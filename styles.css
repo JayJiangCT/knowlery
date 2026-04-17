@@ -1,0 +1,900 @@
+/* ================================================================== */
+/*  Knowlery – Obsidian Plugin Styles                                 */
+/*  Uses only Obsidian CSS variables. Logical properties for RTL.     */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/*  Dashboard                                                          */
+/* ------------------------------------------------------------------ */
+
+.knowlery-dashboard {
+  --knowlery-spacing-xs: 4px;
+  --knowlery-spacing-sm: 8px;
+  --knowlery-spacing-md: 12px;
+  --knowlery-spacing-lg: 16px;
+  --knowlery-spacing-xl: 24px;
+  --knowlery-radius: var(--radius-s);
+}
+
+.knowlery-dashboard__root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-md);
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  max-inline-size: 100%;
+}
+
+.knowlery-dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.knowlery-dashboard__title {
+  margin: 0;
+  font-size: var(--font-ui-large);
+  color: var(--text-normal);
+}
+
+.knowlery-dashboard__tabs {
+  display: flex;
+  gap: var(--knowlery-spacing-xs);
+  border-block-end: 1px solid var(--background-modifier-border);
+}
+
+.knowlery-dashboard__tab {
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  background: none;
+  border: none;
+  border-block-end: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  transition: color 150ms, border-color 150ms;
+}
+
+.knowlery-dashboard__tab:hover {
+  color: var(--text-normal);
+}
+
+.knowlery-dashboard__tab.is-active {
+  color: var(--text-accent);
+  border-block-end-color: var(--text-accent);
+}
+
+.knowlery-dashboard__content {
+  min-block-size: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Banner                                                             */
+/* ------------------------------------------------------------------ */
+
+.knowlery-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+}
+
+.knowlery-banner__content {
+  flex: 1;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  line-height: var(--line-height-normal);
+}
+
+.knowlery-banner__dismiss {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Loading                                                            */
+/* ------------------------------------------------------------------ */
+
+.knowlery-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: var(--knowlery-spacing-xl);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Skills                                                             */
+/* ------------------------------------------------------------------ */
+
+.knowlery-skills__divider {
+  margin-block: var(--knowlery-spacing-md);
+  padding-block-end: var(--knowlery-spacing-xs);
+  border-block-end: 1px solid var(--background-modifier-border);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.knowlery-skill-row {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  margin-block-end: var(--knowlery-spacing-sm);
+  overflow: hidden;
+}
+
+.knowlery-skill-row__header {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.knowlery-skill-row__header:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-skill-row__emoji {
+  flex-shrink: 0;
+  font-size: var(--font-ui-medium);
+}
+
+.knowlery-skill-row__name {
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+  white-space: nowrap;
+}
+
+.knowlery-skill-row__desc {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowlery-skill-row__body {
+  border-block-start: 1px solid var(--background-modifier-border);
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+}
+
+.knowlery-skill-row__content {
+  max-block-size: 200px;
+  overflow-y: auto;
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-primary-alt);
+  border-radius: var(--knowlery-radius);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.knowlery-skill-row__actions {
+  display: flex;
+  gap: var(--knowlery-spacing-sm);
+  margin-block-start: var(--knowlery-spacing-md);
+  justify-content: flex-end;
+}
+
+.knowlery-skill-row.is-disabled {
+  opacity: 0.6;
+}
+
+/* Badges */
+.knowlery-badge {
+  flex-shrink: 0;
+  padding-block: 1px;
+  padding-inline: var(--knowlery-spacing-sm);
+  border-radius: var(--radius-s);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
+  line-height: 1.4;
+}
+
+.knowlery-badge--built-in {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.knowlery-badge--custom {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.knowlery-badge--disabled {
+  background: var(--background-modifier-border);
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Config                                                             */
+/* ------------------------------------------------------------------ */
+
+.knowlery-config__section {
+  margin-block-end: var(--knowlery-spacing-lg);
+}
+
+.knowlery-config__heading {
+  margin-block: 0 var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.knowlery-config__file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--knowlery-spacing-xs);
+  padding-inline: var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+}
+
+.knowlery-config__rule-row {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-xs);
+  padding-inline: var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+}
+
+.knowlery-config__rule-icon {
+  flex-shrink: 0;
+}
+
+.knowlery-config__rule-name {
+  flex: 1;
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowlery-config__rule-actions {
+  display: flex;
+  gap: var(--knowlery-spacing-xs);
+  flex-shrink: 0;
+}
+
+.knowlery-config__add-rule {
+  margin-block-start: var(--knowlery-spacing-sm);
+  background: none;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  width: 100%;
+  text-align: start;
+  transition: color 100ms, border-color 100ms;
+}
+
+.knowlery-config__add-rule:hover {
+  color: var(--text-normal);
+  border-color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Health                                                             */
+/* ------------------------------------------------------------------ */
+
+.knowlery-health__section {
+  margin-block-end: var(--knowlery-spacing-lg);
+}
+
+.knowlery-health__heading {
+  margin-block: 0 var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.knowlery-health__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--knowlery-spacing-sm);
+}
+
+@container (min-width: 280px) {
+  .knowlery-health__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Fallback for environments without container queries */
+@media (min-width: 400px) {
+  .knowlery-health__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.knowlery-health__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-sm);
+  background: var(--background-secondary);
+  border-radius: var(--knowlery-radius);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.knowlery-health__stat-value {
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.knowlery-health__stat-label {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.knowlery-health__expandable {
+  margin-block-end: var(--knowlery-spacing-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  overflow: hidden;
+}
+
+.knowlery-health__expandable-header {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  transition: background 100ms;
+}
+
+.knowlery-health__expandable-header:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-health__expandable-list {
+  padding-block: var(--knowlery-spacing-xs);
+  padding-inline: var(--knowlery-spacing-md) var(--knowlery-spacing-md);
+  border-block-start: 1px solid var(--background-modifier-border);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.knowlery-health__expandable-list ul {
+  margin: 0;
+  padding-inline-start: var(--knowlery-spacing-lg);
+}
+
+.knowlery-health__empty {
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.knowlery-health__checks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-xs);
+}
+
+.knowlery-health__check {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-xs);
+  padding-inline: var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+}
+
+.knowlery-health__check-icon {
+  flex-shrink: 0;
+  font-weight: var(--font-bold);
+}
+
+.knowlery-health__check-icon.is-ok {
+  color: var(--text-success);
+}
+
+.knowlery-health__check-icon.is-fail {
+  color: var(--text-error);
+}
+
+.knowlery-health__check-detail {
+  margin-inline-start: auto;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Wizard                                                             */
+/* ------------------------------------------------------------------ */
+
+.knowlery-wizard__phase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-md);
+}
+
+.knowlery-wizard__subtitle {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__intro {
+  font-size: var(--font-ui-small);
+  color: var(--text-normal);
+  line-height: var(--line-height-normal);
+}
+
+.knowlery-wizard__done .knowlery-wizard__success,
+.knowlery-wizard--success {
+  color: var(--text-success);
+  font-weight: var(--font-semibold);
+  font-size: var(--font-ui-medium);
+}
+
+.knowlery-wizard__platform-list,
+.knowlery-wizard__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-wizard__platform-option,
+.knowlery-wizard__option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  cursor: pointer;
+  transition: border-color 100ms, background 100ms;
+}
+
+.knowlery-wizard__platform-option:hover,
+.knowlery-wizard__option:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-wizard__platform-option.is-selected,
+.knowlery-wizard__option.is-selected {
+  border-color: var(--interactive-accent);
+  background: var(--background-secondary);
+}
+
+.knowlery-wizard__radio,
+.knowlery-wizard__option-radio {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: var(--font-ui-medium);
+}
+
+.knowlery-wizard__platform-option.is-selected .knowlery-wizard__radio,
+.knowlery-wizard__option.is-selected .knowlery-wizard__option-radio {
+  color: var(--interactive-accent);
+}
+
+.knowlery-wizard__platform-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.knowlery-wizard__option-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__platform-desc,
+.knowlery-wizard__option-desc {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__footer,
+.knowlery-wizard__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--knowlery-spacing-sm);
+  margin-block-start: var(--knowlery-spacing-md);
+}
+
+.knowlery-wizard__preview-section,
+.knowlery-wizard__section {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  overflow: hidden;
+}
+
+.knowlery-wizard__preview-section + .knowlery-wizard__preview-section,
+.knowlery-wizard__section + .knowlery-wizard__section {
+  margin-block-start: var(--knowlery-spacing-sm);
+}
+
+.knowlery-wizard__preview-header,
+.knowlery-wizard__section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  color: var(--text-normal);
+  transition: background 100ms;
+}
+
+.knowlery-wizard__preview-header:hover,
+.knowlery-wizard__section-header:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-wizard__chevron {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__preview-body,
+.knowlery-wizard__section-body {
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  border-block-start: 1px solid var(--background-modifier-border);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__skill-list,
+.knowlery-wizard__dir-list {
+  margin: 0;
+  padding-inline-start: var(--knowlery-spacing-lg);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__skill-list li,
+.knowlery-wizard__dir-list li {
+  margin-block-end: var(--knowlery-spacing-xs);
+}
+
+.knowlery-wizard__progress-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-wizard__progress-list li,
+.knowlery-wizard__progress .knowlery-wizard__step {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-spacing-sm);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__progress-list li.is-done,
+.knowlery-wizard__step.is-done {
+  color: var(--text-success);
+}
+
+.knowlery-wizard__step.is-pending {
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__step-icon {
+  flex-shrink: 0;
+  font-weight: var(--font-bold);
+}
+
+.knowlery-wizard__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--knowlery-spacing-sm);
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-modifier-error);
+  border: 1px solid var(--background-modifier-error-hover);
+  border-radius: var(--knowlery-radius);
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+
+.knowlery-wizard__error-icon {
+  flex-shrink: 0;
+  font-weight: var(--font-bold);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rule Editor Modal                                                  */
+/* ------------------------------------------------------------------ */
+
+.knowlery-rule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-md);
+}
+
+.knowlery-rule-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-xs);
+}
+
+.knowlery-rule-editor__field label {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  color: var(--text-normal);
+}
+
+.knowlery-rule-editor__field input[type="text"] {
+  width: 100%;
+}
+
+.knowlery-rule-editor__textarea {
+  width: 100%;
+  min-block-size: 200px;
+  resize: vertical;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+}
+
+.knowlery-rule-editor__preview {
+  max-block-size: 400px;
+  overflow-y: auto;
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-primary-alt);
+  border-radius: var(--knowlery-radius);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.knowlery-rule-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-rule-editor__templates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-rule-editor__template {
+  text-align: start;
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: var(--font-ui-small);
+  transition: border-color 100ms, background 100ms;
+}
+
+.knowlery-rule-editor__template:hover {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Skill Editor Modal                                                 */
+/* ------------------------------------------------------------------ */
+
+.knowlery-skill-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-md);
+}
+
+.knowlery-skill-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-xs);
+}
+
+.knowlery-skill-editor__field label {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+  color: var(--text-normal);
+}
+
+.knowlery-skill-editor__field input[type="text"] {
+  width: 100%;
+}
+
+.knowlery-skill-editor__textarea {
+  width: 100%;
+  min-block-size: 250px;
+  resize: vertical;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+}
+
+.knowlery-skill-editor__preview {
+  max-block-size: 400px;
+  overflow-y: auto;
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-primary-alt);
+  border-radius: var(--knowlery-radius);
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.knowlery-skill-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--knowlery-spacing-sm);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Skill Browser Modal                                                */
+/* ------------------------------------------------------------------ */
+
+.knowlery-skill-browser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-md);
+}
+
+.knowlery-skill-browser__search {
+  display: flex;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-skill-browser__search input[type="text"] {
+  flex: 1;
+}
+
+.knowlery-skill-browser__error {
+  padding-block: var(--knowlery-spacing-md);
+  padding-inline: var(--knowlery-spacing-md);
+  background: var(--background-modifier-error);
+  border: 1px solid var(--background-modifier-error-hover);
+  border-radius: var(--knowlery-radius);
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+  word-break: break-word;
+}
+
+.knowlery-skill-browser__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-spacing-sm);
+}
+
+.knowlery-skill-browser__result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  font-size: var(--font-ui-small);
+}
+
+.knowlery-skill-browser__result strong {
+  color: var(--text-normal);
+}
+
+.knowlery-skill-browser__result span {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.knowlery-skill-browser__hint {
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.knowlery-skill-browser__hint a {
+  color: var(--text-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Buttons — generic styles for all knowlery containers               */
+/* ------------------------------------------------------------------ */
+
+.knowlery-dashboard button,
+.knowlery-rule-editor button,
+.knowlery-skill-editor button,
+.knowlery-skill-browser button,
+.knowlery-wizard__phase button {
+  padding-block: var(--knowlery-spacing-sm);
+  padding-inline: var(--knowlery-spacing-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  cursor: pointer;
+  transition: background 100ms, border-color 100ms;
+}
+
+.knowlery-dashboard button:hover,
+.knowlery-rule-editor button:hover,
+.knowlery-skill-editor button:hover,
+.knowlery-skill-browser button:hover,
+.knowlery-wizard__phase button:hover {
+  background: var(--interactive-hover);
+}
+
+.knowlery-dashboard button:disabled,
+.knowlery-rule-editor button:disabled,
+.knowlery-skill-editor button:disabled,
+.knowlery-skill-browser button:disabled,
+.knowlery-wizard__phase button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.knowlery-dashboard button.mod-cta,
+.knowlery-rule-editor button.mod-cta,
+.knowlery-skill-editor button.mod-cta,
+.knowlery-skill-browser button.mod-cta,
+.knowlery-wizard__phase button.mod-cta {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.knowlery-dashboard button.mod-cta:hover,
+.knowlery-rule-editor button.mod-cta:hover,
+.knowlery-skill-editor button.mod-cta:hover,
+.knowlery-skill-browser button.mod-cta:hover,
+.knowlery-wizard__phase button.mod-cta:hover {
+  background: var(--interactive-accent-hover);
+}
+
+.knowlery-dashboard button.mod-warning,
+.knowlery-rule-editor button.mod-warning,
+.knowlery-skill-editor button.mod-warning,
+.knowlery-skill-browser button.mod-warning,
+.knowlery-wizard__phase button.mod-warning {
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+  border-color: var(--background-modifier-error-hover);
+}
+
+.knowlery-dashboard button.mod-warning:hover,
+.knowlery-rule-editor button.mod-warning:hover,
+.knowlery-skill-editor button.mod-warning:hover,
+.knowlery-skill-browser button.mod-warning:hover,
+.knowlery-wizard__phase button.mod-warning:hover {
+  background: var(--background-modifier-error-hover);
+}
