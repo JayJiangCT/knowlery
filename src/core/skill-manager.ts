@@ -1,7 +1,7 @@
 import { App, normalizePath, TFile, TFolder } from 'obsidian';
 import type { SkillInfo, SkillsLock, SkillLockEntry } from '../types';
 import { BUNDLED_SKILLS, type BundledSkill } from '../assets/skills';
-import * as matter from 'gray-matter';
+import matter from 'gray-matter';
 
 const SKILLS_DIR = '.agents/skills';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
