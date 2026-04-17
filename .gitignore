@@ -1,0 +1,12 @@
+.claude/
+.agents/
+.remember/
+.envrc
+skills-lock.json
+
+# Build artifacts
+node_modules/
+main.js
+*.js.map
+data.json
+.DS_Store
