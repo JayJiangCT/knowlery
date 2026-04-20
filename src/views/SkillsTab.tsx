@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Notice } from 'obsidian';
-import { usePlugin, useSettings } from '../context';
+import { usePlugin } from '../context';
 import type { SkillInfo } from '../types';
 import {
   listSkills,
@@ -9,6 +9,15 @@ import {
   deleteSkill,
 } from '../core/skill-manager';
 import { SkillEditorModal } from '../modals/skill-editor';
+import { SkillBrowserModal } from '../modals/skill-browser';
+import { SkillDetailModal } from '../modals/skill-detail';
+import {
+  IconChevronRight,
+  IconPlus,
+  IconInbox,
+  IconCheckCircle,
+  IconLightbulb,
+} from './Icons';
 
 /* ------------------------------------------------------------------ */
 /*  SkillRow                                                           */
@@ -59,45 +68,115 @@ function SkillRow(props: {
     new SkillEditorModal(plugin.app, plugin, 'edit', skill, onRefresh).open();
   };
 
+  const hasTipCard =
+    skill.kind === 'knowledge' &&
+    ((skill.detail?.bestFor && skill.detail.bestFor.length > 0) ||
+      skill.detail?.proTip);
+
+  const bestForFirst = skill.detail?.bestFor?.[0];
+  const proTip = skill.detail?.proTip
+    ? skill.detail.proTip.slice(0, 60) + (skill.detail.proTip.length > 60 ? '…' : '')
+    : undefined;
+
   return (
-    <div className="knowlery-skill-row">
-      <div
-        className="knowlery-skill-row__header"
-        onClick={() => setExpanded(!expanded)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setExpanded(!expanded);
-        }}
+    <div className={`knowlery-accordion${expanded ? ' is-expanded' : ''}${skill.disabled ? ' is-disabled' : ''}`}>
+      <button
+        type="button"
+        className="knowlery-accordion__header"
+        onClick={() => setExpanded((v) => { if (v) setConfirmDelete(false); return !v; })}
+        aria-expanded={expanded}
       >
+        <span className="knowlery-accordion__chevron">
+          <IconChevronRight size={14} />
+        </span>
         {skill.emoji && (
-          <span className="knowlery-skill-row__emoji">{skill.emoji}</span>
+          <span className="knowlery-skill-row__emoji" aria-hidden="true">{skill.emoji}</span>
         )}
-        <span className="knowlery-skill-row__name">{skill.name}</span>
+        {skill.kind === 'knowledge' ? (
+          <button
+            className="knowlery-skill-row__name is-knowledge"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              new SkillDetailModal(plugin.app, plugin, skill, false).open();
+            }}
+          >
+            {skill.name}
+          </button>
+        ) : (
+          <span className="knowlery-skill-row__name">{skill.name}</span>
+        )}
         {skill.description && (
           <span className="knowlery-skill-row__desc">{skill.description}</span>
         )}
         <span className={`knowlery-badge knowlery-badge--${badge.replace(/\s/g, '-')}`}>
           {badge}
         </span>
-      </div>
+      </button>
 
       {expanded && (
-        <div className="knowlery-skill-row__body">
-          <pre className="knowlery-skill-row__content">{skill.content}</pre>
+        <div className="knowlery-accordion__body">
+          <div className="knowlery-skill-row__code">
+            {skill.content}
+          </div>
+
+          {hasTipCard && (
+            <div className="knowlery-tip-card">
+              {bestForFirst && (
+                <div className="knowlery-tip-card__row">
+                  <IconCheckCircle size={14} />
+                  <span>Best For: {bestForFirst}</span>
+                </div>
+              )}
+              {proTip && (
+                <div className="knowlery-tip-card__row">
+                  <IconLightbulb size={14} />
+                  <span>Pro Tip: {proTip}</span>
+                </div>
+              )}
+              <button
+                type="button"
+                className="knowlery-tip-card__link"
+                onClick={() => { new SkillDetailModal(plugin.app, plugin, skill, true).open(); }}
+              >
+                Example Prompt →
+              </button>
+            </div>
+          )}
+
           <div className="knowlery-skill-row__actions">
             {skill.disabled ? (
-              <button onClick={handleEnable}>Enable</button>
+              <button
+                className="knowlery-btn knowlery-btn--outline"
+                onClick={handleEnable}
+              >
+                Enable
+              </button>
             ) : skill.source === 'builtin' ? (
               <>
-                <button onClick={handleFork}>Fork</button>
-                <button onClick={handleDisable}>Disable</button>
+                <button
+                  className="knowlery-btn knowlery-btn--outline"
+                  onClick={handleFork}
+                >
+                  Fork
+                </button>
+                <button
+                  className="knowlery-btn knowlery-btn--outline knowlery-btn--danger"
+                  onClick={handleDisable}
+                >
+                  Disable
+                </button>
               </>
             ) : (
               <>
-                <button onClick={handleEdit}>Edit</button>
                 <button
-                  className={confirmDelete ? 'mod-warning' : ''}
+                  className="knowlery-btn knowlery-btn--outline"
+                  onClick={handleEdit}
+                >
+                  Edit
+                </button>
+                <button
+                  className={`knowlery-btn knowlery-btn--outline knowlery-btn--danger${confirmDelete ? ' is-confirming' : ''}`}
                   onClick={handleDelete}
                 >
                   {confirmDelete ? 'Confirm delete' : 'Delete'}
@@ -135,8 +214,19 @@ export function SkillsTab() {
 
   return (
     <div className="knowlery-skills">
+      {skills.length === 0 && (
+        <div className="knowlery-empty-state">
+          <IconInbox size={32} className="knowlery-empty-state__icon" />
+          <p className="knowlery-empty-state__text">No skills found</p>
+          <p className="knowlery-empty-state__hint">Run the setup wizard to install built-in skills.</p>
+        </div>
+      )}
+
       {enabled.length > 0 && (
         <>
+          <div className="knowlery-section-label">
+            <span>Active Skills ({enabled.length})</span>
+          </div>
           {enabled.map((s) => (
             <SkillRow key={s.name} skill={s} onRefresh={refresh} />
           ))}
@@ -145,16 +235,22 @@ export function SkillsTab() {
 
       {disabled.length > 0 && (
         <>
-          <div className="knowlery-skills__divider">Disabled</div>
+          <div className="knowlery-section-label">
+            <span>Disabled ({disabled.length})</span>
+          </div>
           {disabled.map((s) => (
             <SkillRow key={s.name} skill={s} onRefresh={refresh} />
           ))}
         </>
       )}
 
-      {skills.length === 0 && (
-        <p>No skills found. Run the setup wizard to install built-in skills.</p>
-      )}
+      <button
+        className="knowlery-btn knowlery-btn--outline is-full-width knowlery-skills__browse"
+        onClick={() => new SkillBrowserModal(plugin.app, plugin).open()}
+      >
+        <IconPlus size={14} />
+        <span>Browse more skills</span>
+      </button>
     </div>
   );
 }

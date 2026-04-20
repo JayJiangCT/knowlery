@@ -1,293 +1,333 @@
+import type { SkillKind } from '../types';
+
 export interface BundledSkill {
   name: string;
   emoji: string;
   description: string;
   content: string;
+  kind: SkillKind;
 }
 
 export const BUNDLED_SKILLS: BundledSkill[] = [
   {
     name: 'cook',
+    kind: 'knowledge',
     emoji: '\u{1F373}',
-    description: 'Digest notes and external sources into knowledge pages',
+    description: 'Digest notes into knowledge pages and maintain INDEX.base',
     content: `---
 name: cook
-description: Digest notes and external sources into knowledge pages
-version: 1.0.0
+description: Digest notes into knowledge pages and maintain INDEX.base
+version: 2.0.0
+kind: knowledge
 ---
 
 # Cook
 
-Digest raw notes, articles, and external sources into structured knowledge pages.
+## What it does
 
-## When to use
+\`cook\` processes raw notes, articles, and web content into structured knowledge pages using the vault's schema. It identifies entity types, extracts relationships, and creates or updates pages with proper frontmatter and wikilinks.
 
-Use /cook when you have raw material (notes, articles, bookmarks, ideas) that needs to be turned into structured knowledge pages in the vault.
+## Best For
 
-## Instructions
+- Raw field notes or meeting transcripts that need structuring
+- Pasted web articles waiting to be integrated into the vault
+- Incremental vault updates after research sessions
+- Refreshing INDEX.base after bulk imports
 
-1. Read the source material provided by the user
-2. Identify the type of knowledge (entity, concept, comparison, or query)
-3. Create a new page in the appropriate directory with proper frontmatter
-4. Extract key information and organize it clearly
-5. Add wikilinks to connect with existing pages in the vault
-6. Summarize what was created and suggest next steps
+## Pro Tip
+
+Run \`cook\` immediately after pasting meeting notes — it extracts action items and assigns them to entities already in your vault, turning loose transcripts into connected knowledge pages in one pass.
+
+## Example
+
+\`\`\`
+/knowlery cook --format=meeting --extract-actions "notes/2024-q4-review.md"
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --format | String | Target page structure: 'meeting', 'article', 'entity', 'concept' |
+| --extract-actions | Boolean | Auto-generate task list from text, default false |
+| --index-only | Boolean | Refresh INDEX.base without cooking new content, default false |
 `,
   },
   {
     name: 'ask',
+    kind: 'knowledge',
     emoji: '\u{2753}',
     description: 'Open-ended Q&A against the knowledge base',
     content: `---
 name: ask
 description: Open-ended Q&A against the knowledge base
 version: 1.0.0
+kind: knowledge
 ---
 
 # Ask
 
-Answer questions using the knowledge base as context.
+## What it does
 
-## When to use
+\`ask\` queries the knowledge base to answer questions by searching across notes, following wikilinks, and synthesizing information from multiple pages. It returns a sourced answer with links to relevant vault pages.
 
-Use /ask when you want to query your knowledge base for answers, insights, or connections.
+## Best For
 
-## Instructions
+- Cross-referencing concepts stored across multiple notes
+- Checking what the vault says about a specific topic
+- Finding connections between two areas of knowledge
+- Getting a synthesis before starting new research
 
-1. Search the vault for relevant pages using wikilinks and tags
-2. Read and synthesize information from multiple sources
-3. Provide a clear, well-sourced answer with wikilinks to relevant pages
-4. If the answer isn't in the vault, say so and suggest what to /cook
+## Pro Tip
+
+Use \`ask\` before starting any new research — you might have already captured the answer in your vault. Discovering existing coverage saves time on duplicate work and often reveals angles worth expanding rather than rebuilding.
+
+## Example
+
+\`\`\`
+/knowlery ask "What are the key differences between X and Y?"
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --depth | Integer | How many wikilink hops to follow, default 2 |
+| --format | String | Output format: 'summary', 'detailed', 'bullets', default 'summary' |
+| --cite | Boolean | Include wikilinks to sources in response, default true |
 `,
   },
   {
-    name: 'health',
-    emoji: '\u{1FA7A}',
-    description: 'Audit knowledge page quality',
+    name: 'explore',
+    kind: 'knowledge',
+    emoji: '\u{1F9ED}',
+    description: 'Trace idea timelines and find connections between topics',
     content: `---
-name: health
-description: Audit knowledge page quality
+name: explore
+description: Trace idea timelines and find connections between topics
 version: 1.0.0
+kind: knowledge
 ---
 
-# Health
+# Explore
 
-Audit the quality of knowledge pages in the vault.
+## What it does
 
-## Instructions
+\`explore\` navigates the vault's knowledge graph in two modes — timeline (how an idea evolved over time) and bridge (how two topics connect). It surfaces turning points, shared concepts, and hidden relationships across the vault.
 
-1. Check for missing frontmatter fields per SCHEMA.md
-2. Identify pages with no outgoing wikilinks (isolated)
-3. Find pages with broken wikilinks
-4. Report quality scores and suggest improvements
-`,
-  },
-  {
-    name: 'wiki',
-    emoji: '\u{1F4DA}',
-    description: 'Set up or refresh wiki index (INDEX.base)',
-    content: `---
-name: wiki
-description: Set up or refresh wiki index (INDEX.base)
-version: 1.0.0
----
+## Best For
 
-# Wiki
+- Tracing how your thinking on a topic has changed over time
+- Finding unexpected connections between separate research areas
+- Building a chronological view of an evolving project
+- Discovering which concepts bridge two domains you haven't explicitly linked
 
-Generate or refresh the vault's INDEX.base wiki index.
+## Pro Tip
 
-## Instructions
+Use \`explore\` in bridge mode before writing a comparative essay — it maps the conceptual territory between two ideas and often surfaces a third angle you hadn't considered, one that's already grounded in your own notes.
 
-1. Scan all knowledge directories for pages
-2. Generate an INDEX.base file that catalogs all pages
-3. Group by type (entity, concept, comparison, query)
-4. Include page titles, descriptions, and key metadata
-`,
-  },
-  {
-    name: 'prep',
-    emoji: '\u{1F9F9}',
-    description: 'Fix frontmatter and broken wikilinks',
-    content: `---
-name: prep
-description: Fix frontmatter and broken wikilinks
-version: 1.0.0
----
+## Example
 
-# Prep
+\`\`\`
+/knowlery explore --mode=bridge --from="machine learning" --to="epistemology"
+\`\`\`
 
-Fix structural issues in the vault: frontmatter and broken wikilinks.
+## Parameters
 
-## Instructions
-
-1. Scan pages for missing or malformed frontmatter
-2. Add missing required fields per SCHEMA.md
-3. Find and fix broken wikilinks
-4. Report what was fixed
-`,
-  },
-  {
-    name: 'trace',
-    emoji: '\u{1F50D}',
-    description: 'Trace reasoning chains',
-    content: `---
-name: trace
-description: Trace reasoning chains
-version: 1.0.0
----
-
-# Trace
-
-Trace reasoning chains through connected knowledge pages.
-
-## Instructions
-
-1. Start from a given concept or question
-2. Follow wikilinks to trace how ideas connect
-3. Build a reasoning chain showing the path
-4. Identify gaps or weak links in the chain
-`,
-  },
-  {
-    name: 'connect',
-    emoji: '\u{1F517}',
-    description: 'Find connections between concepts',
-    content: `---
-name: connect
-description: Find connections between concepts
-version: 1.0.0
----
-
-# Connect
-
-Find hidden connections between concepts in the vault.
-
-## Instructions
-
-1. Analyze two or more pages specified by the user
-2. Identify shared themes, references, or underlying patterns
-3. Suggest new wikilinks that should exist
-4. Optionally create a comparison page
-`,
-  },
-  {
-    name: 'ideas',
-    emoji: '\u{1F4A1}',
-    description: 'Generate ideas from vault content',
-    content: `---
-name: ideas
-description: Generate ideas from vault content
-version: 1.0.0
----
-
-# Ideas
-
-Generate new ideas by combining existing knowledge.
-
-## Instructions
-
-1. Read relevant pages from the vault
-2. Apply creative thinking techniques (analogy, inversion, combination)
-3. Generate novel ideas grounded in vault knowledge
-4. Create query pages for promising ideas worth exploring
+| Flag | Type | Description |
+|------|------|-------------|
+| --mode | String | 'timeline' for single topic evolution or 'bridge' for two-topic connection |
+| --from | String | Topic name for timeline mode or first topic for bridge mode |
+| --to | String | Second topic for bridge mode only |
+| --depth | Integer | Wikilink hops to follow, default 3 |
 `,
   },
   {
     name: 'challenge',
+    kind: 'knowledge',
     emoji: '\u{1F94A}',
-    description: 'Challenge assumptions in notes',
+    description: 'Pressure-test beliefs and track intention-vs-action gaps',
     content: `---
 name: challenge
-description: Challenge assumptions in notes
-version: 1.0.0
+description: Pressure-test beliefs and track intention-vs-action gaps
+version: 2.0.0
+kind: knowledge
 ---
 
 # Challenge
 
-Challenge assumptions and claims in your notes.
+## What it does
 
-## Instructions
+\`challenge\` stress-tests the knowledge base by looking for contradictions, outdated claims, unsupported assertions, and drift between related notes. It surfaces which beliefs need updated evidence.
 
-1. Read the specified page(s)
-2. Identify key claims and assumptions
-3. Present counterarguments or alternative perspectives
-4. Suggest evidence that would strengthen or weaken each claim
+## Best For
+
+- Auditing a knowledge area before making a high-stakes decision
+- Detecting when notes have drifted from each other after long gaps
+- Finding claims that lack supporting sources
+- Reviewing assumptions before a project retrospective
+
+## Pro Tip
+
+Run \`challenge\` quarterly on your core concept pages — beliefs that haven't been tested become invisible assumptions. Surfacing them on a schedule keeps your knowledge base honest rather than self-reinforcing.
+
+## Example
+
+\`\`\`
+/knowlery challenge --topic="AI safety" --since="2024-01-01"
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --topic | String | Vault area or concept to challenge |
+| --since | String | ISO date — only flag drift newer than this date |
+| --strict | Boolean | Fail on any unsupported claim, not just contradictions, default false |
 `,
   },
   {
-    name: 'drift',
-    emoji: '\u{1F30A}',
-    description: 'Explore tangential ideas',
+    name: 'ideas',
+    kind: 'knowledge',
+    emoji: '\u{1F4A1}',
+    description: 'Generate actionable ideas from vault content',
     content: `---
-name: drift
-description: Explore tangential ideas
+name: ideas
+description: Generate actionable ideas from vault content
 version: 1.0.0
+kind: knowledge
 ---
 
-# Drift
+# Ideas
 
-Explore tangential ideas starting from a given concept.
+## What it does
 
-## Instructions
+\`ideas\` cross-pollinates the knowledge base to generate novel connections and synthesis. It finds concepts from different domains that share structural similarities and proposes new angles or research directions grounded in existing vault content.
 
-1. Start from the specified concept
-2. Follow unexpected connections and tangents
-3. Explore adjacent fields and analogies
-4. Document interesting discoveries as new query pages
+## Best For
+
+- Breaking out of a conceptual rut on a long-running topic
+- Generating hypotheses for a research question
+- Finding analogies between technical and non-technical domains
+- Seeding brainstorming sessions with evidence-backed starting points
+
+## Pro Tip
+
+Feed \`ideas\` a specific constraint ("only connect to pages tagged #biology") — unconstrained synthesis produces too many weak connections, while constrained synthesis surfaces surprising depth from domains you wouldn't have checked manually.
+
+## Example
+
+\`\`\`
+/knowlery ideas --seed="feedback loops" --domains="economics,ecology" --count=5
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --seed | String | Central concept to cross-pollinate |
+| --domains | String | Comma-separated vault tags or folder names to draw from |
+| --count | Integer | Number of idea threads to generate, default 3 |
+`,
+  },
+  {
+    name: 'audit',
+    kind: 'knowledge',
+    emoji: '\u{1FA7A}',
+    description: 'Check vault health, frontmatter coverage, and structural integrity',
+    content: `---
+name: audit
+description: Check vault health, frontmatter coverage, and structural integrity
+version: 1.0.0
+kind: knowledge
+---
+
+# Audit
+
+## What it does
+
+\`audit\` runs a comprehensive health check on the knowledge base — checking for orphan notes, missing frontmatter, stale INDEX.base, broken wikilinks, and structural inconsistencies against the vault schema.
+
+## Best For
+
+- Monthly vault maintenance sessions
+- Before sharing or exporting vault content
+- After bulk imports or migrations
+- Diagnosing why vault search or navigation feels unreliable
+
+## Pro Tip
+
+Run \`audit\` before any major restructuring — it shows exactly what's already broken, so you're not compounding existing problems with structural changes. Use \`--dry-run\` to preview fixes before committing them.
+
+## Example
+
+\`\`\`
+/knowlery audit --fix=orphans --report=full
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --fix | String | Auto-fix mode: 'orphans', 'frontmatter', 'index', or 'all' |
+| --report | String | Output detail: 'summary' or 'full' |
+| --dry-run | Boolean | Show what would be fixed without making changes, default false |
 `,
   },
   {
     name: 'organize',
+    kind: 'knowledge',
     emoji: '\u{1F4C1}',
     description: 'Reorganize directory structure',
     content: `---
 name: organize
 description: Reorganize directory structure
 version: 1.0.0
+kind: knowledge
 ---
 
 # Organize
 
-Reorganize vault directory structure for better knowledge organization.
+## What it does
 
-## Instructions
+\`organize\` analyzes the vault's directory structure and note clustering patterns, then proposes restructuring moves — merging over-fragmented topics, splitting overloaded directories, and renaming pages to follow the vault's naming conventions.
 
-1. Analyze current vault structure
-2. Identify misplaced pages (wrong directory for their type)
-3. Suggest moves with rationale
-4. Execute moves if approved, updating all wikilinks
-`,
-  },
-  {
-    name: 'mise',
-    emoji: '\u{1F9D1}\u{200D}\u{1F373}',
-    description: 'Check overall vault health',
-    content: `---
-name: mise
-description: Check overall vault health
-version: 1.0.0
----
+## Best For
 
-# Mise en Place
+- Vaults that have grown organically and feel chaotic to navigate
+- After merging notes from multiple sources or projects
+- When search results feel noisy or unfocused
+- Preparing a vault for a new phase of use
 
-Comprehensive vault health check — everything in its place.
+## Pro Tip
 
-## Instructions
+Run \`organize\` with \`--dry-run\` first — the proposed moves often reveal structural assumptions you didn't realize you'd made, which is itself valuable even if you don't apply all of them.
 
-1. Run all health checks (frontmatter, wikilinks, orphans)
-2. Check vault structure completeness
-3. Verify agent configuration
-4. Produce a summary report with action items
+## Example
+
+\`\`\`
+/knowlery organize --scope=concepts --dry-run
+\`\`\`
+
+## Parameters
+
+| Flag | Type | Description |
+|------|------|-------------|
+| --scope | String | Vault area to reorganize: folder name, tag, or 'all' |
+| --dry-run | Boolean | Propose moves without executing them, default true |
+| --rename | Boolean | Also suggest page renames for consistency, default false |
 `,
   },
   {
     name: 'obsidian-cli',
+    kind: 'tooling',
     emoji: '\u{1F4BB}',
     description: 'Obsidian CLI usage',
     content: `---
 name: obsidian-cli
 description: Obsidian CLI usage
 version: 1.0.0
+kind: tooling
 ---
 
 # Obsidian CLI
@@ -304,12 +344,14 @@ Use the Obsidian CLI to interact with the vault programmatically.
   },
   {
     name: 'obsidian-markdown',
+    kind: 'tooling',
     emoji: '\u{270D}\u{FE0F}',
     description: 'Obsidian flavored markdown',
     content: `---
 name: obsidian-markdown
 description: Obsidian flavored markdown
 version: 1.0.0
+kind: tooling
 ---
 
 # Obsidian Flavored Markdown
@@ -327,12 +369,14 @@ Write markdown using Obsidian's extensions.
   },
   {
     name: 'obsidian-bases',
+    kind: 'tooling',
     emoji: '\u{1F4CA}',
     description: 'Obsidian Bases (.base files)',
     content: `---
 name: obsidian-bases
 description: Obsidian Bases (.base files)
 version: 1.0.0
+kind: tooling
 ---
 
 # Obsidian Bases
@@ -346,12 +390,14 @@ Bases are JSON files with .base extension that define views over vault data.
   },
   {
     name: 'json-canvas',
+    kind: 'tooling',
     emoji: '\u{1F3A8}',
     description: 'JSON Canvas format',
     content: `---
 name: json-canvas
 description: JSON Canvas format
 version: 1.0.0
+kind: tooling
 ---
 
 # JSON Canvas
@@ -365,12 +411,14 @@ Canvas files are JSON with nodes (text, file, link, group) and edges connecting 
   },
   {
     name: 'defuddle',
+    kind: 'tooling',
     emoji: '\u{1F9F9}',
     description: 'Web content extraction',
     content: `---
 name: defuddle
 description: Web content extraction
 version: 1.0.0
+kind: tooling
 ---
 
 # Defuddle
@@ -384,12 +432,14 @@ Use defuddle to strip navigation, ads, and clutter from web pages, extracting ju
   },
   {
     name: 'vault-conventions',
+    kind: 'tooling',
     emoji: '\u{1F4D0}',
     description: 'Vault-specific conventions',
     content: `---
 name: vault-conventions
 description: Vault-specific conventions
 version: 1.0.0
+kind: tooling
 ---
 
 # Vault Conventions
@@ -397,31 +447,9 @@ version: 1.0.0
 Follow these conventions when working in this vault:
 
 - Knowledge pages live in typed directories (entities/, concepts/, comparisons/, queries/)
-- Every page has YAML frontmatter matching SCHEMA.md
+- Every knowledge page should have YAML frontmatter matching SCHEMA.md
 - Use wikilinks to connect related pages
 - Keep pages focused on a single topic
-`,
-  },
-  {
-    name: 'vault-thinking',
-    emoji: '\u{1F9E0}',
-    description: 'Vault-aware reasoning',
-    content: `---
-name: vault-thinking
-description: Vault-aware reasoning
-version: 1.0.0
----
-
-# Vault-Aware Thinking
-
-When reasoning about questions or tasks, always consider what's already in the vault.
-
-## Process
-
-1. Before creating new content, search for existing related pages
-2. Build on existing knowledge rather than duplicating
-3. Identify and fill gaps rather than restating known information
-4. Connect new insights to existing pages via wikilinks
 `,
   },
 ];

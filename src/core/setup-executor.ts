@@ -5,12 +5,15 @@ import { generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
 import { generatePlatformConfig } from './platform-adapter';
 import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from './skill-manager';
 import { installDefaultRules } from './rule-manager';
+import { ensureDir, writeFile } from './vault-io';
+
+const KNOWLERY_DIR = '.knowlery';
+const MANIFEST_PATH = `${KNOWLERY_DIR}/manifest.json`;
 
 export type SetupStep =
   | 'directories'
   | 'knowledge-files'
   | 'skills'
-  | 'symlinks'
   | 'platform-config'
   | 'lock-files';
 
@@ -25,7 +28,6 @@ export function getSetupSteps(): SetupProgress[] {
     { step: 'directories', label: 'Creating knowledge directories', done: false },
     { step: 'knowledge-files', label: 'Writing KNOWLEDGE.md and SCHEMA.md', done: false },
     { step: 'skills', label: 'Installing 19 built-in skills', done: false },
-    { step: 'symlinks', label: 'Creating skill symlinks', done: false },
     { step: 'platform-config', label: 'Generating agent configuration', done: false },
     { step: 'lock-files', label: 'Writing configuration files', done: false },
   ];
@@ -39,19 +41,15 @@ export async function executeSetup(
 ): Promise<void> {
   onProgress('directories');
   for (const dir of KNOWLEDGE_DIRS) {
-    const path = normalizePath(dir);
-    if (!app.vault.getFolderByPath(path)) {
-      await app.vault.createFolder(path);
-    }
+    await ensureDir(app, dir);
   }
 
   onProgress('knowledge-files');
-  await writeFileIfNotExists(app, 'KNOWLEDGE.md', generateKnowledgeMd(kbName));
-  await writeFileIfNotExists(app, 'SCHEMA.md', generateSchemaMd());
+  await writeFile(app, 'KNOWLEDGE.md', generateKnowledgeMd(kbName));
+  await writeFile(app, 'SCHEMA.md', generateSchemaMd());
 
   onProgress('skills');
   await installAllBuiltinSkills(app);
-  onProgress('symlinks');
 
   onProgress('platform-config');
   await generatePlatformConfig(app, platform, kbName);
@@ -63,51 +61,45 @@ export async function executeSetup(
   await writeManifest(app, platform, kbName);
 }
 
-async function writeFileIfNotExists(app: App, path: string, content: string): Promise<void> {
-  const normalized = normalizePath(path);
-  const existing = app.vault.getFileByPath(normalized);
-  if (existing) {
-    await app.vault.modify(existing, content);
-  } else {
-    await app.vault.create(normalized, content);
-  }
-}
-
 async function writeManifest(app: App, platform: Platform, kbName: string): Promise<void> {
+  const existing = await readManifest(app);
+  const now = new Date().toISOString();
   const manifest: Manifest = {
     version: '0.1.0',
     platform,
     kbName,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
   };
 
-  const dirPath = normalizePath('.byoao');
-  if (!app.vault.getFolderByPath(dirPath)) {
-    await app.vault.createFolder(dirPath);
-  }
-
-  const filePath = normalizePath('.byoao/manifest.json');
-  const content = JSON.stringify(manifest, null, 2);
-  const existing = app.vault.getFileByPath(filePath);
-  if (existing) {
-    await app.vault.modify(existing, content);
-  } else {
-    await app.vault.create(filePath, content);
-  }
+  await ensureDir(app, KNOWLERY_DIR);
+  const path = normalizePath(MANIFEST_PATH);
+  await app.vault.adapter.write(path, JSON.stringify(manifest, null, 2));
 }
 
 export async function readManifest(app: App): Promise<Manifest | null> {
-  const file = app.vault.getFileByPath(normalizePath('.byoao/manifest.json'));
-  if (!file) return null;
-  const content = await app.vault.cachedRead(file);
+  const path = normalizePath(MANIFEST_PATH);
+  if (!(await app.vault.adapter.exists(path))) return null;
   try {
+    const content = await app.vault.adapter.read(path);
     return JSON.parse(content);
   } catch {
     return null;
   }
 }
 
-export function isVaultInitialized(app: App): boolean {
-  return app.vault.getFileByPath(normalizePath('.byoao/manifest.json')) !== null;
+export async function isVaultInitialized(app: App): Promise<boolean> {
+  return app.vault.adapter.exists(normalizePath(MANIFEST_PATH));
+}
+
+export async function writeManifestUpdate(
+  app: App,
+  updates: Partial<Pick<Manifest, 'kbName' | 'platform'>>,
+): Promise<void> {
+  const manifest = await readManifest(app);
+  if (!manifest) return;
+  Object.assign(manifest, updates, { updatedAt: new Date().toISOString() });
+  await ensureDir(app, KNOWLERY_DIR);
+  const path = normalizePath(MANIFEST_PATH);
+  await app.vault.adapter.write(path, JSON.stringify(manifest, null, 2));
 }

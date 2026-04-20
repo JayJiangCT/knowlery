@@ -1,26 +1,97 @@
-import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
 import type KnowleryPlugin from './main';
 import type { Platform } from './types';
 import { generatePlatformConfig, migratePlatform } from './core/platform-adapter';
 import { detectNode } from './core/node-detect';
 import { generateKnowledgeMd } from './assets/templates';
-import { executeSetup, readManifest } from './core/setup-executor';
+import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/setup-executor';
+import { SetupWizardModal } from './modals/setup-wizard';
+
+class ConfirmModal extends Modal {
+  private confirmed = false;
+
+  constructor(
+    app: App,
+    private title: string,
+    private message: string,
+    private onConfirm: () => void,
+  ) {
+    super(app);
+  }
+
+  onOpen() {
+    this.setTitle(this.title);
+    this.contentEl.createEl('p', { text: this.message });
+
+    const btnContainer = this.contentEl.createDiv({ cls: 'modal-button-container' });
+    btnContainer
+      .createEl('button', { text: 'Cancel' })
+      .addEventListener('click', () => this.close());
+    const confirmBtn = btnContainer.createEl('button', {
+      text: 'Confirm',
+      cls: 'mod-warning',
+    });
+    confirmBtn.addEventListener('click', () => {
+      this.confirmed = true;
+      this.close();
+    });
+  }
+
+  onClose() {
+    if (this.confirmed) this.onConfirm();
+  }
+}
 
 export class KnowlerySettingTab extends PluginSettingTab {
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
 
-  display(): void {
+  async display(): Promise<void> {
     const { containerEl } = this;
     containerEl.empty();
 
-    /* ---- General ---- */
+    const initialized = await isVaultInitialized(this.plugin.app);
+
+    if (!initialized) {
+      this.renderUninitializedState(containerEl);
+    } else {
+      this.renderInitializedState(containerEl);
+    }
+  }
+
+  private renderUninitializedState(containerEl: HTMLElement): void {
+    const banner = containerEl.createDiv({ cls: 'knowlery-settings-banner' });
+    banner.createEl('h3', { text: 'Vault not set up' });
+    banner.createEl('p', {
+      text: 'This vault hasn\'t been configured for AI yet. Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.',
+    });
+    const bannerBtn = banner.createEl('button', {
+      text: 'Initialize vault',
+      cls: 'mod-cta',
+    });
+    bannerBtn.addEventListener('click', () => {
+      new SetupWizardModal(this.plugin.app, this.plugin, () => {
+        this.plugin.onSetupComplete();
+        this.display();
+      }).open();
+    });
+
+    this.renderNodeSetting(containerEl);
+  }
+
+  private renderInitializedState(containerEl: HTMLElement): void {
+    this.renderGeneralSection(containerEl);
+    this.renderPlatformSection(containerEl);
+    this.renderMaintenanceSection(containerEl);
+  }
+
+  private renderGeneralSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName('General').setHeading();
 
     new Setting(containerEl)
-      .setName('KB name')
-      .setDesc('Changing this will update KNOWLEDGE.md and regenerate agent config.')
+      .setName('Knowledge base name')
+      .setDesc('Updates KNOWLEDGE.md and regenerates agent config when saved.')
       .addText((text) =>
         text
           .setValue(this.plugin.settings.kbName)
@@ -32,13 +103,18 @@ export class KnowlerySettingTab extends PluginSettingTab {
         btn.setButtonText('Save').onClick(async () => {
           await this.plugin.saveSettings();
           await this.updateKbName();
-          new Notice('KB name updated');
+          new Notice('Knowledge base name updated');
         }),
       );
 
-    /* ---- Platform ---- */
+    this.renderNodeSetting(containerEl);
+  }
+
+  private renderPlatformSection(containerEl: HTMLElement): void {
     new Setting(containerEl).setName('Platform').setHeading();
 
+    const currentLabel =
+      this.plugin.settings.platform === 'claude-code' ? 'Claude Code' : 'OpenCode';
     const otherPlatform: Platform =
       this.plugin.settings.platform === 'claude-code' ? 'opencode' : 'claude-code';
     const otherLabel =
@@ -46,38 +122,35 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Current platform')
-      .setDesc(
-        this.plugin.settings.platform === 'claude-code' ? 'Claude Code' : 'OpenCode',
-      )
+      .setDesc(currentLabel)
       .addButton((btn) =>
-        btn.setButtonText(`Switch to ${otherLabel}`).onClick(async () => {
-          const confirmed = confirm(
-            `Switch to ${otherLabel}? This generates new config files.`,
-          );
-          if (!confirmed) return;
-
-          const keepOld = confirm('Keep old platform config files?');
-          await migratePlatform(
+        btn.setButtonText(`Switch to ${otherLabel}`).onClick(() => {
+          new ConfirmModal(
             this.plugin.app,
-            this.plugin.settings.platform,
-            otherPlatform,
-            this.plugin.settings.kbName,
-            keepOld,
-          );
-
-          this.plugin.settings.platform = otherPlatform;
-          await this.plugin.saveSettings();
-          new Notice(`Switched to ${otherLabel}`);
-          this.display();
+            'Switch platform',
+            `Switch to ${otherLabel}? New config files will be generated. Existing config files are kept as backup.`,
+            async () => {
+              await migratePlatform(
+                this.plugin.app,
+                this.plugin.settings.platform,
+                otherPlatform,
+                this.plugin.settings.kbName,
+                true,
+              );
+              this.plugin.settings.platform = otherPlatform;
+              await this.plugin.saveSettings();
+              new Notice(`Switched to ${otherLabel}`);
+              this.display();
+            },
+          ).open();
         }),
       );
+  }
 
-    /* ---- Node.js ---- */
-    new Setting(containerEl).setName('Node.js').setHeading();
-
+  private renderNodeSetting(containerEl: HTMLElement): void {
     new Setting(containerEl)
       .setName('Node.js path')
-      .setDesc('Required for browsing and installing third-party skills.')
+      .setDesc('Path to Node.js. Usually leave blank. Only needed if node is in a non-standard location (enter absolute path, e.g. /usr/local/bin/node).')
       .addText((text) =>
         text
           .setPlaceholder('/usr/local/bin/node')
@@ -89,43 +162,36 @@ export class KnowlerySettingTab extends PluginSettingTab {
       )
       .addButton((btn) =>
         btn.setButtonText('Auto-detect').onClick(async () => {
-          const result = await detectNode();
-          if (result.detected && result.path) {
-            this.plugin.settings.nodePath = result.path;
-            await this.plugin.saveSettings();
-            new Notice(`Detected Node.js ${result.version} at ${result.path}`);
+          btn.setButtonText('Detecting…');
+          btn.setDisabled(true);
+          try {
+            const result = await detectNode();
+            if (result.detected && result.path) {
+              this.plugin.settings.nodePath = result.path;
+              await this.plugin.saveSettings();
+              new Notice(`Detected Node.js ${result.version} at ${result.path}`);
+            } else {
+              new Notice('Node.js not found. Install Node.js or enter the path manually.');
+            }
+          } finally {
+            btn.setButtonText('Auto-detect');
+            btn.setDisabled(false);
             this.display();
-          } else {
-            new Notice('Node.js not detected');
           }
         }),
       );
+  }
 
-    /* ---- Advanced ---- */
-    new Setting(containerEl).setName('Advanced').setHeading();
-
-    new Setting(containerEl)
-      .setName('Re-initialize vault')
-      .setDesc('Re-run setup. Overwrites built-in skills and agent config.')
-      .addButton((btn) =>
-        btn
-          .setButtonText('Re-initialize')
-          .setWarning()
-          .onClick(async () => {
-            if (!confirm('Re-initialize vault?')) return;
-            await executeSetup(
-              this.plugin.app,
-              this.plugin.settings.platform,
-              this.plugin.settings.kbName,
-              () => {},
-            );
-            new Notice('Vault re-initialized');
-          }),
-      );
+  private renderMaintenanceSection(containerEl: HTMLElement): void {
+    new Setting(containerEl).setName('Maintenance').setHeading();
 
     new Setting(containerEl)
       .setName('Regenerate agent config')
-      .setDesc('Regenerate CLAUDE.md or opencode.json.')
+      .setDesc(
+        this.plugin.settings.platform === 'claude-code'
+          ? 'Recreate .claude/CLAUDE.md from current settings.'
+          : 'Recreate opencode.json from current settings.',
+      )
       .addButton((btn) =>
         btn.setButtonText('Regenerate').onClick(async () => {
           await generatePlatformConfig(
@@ -135,6 +201,31 @@ export class KnowlerySettingTab extends PluginSettingTab {
           );
           new Notice('Agent config regenerated');
         }),
+      );
+
+    new Setting(containerEl)
+      .setName('Re-initialize vault')
+      .setDesc('Re-run the full setup. Overwrites built-in skills and agent config. Custom skills are preserved.')
+      .addButton((btn) =>
+        btn
+          .setButtonText('Re-initialize')
+          .setWarning()
+          .onClick(() => {
+            new ConfirmModal(
+              this.plugin.app,
+              'Re-initialize vault',
+              'This will overwrite all built-in skills and regenerate agent config. Custom skills and your knowledge files are preserved. Continue?',
+              async () => {
+                await executeSetup(
+                  this.plugin.app,
+                  this.plugin.settings.platform,
+                  this.plugin.settings.kbName,
+                  () => {},
+                );
+                new Notice('Vault re-initialized');
+              },
+            ).open();
+          }),
       );
   }
 
@@ -153,17 +244,8 @@ export class KnowlerySettingTab extends PluginSettingTab {
       this.plugin.settings.kbName,
     );
 
-    const manifestFile = this.plugin.app.vault.getFileByPath('.byoao/manifest.json');
-    if (manifestFile) {
-      const manifest = await readManifest(this.plugin.app);
-      if (manifest) {
-        manifest.kbName = this.plugin.settings.kbName;
-        manifest.updatedAt = new Date().toISOString();
-        await this.plugin.app.vault.modify(
-          manifestFile,
-          JSON.stringify(manifest, null, 2),
-        );
-      }
-    }
+    await writeManifestUpdate(this.plugin.app, {
+      kbName: this.plugin.settings.kbName,
+    });
   }
 }

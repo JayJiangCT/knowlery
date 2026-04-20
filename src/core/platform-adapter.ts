@@ -1,6 +1,7 @@
 import { App, normalizePath } from 'obsidian';
 import type { Platform } from '../types';
 import { generateClaudeMd, generateOpenCodeJson } from '../assets/templates';
+import { ensureDir, writeFile } from './vault-io';
 
 export async function generatePlatformConfig(
   app: App,
@@ -15,36 +16,14 @@ export async function generatePlatformConfig(
 }
 
 async function generateClaudeCodeConfig(app: App): Promise<void> {
-  const claudeDir = normalizePath('.claude');
-  const rulesDir = normalizePath('.claude/rules');
-
-  await ensureDir(app, claudeDir);
-  await ensureDir(app, rulesDir);
-
-  const claudeMdPath = normalizePath('.claude/CLAUDE.md');
-  const content = generateClaudeMd();
-
-  const existing = app.vault.getFileByPath(claudeMdPath);
-  if (existing) {
-    await app.vault.modify(existing, content);
-  } else {
-    await app.vault.create(claudeMdPath, content);
-  }
+  await ensureDir(app, '.claude');
+  await ensureDir(app, '.claude/rules');
+  await writeFile(app, '.claude/CLAUDE.md', generateClaudeMd());
 }
 
 async function generateOpenCodeConfig(app: App, kbName: string): Promise<void> {
-  const agentsRulesDir = normalizePath('.agents/rules');
-  await ensureDir(app, agentsRulesDir);
-
-  const configPath = normalizePath('opencode.json');
-  const content = generateOpenCodeJson(kbName);
-
-  const existing = app.vault.getFileByPath(configPath);
-  if (existing) {
-    await app.vault.modify(existing, content);
-  } else {
-    await app.vault.create(configPath, content);
-  }
+  await ensureDir(app, '.agents/rules');
+  await writeFile(app, 'opencode.json', generateOpenCodeJson(kbName));
 }
 
 export function getRulesDir(platform: Platform): string {
@@ -63,19 +42,15 @@ export async function migratePlatform(
 
   await ensureDir(app, normalizePath(toRulesDir));
 
-  const fromFolder = app.vault.getFolderByPath(normalizePath(fromRulesDir));
-  if (fromFolder) {
-    for (const child of fromFolder.children) {
-      if (child.name.endsWith('.md')) {
-        const content = await app.vault.cachedRead(child as any);
-        const destPath = normalizePath(`${toRulesDir}/${child.name}`);
-        const destFile = app.vault.getFileByPath(destPath);
-        if (destFile) {
-          await app.vault.modify(destFile, content);
-        } else {
-          await app.vault.create(destPath, content);
-        }
-      }
+  const adapter = app.vault.adapter;
+  const fromDirPath = normalizePath(fromRulesDir);
+  if (await adapter.exists(fromDirPath)) {
+    const listing = await adapter.list(fromDirPath);
+    for (const filePath of listing.files) {
+      if (!filePath.endsWith('.md')) continue;
+      const filename = filePath.split('/').pop()!;
+      const content = await adapter.read(normalizePath(filePath));
+      await writeFile(app, `${toRulesDir}/${filename}`, content);
     }
   }
 
@@ -87,18 +62,13 @@ export async function migratePlatform(
 }
 
 async function cleanupPlatformConfig(app: App, platform: Platform): Promise<void> {
+  const adapter = app.vault.adapter;
   if (platform === 'claude-code') {
-    const claudeMd = app.vault.getFileByPath(normalizePath('.claude/CLAUDE.md'));
-    if (claudeMd) await app.vault.trash(claudeMd, true);
+    const path = normalizePath('.claude/CLAUDE.md');
+    if (await adapter.exists(path)) await adapter.remove(path);
   } else {
-    const openCodeJson = app.vault.getFileByPath(normalizePath('opencode.json'));
-    if (openCodeJson) await app.vault.trash(openCodeJson, true);
+    const path = normalizePath('opencode.json');
+    if (await adapter.exists(path)) await adapter.remove(path);
   }
 }
 
-async function ensureDir(app: App, path: string): Promise<void> {
-  const normalized = normalizePath(path);
-  if (!app.vault.getFolderByPath(normalized)) {
-    await app.vault.createFolder(normalized);
-  }
-}

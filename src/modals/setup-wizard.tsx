@@ -1,12 +1,16 @@
 import { App, Modal } from 'obsidian';
-import { StrictMode, useState } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
-import type { Platform } from '../types';
+import type { Manifest, Platform } from '../types';
 import { KNOWLEDGE_DIRS } from '../types';
-import { executeSetup, getSetupSteps, type SetupStep } from '../core/setup-executor';
+import { executeSetup, getSetupSteps, readManifest, type SetupStep } from '../core/setup-executor';
 import { BUNDLED_SKILLS } from '../assets/skills';
+import {
+  IconCircle, IconCircleDot, IconChevronRight, IconChevronDown,
+  IconAlertCircle, IconCheckCircle, IconCode, IconTerminal,
+} from '../views/Icons';
 
 /* ------------------------------------------------------------------ */
 /*  Modal wrapper                                                      */
@@ -51,40 +55,47 @@ export class SetupWizardModal extends Modal {
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-type WizardPhase = 'choose-platform' | 'preview' | 'running' | 'done';
+type WizardPhase = 'preview' | 'running' | 'done';
+
+/* ------------------------------------------------------------------ */
+/*  Phase step indicator                                               */
+/* ------------------------------------------------------------------ */
+
+const PHASES: { key: WizardPhase; label: string }[] = [
+  { key: 'preview', label: 'Preview' },
+  { key: 'running', label: 'Running' },
+  { key: 'done', label: 'Done' },
+];
+
+function PhaseSteps(props: { current: WizardPhase }) {
+  const currentIndex = PHASES.findIndex((p) => p.key === props.current);
+  return (
+    <div className="knowlery-wizard__phase-steps">
+      {PHASES.map((p, i) => {
+        const isDone = i < currentIndex;
+        const isActive = i === currentIndex;
+        let modifier = '';
+        if (isDone) modifier = ' is-done';
+        else if (isActive) modifier = ' is-active';
+        return (
+          <div key={p.key} className="knowlery-wizard__phase-step-wrapper">
+            {i > 0 && <div className="knowlery-wizard__phase-step-separator" />}
+            <div className={`knowlery-wizard__phase-step${modifier}`}>
+              <span className="knowlery-wizard__phase-step-dot">
+                {isDone ? <IconCheckCircle size={14} /> : isActive ? <IconCircleDot size={14} /> : <IconCircle size={14} />}
+              </span>
+              <span className="knowlery-wizard__phase-step-label">{p.label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
-
-function PlatformOption(props: {
-  value: Platform;
-  label: string;
-  description: string;
-  selected: boolean;
-  onSelect: (p: Platform) => void;
-}) {
-  return (
-    <div
-      className={`knowlery-wizard__platform-option ${props.selected ? 'is-selected' : ''}`}
-      onClick={() => props.onSelect(props.value)}
-      role="radio"
-      aria-checked={props.selected}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') props.onSelect(props.value);
-      }}
-    >
-      <span className="knowlery-wizard__radio">
-        {props.selected ? '\u25C9' : '\u25CB'}
-      </span>
-      <div className="knowlery-wizard__platform-label">
-        <strong>{props.label}</strong>
-        <span className="knowlery-wizard__platform-desc">{props.description}</span>
-      </div>
-    </div>
-  );
-}
 
 function PreviewSection(props: {
   title: string;
@@ -94,19 +105,98 @@ function PreviewSection(props: {
   const [open, setOpen] = useState(props.defaultOpen ?? false);
   return (
     <div className="knowlery-wizard__preview-section">
-      <div
+      <button
+        type="button"
         className="knowlery-wizard__preview-header"
-        onClick={() => setOpen(!open)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setOpen(!open);
-        }}
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
       >
-        <span className="knowlery-wizard__chevron">{open ? '\u25BC' : '\u25B6'}</span>
+        <span className="knowlery-icon-chevron">
+          {open ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+        </span>
         <span>{props.title}</span>
-      </div>
+      </button>
       {open && <div className="knowlery-wizard__preview-body">{props.children}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Platform selection card                                            */
+/* ------------------------------------------------------------------ */
+
+interface PlatformOption {
+  value: Platform;
+  label: string;
+  description: string;
+  Icon: React.ComponentType<{ size?: number }>;
+}
+
+const PLATFORM_OPTIONS: PlatformOption[] = [
+  {
+    value: 'claude-code',
+    label: 'Claude Code',
+    description: "Anthropic's hosted AI coding CLI",
+    Icon: IconCode,
+  },
+  {
+    value: 'opencode',
+    label: 'OpenCode',
+    description: 'Open-source, self-hostable alternative',
+    Icon: IconTerminal,
+  },
+];
+
+function PlatformGrid(props: {
+  value: Platform;
+  onChange: (p: Platform) => void;
+}) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const idx = PLATFORM_OPTIONS.findIndex((o) => o.value === props.value);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      props.onChange(PLATFORM_OPTIONS[(idx + 1) % PLATFORM_OPTIONS.length].value);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      props.onChange(PLATFORM_OPTIONS[(idx - 1 + PLATFORM_OPTIONS.length) % PLATFORM_OPTIONS.length].value);
+    }
+  };
+
+  return (
+    <div>
+      <div className="knowlery-section-label">Agent Engine</div>
+      <div
+        className="knowlery-wizard__platform-grid"
+        role="radiogroup"
+        aria-label="Agent Engine"
+        onKeyDown={handleKeyDown}
+      >
+        {PLATFORM_OPTIONS.map((opt) => {
+          const selected = props.value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`knowlery-wizard__platform-card${selected ? ' is-selected' : ''}`}
+              onClick={() => props.onChange(opt.value)}
+              tabIndex={selected ? 0 : -1}
+            >
+              {selected && (
+                <span className="knowlery-wizard__platform-card__check">
+                  <IconCheckCircle size={14} />
+                </span>
+              )}
+              <span className="knowlery-wizard__platform-card__icon">
+                <opt.Icon size={20} />
+              </span>
+              <span className="knowlery-wizard__platform-card__name">{opt.label}</span>
+              <span className="knowlery-wizard__platform-card__desc">{opt.description}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -118,10 +208,22 @@ function PreviewSection(props: {
 function SetupWizardContent(props: { onComplete: () => void }) {
   const plugin = usePlugin();
 
-  const [phase, setPhase] = useState<WizardPhase>('choose-platform');
+  const [existingManifest, setExistingManifest] = useState<Manifest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [phase, setPhase] = useState<WizardPhase>('preview');
   const [platform, setPlatform] = useState<Platform>('claude-code');
   const [completedSteps, setCompletedSteps] = useState<Set<SetupStep>>(new Set());
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    readManifest(plugin.app).then((m) => {
+      if (m) {
+        setExistingManifest(m);
+        setPlatform(m.platform);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   /* ---- setup handler ---- */
   const handleSetup = async () => {
@@ -145,37 +247,13 @@ function SetupWizardContent(props: { onComplete: () => void }) {
     }
   };
 
-  /* ---- phase: choose-platform ---- */
-  if (phase === 'choose-platform') {
+  const isReinstall = existingManifest !== null;
+
+  /* ---- loading ---- */
+  if (loading) {
     return (
       <div className="knowlery-wizard__phase">
-        <p className="knowlery-wizard__intro">
-          Choose which AI coding agent you use. This determines how Knowlery
-          writes its configuration files.
-        </p>
-
-        <div className="knowlery-wizard__platform-list">
-          <PlatformOption
-            value="claude-code"
-            label="Claude Code"
-            description="Anthropic's CLI agent (CLAUDE.md + .claude/commands)"
-            selected={platform === 'claude-code'}
-            onSelect={setPlatform}
-          />
-          <PlatformOption
-            value="opencode"
-            label="OpenCode"
-            description="Open-source alternative (AGENTS.md + .opencode/commands)"
-            selected={platform === 'opencode'}
-            onSelect={setPlatform}
-          />
-        </div>
-
-        <div className="knowlery-wizard__actions">
-          <button className="mod-cta" onClick={() => setPhase('preview')}>
-            Next
-          </button>
-        </div>
+        <p className="knowlery-wizard__intro">Checking vault state…</p>
       </div>
     );
   }
@@ -187,16 +265,24 @@ function SetupWizardContent(props: { onComplete: () => void }) {
 
     return (
       <div className="knowlery-wizard__phase">
+        <PhaseSteps current="preview" />
+
         <p className="knowlery-wizard__intro">
-          Review what Knowlery will create in your vault.
+          {isReinstall
+            ? 'Review what Knowlery will update in your vault. Existing files will be overwritten.'
+            : 'Review what Knowlery will create in your vault.'}
         </p>
 
         {error && (
           <div className="knowlery-wizard__error">
-            <span className="knowlery-wizard__error-icon">{'\u2715'}</span>
-            {error}
+            <span className="knowlery-wizard__error-icon">
+              <IconAlertCircle size={16} />
+            </span>
+            <span>{error}</span>
           </div>
         )}
+
+        <PlatformGrid value={platform} onChange={setPlatform} />
 
         <PreviewSection title={`Skills (${BUNDLED_SKILLS.length})`} defaultOpen>
           <ul className="knowlery-wizard__skill-list">
@@ -228,8 +314,8 @@ function SetupWizardContent(props: { onComplete: () => void }) {
         <PreviewSection title="Agent configuration">
           <p>
             {platform === 'claude-code'
-              ? 'Creates CLAUDE.md with knowledge-base instructions and skill commands in .claude/commands/'
-              : 'Creates AGENTS.md with knowledge-base instructions and skill commands in .opencode/commands/'}
+              ? 'Creates .claude/CLAUDE.md with @includes for KNOWLEDGE.md and SCHEMA.md, plus rules in .claude/rules/'
+              : 'Creates opencode.json with instructions referencing KNOWLEDGE.md and SCHEMA.md, plus rules in .agents/rules/'}
           </p>
         </PreviewSection>
 
@@ -241,9 +327,8 @@ function SetupWizardContent(props: { onComplete: () => void }) {
         </PreviewSection>
 
         <div className="knowlery-wizard__actions">
-          <button onClick={() => setPhase('choose-platform')}>Back</button>
-          <button className="mod-cta" onClick={handleSetup}>
-            Set up vault
+          <button type="button" className="mod-cta" onClick={handleSetup}>
+            {isReinstall ? 'Update vault' : 'Set up vault'}
           </button>
         </div>
       </div>
@@ -253,16 +338,30 @@ function SetupWizardContent(props: { onComplete: () => void }) {
   /* ---- phase: running ---- */
   if (phase === 'running') {
     const steps = getSetupSteps();
+    const totalSteps = steps.length;
     return (
       <div className="knowlery-wizard__phase">
-        <p className="knowlery-wizard__intro">Setting up your vault...</p>
+        <PhaseSteps current="running" />
+
+        <div>
+          <div
+            className="knowlery-wizard__progress-track"
+            style={{ '--knowlery-progress': `${(completedSteps.size / totalSteps) * 100}%` } as React.CSSProperties}
+          >
+            <div className="knowlery-wizard__progress-fill" />
+          </div>
+          <span className="knowlery-wizard__progress-label">
+            Step {completedSteps.size} of {totalSteps}
+          </span>
+        </div>
+
         <ul className="knowlery-wizard__progress-list">
           {steps.map((s) => {
             const done = completedSteps.has(s.step);
             return (
               <li key={s.step} className={done ? 'is-done' : ''}>
                 <span className="knowlery-wizard__step-icon">
-                  {done ? '\u2713' : '\u25CB'}
+                  {done ? <IconCheckCircle size={16} /> : <IconCircle size={16} />}
                 </span>
                 {s.label}
               </li>
@@ -276,13 +375,30 @@ function SetupWizardContent(props: { onComplete: () => void }) {
   /* ---- phase: done ---- */
   return (
     <div className="knowlery-wizard__phase knowlery-wizard__done">
-      <p className="knowlery-wizard__success">Your vault is ready!</p>
-      <p>
-        Knowlery has installed {BUNDLED_SKILLS.length} skills and configured your
-        vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.
+      <PhaseSteps current="done" />
+
+      <div className="knowlery-wizard__success-icon">
+        <IconCheckCircle size={40} />
+      </div>
+      <p className="knowlery-wizard__success">
+        {isReinstall ? 'Vault updated!' : 'Your vault is ready!'}
       </p>
+      <p>
+        Knowlery has {isReinstall ? 'updated' : 'installed'} {BUNDLED_SKILLS.length} skills
+        and configured your vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.
+      </p>
+
+      <div className="knowlery-wizard__next-steps knowlery-card">
+        <div className="knowlery-section-label">What to do next</div>
+        <ol className="knowlery-wizard__next-steps-list">
+          <li>Open <strong>KNOWLEDGE.md</strong> in the Config tab and describe your knowledge base</li>
+          <li>Try the <strong>cook</strong> skill — ask Claude Code to cook a new note</li>
+          <li>Browse installed skills in the <strong>Skills tab</strong></li>
+        </ol>
+      </div>
+
       <div className="knowlery-wizard__actions">
-        <button className="mod-cta" onClick={props.onComplete}>
+        <button type="button" className="mod-cta" onClick={props.onComplete}>
           Open dashboard
         </button>
       </div>

@@ -28,6 +28,22 @@ export const SkillsLockSchema = z.object({
 });
 export type SkillsLock = z.infer<typeof SkillsLockSchema>;
 
+export type SkillKind = 'knowledge' | 'tooling';
+
+export interface SkillParameter {
+  flag: string;
+  type: string;
+  description: string;
+}
+
+export interface SkillDetail {
+  whatItDoes?: string;
+  bestFor?: string[];
+  proTip?: string;
+  example?: string;
+  parameters?: SkillParameter[];
+}
+
 export interface SkillInfo {
   name: string;
   source: 'builtin' | 'custom';
@@ -36,6 +52,8 @@ export interface SkillInfo {
   description: string;
   emoji: string;
   content: string;
+  kind: SkillKind;
+  detail?: SkillDetail;
 }
 
 export interface RuleInfo {
@@ -67,7 +85,8 @@ export interface ConfigIntegrity {
   rulesConfigured: boolean;
   skillsComplete: { present: string[]; missing: string[] };
   obsidianCli: boolean;
-  nodeJs: { detected: boolean; version: string | null };
+  claudeCodeCli: boolean;
+  opencodeCli: boolean;
   platform: Platform;
 }
 
@@ -88,10 +107,9 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
 export const KNOWLEDGE_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
 
 export const BUILTIN_SKILL_NAMES = [
-  'cook', 'ask', 'health', 'wiki', 'prep', 'trace',
-  'connect', 'ideas', 'challenge', 'drift', 'organize', 'mise',
+  'cook', 'ask', 'explore', 'challenge', 'ideas', 'audit', 'organize',
   'obsidian-cli', 'obsidian-markdown', 'obsidian-bases',
-  'json-canvas', 'defuddle', 'vault-conventions', 'vault-thinking',
+  'json-canvas', 'defuddle', 'vault-conventions',
 ] as const;
 
 export type DashboardTab = 'skills' | 'config' | 'health';

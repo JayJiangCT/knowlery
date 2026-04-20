@@ -1,9 +1,101 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { normalizePath, Notice } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
 import type { RuleInfo } from '../types';
 import { listRules, deleteRule } from '../core/rule-manager';
 import { RuleEditorModal } from '../modals/rule-editor';
+import { IconFileText, IconPlus, IconArrowRight, IconMoreHorizontal } from './Icons';
+
+/* ------------------------------------------------------------------ */
+/*  RuleCard                                                           */
+/* ------------------------------------------------------------------ */
+
+function RuleCard(props: {
+  rule: RuleInfo;
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { rule, onView, onEdit, onDelete } = props;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setConfirmDelete(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [menuOpen]);
+
+  const firstLine = rule.content
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l.length > 0) ?? '';
+  const preview = firstLine.length > 80 ? firstLine.slice(0, 80) + '…' : firstLine;
+
+  const handleDeleteClick = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setMenuOpen(false);
+    setConfirmDelete(false);
+    onDelete();
+  };
+
+  return (
+    <div className="knowlery-card">
+      <div className="knowlery-config__rule-card-inner">
+        <span className="knowlery-config__rule-card-icon" aria-hidden="true">
+          <IconFileText size={16} />
+        </span>
+        <div className="knowlery-config__rule-card-body">
+          <div className="knowlery-config__rule-name">{rule.name}</div>
+          {preview && (
+            <div className="knowlery-config__rule-preview">{preview}</div>
+          )}
+        </div>
+        <div className="knowlery-config__rule-overflow" ref={menuRef}>
+          <button
+            className="knowlery-btn knowlery-btn--ghost"
+            aria-label="More options"
+            onClick={() => { setMenuOpen((v) => !v); setConfirmDelete(false); }}
+          >
+            <IconMoreHorizontal size={16} />
+          </button>
+          {menuOpen && (
+            <div className="knowlery-config__rule-menu">
+              <button
+                className="knowlery-btn knowlery-btn--ghost"
+                onClick={() => { setMenuOpen(false); onView(); }}
+              >
+                View
+              </button>
+              <button
+                className="knowlery-btn knowlery-btn--ghost"
+                onClick={() => { setMenuOpen(false); onEdit(); }}
+              >
+                Edit
+              </button>
+              <button
+                className={`knowlery-btn knowlery-btn--ghost knowlery-btn--danger${confirmDelete ? ' is-confirming' : ''}`}
+                onClick={handleDeleteClick}
+              >
+                {confirmDelete ? 'Confirm delete' : 'Delete'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  ConfigTab                                                          */
@@ -54,40 +146,57 @@ export function ConfigTab() {
 
   return (
     <div className="knowlery-config">
-      {/* Files section */}
-      <div className="knowlery-config__section">
-        <h3 className="knowlery-config__heading">Files</h3>
-        <div className="knowlery-config__file-row">
-          <span>KNOWLEDGE.md</span>
-          <button onClick={() => openFile('KNOWLEDGE.md')}>Open</button>
-        </div>
-        <div className="knowlery-config__file-row">
-          <span>SCHEMA.md</span>
-          <button onClick={() => openFile('SCHEMA.md')}>Open</button>
-        </div>
+      {/* Schema & Guidance section */}
+      <div className="knowlery-section-label">
+        <span>Schema &amp; Guidance</span>
       </div>
 
-      {/* Rules section */}
-      <div className="knowlery-config__section">
-        <h3 className="knowlery-config__heading">Rules</h3>
+      <div className="knowlery-config__files">
+        <button
+          className="knowlery-card knowlery-config__file-row"
+          onClick={() => openFile('KNOWLEDGE.md')}
+        >
+          <IconFileText size={16} aria-hidden="true" />
+          <span className="knowlery-config__file-row__label">KNOWLEDGE.md</span>
+          <IconArrowRight size={14} aria-hidden="true" />
+        </button>
 
+        <button
+          className="knowlery-card knowlery-config__file-row"
+          onClick={() => openFile('SCHEMA.md')}
+        >
+          <IconFileText size={16} aria-hidden="true" />
+          <span className="knowlery-config__file-row__label">SCHEMA.md</span>
+          <IconArrowRight size={14} aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Agent Rules section */}
+      <div className="knowlery-section-label">
+        <span>Agent Rules ({rules.length})</span>
+        <button
+          className="knowlery-section-label__action"
+          aria-label="Add rule"
+          onClick={handleAdd}
+        >
+          <IconPlus size={14} />
+        </button>
+      </div>
+
+      <div className="knowlery-config__rule-sections">
         {rules.map((rule) => (
-          <div key={rule.filename} className="knowlery-config__rule-row">
-            <span className="knowlery-config__rule-icon">{'\uD83D\uDCC4'}</span>
-            <span className="knowlery-config__rule-name">{rule.name}</span>
-            <div className="knowlery-config__rule-actions">
-              <button onClick={() => handleView(rule)}>View</button>
-              <button onClick={() => handleEdit(rule)}>Edit</button>
-              <button onClick={() => handleDelete(rule)}>Delete</button>
-            </div>
-          </div>
+          <RuleCard
+            key={rule.filename}
+            rule={rule}
+            onView={() => handleView(rule)}
+            onEdit={() => handleEdit(rule)}
+            onDelete={() => handleDelete(rule)}
+          />
         ))}
 
-        {rules.length === 0 && <p>No rules configured yet.</p>}
-
-        <button className="knowlery-config__add-rule" onClick={handleAdd}>
-          + Add rule
-        </button>
+        {rules.length === 0 && (
+          <p className="knowlery-config__empty">No rules configured yet.</p>
+        )}
       </div>
     </div>
   );

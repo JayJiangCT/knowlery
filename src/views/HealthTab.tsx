@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePlugin, useSettings } from '../context';
 import type { VaultStats, DiagnosisResult, ConfigIntegrity } from '../types';
 import { getVaultStats, runDiagnosis, checkConfigIntegrity } from '../core/vault-health';
-import { detectNode } from '../core/node-detect';
+import {
+  IconChevronRight,
+  IconChevronDown,
+  IconCheckCircle,
+  IconAlertCircle,
+  IconPlay,
+} from './Icons';
 
 /* ------------------------------------------------------------------ */
 /*  ExpandableList                                                     */
@@ -19,14 +25,17 @@ function ExpandableList(props: {
     <div className="knowlery-health__expandable">
       <div
         className="knowlery-health__expandable-header"
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((v) => !v)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') setOpen(!open);
+          if (e.key === 'Enter' || e.key === ' ') setOpen((v) => !v);
         }}
+        aria-expanded={open}
       >
-        <span>{open ? '\u25BC' : '\u25B6'}</span>
+        <span className="knowlery-icon-chevron">
+          {open ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+        </span>
         <span>
           {props.title} ({props.items.length})
         </span>
@@ -49,6 +58,48 @@ function ExpandableList(props: {
 }
 
 /* ------------------------------------------------------------------ */
+/*  IntegrityRow                                                       */
+/* ------------------------------------------------------------------ */
+
+type IntegrityState = 'ok' | 'fail' | 'warn';
+
+function IntegrityRow(props: {
+  state: IntegrityState;
+  label: string;
+  detail?: string;
+  onClick?: () => void;
+}) {
+  const { state, label, detail, onClick } = props;
+  const isClickable = state === 'fail' && onClick !== undefined;
+
+  return (
+    <div
+      className={`knowlery-integrity-row${isClickable ? ' is-clickable' : ''}`}
+      onClick={isClickable ? onClick : undefined}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onKeyDown={
+        isClickable
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.(); }
+          : undefined
+      }
+    >
+      <span className={`knowlery-integrity-row__icon is-${state}`} aria-hidden="true">
+        {state === 'ok' ? (
+          <IconCheckCircle size={16} />
+        ) : (
+          <IconAlertCircle size={16} />
+        )}
+      </span>
+      <span className="knowlery-integrity-row__label">{label}</span>
+      {detail && (
+        <span className="knowlery-integrity-row__action">{detail}</span>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  HealthTab                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -59,9 +110,8 @@ export function HealthTab() {
   const [stats, setStats] = useState<VaultStats | null>(null);
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [diagnosisRunning, setDiagnosisRunning] = useState(false);
+  const [diagnosisTime, setDiagnosisTime] = useState<Date | null>(null);
   const [integrity, setIntegrity] = useState<ConfigIntegrity | null>(null);
-  const [nodeVersion, setNodeVersion] = useState<string | null>(null);
-  const [nodeDetected, setNodeDetected] = useState(false);
 
   const loadStats = useCallback(() => {
     const s = getVaultStats(plugin.app);
@@ -69,15 +119,9 @@ export function HealthTab() {
   }, [plugin]);
 
   const loadIntegrity = useCallback(async () => {
-    const result = checkConfigIntegrity(plugin.app, settings.platform);
+    const result = await checkConfigIntegrity(plugin.app, settings.platform);
     setIntegrity(result);
-
-    const nodeResult = await detectNode(
-      settings.nodePath || undefined,
-    );
-    setNodeDetected(nodeResult.detected);
-    setNodeVersion(nodeResult.version);
-  }, [plugin, settings.platform, settings.nodePath]);
+  }, [plugin, settings.platform]);
 
   useEffect(() => {
     loadStats();
@@ -94,113 +138,161 @@ export function HealthTab() {
     try {
       const result = await runDiagnosis(plugin.app);
       setDiagnosis(result);
+      setDiagnosisTime(new Date());
     } finally {
       setDiagnosisRunning(false);
     }
   };
 
+  const openSettings = () => {
+    // Open Obsidian settings to the Knowlery tab
+    (plugin.app as any).setting?.open();
+    (plugin.app as any).setting?.openTabById?.(plugin.manifest.id);
+  };
+
+  const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="knowlery-health">
-      {/* Content Statistics */}
-      <div className="knowlery-health__section">
-        <h3 className="knowlery-health__heading">Content Statistics</h3>
-        {stats && (
-          <div className="knowlery-health__grid">
-            <Stat label="Notes" value={stats.notesCount} />
-            <Stat label="Wikilinks" value={stats.wikilinksCount} />
-            <Stat label="Entities" value={stats.entitiesCount} />
-            <Stat label="Concepts" value={stats.conceptsCount} />
-            <Stat label="Comparisons" value={stats.comparisonsCount} />
-            <Stat label="Queries" value={stats.queriesCount} />
-          </div>
-        )}
+      {/* 1. Configuration Integrity — FIRST */}
+      <div className="knowlery-section-label">
+        <span>Configuration</span>
+      </div>
+      {integrity && (
+        <div className="knowlery-card knowlery-health__integrity-card">
+          <IntegrityRow
+            state={integrity.knowledgeMdExists ? 'ok' : 'fail'}
+            label="KNOWLEDGE.md"
+            detail={integrity.knowledgeMdExists ? undefined : 'Missing'}
+            onClick={integrity.knowledgeMdExists ? undefined : openSettings}
+          />
+          <IntegrityRow
+            state={integrity.schemaMdExists ? 'ok' : 'fail'}
+            label="SCHEMA.md"
+            detail={integrity.schemaMdExists ? undefined : 'Missing'}
+            onClick={integrity.schemaMdExists ? undefined : openSettings}
+          />
+          <IntegrityRow
+            state={integrity.knowledgeDirsComplete.missing.length === 0 ? 'ok' : 'fail'}
+            label="Knowledge directories"
+            detail={
+              integrity.knowledgeDirsComplete.missing.length === 0
+                ? undefined
+                : `Missing: ${integrity.knowledgeDirsComplete.missing.join(', ')}`
+            }
+          />
+          <IntegrityRow
+            state={integrity.agentConfigExists ? 'ok' : 'fail'}
+            label="Agent configuration"
+            detail={integrity.agentConfigExists ? undefined : 'Missing'}
+            onClick={integrity.agentConfigExists ? undefined : openSettings}
+          />
+          <IntegrityRow
+            state={integrity.rulesConfigured ? 'ok' : 'fail'}
+            label="Rules configured"
+            detail={integrity.rulesConfigured ? undefined : 'None found'}
+          />
+          <IntegrityRow
+            state={integrity.skillsComplete.missing.length === 0 ? 'ok' : 'fail'}
+            label="Skills installed"
+            detail={
+              integrity.skillsComplete.missing.length === 0
+                ? `${integrity.skillsComplete.present.length} installed`
+                : `${integrity.skillsComplete.missing.length} missing`
+            }
+          />
+          <IntegrityRow
+            state={integrity.obsidianCli ? 'ok' : 'warn'}
+            label="Obsidian CLI"
+            detail={integrity.obsidianCli ? 'Enabled' : 'Not enabled'}
+          />
+          <IntegrityRow
+            state={integrity.claudeCodeCli ? 'ok' : 'warn'}
+            label="Claude Code CLI detected"
+            detail={integrity.claudeCodeCli ? 'Found' : 'Not found'}
+          />
+          <IntegrityRow
+            state={integrity.opencodeCli ? 'ok' : 'warn'}
+            label="OpenCode CLI detected"
+            detail={integrity.opencodeCli ? 'Found' : 'Not found'}
+          />
+          <IntegrityRow
+            state="ok"
+            label="Platform"
+            detail={settings.platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}
+          />
+        </div>
+      )}
+
+      {/* 2. Content Stats */}
+      <div className="knowlery-section-label knowlery-health__section-gap">
+        <span>Content</span>
+      </div>
+      {stats && (
+        <div className="knowlery-stat-grid">
+          <StatCard label="Notes" value={stats.notesCount} />
+          <StatCard label="Wikilinks" value={stats.wikilinksCount} />
+          <StatCard label="Entities" value={stats.entitiesCount} />
+          <StatCard label="Concepts" value={stats.conceptsCount} />
+          <StatCard label="Comparisons" value={stats.comparisonsCount} />
+          <StatCard label="Queries" value={stats.queriesCount} />
+        </div>
+      )}
+
+      {/* 3. Structure */}
+      <div className="knowlery-section-label knowlery-health__section-gap">
+        <span>Structure</span>
+        <button
+          className="knowlery-section-label__action"
+          aria-label="Run scan"
+          onClick={handleRunDiagnosis}
+          disabled={diagnosisRunning}
+        >
+          <IconPlay size={12} />
+        </button>
       </div>
 
-      {/* Structural Health */}
-      <div className="knowlery-health__section">
-        <h3 className="knowlery-health__heading">Structural Health</h3>
-        {!diagnosis && (
-          <button onClick={handleRunDiagnosis} disabled={diagnosisRunning}>
-            {diagnosisRunning ? 'Running...' : 'Run diagnosis'}
-          </button>
-        )}
-        {diagnosis && (
-          <>
-            <ExpandableList
-              title="Orphan notes"
-              items={diagnosis.orphanNotes}
-            />
-            <ExpandableList
-              title="Broken wikilinks"
-              items={diagnosis.brokenWikilinks.map(
-                (b) => `${b.file} \u2192 [[${b.link}]]`,
-              )}
-            />
-            <ExpandableList
-              title="Missing frontmatter"
-              items={diagnosis.missingFrontmatter.map(
-                (m) => `${m.file}: ${m.missingFields.join(', ')}`,
-              )}
-            />
-          </>
-        )}
-      </div>
+      {!diagnosis && !diagnosisRunning && (
+        <button
+          className="knowlery-btn knowlery-btn--outline is-full-width"
+          onClick={handleRunDiagnosis}
+        >
+          <IconPlay size={14} />
+          Run diagnosis
+        </button>
+      )}
 
-      {/* Configuration Integrity */}
-      <div className="knowlery-health__section">
-        <h3 className="knowlery-health__heading">Configuration Integrity</h3>
-        {integrity && (
-          <div className="knowlery-health__checks">
-            <Check
-              ok={integrity.knowledgeMdExists}
-              label="KNOWLEDGE.md"
-              detail={integrity.knowledgeMdExists ? 'Found' : 'Missing'}
-            />
-            <Check
-              ok={integrity.schemaMdExists}
-              label="SCHEMA.md"
-              detail={integrity.schemaMdExists ? 'Found' : 'Missing'}
-            />
-            <Check
-              ok={integrity.knowledgeDirsComplete.missing.length === 0}
-              label="Knowledge directories"
-              detail={
-                integrity.knowledgeDirsComplete.missing.length === 0
-                  ? 'All present'
-                  : `Missing: ${integrity.knowledgeDirsComplete.missing.join(', ')}`
-              }
-            />
-            <Check
-              ok={integrity.agentConfigExists}
-              label="Agent configuration"
-              detail={integrity.agentConfigExists ? 'Found' : 'Missing'}
-            />
-            <Check
-              ok={integrity.rulesConfigured}
-              label="Rules configured"
-              detail={integrity.rulesConfigured ? 'Yes' : 'No'}
-            />
-            <Check
-              ok={integrity.skillsComplete.missing.length === 0}
-              label="Skills installed"
-              detail={
-                integrity.skillsComplete.missing.length === 0
-                  ? `All ${integrity.skillsComplete.present.length} present`
-                  : `Missing: ${integrity.skillsComplete.missing.length}`
-              }
-            />
-            <Check
-              ok={nodeDetected}
-              label="Node.js"
-              detail={
-                nodeDetected
-                  ? `Detected (${nodeVersion})`
-                  : 'Not detected'
-              }
-            />
-          </div>
-        )}
-      </div>
+      {diagnosisRunning && (
+        <div className="knowlery-loading">Running diagnosis…</div>
+      )}
+
+      {diagnosis && (
+        <>
+          {diagnosisTime && (
+            <div className="knowlery-health__diagnosis-time">
+              Last run: {formatTime(diagnosisTime)}
+            </div>
+          )}
+          <ExpandableList
+            title="Orphan notes"
+            items={diagnosis.orphanNotes}
+          />
+          <ExpandableList
+            title="Broken wikilinks"
+            items={diagnosis.brokenWikilinks.map(
+              (b) => `${b.file} \u2192 [[${b.link}]]`,
+            )}
+          />
+          <ExpandableList
+            title="Missing frontmatter"
+            items={diagnosis.missingFrontmatter.map(
+              (m) => `${m.file}: ${m.missingFields.join(', ')}`,
+            )}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -209,23 +301,11 @@ export function HealthTab() {
 /*  Helper components                                                  */
 /* ------------------------------------------------------------------ */
 
-function Stat(props: { label: string; value: number }) {
+function StatCard(props: { label: string; value: number }) {
   return (
-    <div className="knowlery-health__stat">
-      <span className="knowlery-health__stat-value">{props.value}</span>
-      <span className="knowlery-health__stat-label">{props.label}</span>
-    </div>
-  );
-}
-
-function Check(props: { ok: boolean; label: string; detail: string }) {
-  return (
-    <div className="knowlery-health__check">
-      <span className="knowlery-health__check-icon">
-        {props.ok ? '\u2713' : '\u2717'}
-      </span>
-      <span>{props.label}</span>
-      <span className="knowlery-health__check-detail">{props.detail}</span>
+    <div className="knowlery-stat-card">
+      <span className="knowlery-stat-card__number">{props.value}</span>
+      <span className="knowlery-stat-card__label">{props.label}</span>
     </div>
   );
 }

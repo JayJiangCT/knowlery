@@ -66,18 +66,25 @@ function SkillBrowserContent(props: { onClose: () => void }) {
   const handleSearch = async () => {
     if (!query.trim()) return;
 
+    const sanitized = query.trim().replace(/[^a-zA-Z0-9\s\-_]/g, '');
+    if (!sanitized) {
+      setError('Query contains no valid characters. Use letters, numbers, hyphens, and underscores.');
+      return;
+    }
+
     setSearching(true);
     setError(null);
     setResults([]);
     setSearched(true);
 
     try {
-      const { exec } = await import('child_process');
+      const { execFile } = await import('child_process');
       const nodePath = plugin.settings.nodePath || 'node';
 
       const output = await new Promise<string>((resolve, reject) => {
-        exec(
-          `"${nodePath}" -e "const{execSync}=require('child_process');process.stdout.write(execSync('npx skills search ${query.replace(/"/g, '\\"')}',{encoding:'utf-8'}))"`,
+        execFile(
+          nodePath,
+          ['-e', `const{execFileSync}=require('child_process');process.stdout.write(execFileSync('npx',['skills','search','${sanitized}'],{encoding:'utf-8'}))`],
           { timeout: 30000 },
           (err, stdout, stderr) => {
             if (err) {

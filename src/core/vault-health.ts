@@ -1,4 +1,4 @@
-import { App, normalizePath, TFile, TFolder } from 'obsidian';
+import { App, normalizePath, TFile } from 'obsidian';
 import type {
   ConfigIntegrity,
   DiagnosisResult,
@@ -7,6 +7,7 @@ import type {
 } from '../types';
 import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
 import { getRulesDir } from './platform-adapter';
+import { detectAgentCli } from './cli-detect';
 
 export function getVaultStats(app: App): VaultStats {
   const mdFiles = app.vault.getMarkdownFiles();
@@ -121,45 +122,68 @@ function isSystemFile(path: string): boolean {
   return path.startsWith('.') || path === 'KNOWLEDGE.md' || path === 'SCHEMA.md';
 }
 
-export function checkConfigIntegrity(app: App, platform: Platform): ConfigIntegrity {
-  const existingDirs = KNOWLEDGE_DIRS.filter(
-    d => app.vault.getFolderByPath(normalizePath(d)) !== null
-  );
-  const missingDirs = KNOWLEDGE_DIRS.filter(
-    d => app.vault.getFolderByPath(normalizePath(d)) === null
-  );
+export async function checkConfigIntegrity(app: App, platform: Platform): Promise<ConfigIntegrity> {
+  const adapter = app.vault.adapter;
+
+  const existingDirs: string[] = [];
+  const missingDirs: string[] = [];
+  for (const d of KNOWLEDGE_DIRS) {
+    if (app.vault.getFolderByPath(normalizePath(d))) {
+      existingDirs.push(d);
+    } else {
+      missingDirs.push(d);
+    }
+  }
 
   const rulesDir = getRulesDir(platform);
-  const rulesFolder = app.vault.getFolderByPath(normalizePath(rulesDir));
-  const rulesConfigured = rulesFolder !== null && rulesFolder.children.length > 0;
+  const rulesDirPath = normalizePath(rulesDir);
+  let rulesConfigured = false;
+  if (await adapter.exists(rulesDirPath)) {
+    const listing = await adapter.list(rulesDirPath);
+    rulesConfigured = listing.files.length > 0;
+  }
 
   const presentSkills: string[] = [];
   const missingSkills: string[] = [];
   for (const name of BUILTIN_SKILL_NAMES) {
     const path = normalizePath(`.agents/skills/${name}/SKILL.md`);
-    if (app.vault.getFileByPath(path)) {
+    if (await adapter.exists(path)) {
       presentSkills.push(name);
     } else {
       missingSkills.push(name);
     }
   }
 
-  const agentConfigExists = platform === 'claude-code'
-    ? app.vault.getFileByPath(normalizePath('.claude/CLAUDE.md')) !== null
-    : app.vault.getFileByPath(normalizePath('opencode.json')) !== null;
+  const agentConfigPath = platform === 'claude-code'
+    ? normalizePath('.claude/CLAUDE.md')
+    : normalizePath('opencode.json');
+  const agentConfigExists = await adapter.exists(agentConfigPath);
+
+  let obsidianCli = false;
+  try {
+    const electron = (window as any).electron;
+    if (electron?.ipcRenderer) {
+      obsidianCli = !!electron.ipcRenderer.sendSync('cli', null);
+    }
+  } catch {
+    // Not available on mobile or restricted environments
+  }
+
+  const cliDetection = await detectAgentCli();
 
   return {
     knowledgeMdExists: app.vault.getFileByPath(normalizePath('KNOWLEDGE.md')) !== null,
     schemaMdExists: app.vault.getFileByPath(normalizePath('SCHEMA.md')) !== null,
     knowledgeDirsComplete: {
-      exists: [...existingDirs],
-      missing: [...missingDirs],
+      exists: existingDirs,
+      missing: missingDirs,
     },
     agentConfigExists,
     rulesConfigured,
     skillsComplete: { present: presentSkills, missing: missingSkills },
-    obsidianCli: false,
-    nodeJs: { detected: false, version: null },
+    obsidianCli,
+    claudeCodeCli: cliDetection.claudeCode.installed,
+    opencodeCli: cliDetection.opencode.installed,
     platform,
   };
 }

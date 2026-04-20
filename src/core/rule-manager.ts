@@ -1,7 +1,8 @@
-import { App, normalizePath, TFile } from 'obsidian';
+import { App, normalizePath } from 'obsidian';
 import type { Platform, RuleInfo } from '../types';
 import { RULE_TEMPLATES, type RuleTemplate } from '../assets/rules';
 import { getRulesDir } from './platform-adapter';
+import { ensureDir, writeFile } from './vault-io';
 
 export function getRuleTemplates(): RuleTemplate[] {
   return RULE_TEMPLATES;
@@ -9,17 +10,19 @@ export function getRuleTemplates(): RuleTemplate[] {
 
 export async function listRules(app: App, platform: Platform): Promise<RuleInfo[]> {
   const rulesDir = getRulesDir(platform);
-  const folder = app.vault.getFolderByPath(normalizePath(rulesDir));
-  if (!folder) return [];
+  const adapter = app.vault.adapter;
+  const dirPath = normalizePath(rulesDir);
+  if (!(await adapter.exists(dirPath))) return [];
 
+  const listing = await adapter.list(dirPath);
   const rules: RuleInfo[] = [];
-  for (const child of folder.children) {
-    if (!(child instanceof TFile) || !child.name.endsWith('.md')) continue;
-
-    const content = await app.vault.cachedRead(child);
+  for (const filePath of listing.files) {
+    if (!filePath.endsWith('.md')) continue;
+    const filename = filePath.split('/').pop()!;
+    const content = await adapter.read(normalizePath(filePath));
     rules.push({
-      name: child.basename,
-      filename: child.name,
+      name: filename.replace(/\.md$/, ''),
+      filename,
       content,
     });
   }
@@ -33,9 +36,9 @@ export async function readRule(
   filename: string,
 ): Promise<string | null> {
   const rulesDir = getRulesDir(platform);
-  const file = app.vault.getFileByPath(normalizePath(`${rulesDir}/${filename}`));
-  if (!file) return null;
-  return app.vault.cachedRead(file);
+  const path = normalizePath(`${rulesDir}/${filename}`);
+  if (!(await app.vault.adapter.exists(path))) return null;
+  return app.vault.adapter.read(path);
 }
 
 export async function writeRule(
@@ -45,15 +48,8 @@ export async function writeRule(
   content: string,
 ): Promise<void> {
   const rulesDir = getRulesDir(platform);
-  await ensureDir(app, normalizePath(rulesDir));
-
-  const filePath = normalizePath(`${rulesDir}/${filename}`);
-  const existing = app.vault.getFileByPath(filePath);
-  if (existing) {
-    await app.vault.modify(existing, content);
-  } else {
-    await app.vault.create(filePath, content);
-  }
+  await ensureDir(app, rulesDir);
+  await writeFile(app, `${rulesDir}/${filename}`, content);
 }
 
 export async function deleteRule(
@@ -62,9 +58,9 @@ export async function deleteRule(
   filename: string,
 ): Promise<void> {
   const rulesDir = getRulesDir(platform);
-  const file = app.vault.getFileByPath(normalizePath(`${rulesDir}/${filename}`));
-  if (file) {
-    await app.vault.trash(file, true);
+  const path = normalizePath(`${rulesDir}/${filename}`);
+  if (await app.vault.adapter.exists(path)) {
+    await app.vault.adapter.remove(path);
   }
 }
 
@@ -77,9 +73,3 @@ export async function installDefaultRules(
   }
 }
 
-async function ensureDir(app: App, path: string): Promise<void> {
-  const normalized = normalizePath(path);
-  if (!app.vault.getFolderByPath(normalized)) {
-    await app.vault.createFolder(normalized);
-  }
-}

@@ -52,13 +52,26 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addSettingTab(new KnowlerySettingTab(this.app, this));
 
-    this.app.workspace.onLayoutReady(() => {
-      if (!isVaultInitialized(this.app)) {
+    this.app.workspace.onLayoutReady(async () => {
+      if (!(await isVaultInitialized(this.app))) {
         new Notice(
           'Knowlery: This vault isn\'t set up for AI yet. Use the command palette to initialize.',
           10000,
         );
       }
+
+      let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+      const throttledRefresh = () => {
+        if (refreshTimer) return;
+        refreshTimer = setTimeout(() => {
+          refreshTimer = null;
+          this.events.trigger('dashboard-refresh');
+        }, 5000);
+      };
+      this.registerEvent(this.app.vault.on('create', throttledRefresh));
+      this.registerEvent(this.app.vault.on('delete', throttledRefresh));
+      this.registerEvent(this.app.vault.on('rename', throttledRefresh));
+      this.registerEvent(this.app.vault.on('modify', throttledRefresh));
     });
   }
 

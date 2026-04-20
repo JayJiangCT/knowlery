@@ -1,6 +1,9 @@
 .claude/
 .agents/
+.knowlery/
 .remember/
+.superpowers/
+docs/
 .envrc
 skills-lock.json
 

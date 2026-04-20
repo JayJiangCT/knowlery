@@ -6,29 +6,39 @@ export interface RuleTemplate {
 
 export const RULE_TEMPLATES: RuleTemplate[] = [
   {
-    name: 'Obsidian CLI',
-    filename: 'obsidian-cli.md',
-    content: `# Obsidian CLI
-
-When interacting with this Obsidian vault:
-
-- Use the Obsidian CLI to read, create, search, and manage notes
-- Prefer \`obsidian-cli\` commands over direct file system access
-- Respect the vault's folder structure and naming conventions
-`,
-  },
-  {
     name: 'Obsidian markdown writing',
     filename: 'obsidian-markdown-writing.md',
     content: `# Obsidian Markdown Writing
 
-When writing markdown in this vault:
+Before creating or editing any note, use the \`obsidian-markdown\` skill to ensure correct formatting:
 
-- Use wikilinks \`[[Page Name]]\` instead of standard markdown links
-- Use callouts for important information: \`> [!note]\`, \`> [!warning]\`, etc.
-- Use YAML frontmatter for metadata on every page
-- Use tags in frontmatter, not inline \`#tags\`
-- Embed content with \`![[Page Name]]\` syntax
+- Wikilinks: \`[[Page Name]]\` or \`[[folder/Page Name]]\`
+- Embeds: \`![[Page Name]]\`
+- Callouts: \`> [!note]\`, \`> [!warning]\`, etc.
+- YAML frontmatter for metadata on every page
+- Tags in frontmatter, not inline \`#tags\`
+`,
+  },
+  {
+    name: 'User notes are read-only',
+    filename: 'user-notes-readonly.md',
+    content: `---
+paths:
+  - "**/*.md"
+  - "!entities/**"
+  - "!concepts/**"
+  - "!comparisons/**"
+  - "!queries/**"
+  - "!SCHEMA.md"
+  - "!log.md"
+---
+# User Notes Are Read-Only
+
+These notes are raw material for knowledge compilation via /cook.
+
+- Read them to extract entities, concepts, and relationships
+- Do not modify, rename, or delete them
+- Use Obsidian CLI for reading: \`obsidian read file="..."\`
 `,
   },
 ];
