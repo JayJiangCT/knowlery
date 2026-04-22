@@ -19,16 +19,22 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ## Getting started (video)
 
-**~3 minute** full walkthrough. On **github.com**, the player below should show **inline** (play in place). The video is stored in the repo as [`media/knowlery-walkthrough.mp4`](media/knowlery-walkthrough.mp4) and streamed from **`raw.githubusercontent.com`**. (Release *download* URLs are served as attachments and do **not** work reliably in a `<video>` tag—that is why the file is kept in the tree for README embedding.)
+GitHub **does not render** a custom HTML5 `<video>` block inside the README (the HTML is **sanitized**), so you will not get a YouTube-style player **embedded in this README file**. What works is:
 
-<video controls playsinline width="100%" preload="metadata">
-  <source src="https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4" type="video/mp4" />
-  <a href="https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4">Open the MP4</a>
-</video>
+- **A preview in the README** (below): a **silent animated GIF** (~12s from the start) so you see motion immediately in this page.
+- **Full video with audio (recommended):** open the MP4 in GitHub’s own **file viewer** — it has a real **play/pause bar and audio**. This streams in the browser; it is not a “force download” flow in normal browsers.
 
-**Download for offline** (e.g. QuickTime / VLC): grab [`knowlery-walkthrough.mp4` from the latest release](https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4), or use the [raw file](https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4) link.
+### Preview (first ~12s, no audio)
 
-When you publish a new cut, update **`media/knowlery-walkthrough.mp4`** on `main` and keep the **same** asset name on the latest **Release** in sync.
+![Knowlery walkthrough — preview (GIF)](media/knowlery-walkthrough-preview.gif)
+
+### Full walkthrough (~3:12, with U.S. English TTS in the source recording)
+
+**[▶ Play the full video on GitHub (built-in player)](https://github.com/JayJiangCT/knowlery/blob/main/media/knowlery-walkthrough.mp4)**
+
+*The same file is mirrored on [Releases](https://github.com/JayJiangCT/knowlery/releases) for tooling that expects release assets.*
+
+**Maintainers:** update [`media/knowlery-walkthrough.mp4`](media/knowlery-walkthrough.mp4), then regenerate [`media/knowlery-walkthrough-preview.gif`](media/knowlery-walkthrough-preview.gif) from the first ~12s (palette GIF, ~800px wide) so the README preview stays current.
 
 ## Requirements
 
