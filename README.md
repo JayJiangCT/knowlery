@@ -1,7 +1,7 @@
 # Knowlery
 
-[![Release](https://img.shields.io/badge/release-v0.1.1-1f883d?style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-1f883d?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/JayJiangCT/knowlery?label=release&style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
+[![License: MIT](https://img.shields.io/github/license/JayJiangCT/knowlery?style=flat-square)](LICENSE)
 
 Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
 
@@ -21,7 +21,7 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 The **~3 minute** walkthrough is a **full-length MP4** attached to [GitHub Releases](https://github.com/JayJiangCT/knowlery/releases) (not committed in this repo). Use a **stable file name** on each release, for example `knowlery-walkthrough.mp4`, so the links below stay valid.
 
-**Watch in the browser** (on github.com; for **private** repos, sign in—some browsers will not send auth to the asset URL and the player may fail; use the direct link or download from Releases in that case):
+**Watch in the browser** on this page (works for public releases; if the player fails, use the direct link below):
 
 <video src="https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4" controls playsinline width="100%">
   <a href="https://github.com/JayJiangCT/knowlery/releases/latest">Download the walkthrough (MP4)</a>
