@@ -1,7 +1,7 @@
 # Knowlery
 
-[![Release](https://img.shields.io/badge/release-v0.1.0-1f883d?style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-1f883d?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/JayJiangCT/knowlery?label=release&style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
+[![License: MIT](https://img.shields.io/github/license/JayJiangCT/knowlery?style=flat-square)](LICENSE)
 
 Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
 
@@ -19,9 +19,17 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ## Getting started (video)
 
-The **~3 minute** product walkthrough is distributed as a **full-length MP4** on [GitHub Releases](https://github.com/JayJiangCT/knowlery/releases), not in the source tree. Download the video asset from the **latest** release and play it locally (QuickTime, VLC, etc.).
+The **~3 minute** walkthrough is a **full-length MP4** attached to [GitHub Releases](https://github.com/JayJiangCT/knowlery/releases) (not committed in this repo). Use a **stable file name** on each release, for example `knowlery-walkthrough.mp4`, so the links below stay valid.
 
-When publishing a new video build, attach a single file such as `knowlery-walkthrough.mp4` to the release; release notes can point to the exact filename.
+**Watch in the browser** on this page (works for public releases; if the player fails, use the direct link below):
+
+<video src="https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4" controls playsinline width="100%">
+  <a href="https://github.com/JayJiangCT/knowlery/releases/latest">Download the walkthrough (MP4)</a>
+</video>
+
+**Direct link:** [latest `knowlery-walkthrough.mp4`](https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4) · **Offline:** open the file in QuickTime, VLC, etc.
+
+When you publish a new build, upload or replace that asset on the **latest** release and keep the same name (or update this README if you rename the file).
 
 ## Requirements
 
