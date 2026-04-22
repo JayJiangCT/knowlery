@@ -32,14 +32,23 @@ When publishing a new video build, attach a single file such as `knowlery-walkth
 
 Knowlery is desktop-only because it uses local command-line tools and Electron desktop APIs.
 
+### Agent chat in Obsidian (optional companions)
+
+Knowlery focuses on **vault layout, skills, rules, and health** for agent workflows. If you also want a **full agent chat** inside Obsidian (sidebar, inline edit, multi-provider), consider installing one of these **in addition to** Knowlery:
+
+- **[Claudian](https://github.com/YishenTu/claudian)** — embeds Claude Code, Codex, and related flows in the vault; file read/write and bash from a chat UI.
+- **[obsidian-agent-client](https://github.com/RAIT-09/obsidian-agent-client)** — brings agents in via Agent Client Protocol (ACP) (e.g. Claude Code, Codex, Gemini CLI) with multi-session and MCP support.
+
 ## Install with BRAT
+
+BRAT is the **Beta Reviewers Auto-update Tool** for Obsidian. Upstream project: [`TfTHacker/obsidian42-brat`](https://github.com/TfTHacker/obsidian42-brat) (documentation: [tfthacker.com/BRAT](https://tfthacker.com/BRAT)).
 
 Knowlery can be installed as a beta plugin through BRAT before it is listed in the community plugin directory.
 
-1. Install the BRAT plugin in Obsidian.
-2. Open BRAT settings.
-3. Add this beta plugin repository: `JayJiangCT/knowlery`.
-4. Enable Knowlery from Settings -> Community plugins.
+1. Install the **BRAT** plugin in Obsidian (from Community plugins, or build from the [BRAT repository](https://github.com/TfTHacker/obsidian42-brat) above).
+2. Open **BRAT** settings.
+3. **Add Beta plugin** and use this repository URL: `https://github.com/JayJiangCT/knowlery` (or the short form `JayJiangCT/knowlery` if BRAT accepts it).
+4. Enable **Knowlery** under Settings → Community plugins.
 
 ## Manual install
 
