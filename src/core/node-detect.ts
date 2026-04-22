@@ -37,7 +37,7 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
 }
 
 function resolveNodeViaShell(): Promise<NodeDetectResult | null> {
-  const { exec } = require('child_process') as typeof import('child_process');
+  const { execFile } = require('child_process') as typeof import('child_process');
   const home = process.env.HOME || '';
   const shell = process.env.SHELL || '/bin/zsh';
 
@@ -48,8 +48,9 @@ function resolveNodeViaShell(): Promise<NodeDetectResult | null> {
     : `source "${home}/.bash_profile" 2>/dev/null; source "${home}/.bashrc" 2>/dev/null;`;
 
   return new Promise(resolve => {
-    exec(
-      `${shell} -c '${sourceCmd} which node && node --version'`,
+    execFile(
+      shell,
+      ['-c', `${sourceCmd} command -v node && node --version`],
       { timeout: 10000 },
       (error, stdout) => {
         if (error) {

@@ -17,6 +17,7 @@ function parseSkillBody(content: string): SkillDetail {
 
   // Split body into sections by ## headings
   const parts = body.split(/^## .+$/m);
+  const intro = parts[0]?.trim();
   const headings: string[] = [];
   let match: RegExpExecArray | null;
   const headingRe = /^## (.+)$/gm;
@@ -29,6 +30,9 @@ function parseSkillBody(content: string): SkillDetail {
     const sectionText = (parts[i + 1] ?? '').trim();
     switch (heading) {
       case 'What it does':
+      case 'Introduction':
+      case 'Overview':
+      case 'Description':
         detail.whatItDoes = sectionText;
         break;
       case 'Best For': {
@@ -68,6 +72,10 @@ function parseSkillBody(content: string): SkillDetail {
       }
     }
   });
+
+  if (!detail.whatItDoes && intro) {
+    detail.whatItDoes = intro;
+  }
 
   return detail;
 }
@@ -168,20 +176,20 @@ export async function listSkills(app: App): Promise<SkillInfo[]> {
     }
 
     let detail: SkillDetail | undefined;
-    if (kind === 'knowledge') {
-      if (skillDetailCache.has(name)) {
-        detail = skillDetailCache.get(name);
-      } else {
-        detail = parseSkillBody(content);
-        skillDetailCache.set(name, detail);
-      }
+    const cacheKey = `${name}:${content}`;
+    if (skillDetailCache.has(cacheKey)) {
+      detail = skillDetailCache.get(cacheKey);
+    } else {
+      detail = parseSkillBody(content);
+      skillDetailCache.set(cacheKey, detail);
     }
 
     skills.push({
       name,
-      source: lockEntry?.source || (bundled ? 'builtin' : 'custom'),
+      source: lockEntry?.source || (bundled ? 'builtin' : 'registry'),
       disabled: lockEntry?.disabled || false,
       forkedFrom: lockEntry?.forkedFrom,
+      registryIdentifier: lockEntry?.registryIdentifier,
       description,
       emoji,
       content,
@@ -208,6 +216,41 @@ export async function forkSkill(
     version: '1.0.0',
     disabled: false,
     forkedFrom: originalName,
+  };
+  await saveSkillsLock(app, lock);
+}
+
+export async function createSkill(
+  app: App,
+  name: string,
+  content: string,
+): Promise<void> {
+  await ensureDir(app, normalizePath(SKILLS_DIR));
+  await ensureDir(app, normalizePath(CLAUDE_SKILLS_DIR));
+  await ensureDir(app, `${SKILLS_DIR}/${name}`);
+  await writeFile(app, `${SKILLS_DIR}/${name}/SKILL.md`, content);
+  await copySkillToClaudeDir(app, name);
+
+  const lock = await loadSkillsLock(app);
+  lock.skills[name] = {
+    source: 'custom',
+    version: '1.0.0',
+    disabled: false,
+  };
+  await saveSkillsLock(app, lock);
+}
+
+export async function markSkillInstalledFromRegistry(
+  app: App,
+  name: string,
+  registryIdentifier: string,
+): Promise<void> {
+  const lock = await loadSkillsLock(app);
+  lock.skills[name] = {
+    source: 'registry',
+    version: lock.skills[name]?.version ?? '1.0.0',
+    disabled: lock.skills[name]?.disabled ?? false,
+    registryIdentifier,
   };
   await saveSkillsLock(app, lock);
 }
@@ -269,4 +312,3 @@ export async function updateSkillContent(
   await writeSkillFile(app, name, content);
   await copySkillToClaudeDir(app, name);
 }
-

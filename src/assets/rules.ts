@@ -1,44 +1,50 @@
 export interface RuleTemplate {
   name: string;
+  description: string;
   filename: string;
   content: string;
 }
 
 export const RULE_TEMPLATES: RuleTemplate[] = [
   {
-    name: 'Obsidian markdown writing',
-    filename: 'obsidian-markdown-writing.md',
-    content: `# Obsidian Markdown Writing
+    name: 'Citation required',
+    description: 'Always cite source notes when answering questions',
+    filename: 'citation-required.md',
+    content: `# Citation Required
 
-Before creating or editing any note, use the \`obsidian-markdown\` skill to ensure correct formatting:
+When answering questions from the knowledge base:
 
-- Wikilinks: \`[[Page Name]]\` or \`[[folder/Page Name]]\`
-- Embeds: \`![[Page Name]]\`
-- Callouts: \`> [!note]\`, \`> [!warning]\`, etc.
-- YAML frontmatter for metadata on every page
-- Tags in frontmatter, not inline \`#tags\`
+- Always cite the source note(s) using wikilinks: \`[[Note Name]]\`
+- If the answer spans multiple notes, list all sources
+- If unsure, say so — do not fabricate references
+- Quote key passages when they directly answer the question
 `,
   },
   {
-    name: 'User notes are read-only',
-    filename: 'user-notes-readonly.md',
-    content: `---
-paths:
-  - "**/*.md"
-  - "!entities/**"
-  - "!concepts/**"
-  - "!comparisons/**"
-  - "!queries/**"
-  - "!SCHEMA.md"
-  - "!log.md"
----
-# User Notes Are Read-Only
+    name: 'Language preference',
+    description: 'Set the preferred response language',
+    filename: 'language-preference.md',
+    content: `# Language Preference
 
-These notes are raw material for knowledge compilation via /cook.
+Respond in the same language as the user's message.
 
-- Read them to extract entities, concepts, and relationships
-- Do not modify, rename, or delete them
-- Use Obsidian CLI for reading: \`obsidian read file="..."\`
+If the user writes in English, respond in English.
+If the user writes in another language, match that language.
+`,
+  },
+  {
+    name: 'Domain context',
+    description: 'Define the knowledge domain for better answers',
+    filename: 'domain-context.md',
+    content: `# Domain Context
+
+This knowledge base covers [YOUR DOMAIN HERE].
+
+When interpreting queries:
+
+- Use domain-specific terminology accurately
+- Prefer explanations relevant to this domain
+- Cross-reference related concepts within the vault
 `,
   },
 ];

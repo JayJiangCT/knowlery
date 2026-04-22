@@ -94,10 +94,17 @@ export default class KnowleryPlugin extends Plugin {
       leaf = workspace.getRightLeaf(false);
       await leaf!.setViewState({ type: VIEW_TYPE_DASHBOARD, active: true });
     }
-    if (leaf) await workspace.revealLeaf(leaf);
+    if (leaf) {
+      const rightSplit = workspace.rightSplit as any;
+      if (rightSplit?.collapsed) {
+        rightSplit.expand();
+      }
+      await workspace.revealLeaf(leaf);
+    }
   }
 
   onSetupComplete() {
+    this.events.trigger('setup-complete');
     this.activateDashboard();
   }
 }

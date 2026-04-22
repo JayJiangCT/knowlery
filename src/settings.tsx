@@ -209,7 +209,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
       .addButton((btn) =>
         btn
           .setButtonText('Re-initialize')
-          .setWarning()
+          .setCta()
           .onClick(() => {
             new ConfirmModal(
               this.plugin.app,

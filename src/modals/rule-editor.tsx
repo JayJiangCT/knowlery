@@ -5,6 +5,7 @@ import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin, useSettings } from '../context';
 import type { RuleInfo } from '../types';
 import { writeRule, getRuleTemplates } from '../core/rule-manager';
+import { IconFileText, IconPlus, IconChevronRight } from '../views/Icons';
 
 /* ------------------------------------------------------------------ */
 /*  Modal wrapper                                                      */
@@ -26,6 +27,7 @@ export class RuleEditorModal extends Modal {
   onOpen() {
     const titles = { view: 'View rule', edit: 'Edit rule', add: 'Add rule' };
     this.setTitle(titles[this.mode]);
+    this.contentEl.addClass('knowlery-modal');
     this.root = createRoot(this.contentEl);
     this.root.render(
       <StrictMode>
@@ -104,22 +106,40 @@ function RuleEditorContent(props: {
   if (props.mode === 'add' && showTemplates) {
     return (
       <div className="knowlery-rule-editor">
-        <p>Choose a template or start from scratch:</p>
+        <p className="knowlery-rule-editor__prompt">Choose a template or start from scratch:</p>
         <div className="knowlery-rule-editor__templates">
           {templates.map((t) => (
             <button
               key={t.filename}
-              className="knowlery-rule-editor__template"
+              className="knowlery-rule-editor__template-btn"
               onClick={() => handleTemplateSelect(t.content, t.filename)}
             >
-              {t.name}
+              <span className="knowlery-rule-editor__template-icon" aria-hidden="true">
+                <IconFileText size={16} />
+              </span>
+              <span className="knowlery-rule-editor__template-body">
+                <span className="knowlery-rule-editor__template-name">{t.name}</span>
+                <span className="knowlery-rule-editor__template-desc">{t.description}</span>
+              </span>
+              <span className="knowlery-rule-editor__template-chevron" aria-hidden="true">
+                <IconChevronRight size={14} />
+              </span>
             </button>
           ))}
           <button
-            className="knowlery-rule-editor__template"
+            className="knowlery-rule-editor__template-btn"
             onClick={handleCustom}
           >
-            Custom (blank)
+            <span className="knowlery-rule-editor__template-icon" aria-hidden="true">
+              <IconPlus size={16} />
+            </span>
+            <span className="knowlery-rule-editor__template-body">
+              <span className="knowlery-rule-editor__template-name">Custom (blank)</span>
+              <span className="knowlery-rule-editor__template-desc">Start with an empty rule file</span>
+            </span>
+            <span className="knowlery-rule-editor__template-chevron" aria-hidden="true">
+              <IconChevronRight size={14} />
+            </span>
           </button>
         </div>
       </div>

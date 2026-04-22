@@ -1,4 +1,4 @@
-import { Notice } from 'obsidian';
+import { Notice, Platform } from 'obsidian';
 import type { SkillInfo } from '../types';
 
 export async function copySkillCommand(skill: SkillInfo): Promise<void> {
@@ -12,6 +12,11 @@ export async function runSkillViaCli(
   skill: SkillInfo,
   cli: 'claude' | 'opencode',
 ): Promise<void> {
+  if (Platform.isMobile) {
+    new Notice('Running skills from the dashboard is only available on desktop.');
+    return;
+  }
+
   const safeName = skill.name.replace(/[^a-zA-Z0-9\s\-_]/g, '');
   if (!safeName) { new Notice('Invalid skill name.'); return; }
   const { execFile } = require('child_process') as typeof import('child_process');

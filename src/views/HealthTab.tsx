@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePlugin, useSettings } from '../context';
-import type { VaultStats, DiagnosisResult, ConfigIntegrity } from '../types';
+import type { VaultStats, DiagnosisResult, ConfigIntegrity, DashboardRefreshPayload } from '../types';
 import { getVaultStats, runDiagnosis, checkConfigIntegrity } from '../core/vault-health';
 import {
   IconChevronRight,
@@ -74,7 +74,7 @@ function IntegrityRow(props: {
 
   return (
     <div
-      className={`knowlery-integrity-row${isClickable ? ' is-clickable' : ''}`}
+      className={`knowlery-health__integrity-row${isClickable ? ' is-clickable' : ''}`}
       onClick={isClickable ? onClick : undefined}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
@@ -84,16 +84,16 @@ function IntegrityRow(props: {
           : undefined
       }
     >
-      <span className={`knowlery-integrity-row__icon is-${state}`} aria-hidden="true">
+      <span className={`knowlery-health__check-icon is-${state}`} aria-hidden="true">
         {state === 'ok' ? (
           <IconCheckCircle size={16} />
         ) : (
           <IconAlertCircle size={16} />
         )}
       </span>
-      <span className="knowlery-integrity-row__label">{label}</span>
+      <span className="knowlery-health__check-label">{label}</span>
       {detail && (
-        <span className="knowlery-integrity-row__action">{detail}</span>
+        <span className="knowlery-health__check-detail">{detail}</span>
       )}
     </div>
   );
@@ -118,17 +118,18 @@ export function HealthTab() {
     setStats(s);
   }, [plugin]);
 
-  const loadIntegrity = useCallback(async () => {
+  const loadIntegrity = useCallback(async (payload?: DashboardRefreshPayload) => {
     const result = await checkConfigIntegrity(plugin.app, settings.platform);
     setIntegrity(result);
+    if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin, settings.platform]);
 
   useEffect(() => {
     loadStats();
     loadIntegrity();
-    const ref = plugin.events.on('dashboard-refresh', () => {
+    const ref = plugin.events.on('dashboard-refresh', (payload?: DashboardRefreshPayload) => {
       loadStats();
-      loadIntegrity();
+      loadIntegrity(payload);
     });
     return () => plugin.events.offref(ref);
   }, [plugin, loadStats, loadIntegrity]);
@@ -160,8 +161,9 @@ export function HealthTab() {
       <div className="knowlery-section-label">
         <span>Configuration</span>
       </div>
+      {!integrity && <IntegritySkeleton />}
       {integrity && (
-        <div className="knowlery-card knowlery-health__integrity-card">
+        <div className="knowlery-health__integrity-card is-loaded">
           <IntegrityRow
             state={integrity.knowledgeMdExists ? 'ok' : 'fail'}
             label="KNOWLEDGE.md"
@@ -208,16 +210,19 @@ export function HealthTab() {
             label="Obsidian CLI"
             detail={integrity.obsidianCli ? 'Enabled' : 'Not enabled'}
           />
-          <IntegrityRow
-            state={integrity.claudeCodeCli ? 'ok' : 'warn'}
-            label="Claude Code CLI detected"
-            detail={integrity.claudeCodeCli ? 'Found' : 'Not found'}
-          />
-          <IntegrityRow
-            state={integrity.opencodeCli ? 'ok' : 'warn'}
-            label="OpenCode CLI detected"
-            detail={integrity.opencodeCli ? 'Found' : 'Not found'}
-          />
+          {settings.platform === 'claude-code' ? (
+            <IntegrityRow
+              state={integrity.claudeCodeCli ? 'ok' : 'warn'}
+              label="Claude Code CLI detected"
+              detail={integrity.claudeCodeCli ? 'Found' : 'Not found'}
+            />
+          ) : (
+            <IntegrityRow
+              state={integrity.opencodeCli ? 'ok' : 'warn'}
+              label="OpenCode CLI detected"
+              detail={integrity.opencodeCli ? 'Found' : 'Not found'}
+            />
+          )}
           <IntegrityRow
             state="ok"
             label="Platform"
@@ -227,7 +232,7 @@ export function HealthTab() {
       )}
 
       {/* 2. Content Stats */}
-      <div className="knowlery-section-label knowlery-health__section-gap">
+      <div className="knowlery-section-label">
         <span>Content</span>
       </div>
       {stats && (
@@ -242,21 +247,13 @@ export function HealthTab() {
       )}
 
       {/* 3. Structure */}
-      <div className="knowlery-section-label knowlery-health__section-gap">
+      <div className="knowlery-section-label">
         <span>Structure</span>
-        <button
-          className="knowlery-section-label__action"
-          aria-label="Run scan"
-          onClick={handleRunDiagnosis}
-          disabled={diagnosisRunning}
-        >
-          <IconPlay size={12} />
-        </button>
       </div>
 
       {!diagnosis && !diagnosisRunning && (
         <button
-          className="knowlery-btn knowlery-btn--outline is-full-width"
+          className="knowlery-btn knowlery-btn--primary is-full-width"
           onClick={handleRunDiagnosis}
         >
           <IconPlay size={14} />
@@ -300,6 +297,21 @@ export function HealthTab() {
 /* ------------------------------------------------------------------ */
 /*  Helper components                                                  */
 /* ------------------------------------------------------------------ */
+
+function IntegritySkeleton() {
+  const widths = ['medium', 'short', 'long', 'medium', 'short', 'medium', 'short', 'long', 'long', 'short'];
+  return (
+    <div className="knowlery-health__integrity-card">
+      {widths.map((w, i) => (
+        <div key={i} className="knowlery-health__skeleton-row">
+          <div className="knowlery-health__skeleton-circle" />
+          <div className={`knowlery-health__skeleton-bar knowlery-health__skeleton-bar--${w}`} />
+          {i >= 5 && <div className="knowlery-health__skeleton-bar knowlery-health__skeleton-bar--detail" />}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function StatCard(props: { label: string; value: number }) {
   return (

@@ -1,9 +1,14 @@
 .claude/
 .agents/
+.codex/
 .knowlery/
 .remember/
 .superpowers/
 docs/
+prototypes/
+specs/
+plugins/
+AGENTS.md
 .envrc
 skills-lock.json
 

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { normalizePath, Notice } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
-import type { RuleInfo } from '../types';
+import type { RuleInfo, DashboardRefreshPayload } from '../types';
 import { listRules, deleteRule } from '../core/rule-manager';
 import { RuleEditorModal } from '../modals/rule-editor';
-import { IconFileText, IconPlus, IconArrowRight, IconMoreHorizontal } from './Icons';
+import { IconFileText, IconPlus, IconArrowRight, IconMoreVertical, IconChevronRight } from './Icons';
 
 /* ------------------------------------------------------------------ */
 /*  RuleCard                                                           */
@@ -50,48 +50,52 @@ function RuleCard(props: {
   };
 
   return (
-    <div className="knowlery-card">
-      <div className="knowlery-config__rule-card-inner">
-        <span className="knowlery-config__rule-card-icon" aria-hidden="true">
+    <div className="knowlery-config__rule-card">
+      <button
+        type="button"
+        className="knowlery-config__rule-main"
+        onClick={onView}
+        aria-label={`View rule ${rule.name}`}
+      >
+        <span className="knowlery-config__rule-icon" aria-hidden="true">
           <IconFileText size={16} />
         </span>
-        <div className="knowlery-config__rule-card-body">
-          <div className="knowlery-config__rule-name">{rule.name}</div>
+        <span className="knowlery-config__rule-body">
+          <span className="knowlery-config__rule-name">{rule.name}</span>
           {preview && (
-            <div className="knowlery-config__rule-preview">{preview}</div>
+            <span className="knowlery-config__rule-preview">{preview}</span>
           )}
-        </div>
-        <div className="knowlery-config__rule-overflow" ref={menuRef}>
-          <button
-            className="knowlery-btn knowlery-btn--ghost"
-            aria-label="More options"
-            onClick={() => { setMenuOpen((v) => !v); setConfirmDelete(false); }}
-          >
-            <IconMoreHorizontal size={16} />
-          </button>
-          {menuOpen && (
-            <div className="knowlery-config__rule-menu">
-              <button
-                className="knowlery-btn knowlery-btn--ghost"
-                onClick={() => { setMenuOpen(false); onView(); }}
-              >
-                View
-              </button>
-              <button
-                className="knowlery-btn knowlery-btn--ghost"
-                onClick={() => { setMenuOpen(false); onEdit(); }}
-              >
-                Edit
-              </button>
-              <button
-                className={`knowlery-btn knowlery-btn--ghost knowlery-btn--danger${confirmDelete ? ' is-confirming' : ''}`}
-                onClick={handleDeleteClick}
-              >
-                {confirmDelete ? 'Confirm delete' : 'Delete'}
-              </button>
-            </div>
-          )}
-        </div>
+        </span>
+        <span className="knowlery-config__rule-chevron" aria-hidden="true">
+          <IconChevronRight size={14} />
+        </span>
+      </button>
+
+      <div ref={menuRef} className="knowlery-config__rule-actions">
+        <button
+          type="button"
+          className="knowlery-config__rule-menu"
+          aria-label={`More options for rule ${rule.name}`}
+          onClick={() => { setMenuOpen((v) => !v); setConfirmDelete(false); }}
+        >
+          <IconMoreVertical size={16} />
+        </button>
+        {menuOpen && (
+          <div className="knowlery-config__rule-dropdown">
+            <button onClick={() => { setMenuOpen(false); onView(); }}>
+              View
+            </button>
+            <button onClick={() => { setMenuOpen(false); onEdit(); }}>
+              Edit
+            </button>
+            <button
+              className={confirmDelete ? 'is-danger' : ''}
+              onClick={handleDeleteClick}
+            >
+              {confirmDelete ? 'Confirm delete' : 'Delete'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -106,14 +110,17 @@ export function ConfigTab() {
   const [settings] = useSettings();
   const [rules, setRules] = useState<RuleInfo[]>([]);
 
-  const refreshRules = useCallback(async () => {
+  const refreshRules = useCallback(async (payload?: DashboardRefreshPayload) => {
     const result = await listRules(plugin.app, settings.platform);
     setRules(result);
+    if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin, settings.platform]);
 
   useEffect(() => {
     refreshRules();
-    const ref = plugin.events.on('dashboard-refresh', refreshRules);
+    const ref = plugin.events.on('dashboard-refresh', (payload?: DashboardRefreshPayload) => {
+      refreshRules(payload);
+    });
     return () => plugin.events.offref(ref);
   }, [plugin, refreshRules]);
 
@@ -153,21 +160,21 @@ export function ConfigTab() {
 
       <div className="knowlery-config__files">
         <button
-          className="knowlery-card knowlery-config__file-row"
+          className="knowlery-config__file-row"
           onClick={() => openFile('KNOWLEDGE.md')}
         >
-          <IconFileText size={16} aria-hidden="true" />
-          <span className="knowlery-config__file-row__label">KNOWLEDGE.md</span>
-          <IconArrowRight size={14} aria-hidden="true" />
+          <span className="knowlery-config__file-row-icon"><IconFileText size={16} /></span>
+          <span className="knowlery-config__file-row-label">KNOWLEDGE.md</span>
+          <span className="knowlery-config__file-row-arrow"><IconArrowRight size={14} /></span>
         </button>
 
         <button
-          className="knowlery-card knowlery-config__file-row"
+          className="knowlery-config__file-row"
           onClick={() => openFile('SCHEMA.md')}
         >
-          <IconFileText size={16} aria-hidden="true" />
-          <span className="knowlery-config__file-row__label">SCHEMA.md</span>
-          <IconArrowRight size={14} aria-hidden="true" />
+          <span className="knowlery-config__file-row-icon"><IconFileText size={16} /></span>
+          <span className="knowlery-config__file-row-label">SCHEMA.md</span>
+          <span className="knowlery-config__file-row-arrow"><IconArrowRight size={14} /></span>
         </button>
       </div>
 

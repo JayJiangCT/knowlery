@@ -6,5 +6,5 @@
   "description": "Turn your vault into an AI-powered knowledge base control panel.",
   "author": "Jay Jiang",
   "authorUrl": "https://github.com/JayJiangCT",
-  "isDesktopOnly": false
+  "isDesktopOnly": true
 }

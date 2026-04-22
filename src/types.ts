@@ -15,10 +15,11 @@ export const ManifestSchema = z.object({
 export type Manifest = z.infer<typeof ManifestSchema>;
 
 export const SkillLockEntrySchema = z.object({
-  source: z.enum(['builtin', 'custom']),
+  source: z.enum(['builtin', 'registry', 'custom']),
   version: z.string(),
   disabled: z.boolean(),
   forkedFrom: z.string().optional(),
+  registryIdentifier: z.string().optional(),
 });
 export type SkillLockEntry = z.infer<typeof SkillLockEntrySchema>;
 
@@ -46,9 +47,10 @@ export interface SkillDetail {
 
 export interface SkillInfo {
   name: string;
-  source: 'builtin' | 'custom';
+  source: 'builtin' | 'registry' | 'custom';
   disabled: boolean;
   forkedFrom?: string;
+  registryIdentifier?: string;
   description: string;
   emoji: string;
   content: string;
@@ -113,3 +115,8 @@ export const BUILTIN_SKILL_NAMES = [
 ] as const;
 
 export type DashboardTab = 'skills' | 'config' | 'health';
+
+export interface DashboardRefreshPayload {
+  tab: DashboardTab;
+  requestId: number;
+}

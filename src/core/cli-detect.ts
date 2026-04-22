@@ -49,22 +49,27 @@ function detectCliToolUnix(toolName: string): Promise<CliToolResult> {
     ? `source "${home}/.zprofile" 2>/dev/null; source "${home}/.zshrc" 2>/dev/null;`
     : `source "${home}/.bash_profile" 2>/dev/null; source "${home}/.bashrc" 2>/dev/null;`;
 
-  const cmd = `${sourceCmd} which ${safeName} && ${safeName} --version`;
+  const cmd = `${sourceCmd} command -v "$KNOWLERY_CLI_TOOL" && "$KNOWLERY_CLI_TOOL" --version`;
 
   return new Promise(resolve => {
-    execFile(shell, ['-c', cmd], { timeout: 10000 }, (error, stdout) => {
-      if (error) {
-        resolve({ installed: false });
-        return;
-      }
-      const lines = stdout.trim().split('\n').filter(l => l.trim());
-      if (lines.length >= 2) {
-        const version = lines[lines.length - 1].trim() || undefined;
-        resolve({ installed: true, version });
-      } else {
-        resolve({ installed: false });
-      }
-    });
+    execFile(
+      shell,
+      ['-c', cmd],
+      { timeout: 10000, env: { ...process.env, KNOWLERY_CLI_TOOL: safeName } },
+      (error, stdout) => {
+        if (error) {
+          resolve({ installed: false });
+          return;
+        }
+        const lines = stdout.trim().split('\n').filter(l => l.trim());
+        if (lines.length >= 2) {
+          const version = lines[lines.length - 1].trim() || undefined;
+          resolve({ installed: true, version });
+        } else {
+          resolve({ installed: false });
+        }
+      },
+    );
   });
 }
 
