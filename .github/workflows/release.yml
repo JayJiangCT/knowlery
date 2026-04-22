@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate tag matches manifest version
+        run: |
+          node -e "const fs=require('fs'); const tag=process.env.GITHUB_REF_NAME; const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8')); if (tag !== manifest.version) { console.error(`Tag ${tag} does not match manifest version ${manifest.version}`); process.exit(1); }"
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            main.js
+            manifest.json
+            styles.css

@@ -1,0 +1,20 @@
+.claude/
+.agents/
+.codex/
+.knowlery/
+.remember/
+.superpowers/
+docs/
+prototypes/
+specs/
+plugins/
+AGENTS.md
+.envrc
+skills-lock.json
+
+# Build artifacts
+node_modules/
+main.js
+*.js.map
+data.json
+.DS_Store

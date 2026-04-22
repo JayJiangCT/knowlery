@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Knowlery Intro Short Preview</title>
+  <style>
+    :root {
+      --bg: #f5f4f2;
+      --paper: #fbfaf8;
+      --panel: #ffffff;
+      --panel-soft: #f4f2f0;
+      --line: #dedbd6;
+      --text: #2c2a28;
+      --muted: #78736d;
+      --muted-2: #aaa5a0;
+      --accent: #9b72f2;
+      --accent-2: #efe7ff;
+      --ok: #25a951;
+      --shadow: 0 34px 90px rgba(38, 34, 30, 0.18);
+      --duration: 22s;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #e9e7e3;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .frame {
+      width: min(100vw, 1920px);
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(155, 114, 242, 0.12), transparent 24%),
+        linear-gradient(135deg, #f8f7f4 0%, #eeecea 100%);
+      box-shadow: 0 22px 80px rgba(0, 0, 0, 0.16);
+      isolation: isolate;
+    }
+
+    .top-note {
+      position: absolute;
+      z-index: 20;
+      top: 24px;
+      left: 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 18px;
+      letter-spacing: 0.01em;
+      animation: note var(--duration) linear infinite;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 7px rgba(155, 114, 242, 0.14);
+    }
+
+    .workspace {
+      position: absolute;
+      inset: 74px 70px 70px;
+      display: grid;
+      grid-template-columns: 430px 1fr 690px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform-origin: 50% 50%;
+      animation: workspaceCamera var(--duration) cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    .rail {
+      background: rgba(244, 243, 241, 0.92);
+      border-right: 1px solid var(--line);
+      padding: 30px 30px;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .rail-title {
+      margin: 20px 0 18px;
+      color: var(--muted-2);
+      font-size: 17px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .rail-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      height: 43px;
+      padding: 0 12px;
+      border-radius: 7px;
+    }
+
+    .rail-row.active {
+      color: var(--text);
+      background: #e8e6e3;
+    }
+
+    .icon {
+      width: 21px;
+      height: 21px;
+      border: 2px solid currentColor;
+      border-radius: 6px;
+      opacity: 0.7;
+    }
+
+    .vault {
+      position: relative;
+      background: rgba(251, 250, 248, 0.8);
+      border-right: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .vault-list {
+      position: absolute;
+      top: 112px;
+      left: 70px;
+      right: 46px;
+      color: var(--muted);
+      font-size: 25px;
+      line-height: 1.7;
+      animation: vaultFiles var(--duration) linear infinite;
+    }
+
+    .vault-empty {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 420px;
+      transform: translate(-50%, -50%);
+      color: var(--accent);
+      text-align: center;
+      font-size: 25px;
+      animation: emptyPrompt var(--duration) linear infinite;
+    }
+
+    .app {
+      position: relative;
+      background: var(--paper);
+      padding: 42px 34px;
+      overflow: hidden;
+    }
+
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .brand-left {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--accent-2);
+      color: var(--accent);
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .brand-name {
+      font-size: 25px;
+      font-weight: 820;
+    }
+
+    .brand-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 46px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 0 22px;
+      font-size: 18px;
+      font-weight: 680;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .button.primary {
+      border-color: transparent;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 24px;
+      height: 48px;
+      font-size: 22px;
+    }
+
+    .tab {
+      height: 48px;
+      color: var(--text);
+      position: relative;
+    }
+
+    .tab.active {
+      color: var(--accent);
+      font-weight: 760;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--accent);
+    }
+
+    .scene {
+      position: absolute;
+      inset: 158px 34px 34px;
+      opacity: 0;
+      transform: translateY(22px) scale(0.99);
+      animation-duration: var(--duration);
+      animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+      animation-iteration-count: infinite;
+      animation-fill-mode: both;
+    }
+
+    .scene-setup {
+      animation-name: sceneSetup;
+    }
+
+    .scene-wizard {
+      animation-name: sceneWizard;
+      inset: 92px 58px 54px;
+      display: grid;
+      place-items: center;
+    }
+
+    .scene-dashboard {
+      animation-name: sceneDashboard;
+    }
+
+    .scene-health {
+      animation-name: sceneHealth;
+    }
+
+    .setup-card {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 9px;
+      padding: 30px 30px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .setup-title {
+      margin: 0 0 18px;
+      font-size: 29px;
+      font-weight: 820;
+    }
+
+    .setup-copy {
+      max-width: 820px;
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.5;
+    }
+
+    .wizard {
+      width: 620px;
+      border: 1px solid #cac7c2;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+      padding: 28px 30px 24px;
+    }
+
+    .wizard-title {
+      margin: 0 0 24px;
+      font-size: 29px;
+      font-weight: 830;
+    }
+
+    .steps {
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 16px;
+      margin-bottom: 32px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .steps span:first-child,
+    .steps span:nth-child(2) {
+      color: var(--ok);
+      font-weight: 720;
+    }
+
+    .engine {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      overflow: hidden;
+      margin: 18px 0 24px;
+      font-size: 20px;
+    }
+
+    .engine-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .engine-row:first-child {
+      background: var(--accent-2);
+    }
+
+    .engine-row:last-child {
+      border-bottom: 0;
+    }
+
+    .execution {
+      display: grid;
+      gap: 12px;
+    }
+
+    .execution-row {
+      height: 54px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-size: 18px;
+      background: #fff;
+    }
+
+    .list {
+      display: grid;
+      gap: 0;
+      border-radius: 11px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    .group {
+      background: var(--panel-soft);
+      min-height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+    }
+
+    .group strong {
+      display: block;
+      font-size: 22px;
+    }
+
+    .group small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .skill-row {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 42px 1fr 120px 28px;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding: 0 26px;
+      font-size: 20px;
+    }
+
+    .skill-row b {
+      display: block;
+      font-size: 20px;
+    }
+
+    .skill-row span {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .badge {
+      color: var(--muted);
+      font-size: 16px;
+      text-align: right;
+    }
+
+    .checks {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 38px 1fr 160px;
+      align-items: center;
+      min-height: 67px;
+      border-bottom: 1px solid var(--line);
+      font-size: 22px;
+    }
+
+    .check-dot {
+      width: 17px;
+      height: 17px;
+      border-radius: 999px;
+      border: 3px solid var(--ok);
+      position: relative;
+    }
+
+    .check-dot::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 4px;
+      left: 3px;
+      top: 3px;
+      border-left: 2px solid var(--ok);
+      border-bottom: 2px solid var(--ok);
+      transform: rotate(-45deg);
+    }
+
+    .metric-grid {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--panel-soft);
+    }
+
+    .metric {
+      min-height: 95px;
+      display: grid;
+      place-items: center;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .metric:nth-child(3n) {
+      border-right: 0;
+    }
+
+    .metric strong {
+      display: block;
+      text-align: center;
+      font-size: 34px;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted-2);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-copy {
+      position: absolute;
+      z-index: 12;
+      left: 95px;
+      top: 146px;
+      width: 620px;
+      animation: heroCopy var(--duration) linear infinite;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 21px;
+      font-weight: 760;
+      margin-bottom: 22px;
+    }
+
+    .headline {
+      margin: 0;
+      color: var(--text);
+      font-size: 74px;
+      line-height: 0.98;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .subhead {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 25px;
+      line-height: 1.35;
+    }
+
+    .callouts {
+      position: absolute;
+      z-index: 14;
+      right: 96px;
+      bottom: 96px;
+      display: flex;
+      gap: 14px;
+      animation: callouts var(--duration) linear infinite;
+    }
+
+    .callout {
+      min-width: 168px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.08);
+      font-size: 17px;
+      font-weight: 720;
+    }
+
+    .cursor {
+      position: absolute;
+      z-index: 30;
+      width: 24px;
+      height: 31px;
+      clip-path: polygon(0 0, 0 100%, 30% 76%, 48% 100%, 66% 91%, 47% 68%, 83% 68%);
+      background: #2c2a28;
+      filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.2));
+      animation: cursorPath var(--duration) cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    .progress {
+      position: absolute;
+      z-index: 25;
+      left: 32px;
+      right: 32px;
+      bottom: 28px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(44, 42, 40, 0.12);
+      overflow: hidden;
+    }
+
+    .progress::after {
+      content: "";
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform-origin: left center;
+      background: var(--accent);
+      animation: progress var(--duration) linear infinite;
+    }
+
+    .watermark {
+      position: absolute;
+      z-index: 25;
+      right: 34px;
+      bottom: 38px;
+      color: rgba(44, 42, 40, 0.48);
+      font-size: 14px;
+      animation: watermark var(--duration) linear infinite;
+    }
+
+    @keyframes workspaceCamera {
+      0%, 18% { transform: translateX(280px) scale(0.9); opacity: 0.22; filter: blur(1px); }
+      23%, 36% { transform: translateX(0) scale(1); opacity: 1; filter: blur(0); }
+      42%, 60% { transform: translateX(-42px) scale(1.03); opacity: 1; filter: blur(0); }
+      67%, 95% { transform: translateX(-104px) scale(1.03); opacity: 1; filter: blur(0); }
+      100% { transform: translateX(-104px) scale(1.03); opacity: 0.18; filter: blur(1px); }
+    }
+
+    @keyframes heroCopy {
+      0%, 4% { opacity: 0; transform: translateY(22px); }
+      8%, 18% { opacity: 1; transform: translateY(0); }
+      23%, 100% { opacity: 0; transform: translateY(-18px); }
+    }
+
+    @keyframes sceneSetup {
+      0%, 21% { opacity: 0; transform: translateY(26px) scale(0.985); }
+      25%, 36% { opacity: 1; transform: translateY(0) scale(1); }
+      41%, 100% { opacity: 0; transform: translateY(-18px) scale(0.99); }
+    }
+
+    @keyframes sceneWizard {
+      0%, 37% { opacity: 0; transform: translateY(34px) scale(0.96); }
+      42%, 58% { opacity: 1; transform: translateY(0) scale(1); }
+      63%, 100% { opacity: 0; transform: translateY(-18px) scale(0.98); }
+    }
+
+    @keyframes sceneDashboard {
+      0%, 60% { opacity: 0; transform: translateY(24px) scale(0.99); }
+      65%, 76% { opacity: 1; transform: translateY(0) scale(1); }
+      81%, 100% { opacity: 0; transform: translateY(-16px) scale(0.995); }
+    }
+
+    @keyframes sceneHealth {
+      0%, 77% { opacity: 0; transform: translateY(22px) scale(0.995); }
+      82%, 96% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-8px) scale(1); }
+    }
+
+    @keyframes emptyPrompt {
+      0%, 23% { opacity: 1; }
+      32%, 100% { opacity: 0; }
+    }
+
+    @keyframes vaultFiles {
+      0%, 53% { opacity: 0; transform: translateY(16px); }
+      61%, 100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes cursorPath {
+      0%, 24% { opacity: 0; transform: translate(1180px, 735px) rotate(-8deg) scale(0.95); }
+      28% { opacity: 1; transform: translate(1295px, 655px) rotate(-6deg) scale(1); }
+      33% { opacity: 1; transform: translate(1338px, 653px) rotate(-4deg) scale(0.92); }
+      38% { opacity: 0; transform: translate(1338px, 653px) rotate(-4deg) scale(1); }
+      67% { opacity: 0; transform: translate(1535px, 238px) rotate(-8deg) scale(0.95); }
+      70% { opacity: 1; transform: translate(1510px, 238px) rotate(-8deg) scale(1); }
+      74% { opacity: 0; transform: translate(1510px, 238px) rotate(-8deg) scale(0.94); }
+      100% { opacity: 0; transform: translate(1510px, 238px); }
+    }
+
+    @keyframes callouts {
+      0%, 64% { opacity: 0; transform: translateY(24px); }
+      69%, 86% { opacity: 1; transform: translateY(0); }
+      91%, 100% { opacity: 0; transform: translateY(-8px); }
+    }
+
+    @keyframes note {
+      0%, 88% { opacity: 1; }
+      95%, 100% { opacity: 0; }
+    }
+
+    @keyframes watermark {
+      0%, 92% { opacity: 0; }
+      95%, 100% { opacity: 1; }
+    }
+
+    @keyframes progress {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" aria-label="Knowlery intro short preview">
+    <div class="top-note"><span class="dot"></span><span>Short preview v1 · loops every 22 seconds</span></div>
+
+    <section class="hero-copy">
+      <div class="eyebrow">Knowlery for Obsidian</div>
+      <h1 class="headline">Your vault, ready for AI workflows.</h1>
+      <p class="subhead">Set up skills, rules, agent configuration, and vault diagnostics from one local-first control panel.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="rail">
+        <div class="rail-title">Options</div>
+        <div class="rail-row"><span class="icon"></span>General</div>
+        <div class="rail-row"><span class="icon"></span>Editor</div>
+        <div class="rail-row"><span class="icon"></span>Files and links</div>
+        <div class="rail-row"><span class="icon"></span>Appearance</div>
+        <div class="rail-row"><span class="icon"></span>Community plugins</div>
+        <div class="rail-title">Community plugins</div>
+        <div class="rail-row active"><span class="icon"></span>Knowlery</div>
+      </aside>
+
+      <aside class="vault">
+        <div class="vault-empty">Create new note</div>
+        <div class="vault-list">
+          <div>comparisons</div>
+          <div>concepts</div>
+          <div>entities</div>
+          <div>queries</div>
+          <div>KNOWLEDGE</div>
+          <div>SCHEMA</div>
+          <div>skills-lock</div>
+        </div>
+      </aside>
+
+      <section class="app">
+        <header class="brand">
+          <div class="brand-left">
+            <div class="brand-mark">K</div>
+            <div>
+              <div class="brand-name">Knowlery</div>
+              <div class="brand-sub">AI knowledge base control panel</div>
+            </div>
+          </div>
+          <div class="button">Refresh</div>
+        </header>
+
+        <nav class="tabs" aria-label="Preview tabs">
+          <div class="tab active">Skills</div>
+          <div class="tab">Config</div>
+          <div class="tab">Health</div>
+        </nav>
+
+        <div class="scene scene-setup">
+          <article class="setup-card">
+            <h2 class="setup-title">Vault not set up</h2>
+            <p class="setup-copy">Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.</p>
+            <div class="button primary">Initialize vault</div>
+          </article>
+        </div>
+
+        <div class="scene scene-wizard">
+          <article class="wizard">
+            <h2 class="wizard-title">Set up Knowlery</h2>
+            <div class="steps"><span>Preview</span><span>Running</span><span>Done</span></div>
+            <div style="font-size:19px;color:var(--muted);margin-bottom:18px;">Review what Knowlery will create in your vault.</div>
+            <div style="font-size:23px;font-weight:780;margin-bottom:12px;">Select agent engine</div>
+            <div class="engine">
+              <div class="engine-row"><strong>Claude Code</strong><span>selected</span></div>
+              <div class="engine-row"><strong>OpenCode</strong><span>available</span></div>
+            </div>
+            <div style="font-size:23px;font-weight:780;margin-bottom:12px;">Execution preview</div>
+            <div class="execution">
+              <div class="execution-row"><strong>Skills to install</strong><span>13</span></div>
+              <div class="execution-row"><strong>Directories to create</strong><span>4</span></div>
+              <div class="execution-row"><strong>Agent config</strong><span>ready</span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="scene scene-dashboard">
+          <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:20px;">
+            <div>
+              <div style="font-size:29px;font-weight:820;">Skills</div>
+              <div style="color:var(--muted);font-size:18px;margin-top:6px;">Agent capabilities installed in this vault.</div>
+            </div>
+            <div style="display:flex;gap:12px;"><div class="button">Create</div><div class="button">Browse</div></div>
+          </div>
+          <div class="list">
+            <div class="group"><div><strong>Knowledge</strong><small>Vault management and content workflows</small></div><span>7 skills</span></div>
+            <div class="skill-row"><div class="icon"></div><div><b>ask</b><span>Open-ended Q&amp;A against the knowledge base</span></div><div class="badge">built-in</div><div>›</div></div>
+            <div class="skill-row"><div class="icon"></div><div><b>audit</b><span>Check vault health, frontmatter coverage, and structure</span></div><div class="badge">built-in</div><div>›</div></div>
+            <div class="skill-row"><div class="icon"></div><div><b>cook</b><span>Digest notes into knowledge pages and maintain INDEX.base</span></div><div class="badge">built-in</div><div>›</div></div>
+            <div class="group"><div><strong>Tooling</strong><small>Obsidian integrations and format references</small></div><span>6 skills</span></div>
+          </div>
+        </div>
+
+        <div class="scene scene-health">
+          <div style="font-size:29px;font-weight:820;margin-bottom:18px;">Health</div>
+          <div class="checks">
+            <div class="check"><span class="check-dot"></span><span>KNOWLEDGE.md</span><span style="color:var(--muted);text-align:right;">Ready</span></div>
+            <div class="check"><span class="check-dot"></span><span>SCHEMA.md</span><span style="color:var(--muted);text-align:right;">Ready</span></div>
+            <div class="check"><span class="check-dot"></span><span>Knowledge directories</span><span style="color:var(--muted);text-align:right;">Created</span></div>
+            <div class="check"><span class="check-dot"></span><span>Agent configuration</span><span style="color:var(--muted);text-align:right;">Claude Code</span></div>
+            <div class="check"><span class="check-dot"></span><span>Skills installed</span><span style="color:var(--muted);text-align:right;">13 installed</span></div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric"><div><strong>2</strong><small>NOTES</small></div></div>
+            <div class="metric"><div><strong>0</strong><small>WIKILINKS</small></div></div>
+            <div class="metric"><div><strong>0</strong><small>ENTITIES</small></div></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div class="callouts">
+      <div class="callout">Manage skills</div>
+      <div class="callout">Configure agents</div>
+      <div class="callout">Diagnose your vault</div>
+    </div>
+
+    <div class="cursor" aria-hidden="true"></div>
+    <div class="watermark">Created by Huashu-Design</div>
+    <div class="progress" aria-hidden="true"></div>
+  </main>
+</body>
+</html>

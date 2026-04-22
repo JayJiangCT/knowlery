@@ -1,0 +1,10 @@
+{
+  "id": "knowlery",
+  "name": "Knowlery",
+  "version": "0.1.0",
+  "minAppVersion": "1.7.2",
+  "description": "Turn your vault into an AI-powered knowledge base control panel.",
+  "author": "Jay Jiang",
+  "authorUrl": "https://github.com/JayJiangCT",
+  "isDesktopOnly": true
+}
