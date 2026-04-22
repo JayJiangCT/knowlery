@@ -19,17 +19,16 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ## Getting started (video)
 
-The **~3 minute** walkthrough is a **full-length MP4** attached to [GitHub Releases](https://github.com/JayJiangCT/knowlery/releases) (not committed in this repo). Use a **stable file name** on each release, for example `knowlery-walkthrough.mp4`, so the links below stay valid.
+**~3 minute** full walkthrough. On **github.com**, the player below should show **inline** (play in place). The video is stored in the repo as [`media/knowlery-walkthrough.mp4`](media/knowlery-walkthrough.mp4) and streamed from **`raw.githubusercontent.com`**. (Release *download* URLs are served as attachments and do **not** work reliably in a `<video>` tag—that is why the file is kept in the tree for README embedding.)
 
-**Watch in the browser** on this page (works for public releases; if the player fails, use the direct link below):
-
-<video src="https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4" controls playsinline width="100%">
-  <a href="https://github.com/JayJiangCT/knowlery/releases/latest">Download the walkthrough (MP4)</a>
+<video controls playsinline width="100%" preload="metadata">
+  <source src="https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4" type="video/mp4" />
+  <a href="https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4">Open the MP4</a>
 </video>
 
-**Direct link:** [latest `knowlery-walkthrough.mp4`](https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4) · **Offline:** open the file in QuickTime, VLC, etc.
+**Download for offline** (e.g. QuickTime / VLC): grab [`knowlery-walkthrough.mp4` from the latest release](https://github.com/JayJiangCT/knowlery/releases/latest/download/knowlery-walkthrough.mp4), or use the [raw file](https://raw.githubusercontent.com/JayJiangCT/knowlery/main/media/knowlery-walkthrough.mp4) link.
 
-When you publish a new build, upload or replace that asset on the **latest** release and keep the same name (or update this README if you rename the file).
+When you publish a new cut, update **`media/knowlery-walkthrough.mp4`** on `main` and keep the **same** asset name on the latest **Release** in sync.
 
 ## Requirements
 
