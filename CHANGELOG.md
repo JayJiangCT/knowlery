@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.1.1] — 2026-04-22
+
+### Documentation
+
+- README: **static** release and license badges (works while the repo is private; bump the badge text when you ship a new version).
+- Stop tracking **`plan.md`**; it remains available locally via `.gitignore` for maintainers.
+- **Getting started** embeds the walkthrough as an **MP4** from Releases (`knowlery-walkthrough.mp4` via `latest/download`); inline `<video>` on github.com with a direct-link fallback.
+- **BRAT** links the upstream repo ([`TfTHacker/obsidian42-brat`](https://github.com/TfTHacker/obsidian42-brat)) and optional companion plugins: [Claudian](https://github.com/YishenTu/claudian) and [obsidian-agent-client](https://github.com/RAIT-09/obsidian-agent-client).
+
+### Infrastructure
+
+- Add optional **`playwright`** devDependency for local HTML → MP4 recording (e.g. guidance storyboard export); not required to build the plugin.
+
 ## [v0.1.0] — 2026-04-22
 
 ### New features
