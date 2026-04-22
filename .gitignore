@@ -11,6 +11,7 @@ plugins/
 AGENTS.md
 .envrc
 skills-lock.json
+plan.md
 
 # Build artifacts
 node_modules/

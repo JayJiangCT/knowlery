@@ -1,7 +1,7 @@
 # Knowlery
 
-[![Release](https://img.shields.io/github/v/release/JayJiangCT/knowlery?label=release&style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
-[![License: MIT](https://img.shields.io/github/license/JayJiangCT/knowlery?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/badge/release-v0.1.0-1f883d?style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1f883d?style=flat-square)](LICENSE)
 
 Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
 
@@ -17,15 +17,11 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 [BYOAO](https://github.com/JayJiangCT/BYOAO) (*Build Your Own AI OS*) is a separate project: an OpenCode-oriented flow that turns Obsidian into an AI-powered “LLM Wiki” style knowledge base with global CLI install. Working on BYOAO is what made it natural to ask: **what if the same ideas lived as a first-class Obsidian plugin**—settings, setup wizard, skills, and health—without leaving the app? Knowlery is that plugin-shaped experiment: same family of ideas, different packaging (plugin UI + vault-side wiring for Claude Code / OpenCode).
 
-## Getting started (interactive guide)
+## Getting started (video)
 
-A **~3 minute** in-browser walkthrough (subtitles + optional U.S. English voiceover) lives in the repo:
+The **~3 minute** product walkthrough is distributed as a **full-length MP4** on [GitHub Releases](https://github.com/JayJiangCT/knowlery/releases), not in the source tree. Download the video asset from the **latest** release and play it locally (QuickTime, VLC, etc.).
 
-- **File:** [`prototypes/guidance-video/guidance-full.html`](prototypes/guidance-video/guidance-full.html)  
-- **How to use:** clone or download the repo, then open that file in **Chrome, Edge, or Safari** (double-click or *File → Open*). The page loads images and narration from the same folder; use the “Start” button once so the browser can play speech. It loops quietly at the end for kiosk-style demos; press **R** to restart.  
-- **Shorter preview:** [`prototypes/guidance-video/teaser-10s.html`](prototypes/guidance-video/teaser-10s.html)
-
-*For a polished MP4 in docs or a release: screen-record the guide or export from your pipeline; the HTML is a script-accurate storyboard.*
+When publishing a new video build, attach a single file such as `knowlery-walkthrough.mp4` to the release; release notes can point to the exact filename.
 
 ## Requirements
 
