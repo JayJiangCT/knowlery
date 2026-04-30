@@ -140,8 +140,18 @@ async function installOpenCodeCli(nodePath?: string): Promise<string> {
   }
 
   if (ObsidianPlatform.isMacOS) {
-    await runCommand('brew', ['install', 'anomalyco/tap/opencode'], 180000);
-    const installed = await verifyHomebrewBinary('opencode');
+    try {
+      await runCommand('brew', ['install', 'anomalyco/tap/opencode'], 180000);
+      const installed = await verifyHomebrewBinary('opencode');
+      return formatInstalledDetail('OpenCode', installed.version, installed.path);
+    } catch (error) {
+      if (!isMissingBrewError(error)) {
+        throw error;
+      }
+    }
+
+    await runShellCommand('curl -fsSL https://opencode.ai/install | bash', 180000);
+    const installed = await verifyCommandInShell('opencode');
     return formatInstalledDetail('OpenCode', installed.version, installed.path);
   }
 
@@ -337,4 +347,11 @@ function formatInstalledDetail(label: string, version: string | null, path: stri
   return version
     ? `${label} installed (${version}) at ${path}.`
     : `${label} installed at ${path}.`;
+}
+
+function isMissingBrewError(error: unknown): boolean {
+  const message = formatError(error).toLowerCase();
+  return message.includes('brew: command not found')
+    || message.includes('brew: no such file or directory')
+    || message.includes('enoent');
 }
