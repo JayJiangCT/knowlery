@@ -1,5 +1,5 @@
 import { App, Modal, Platform as ObsidianPlatform } from 'obsidian';
-import { StrictMode, useEffect, useState } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
@@ -303,14 +303,15 @@ function EnvironmentInstallsSection(props: {
           return (
             <label
               key={item.id}
-              className={`knowlery-wizard__install-row${selectable ? '' : ' is-disabled'}`}
+              className={`knowlery-wizard__install-row${selectable ? '' : ' is-readonly'}`}
             >
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={!selectable}
-                onChange={(event) => props.onSelectionChange(item.id, event.currentTarget.checked)}
-              />
+              {selectable && (
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => props.onSelectionChange(item.id, event.currentTarget.checked)}
+                />
+              )}
               <span className="knowlery-wizard__install-main">
                 <span className="knowlery-wizard__install-title">
                   <span>{item.label}</span>
@@ -510,6 +511,11 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   const [nodeDetecting, setNodeDetecting] = useState(false);
   const [environmentRefreshKey, setEnvironmentRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const installSelectionTouchedRef = useRef(installSelectionTouched);
+
+  useEffect(() => {
+    installSelectionTouchedRef.current = installSelectionTouched;
+  }, [installSelectionTouched]);
 
   useEffect(() => {
     readManifest(plugin.app).then((m) => {
@@ -534,7 +540,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
       .then((snapshot) => {
         if (cancelled) return;
         setEnvironment(snapshot);
-        setOptionalInstalls((prev) => syncSelectionWithDetection(prev, snapshot, installSelectionTouched));
+        setOptionalInstalls((prev) => syncSelectionWithDetection(prev, snapshot, installSelectionTouchedRef.current));
       })
       .catch((e) => {
         if (cancelled) return;
@@ -550,7 +556,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     return () => {
       cancelled = true;
     };
-  }, [environmentRefreshKey, installSelectionTouched, loading, phase, platform, plugin.app]);
+  }, [environmentRefreshKey, loading, phase, platform, plugin.app]);
 
   /* ---- setup handler ---- */
   const handleSetup = async () => {

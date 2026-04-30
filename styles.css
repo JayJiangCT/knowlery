@@ -2180,7 +2180,8 @@
   color: var(--text-normal);
 }
 
-.knowlery-wizard__install-row.is-disabled {
+.knowlery-wizard__install-row.is-readonly {
+  grid-template-columns: minmax(0, 1fr) auto;
   color: var(--text-muted);
 }
 
