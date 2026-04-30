@@ -1815,14 +1815,14 @@
 
 /* Constrain the Obsidian modal width and reset content padding so the wizard can own the layout */
 .knowlery-wizard-modal {
-  inline-size: min(640px, calc(100vw - 48px));
+  max-inline-size: calc(100vw - (var(--knowlery-space-xl) + var(--knowlery-space-xl)));
 }
 
 .knowlery-wizard-modal .modal-content {
   padding: 0;
   display: flex;
   flex-direction: column;
-  max-block-size: calc(85vh - 60px);
+  max-block-size: calc(100vh - (var(--knowlery-space-2xl) + var(--knowlery-space-2xl)));
   overflow: hidden;
 }
 
@@ -1832,7 +1832,7 @@
   align-items: center;
   gap: var(--knowlery-space-md);
   padding: var(--knowlery-space-sm) var(--knowlery-space-xl);
-  border-block-end: 1px solid var(--background-modifier-border);
+  border-block-end: var(--knowlery-border);
   background: transparent;
   flex-shrink: 0;
 }
@@ -1876,7 +1876,7 @@
 .knowlery-wizard__platform-grid {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--background-modifier-border);
+  border: var(--knowlery-border);
   border-radius: var(--knowlery-radius-panel);
   overflow: hidden;
   background: var(--background-primary);
@@ -1885,7 +1885,7 @@
 .knowlery-wizard__platform-card {
   position: relative;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: calc(var(--knowlery-space-xl) + var(--knowlery-space-sm)) minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   column-gap: var(--knowlery-space-sm);
   row-gap: var(--knowlery-space-2xs);
@@ -1894,12 +1894,12 @@
   padding: var(--knowlery-space-md) var(--knowlery-space-lg);
   background: transparent;
   border: none;
-  border-block-end: 1px solid var(--background-modifier-border);
+  border-block-end: var(--knowlery-border);
   border-radius: 0;
   text-align: start;
   cursor: pointer;
   transition: background var(--knowlery-transition), color var(--knowlery-transition);
-  min-block-size: 64px;
+  min-block-size: calc(var(--knowlery-space-2xl) + var(--knowlery-space-2xl) + var(--knowlery-space-sm));
   min-inline-size: 0;
   color: var(--text-normal);
   box-shadow: none;
@@ -1910,11 +1910,11 @@
   appearance: none;
   -webkit-appearance: none;
   block-size: auto !important;
-  min-block-size: 64px !important;
+  min-block-size: calc(var(--knowlery-space-2xl) + var(--knowlery-space-2xl) + var(--knowlery-space-sm)) !important;
   padding: var(--knowlery-space-md) var(--knowlery-space-lg) !important;
   background: transparent !important;
   border: none !important;
-  border-block-end: 1px solid var(--background-modifier-border) !important;
+  border-block-end: var(--knowlery-border) !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   line-height: 1.2;
@@ -1997,7 +1997,7 @@
 
 /* Preview accordion */
 .knowlery-wizard__preview-section {
-  border: 1px solid var(--background-modifier-border);
+  border: var(--knowlery-border);
   border-radius: var(--knowlery-radius-panel);
   overflow: hidden;
   transition: border-color var(--knowlery-transition);
@@ -2022,7 +2022,7 @@
   text-align: start;
   cursor: pointer;
   transition: background var(--knowlery-transition);
-  min-block-size: 40px;
+  min-block-size: calc(var(--knowlery-space-xl) + var(--knowlery-space-xl));
   box-shadow: none;
   font-family: inherit;
 }
@@ -2031,7 +2031,7 @@
   appearance: none;
   -webkit-appearance: none;
   block-size: auto !important;
-  min-block-size: 40px !important;
+  min-block-size: calc(var(--knowlery-space-xl) + var(--knowlery-space-xl)) !important;
   inline-size: 100%;
   padding: var(--knowlery-space-sm) var(--knowlery-space-md) !important;
   background: transparent !important;
@@ -2057,7 +2057,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: 20px;
+  inline-size: var(--knowlery-space-xl);
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -2075,7 +2075,7 @@
 }
 
 .knowlery-wizard__preview-body {
-  border-block-start: 1px solid var(--background-modifier-border);
+  border-block-start: var(--knowlery-border);
   padding: var(--knowlery-space-md);
   background: var(--background-secondary);
 }
@@ -2098,7 +2098,7 @@
 
 .knowlery-wizard__skill-icon {
   display: inline-flex;
-  inline-size: 20px;
+  inline-size: var(--knowlery-space-xl);
   justify-content: center;
   flex-shrink: 0;
   color: var(--interactive-accent);
