@@ -334,12 +334,27 @@ kind: tooling
 
 Use the Obsidian CLI to interact with the vault programmatically.
 
-## Commands
+## Default operating rule
 
-- \`obsidian-cli read <path>\` - Read a note
-- \`obsidian-cli create <path> --content <text>\` - Create a note
-- \`obsidian-cli search <query>\` - Search vault
-- \`obsidian-cli list [path]\` - List notes
+Do not start routine vault work by running \`obsidian help\`.
+
+Use verified command patterns first. Open help only when a command errors, you need an unfamiliar subcommand, or the CLI appears to have changed.
+
+## Verified commands
+
+- \`obsidian read file="My Note"\` - Read a note
+- \`obsidian create path="queries/example.md" content="# Hello"\` - Create a note at an exact path
+- \`obsidian search query="search term" limit=10\` - Search vault text
+- \`obsidian search:context query="search term" limit=10\` - Search with context
+- \`obsidian property:read name="type" path="entities/example.md"\` - Read one property from a note
+- \`obsidian base:views path="INDEX.base"\` - List Base views
+- \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` - Enumerate compiled pages
+
+## Notes
+
+- Parameters use \`=\`, such as \`query="..."\` or \`path="..."\`
+- \`properties\` lists property names and counts for the vault; it does not filter notes by \`type=value\`
+- Prefer \`file=\` for wikilink-style targets and \`path=\` for exact vault paths
 `,
   },
   {
@@ -385,7 +400,21 @@ Create and edit .base files for structured data views.
 
 ## Format
 
-Bases are JSON files with .base extension that define views over vault data.
+Bases are YAML-like definition files with a \`.base\` extension. They describe filters, formulas, properties, and views over vault data.
+
+## Example
+
+\`\`\`yaml
+filters:
+  or:
+    - file.inFolder("entities")
+    - file.inFolder("concepts")
+views:
+  - type: table
+    name: All Pages
+\`\`\`
+
+Use \`obsidian read file="INDEX.base"\` to inspect the on-disk definition and \`obsidian base:query\` to query a view.
 `,
   },
   {

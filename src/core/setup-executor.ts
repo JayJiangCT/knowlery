@@ -1,7 +1,8 @@
 import { App, normalizePath } from 'obsidian';
 import type { Manifest, Platform } from '../types';
 import { KNOWLEDGE_DIRS } from '../types';
-import { generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
+import { BUNDLED_SKILLS } from '../assets/skills';
+import { generateIndexBase, generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
 import { generatePlatformConfig } from './platform-adapter';
 import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from './skill-manager';
 import { installDefaultRules } from './rule-manager';
@@ -26,8 +27,8 @@ export interface SetupProgress {
 export function getSetupSteps(): SetupProgress[] {
   return [
     { step: 'directories', label: 'Creating knowledge directories', done: false },
-    { step: 'knowledge-files', label: 'Writing KNOWLEDGE.md and SCHEMA.md', done: false },
-    { step: 'skills', label: 'Installing 19 built-in skills', done: false },
+    { step: 'knowledge-files', label: 'Writing KNOWLEDGE.md, SCHEMA.md, and INDEX.base', done: false },
+    { step: 'skills', label: `Installing ${BUNDLED_SKILLS.length} built-in skills`, done: false },
     { step: 'platform-config', label: 'Generating agent configuration', done: false },
     { step: 'lock-files', label: 'Writing configuration files', done: false },
   ];
@@ -47,6 +48,7 @@ export async function executeSetup(
   onProgress('knowledge-files');
   await writeFile(app, 'KNOWLEDGE.md', generateKnowledgeMd(kbName));
   await writeFile(app, 'SCHEMA.md', generateSchemaMd());
+  await writeFile(app, 'INDEX.base', generateIndexBase());
 
   onProgress('skills');
   await installAllBuiltinSkills(app);

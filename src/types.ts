@@ -82,6 +82,7 @@ export interface DiagnosisResult {
 export interface ConfigIntegrity {
   knowledgeMdExists: boolean;
   schemaMdExists: boolean;
+  indexBaseExists: boolean;
   knowledgeDirsComplete: { exists: string[]; missing: string[] };
   agentConfigExists: boolean;
   rulesConfigured: boolean;

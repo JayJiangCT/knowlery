@@ -19,19 +19,27 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 ### Obsidian CLI Only
 
-**Use Obsidian CLI for all vault operations.** Never use bash commands (\`cat\`, \`grep\`, \`find\`, \`sed\`, \`ls\`, \`head\`, \`tail\`, etc.) to read or modify note files.
+**Prefer Obsidian CLI for note-centric vault operations.** Use bash only when the CLI cannot express the task cleanly, such as a folder-listing fallback during knowledge retrieval.
 
 | Task | Command |
 |------|---------|
 | Read a note | \`obsidian read file="..."\` |
 | Search vault | \`obsidian search query="..."\` |
-| Create a note | \`obsidian create file="..." content="..."\` |
+| Query the knowledge index | \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` |
+| Read a note property | \`obsidian property:read name="type" path="entities/example.md"\` |
+| Create a note | \`obsidian create path="queries/example.md" content="..."\` |
 | List files | \`obsidian files folder="..."\` |
 | Show folder | \`obsidian folder path="..."\` |
 | Check links | \`obsidian links file="..."\` |
 | Check backlinks | \`obsidian backlinks file="..."\` |
 
 Obsidian CLI resolves wikilinks, understands frontmatter and aliases, and maintains link graph consistency. Raw bash treats files as plain text and breaks the semantic layer.
+
+Do not start routine work by running \`obsidian help\`. Use the verified command patterns above first, and only open help when:
+
+- a command fails with a parameter or usage error
+- you need an unfamiliar subcommand
+- the local CLI appears to have changed after an upgrade
 
 ### Writing Conventions
 
@@ -47,10 +55,12 @@ Obsidian CLI resolves wikilinks, understands frontmatter and aliases, and mainta
 When answering questions from this vault (not general knowledge):
 
 1. Read \`INDEX.base\` first (compiled knowledge map)
-2. Read \`SCHEMA.md\` for tag taxonomy and domain rules
-3. Run \`obsidian search\` with key concepts; merge results
-4. Run \`obsidian read\` on promising paths — prefer agent pages, \`status: reviewed\` over \`draft\`, recent \`updated\`
-5. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
+2. Run \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` to enumerate compiled pages
+3. Read \`SCHEMA.md\` for tag taxonomy and domain rules
+4. Run \`obsidian search query="..."\` with key concepts; merge results
+5. Use \`obsidian property:read\` and \`obsidian read\` on promising paths — prefer agent pages, \`status: reviewed\` over \`draft\`, recent \`updated\`
+6. If the Base query cannot give usable paths, fall back to \`rg --files entities concepts comparisons queries\`
+7. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
 
 Every claim must be backed by vault notes. See \`/ask\` for the full specification.
 
@@ -136,15 +146,144 @@ updated: YYYY-MM-DD
 `;
 }
 
+export function generateIndexBase(): string {
+  return `filters:
+  or:
+    - file.inFolder("entities")
+    - file.inFolder("concepts")
+    - file.inFolder("comparisons")
+    - file.inFolder("queries")
+formulas:
+  type_label: if(type == "entity", "Entity", if(type == "concept", "Concept", if(type == "comparison", "Comparison", "Query")))
+  days_since_update: if(updated, (today() - date(updated)).days, "")
+  backlink_count: file.backlinks.length
+properties:
+  title:
+    displayName: Title
+  type:
+    displayName: Type
+  domain:
+    displayName: Domain
+  tags:
+    displayName: Tags
+  status:
+    displayName: Status
+  created:
+    displayName: Created
+  updated:
+    displayName: Updated
+  formula.type_label:
+    displayName: Type
+  formula.days_since_update:
+    displayName: Days Since Update
+  formula.backlink_count:
+    displayName: Backlinks
+  file.path:
+    displayName: Path
+views:
+  - type: table
+    name: All Pages
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - file.name
+      - title
+      - formula.type_label
+      - domain
+      - tags
+      - status
+      - created
+      - updated
+      - formula.days_since_update
+      - formula.backlink_count
+      - file.path
+    sort:
+      - property: updated
+        direction: DESC
+  - type: table
+    name: Entities
+    filters:
+      and:
+        - type == "entity"
+    groupBy:
+      property: domain
+      direction: ASC
+    order:
+      - file.name
+      - title
+      - domain
+      - tags
+      - status
+      - updated
+      - formula.days_since_update
+      - formula.backlink_count
+  - type: table
+    name: Concepts
+    filters:
+      and:
+        - type == "concept"
+    groupBy:
+      property: domain
+      direction: ASC
+    order:
+      - file.name
+      - title
+      - domain
+      - tags
+      - status
+      - updated
+      - formula.days_since_update
+      - formula.backlink_count
+  - type: table
+    name: Comparisons
+    filters:
+      and:
+        - type == "comparison"
+    order:
+      - file.name
+      - title
+      - tags
+      - status
+      - updated
+      - formula.days_since_update
+      - formula.backlink_count
+  - type: table
+    name: Queries
+    filters:
+      and:
+        - type == "query"
+    order:
+      - file.name
+      - title
+      - tags
+      - status
+      - updated
+      - formula.days_since_update
+      - formula.backlink_count
+  - type: table
+    name: Recently Updated
+    order:
+      - updated
+      - file.name
+      - title
+      - formula.type_label
+      - tags
+      - formula.backlink_count
+    limit: 10
+`;
+}
+
 export function generateClaudeMd(): string {
   return `@../KNOWLEDGE.md
 @../SCHEMA.md
+@../INDEX.base
 `;
 }
 
 export function generateOpenCodeJson(kbName: string): string {
   return JSON.stringify({
     name: kbName,
-    instructions: ['KNOWLEDGE.md', 'SCHEMA.md', '.agents/rules/*.md'],
+    instructions: ['KNOWLEDGE.md', 'SCHEMA.md', 'INDEX.base', '.agents/rules/*.md'],
   }, null, 2);
 }

@@ -330,6 +330,9 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
                   <li>
                     <code>SCHEMA.md</code>
                   </li>
+                  <li>
+                    <code>INDEX.base</code>
+                  </li>
                 </ul>
               </PreviewSection>
 
@@ -339,8 +342,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
               >
                 <p className="knowlery-wizard__config-summary">
                   {platform === 'claude-code'
-                    ? <>Creates <code>.claude/CLAUDE.md</code> with @includes for KNOWLEDGE.md and SCHEMA.md, plus rules in <code>.claude/rules/</code></>
-                    : <>Creates <code>opencode.json</code> with instructions referencing KNOWLEDGE.md and SCHEMA.md, plus rules in <code>.agents/rules/</code></>}
+                    ? <>Creates <code>.claude/CLAUDE.md</code> with @includes for KNOWLEDGE.md, SCHEMA.md, and INDEX.base, plus rules in <code>.claude/rules/</code></>
+                    : <>Creates <code>opencode.json</code> with instructions referencing KNOWLEDGE.md, SCHEMA.md, and INDEX.base, plus rules in <code>.agents/rules/</code></>}
                 </p>
               </PreviewSection>
             </div>

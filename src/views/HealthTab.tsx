@@ -177,6 +177,12 @@ export function HealthTab() {
             onClick={integrity.schemaMdExists ? undefined : openSettings}
           />
           <IntegrityRow
+            state={integrity.indexBaseExists ? 'ok' : 'fail'}
+            label="INDEX.base"
+            detail={integrity.indexBaseExists ? undefined : 'Missing'}
+            onClick={integrity.indexBaseExists ? undefined : openSettings}
+          />
+          <IntegrityRow
             state={integrity.knowledgeDirsComplete.missing.length === 0 ? 'ok' : 'fail'}
             label="Knowledge directories"
             detail={

@@ -174,6 +174,7 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
   return {
     knowledgeMdExists: app.vault.getFileByPath(normalizePath('KNOWLEDGE.md')) !== null,
     schemaMdExists: app.vault.getFileByPath(normalizePath('SCHEMA.md')) !== null,
+    indexBaseExists: app.vault.getFileByPath(normalizePath('INDEX.base')) !== null,
     knowledgeDirsComplete: {
       exists: existingDirs,
       missing: missingDirs,
