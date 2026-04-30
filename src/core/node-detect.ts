@@ -33,6 +33,20 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
     if (result) return result;
   }
 
+  if (Platform.isWin) {
+    const localAppData = process.env.LOCALAPPDATA ?? '';
+    const programFiles = process.env.ProgramFiles ?? '';
+    const fallbackPaths = [
+      `${programFiles}\\nodejs\\node.exe`,
+      `${localAppData}\\Programs\\nodejs\\node.exe`,
+    ].filter(Boolean);
+
+    for (const nodePath of fallbackPaths) {
+      const result = await tryNodeExecFile(execFile, nodePath);
+      if (result) return result;
+    }
+  }
+
   return { detected: false, version: null, path: null };
 }
 
