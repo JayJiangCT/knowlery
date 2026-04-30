@@ -2396,21 +2396,10 @@
   font-size: var(--knowlery-body-size);
 }
 
-/* Progress track */
-.knowlery-wizard__progress-track {
+/* Progress */
+.knowlery-wizard__native-progress {
+  grid-column: 1 / -1;
   inline-size: 100%;
-  block-size: var(--knowlery-space-xs);
-  background: var(--background-modifier-border);
-  border-radius: var(--knowlery-radius-pill);
-  overflow: hidden;
-}
-
-.knowlery-wizard__progress-fill {
-  inline-size: var(--knowlery-progress, 0%);
-  block-size: 100%;
-  background: var(--interactive-accent);
-  border-radius: var(--knowlery-radius-pill);
-  transition: inline-size var(--knowlery-transition-slow);
 }
 
 .knowlery-wizard__progress-label {

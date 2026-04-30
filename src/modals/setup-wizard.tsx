@@ -1,4 +1,4 @@
-import { App, Modal, Platform as ObsidianPlatform } from 'obsidian';
+import { App, Modal, Platform as ObsidianPlatform, ProgressBarComponent } from 'obsidian';
 import { StrictMode, useEffect, useRef, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
@@ -72,6 +72,8 @@ export class SetupWizardModal extends Modal {
 type WizardPhase = 'preview' | 'running' | 'done';
 
 const INSTALL_ITEM_ORDER: InstallItemId[] = ['platform-cli', 'claudian', 'skills-tooling'];
+const INDETERMINATE_PROGRESS_TICK_MS = 120;
+const INDETERMINATE_PROGRESS_STEP = 8;
 
 /* ------------------------------------------------------------------ */
 /*  Phase step indicator                                               */
@@ -139,6 +141,50 @@ function PreviewSection(props: {
       {open && <div className="knowlery-wizard__preview-body">{props.children}</div>}
     </div>
   );
+}
+
+function NativeProgressBar(props: {
+  value?: number;
+  indeterminate?: boolean;
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const componentRef = useRef<ProgressBarComponent | null>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+
+    host.replaceChildren();
+    const component = new ProgressBarComponent(host);
+    componentRef.current = component;
+    component.setValue(props.value ?? 0);
+
+    return () => {
+      componentRef.current = null;
+      host.replaceChildren();
+    };
+  }, []);
+
+  useEffect(() => {
+    const component = componentRef.current;
+    if (!component || props.indeterminate) return;
+
+    component.setValue(props.value ?? 0);
+  }, [props.indeterminate, props.value]);
+
+  useEffect(() => {
+    if (!props.indeterminate) return;
+
+    let progress = 0;
+    const interval = window.setInterval(() => {
+      progress = (progress + INDETERMINATE_PROGRESS_STEP) % 100;
+      componentRef.current?.setValue(progress);
+    }, INDETERMINATE_PROGRESS_TICK_MS);
+
+    return () => window.clearInterval(interval);
+  }, [props.indeterminate]);
+
+  return <div className="knowlery-wizard__native-progress" ref={hostRef} />;
 }
 
 function selectionForItem(selection: OptionalInstallSelection, id: InstallItemId): boolean {
@@ -258,6 +304,10 @@ function resultTone(status: InstallExecutionState['status']): string {
   if (status === 'failed') return ' is-error';
   if (status === 'skipped') return ' is-warning';
   return '';
+}
+
+function runIsActive(status: InstallExecutionState['status']): boolean {
+  return status === 'queued' || status === 'running' || status === 'verifying';
 }
 
 function EnvironmentInstallsSection(props: {
@@ -406,6 +456,9 @@ function OptionalInstallRunList(props: {
             <span className="knowlery-wizard__run-install-name">{installLabel(run.id, props.platform)}</span>
             <span className="knowlery-wizard__run-install-status">{statusLabel(run.status)}</span>
             {run.detail && <span className="knowlery-wizard__run-install-detail">{run.detail}</span>}
+            {runIsActive(run.status) && (
+              <NativeProgressBar indeterminate />
+            )}
           </li>
         ))}
       </ul>
@@ -791,18 +844,14 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   if (phase === 'running') {
     const steps = getSetupSteps();
     const totalSteps = steps.length;
+    const setupProgress = (completedSteps.size / totalSteps) * 100;
     return (
       <div className="knowlery-wizard__phase">
         <PhaseSteps current="running" />
 
         <div className="knowlery-wizard__body">
           <div>
-            <div
-              className="knowlery-wizard__progress-track"
-              style={{ '--knowlery-progress': `${(completedSteps.size / totalSteps) * 100}%` } as React.CSSProperties}
-            >
-              <div className="knowlery-wizard__progress-fill" />
-            </div>
+            <NativeProgressBar value={setupProgress} />
             <span className="knowlery-wizard__progress-label">
               Step {completedSteps.size} of {totalSteps}
             </span>
