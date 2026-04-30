@@ -32,6 +32,8 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 Knowlery is desktop-only because it uses local command-line tools and Electron desktop APIs.
 
+During the setup wizard, Knowlery can detect whether Claude Code, OpenCode, Node.js, and the external `skills` CLI are available. On desktop, the wizard can optionally help install or prepare missing agent tools, and can optionally install Claudian directly into your vault without requiring BRAT. These steps are opt-in; if a tool is already installed, Knowlery skips it.
+
 ### Agent chat in Obsidian (optional companions)
 
 Knowlery focuses on **vault layout, skills, rules, and health** for agent workflows. If you also want a **full agent chat** inside Obsidian (sidebar, inline edit, multi-provider), consider installing one of these **in addition to** Knowlery:
