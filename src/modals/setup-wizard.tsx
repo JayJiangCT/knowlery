@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Modal, Platform as ObsidianPlatform } from 'obsidian';
 import { StrictMode, useEffect, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
@@ -168,7 +168,19 @@ function withInstallSelection(
 }
 
 function detectionIsSelectable(item: InstallDetectionResult): boolean {
-  return item.status === 'not-installed';
+  return item.status === 'not-installed' && installUnavailableDetail(item.id) === null;
+}
+
+function installUnavailableDetail(id: InstallItemId): string | null {
+  if (!ObsidianPlatform.isMobile) {
+    return null;
+  }
+
+  if (id === 'platform-cli' || id === 'claudian') {
+    return 'Desktop only.';
+  }
+
+  return null;
 }
 
 function syncSelectionWithDetection(
@@ -286,6 +298,8 @@ function EnvironmentInstallsSection(props: {
         {items.map((item) => {
           const selectable = !props.loading && detectionIsSelectable(item);
           const checked = selectionForItem(props.selection, item.id);
+          const unavailableDetail = installUnavailableDetail(item.id);
+          const detail = unavailableDetail ?? item.installedVersion ?? item.detail;
           return (
             <label
               key={item.id}
@@ -305,14 +319,14 @@ function EnvironmentInstallsSection(props: {
                   )}
                 </span>
                 <span className="knowlery-wizard__install-desc">{item.description}</span>
-                {(item.detail || item.installedVersion) && (
+                {detail && (
                   <span className="knowlery-wizard__install-detail">
-                    {item.installedVersion ? item.installedVersion : item.detail}
+                    {detail}
                   </span>
                 )}
               </span>
-              <span className={`knowlery-wizard__install-status is-${item.status}`}>
-                {props.loading ? 'Checking' : statusLabel(item.status)}
+              <span className={`knowlery-wizard__install-status${unavailableDetail ? ' is-unavailable' : ` is-${item.status}`}`}>
+                {props.loading ? 'Checking' : unavailableDetail ? 'Unavailable' : statusLabel(item.status)}
               </span>
             </label>
           );

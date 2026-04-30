@@ -2301,7 +2301,6 @@
 
 .modal .knowlery-modal .knowlery-wizard__node-controls button.knowlery-btn {
   block-size: auto !important;
-  min-block-size: 32px !important;
   padding: var(--knowlery-space-xs) var(--knowlery-space-md) !important;
 }
 
