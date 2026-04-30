@@ -343,8 +343,11 @@ function EnvironmentInstallsSection(props: {
             <div>
               <div className="knowlery-wizard__node-title">Node.js was not found</div>
               <p>
-                Skills tooling and some CLI installers need Node.js. Install Node.js, enter an
-                absolute path, or run auto-detect after updating your shell path.
+                Skills tooling and some CLI installers need Node.js.{' '}
+                <a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">
+                  Download Node.js
+                </a>
+                {' '}first, then enter an absolute path or run auto-detect after updating your shell path.
               </p>
             </div>
             <div className="knowlery-wizard__node-controls">
