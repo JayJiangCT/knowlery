@@ -26,6 +26,10 @@ interface AppPluginsLike {
   loadPlugin?: (pluginId: string) => Promise<void>;
 }
 
+type CommunityPluginsReadResult =
+  | { ok: true; pluginIds: string[] }
+  | { ok: false; detail: string };
+
 export interface ClaudianInstallResult {
   installed: boolean;
   enabled: boolean;
@@ -159,7 +163,15 @@ async function writeCommunityPluginState(
   app: App,
   plugins: AppPluginsLike,
 ): Promise<{ enabled: boolean; detail: string }> {
-  const pluginIds = await readCommunityPlugins(app);
+  const communityPlugins = await readCommunityPlugins(app);
+  if (!communityPlugins.ok) {
+    return {
+      enabled: false,
+      detail: communityPlugins.detail,
+    };
+  }
+
+  const pluginIds = communityPlugins.pluginIds;
   if (!pluginIds.includes(CLAUDIAN_PLUGIN_ID)) {
     pluginIds.push(CLAUDIAN_PLUGIN_ID);
     await app.vault.adapter.write(
@@ -189,20 +201,36 @@ async function writeCommunityPluginState(
   };
 }
 
-async function readCommunityPlugins(app: App): Promise<string[]> {
+async function readCommunityPlugins(app: App): Promise<CommunityPluginsReadResult> {
   const path = normalizePath(COMMUNITY_PLUGINS_PATH);
   if (!(await app.vault.adapter.exists(path))) {
-    return [];
+    return { ok: true, pluginIds: [] };
   }
 
   try {
     const content = await app.vault.adapter.read(path);
     const parsed = JSON.parse(content);
-    return Array.isArray(parsed)
-      ? parsed.filter((value): value is string => typeof value === 'string')
-      : [];
+    if (!Array.isArray(parsed)) {
+      return {
+        ok: false,
+        detail: 'Claudian files were installed, but Knowlery could not safely update community-plugins.json because it was not an array.',
+      };
+    }
+
+    const pluginIds = parsed.filter((value): value is string => typeof value === 'string');
+    if (pluginIds.length !== parsed.length) {
+      return {
+        ok: false,
+        detail: 'Claudian files were installed, but Knowlery could not safely update community-plugins.json because it contains non-string entries.',
+      };
+    }
+
+    return { ok: true, pluginIds };
   } catch {
-    return [];
+    return {
+      ok: false,
+      detail: 'Claudian files were installed, but Knowlery could not safely read community-plugins.json to persist enablement.',
+    };
   }
 }
 

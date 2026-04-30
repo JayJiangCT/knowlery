@@ -6,7 +6,6 @@ import type {
   OptionalInstallSelection,
   Platform,
 } from '../types';
-import { detectCliToolByName } from './cli-detect';
 import { installClaudian } from './claudian-installer';
 import { detectNode } from './node-detect';
 
@@ -81,25 +80,11 @@ async function installPlatformCli(platform: Platform, nodePath?: string): Promis
     throw new InstallSkipError('Platform CLI install is not available on mobile.');
   }
 
-  const node = await detectNode(nodePath);
-  if (!node.detected) {
-    throw new InstallSkipError('Node.js is required to install the platform CLI.');
+  if (platform === 'claude-code') {
+    return installClaudeCodeCli();
   }
 
-  const target = platform === 'claude-code'
-    ? { label: 'Claude Code', command: 'claude', packageName: '@anthropic-ai/claude-code' }
-    : { label: 'OpenCode', command: 'opencode', packageName: 'opencode-ai' };
-
-  await runCommand(resolveNodeSiblingCommand(node.path, 'npm'), ['install', '-g', target.packageName], 180000);
-
-  const installed = await detectCliToolByName(target.command);
-  if (!installed.installed) {
-    throw new Error(`${target.label} install finished, but ${target.command} was not found on PATH.`);
-  }
-
-  return installed.version
-    ? `${target.label} installed (${installed.version}).`
-    : `${target.label} installed.`;
+  return installOpenCodeCli(nodePath);
 }
 
 async function installClaudianPlugin(app: App): Promise<string> {
@@ -121,13 +106,48 @@ async function installSkillsTooling(nodePath?: string): Promise<string> {
     throw new InstallSkipError('Node.js is required to install skills tooling.');
   }
 
-  await runCommand(resolveNodeSiblingCommand(node.path, 'npm'), ['install', '-g', 'skills'], 180000);
-  const helpText = await runCommand(resolveNodeSiblingCommand(node.path, 'npx'), ['skills', '--help'], 30000);
+  const helpText = await runCommand(resolveNodeSiblingCommand(node.path, 'npx'), ['--yes', 'skills', '--help'], 60000);
   const summary = firstLine(helpText.stdout) || firstLine(helpText.stderr);
 
   return summary
     ? `Skills tooling ready (${summary}).`
     : 'Skills tooling ready.';
+}
+
+async function installClaudeCodeCli(): Promise<string> {
+  if (ObsidianPlatform.isWin) {
+    await runPowerShellCommand('irm https://claude.ai/install.ps1 | iex', 180000);
+    const installed = await verifyCommandInPowerShell('claude');
+    return formatInstalledDetail('Claude Code', installed.version, installed.path);
+  }
+
+  await runShellCommand('curl -fsSL https://claude.ai/install.sh | bash', 180000);
+  const installed = await verifyCommandInShell('claude');
+  return formatInstalledDetail('Claude Code', installed.version, installed.path);
+}
+
+async function installOpenCodeCli(nodePath?: string): Promise<string> {
+  if (ObsidianPlatform.isWin) {
+    const node = await detectNode(nodePath);
+    if (!node.detected) {
+      throw new InstallSkipError('Node.js is required to install OpenCode on Windows.');
+    }
+
+    const npmPath = resolveNodeSiblingCommand(node.path, 'npm');
+    await runCommand(npmPath, ['install', '-g', 'opencode-ai'], 180000);
+    const installed = await verifyNpmGlobalBinary(npmPath, 'opencode');
+    return formatInstalledDetail('OpenCode', installed.version, installed.path);
+  }
+
+  if (ObsidianPlatform.isMacOS) {
+    await runCommand('brew', ['install', 'anomalyco/tap/opencode'], 180000);
+    const installed = await verifyHomebrewBinary('opencode');
+    return formatInstalledDetail('OpenCode', installed.version, installed.path);
+  }
+
+  await runShellCommand('curl -fsSL https://opencode.ai/install | bash', 180000);
+  const installed = await verifyCommandInShell('opencode');
+  return formatInstalledDetail('OpenCode', installed.version, installed.path);
 }
 
 function isSelected(selection: OptionalInstallSelection, id: InstallItemId): boolean {
@@ -206,6 +226,20 @@ function runCommand(
   });
 }
 
+function runShellCommand(script: string, timeout: number): Promise<{ stdout: string; stderr: string }> {
+  const home = process.env.HOME ?? '';
+  const shell = process.env.SHELL ?? '/bin/zsh';
+  const sourceCmd = shell.endsWith('zsh')
+    ? `source "${home}/.zprofile" 2>/dev/null; source "${home}/.zshrc" 2>/dev/null;`
+    : `source "${home}/.bash_profile" 2>/dev/null; source "${home}/.bashrc" 2>/dev/null;`;
+
+  return runCommand(shell, ['-c', `${sourceCmd} ${script}`], timeout);
+}
+
+function runPowerShellCommand(script: string, timeout: number): Promise<{ stdout: string; stderr: string }> {
+  return runCommand('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], timeout);
+}
+
 function firstLine(text: string): string {
   return text
     .split('\n')
@@ -225,4 +259,82 @@ function resolveNodeSiblingCommand(nodePath: string | null, binary: 'npm' | 'npx
   return ObsidianPlatform.isWin
     ? join(dirname(nodePath), `${binary}.cmd`)
     : join(dirname(nodePath), binary);
+}
+
+async function verifyNpmGlobalBinary(
+  npmPath: string,
+  binaryName: string,
+): Promise<{ path: string; version: string | null }> {
+  const prefixResult = await runCommand(npmPath, ['prefix', '-g'], 30000);
+  const prefix = firstLine(prefixResult.stdout);
+  if (!prefix) {
+    throw new Error(`Unable to determine npm global prefix for ${binaryName}.`);
+  }
+
+  const binaryPath = ObsidianPlatform.isWin
+    ? join(prefix, `${binaryName}.cmd`)
+    : join(prefix, 'bin', binaryName);
+  const versionResult = await runCommand(binaryPath, ['--version'], 30000);
+
+  return {
+    path: binaryPath,
+    version: firstLine(versionResult.stdout) || null,
+  };
+}
+
+async function verifyHomebrewBinary(binaryName: string): Promise<{ path: string; version: string | null }> {
+  const prefixResult = await runCommand('brew', ['--prefix', binaryName], 30000);
+  const prefix = firstLine(prefixResult.stdout);
+  if (!prefix) {
+    throw new Error(`Unable to determine Homebrew prefix for ${binaryName}.`);
+  }
+
+  const binaryPath = join(prefix, 'bin', binaryName);
+  const versionResult = await runCommand(binaryPath, ['--version'], 30000);
+
+  return {
+    path: binaryPath,
+    version: firstLine(versionResult.stdout) || null,
+  };
+}
+
+async function verifyCommandInShell(binaryName: string): Promise<{ path: string; version: string | null }> {
+  const verification = await runShellCommand(`command -v ${binaryName} && ${binaryName} --version`, 30000);
+  const lines = verification.stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length === 0) {
+    throw new Error(`${binaryName} was not found after installation.`);
+  }
+
+  return {
+    path: lines[0],
+    version: lines[1] ?? null,
+  };
+}
+
+async function verifyCommandInPowerShell(binaryName: string): Promise<{ path: string; version: string | null }> {
+  const verification = await runPowerShellCommand(
+    `$cmd = Get-Command ${binaryName} -ErrorAction Stop; Write-Output $cmd.Source; & ${binaryName} --version`,
+    30000,
+  );
+  const lines = verification.stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length === 0) {
+    throw new Error(`${binaryName} was not found after installation.`);
+  }
+
+  return {
+    path: lines[0],
+    version: lines[1] ?? null,
+  };
+}
+
+function formatInstalledDetail(label: string, version: string | null, path: string): string {
+  return version
+    ? `${label} installed (${version}) at ${path}.`
+    : `${label} installed at ${path}.`;
 }

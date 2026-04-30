@@ -36,6 +36,10 @@ export interface ExecuteSetupOptions {
   onOptionalInstallUpdate?: (state: InstallExecutionState) => void;
 }
 
+export interface ExecuteSetupResult {
+  optionalInstallRuns: InstallExecutionState[];
+}
+
 export function getSetupSteps(): SetupProgress[] {
   return [
     { step: 'directories', label: 'Creating knowledge directories', done: false },
@@ -52,7 +56,7 @@ export async function executeSetup(
   kbName: string,
   onProgress: (step: SetupStep) => void,
   options: ExecuteSetupOptions = {},
-): Promise<void> {
+): Promise<ExecuteSetupResult> {
   onProgress('directories');
   for (const dir of KNOWLEDGE_DIRS) {
     await ensureDir(app, dir);
@@ -75,17 +79,18 @@ export async function executeSetup(
   await saveSkillsLock(app, lock);
   await writeManifest(app, platform, kbName);
 
+  let optionalInstallRuns: InstallExecutionState[] = [];
   if (hasOptionalInstalls(options.optionalInstalls)) {
-    void runOptionalInstalls({
+    optionalInstallRuns = await runOptionalInstalls({
       app,
       platform,
       selection: options.optionalInstalls,
       nodePath: options.nodePath,
       onUpdate: options.onOptionalInstallUpdate,
-    }).catch(() => {
-      // Optional installs report their own failures through per-item updates.
     });
   }
+
+  return { optionalInstallRuns };
 }
 
 async function writeManifest(app: App, platform: Platform, kbName: string): Promise<void> {
