@@ -305,12 +305,19 @@ function EnvironmentInstallsSection(props: {
               key={item.id}
               className={`knowlery-wizard__install-row${selectable ? '' : ' is-readonly'}`}
             >
-              {selectable && (
+              {selectable ? (
                 <input
                   type="checkbox"
                   checked={checked}
                   onChange={(event) => props.onSelectionChange(item.id, event.currentTarget.checked)}
                 />
+              ) : (
+                <span
+                  className={`knowlery-wizard__install-leading${item.status === 'installed' ? ' is-installed' : ''}`}
+                  aria-hidden="true"
+                >
+                  {item.status === 'installed' && <IconCheckCircle size={16} />}
+                </span>
               )}
               <span className="knowlery-wizard__install-main">
                 <span className="knowlery-wizard__install-title">

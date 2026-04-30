@@ -2181,12 +2181,21 @@
 }
 
 .knowlery-wizard__install-row.is-readonly {
-  grid-template-columns: minmax(0, 1fr) auto;
   color: var(--text-muted);
 }
 
-.knowlery-wizard__install-row input[type="checkbox"] {
+.knowlery-wizard__install-row input[type="checkbox"],
+.knowlery-wizard__install-leading {
   margin-block-start: var(--knowlery-space-xs);
+}
+
+.knowlery-wizard__install-leading {
+  display: inline-flex;
+  color: var(--text-faint);
+}
+
+.knowlery-wizard__install-leading.is-installed {
+  color: var(--knowlery-success);
 }
 
 .knowlery-wizard__install-main {
