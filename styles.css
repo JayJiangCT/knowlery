@@ -2352,6 +2352,9 @@
 }
 
 .knowlery-wizard__run-install-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
   font-size: var(--knowlery-meta-size);
   color: var(--text-muted);
   white-space: nowrap;
@@ -2396,18 +2399,27 @@
   font-size: var(--knowlery-body-size);
 }
 
-/* Progress */
-.knowlery-wizard__native-progress {
-  grid-column: 1 / -1;
-  inline-size: 100%;
+.knowlery-wizard__running-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--knowlery-space-sm);
 }
 
 .knowlery-wizard__progress-label {
-  display: block;
   font-size: var(--knowlery-meta-size);
   color: var(--text-muted);
-  text-align: end;
-  margin-block-start: var(--knowlery-space-xs);
+}
+
+.knowlery-wizard__circle-progress {
+  display: inline-block;
+  inline-size: var(--knowlery-space-md);
+  block-size: var(--knowlery-space-md);
+  border: var(--knowlery-space-2xs) solid var(--background-modifier-border);
+  border-block-start-color: var(--interactive-accent);
+  border-radius: var(--knowlery-radius-pill);
+  animation: knowlerySpin var(--knowlery-transition-slow) linear infinite;
+  flex-shrink: 0;
 }
 
 /* Step list */
@@ -2451,7 +2463,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .knowlery-wizard__step-icon.is-spinning svg {
+  .knowlery-wizard__step-icon.is-spinning svg,
+  .knowlery-wizard__circle-progress {
     animation: none;
   }
 }
