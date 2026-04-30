@@ -100,11 +100,64 @@ export interface KnowlerySettings {
   onboardingDismissed: boolean;
 }
 
+export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
+
+export type InstallDetectionStatus =
+  | 'checking'
+  | 'installed'
+  | 'not-installed'
+  | 'missing-dependency'
+  | 'error';
+
+export type InstallRunStatus =
+  | 'not-selected'
+  | 'queued'
+  | 'running'
+  | 'verifying'
+  | 'done'
+  | 'failed'
+  | 'skipped';
+
+export interface InstallDetectionResult {
+  id: InstallItemId;
+  label: string;
+  description: string;
+  status: InstallDetectionStatus;
+  detail?: string;
+  recommended?: boolean;
+  selectedByDefault?: boolean;
+  requiresNode?: boolean;
+  installedVersion?: string;
+}
+
+export interface InstallExecutionState {
+  id: InstallItemId;
+  status: InstallRunStatus;
+  detail?: string;
+}
+
+export interface OptionalInstallSelection {
+  platformCli: boolean;
+  claudian: boolean;
+  skillsTooling: boolean;
+}
+
+export interface SetupEnvironmentSummary {
+  detections: InstallDetectionResult[];
+  runs: InstallExecutionState[];
+}
+
 export const DEFAULT_SETTINGS: KnowlerySettings = {
   kbName: 'My Knowledge Base',
   platform: 'claude-code',
   nodePath: '',
   onboardingDismissed: false,
+};
+
+export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
+  platformCli: false,
+  claudian: true,
+  skillsTooling: false,
 };
 
 export const KNOWLEDGE_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
