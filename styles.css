@@ -2155,6 +2155,210 @@
   font-size: var(--knowlery-meta-size);
 }
 
+/* Environment install rows */
+.knowlery-wizard__install-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-wizard__install-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--knowlery-space-sm);
+  align-items: start;
+  padding: var(--knowlery-space-sm);
+  border: var(--knowlery-border);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__install-row.is-disabled {
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__install-row input[type="checkbox"] {
+  margin-block-start: var(--knowlery-space-xs);
+}
+
+.knowlery-wizard__install-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+  min-inline-size: 0;
+}
+
+.knowlery-wizard__install-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--knowlery-space-xs);
+  font-size: var(--knowlery-body-size);
+  font-weight: 600;
+}
+
+.knowlery-wizard__install-pill {
+  padding: var(--knowlery-space-2xs) var(--knowlery-space-xs);
+  border-radius: var(--knowlery-radius-pill);
+  background: var(--knowlery-accent-tint);
+  color: var(--text-accent);
+  font-size: var(--knowlery-meta-size);
+  font-weight: 500;
+}
+
+.knowlery-wizard__install-desc,
+.knowlery-wizard__install-detail,
+.knowlery-wizard__node-summary,
+.knowlery-wizard__node-message {
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.knowlery-wizard__install-detail {
+  color: var(--text-faint);
+}
+
+.knowlery-wizard__install-status {
+  justify-self: end;
+  padding: var(--knowlery-space-2xs) var(--knowlery-space-xs);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-modifier-form-field);
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+  white-space: nowrap;
+}
+
+.knowlery-wizard__install-status.is-installed,
+.knowlery-wizard__run-install-item.is-success .knowlery-wizard__run-install-status {
+  color: var(--knowlery-success);
+}
+
+.knowlery-wizard__install-status.is-not-installed,
+.knowlery-wizard__install-status.is-missing-dependency,
+.knowlery-wizard__run-install-item.is-warning .knowlery-wizard__run-install-status {
+  color: var(--knowlery-warning);
+}
+
+.knowlery-wizard__install-status.is-error,
+.knowlery-wizard__run-install-item.is-error .knowlery-wizard__run-install-status {
+  color: var(--knowlery-error);
+}
+
+.knowlery-wizard__install-note {
+  padding: var(--knowlery-space-sm);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-modifier-form-field);
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-muted);
+}
+
+.knowlery-wizard__install-note.is-error {
+  color: var(--knowlery-error);
+}
+
+.knowlery-wizard__node-summary code {
+  font-family: var(--font-monospace);
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__node-recovery {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-sm);
+  padding: var(--knowlery-space-md);
+  border: var(--knowlery-border);
+  border-inline-start: var(--knowlery-space-2xs) solid var(--knowlery-warning);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-primary);
+}
+
+.knowlery-wizard__node-title {
+  font-size: var(--knowlery-body-size);
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__node-recovery p {
+  margin: var(--knowlery-space-2xs) 0 0;
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+  line-height: 1.5;
+}
+
+.knowlery-wizard__node-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--knowlery-space-sm);
+  align-items: center;
+}
+
+.knowlery-wizard__node-controls input {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.modal .knowlery-modal .knowlery-wizard__node-controls button.knowlery-btn {
+  block-size: auto !important;
+  min-block-size: 32px !important;
+  padding: var(--knowlery-space-xs) var(--knowlery-space-md) !important;
+}
+
+.knowlery-wizard__run-installs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-wizard__run-install-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.knowlery-wizard__run-install-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  padding: var(--knowlery-space-sm);
+  border: var(--knowlery-border);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-primary);
+}
+
+.knowlery-wizard__run-install-name {
+  font-size: var(--knowlery-body-size);
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.knowlery-wizard__run-install-status {
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.knowlery-wizard__run-install-detail {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+  line-height: 1.5;
+}
+
+.knowlery-wizard__install-summary {
+  text-align: start;
+  margin-block-end: var(--knowlery-space-lg);
+}
+
+.knowlery-wizard__install-summary p {
+  color: var(--text-muted);
+  font-size: var(--knowlery-body-size);
+}
+
 /* Intro text */
 .knowlery-wizard__intro {
   font-size: var(--knowlery-body-size);

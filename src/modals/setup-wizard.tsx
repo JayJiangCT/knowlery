@@ -3,14 +3,23 @@ import { StrictMode, useEffect, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
-import type { Manifest, Platform } from '../types';
-import { KNOWLEDGE_DIRS } from '../types';
+import type {
+  InstallDetectionResult,
+  InstallExecutionState,
+  InstallItemId,
+  Manifest,
+  OptionalInstallSelection,
+  Platform,
+} from '../types';
+import { DEFAULT_OPTIONAL_INSTALL_SELECTION, KNOWLEDGE_DIRS } from '../types';
 import { executeSetup, getSetupSteps, readManifest, type SetupStep } from '../core/setup-executor';
+import { detectEnvironment, type EnvironmentDetectSnapshot } from '../core/environment-detect';
+import { detectNode } from '../core/node-detect';
 import { BUNDLED_SKILLS } from '../assets/skills';
 import {
   IconCircle, IconCircleDot, IconChevronDown, IconChevronUp,
   IconAlertCircle, IconCheckCircle, IconCode, IconTerminal,
-  IconWrench, IconFolder, IconSettings, IconArrowRight,
+  IconWrench, IconFolder, IconSettings, IconArrowRight, IconRefresh,
   SkillIcon,
 } from '../views/Icons';
 
@@ -61,6 +70,8 @@ export class SetupWizardModal extends Modal {
 /* ------------------------------------------------------------------ */
 
 type WizardPhase = 'preview' | 'running' | 'done';
+
+const INSTALL_ITEM_ORDER: InstallItemId[] = ['platform-cli', 'claudian', 'skills-tooling'];
 
 /* ------------------------------------------------------------------ */
 /*  Phase step indicator                                               */
@@ -126,6 +137,253 @@ function PreviewSection(props: {
         </span>
       </button>
       {open && <div className="knowlery-wizard__preview-body">{props.children}</div>}
+    </div>
+  );
+}
+
+function selectionForItem(selection: OptionalInstallSelection, id: InstallItemId): boolean {
+  switch (id) {
+    case 'platform-cli':
+      return selection.platformCli;
+    case 'claudian':
+      return selection.claudian;
+    case 'skills-tooling':
+      return selection.skillsTooling;
+  }
+}
+
+function withInstallSelection(
+  selection: OptionalInstallSelection,
+  id: InstallItemId,
+  checked: boolean,
+): OptionalInstallSelection {
+  switch (id) {
+    case 'platform-cli':
+      return { ...selection, platformCli: checked };
+    case 'claudian':
+      return { ...selection, claudian: checked };
+    case 'skills-tooling':
+      return { ...selection, skillsTooling: checked };
+  }
+}
+
+function detectionIsSelectable(item: InstallDetectionResult): boolean {
+  return item.status === 'not-installed';
+}
+
+function syncSelectionWithDetection(
+  previous: OptionalInstallSelection,
+  snapshot: EnvironmentDetectSnapshot,
+  touched: Set<InstallItemId>,
+): OptionalInstallSelection {
+  let next = previous;
+  for (const item of snapshot.items) {
+    const selected = detectionIsSelectable(item)
+      ? touched.has(item.id)
+        ? selectionForItem(previous, item.id)
+        : item.selectedByDefault ?? selectionForItem(previous, item.id)
+      : false;
+    next = withInstallSelection(next, item.id, selected);
+  }
+  return next;
+}
+
+function selectedInstallStates(
+  selection: OptionalInstallSelection,
+  detections: InstallDetectionResult[],
+): InstallExecutionState[] {
+  return INSTALL_ITEM_ORDER
+    .filter((id) => selectionForItem(selection, id))
+    .map((id) => ({
+      id,
+      status: 'queued',
+      detail: `${detections.find((item) => item.id === id)?.label ?? id} queued.`,
+    }));
+}
+
+function installLabel(id: InstallItemId, platform: Platform): string {
+  switch (id) {
+    case 'platform-cli':
+      return platform === 'claude-code' ? 'Claude Code' : 'OpenCode';
+    case 'claudian':
+      return 'Claudian';
+    case 'skills-tooling':
+      return 'Skills tooling';
+  }
+}
+
+function statusLabel(status: InstallDetectionResult['status'] | InstallExecutionState['status']): string {
+  switch (status) {
+    case 'checking':
+      return 'Checking';
+    case 'installed':
+      return 'Installed';
+    case 'not-installed':
+      return 'Not installed';
+    case 'missing-dependency':
+      return 'Needs Node.js';
+    case 'error':
+      return 'Error';
+    case 'not-selected':
+      return 'Not selected';
+    case 'queued':
+      return 'Queued';
+    case 'running':
+      return 'Running';
+    case 'verifying':
+      return 'Verifying';
+    case 'done':
+      return 'Done';
+    case 'failed':
+      return 'Failed';
+    case 'skipped':
+      return 'Skipped';
+  }
+}
+
+function resultTone(status: InstallExecutionState['status']): string {
+  if (status === 'done') return ' is-success';
+  if (status === 'failed') return ' is-error';
+  if (status === 'skipped') return ' is-warning';
+  return '';
+}
+
+function EnvironmentInstallsSection(props: {
+  snapshot: EnvironmentDetectSnapshot | null;
+  loading: boolean;
+  error: string | null;
+  platform: Platform;
+  selection: OptionalInstallSelection;
+  nodePath: string;
+  nodeMessage: string | null;
+  nodeDetecting: boolean;
+  onSelectionChange: (id: InstallItemId, checked: boolean) => void;
+  onNodePathChange: (value: string) => void;
+  onNodePathCommit: () => void;
+  onAutoDetectNode: () => void;
+}) {
+  const items: InstallDetectionResult[] = props.snapshot?.items ?? INSTALL_ITEM_ORDER.map((id) => ({
+    id,
+    label: installLabel(id, props.platform),
+    description: 'Checking install status.',
+    status: 'checking',
+  }));
+  const nodeMissing = !props.loading && props.snapshot !== null && !props.snapshot.nodeDetected;
+
+  return (
+    <PreviewSection
+      title="Detected tools"
+      icon={<IconTerminal size={16} />}
+      defaultOpen
+    >
+      <div className="knowlery-wizard__install-list">
+        {props.error && (
+          <div className="knowlery-wizard__install-note is-error">
+            {props.error}
+          </div>
+        )}
+
+        {items.map((item) => {
+          const selectable = !props.loading && detectionIsSelectable(item);
+          const checked = selectionForItem(props.selection, item.id);
+          return (
+            <label
+              key={item.id}
+              className={`knowlery-wizard__install-row${selectable ? '' : ' is-disabled'}`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={!selectable}
+                onChange={(event) => props.onSelectionChange(item.id, event.currentTarget.checked)}
+              />
+              <span className="knowlery-wizard__install-main">
+                <span className="knowlery-wizard__install-title">
+                  <span>{item.label}</span>
+                  {item.recommended && (
+                    <span className="knowlery-wizard__install-pill">Recommended</span>
+                  )}
+                </span>
+                <span className="knowlery-wizard__install-desc">{item.description}</span>
+                {(item.detail || item.installedVersion) && (
+                  <span className="knowlery-wizard__install-detail">
+                    {item.installedVersion ? item.installedVersion : item.detail}
+                  </span>
+                )}
+              </span>
+              <span className={`knowlery-wizard__install-status is-${item.status}`}>
+                {props.loading ? 'Checking' : statusLabel(item.status)}
+              </span>
+            </label>
+          );
+        })}
+
+        {props.snapshot?.nodeDetected && (
+          <div className="knowlery-wizard__node-summary">
+            Node.js {props.snapshot.nodeVersion ?? 'detected'} at <code>{props.snapshot.nodePath}</code>
+          </div>
+        )}
+
+        {nodeMissing && (
+          <div className="knowlery-wizard__node-recovery">
+            <div>
+              <div className="knowlery-wizard__node-title">Node.js was not found</div>
+              <p>
+                Skills tooling and some CLI installers need Node.js. Install Node.js, enter an
+                absolute path, or run auto-detect after updating your shell path.
+              </p>
+            </div>
+            <div className="knowlery-wizard__node-controls">
+              <input
+                type="text"
+                value={props.nodePath}
+                placeholder="/usr/local/bin/node"
+                onChange={(event) => props.onNodePathChange(event.currentTarget.value)}
+                onBlur={props.onNodePathCommit}
+              />
+              <button
+                type="button"
+                className="knowlery-btn knowlery-btn--outline"
+                onClick={props.onAutoDetectNode}
+                disabled={props.nodeDetecting}
+              >
+                <IconRefresh size={14} />
+                {props.nodeDetecting ? 'Detecting...' : 'Auto-detect'}
+              </button>
+            </div>
+            {props.nodeMessage && (
+              <div className="knowlery-wizard__node-message">{props.nodeMessage}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </PreviewSection>
+  );
+}
+
+function OptionalInstallRunList(props: {
+  runs: InstallExecutionState[];
+  platform: Platform;
+  showLabel?: boolean;
+}) {
+  if (props.runs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="knowlery-wizard__run-installs">
+      {props.showLabel !== false && (
+        <div className="knowlery-section-label">Optional installs</div>
+      )}
+      <ul className="knowlery-wizard__run-install-list">
+        {props.runs.map((run) => (
+          <li key={run.id} className={`knowlery-wizard__run-install-item${resultTone(run.status)}`}>
+            <span className="knowlery-wizard__run-install-name">{installLabel(run.id, props.platform)}</span>
+            <span className="knowlery-wizard__run-install-status">{statusLabel(run.status)}</span>
+            {run.detail && <span className="knowlery-wizard__run-install-detail">{run.detail}</span>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -222,6 +480,18 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   const [phase, setPhase] = useState<WizardPhase>('preview');
   const [platform, setPlatform] = useState<Platform>('claude-code');
   const [completedSteps, setCompletedSteps] = useState<Set<SetupStep>>(new Set());
+  const [environment, setEnvironment] = useState<EnvironmentDetectSnapshot | null>(null);
+  const [environmentLoading, setEnvironmentLoading] = useState(false);
+  const [environmentError, setEnvironmentError] = useState<string | null>(null);
+  const [optionalInstalls, setOptionalInstalls] = useState<OptionalInstallSelection>(
+    DEFAULT_OPTIONAL_INSTALL_SELECTION,
+  );
+  const [installSelectionTouched, setInstallSelectionTouched] = useState<Set<InstallItemId>>(new Set());
+  const [optionalInstallRuns, setOptionalInstallRuns] = useState<InstallExecutionState[]>([]);
+  const [nodePath, setNodePath] = useState(plugin.settings.nodePath);
+  const [nodeMessage, setNodeMessage] = useState<string | null>(null);
+  const [nodeDetecting, setNodeDetecting] = useState(false);
+  const [environmentRefreshKey, setEnvironmentRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -234,25 +504,122 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     });
   }, []);
 
+  useEffect(() => {
+    if (loading || phase !== 'preview') {
+      return;
+    }
+
+    let cancelled = false;
+    setEnvironmentLoading(true);
+    setEnvironmentError(null);
+
+    detectEnvironment({ app: plugin.app, platform, nodePath })
+      .then((snapshot) => {
+        if (cancelled) return;
+        setEnvironment(snapshot);
+        setOptionalInstalls((prev) => syncSelectionWithDetection(prev, snapshot, installSelectionTouched));
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        const message = e instanceof Error ? e.message : String(e);
+        setEnvironmentError(`Could not check environment: ${message}`);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setEnvironmentLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [environmentRefreshKey, installSelectionTouched, loading, phase, platform, plugin.app]);
+
   /* ---- setup handler ---- */
   const handleSetup = async () => {
     setError(null);
     setPhase('running');
     setCompletedSteps(new Set());
+    setOptionalInstallRuns(selectedInstallStates(optionalInstalls, environment?.items ?? []));
 
     try {
-      await executeSetup(plugin.app, platform, plugin.settings.kbName, (step) => {
-        setCompletedSteps((prev) => new Set(prev).add(step));
-      });
+      const result = await executeSetup(
+        plugin.app,
+        platform,
+        plugin.settings.kbName,
+        (step) => {
+          setCompletedSteps((prev) => new Set(prev).add(step));
+        },
+        {
+          optionalInstalls,
+          nodePath,
+          onOptionalInstallUpdate: (state) => {
+            setOptionalInstallRuns((prev) => {
+              const next = prev.filter((run) => run.id !== state.id);
+              next.push(state);
+              return INSTALL_ITEM_ORDER
+                .map((id) => next.find((run) => run.id === id))
+                .filter((run): run is InstallExecutionState => run !== undefined);
+            });
+          },
+        },
+      );
 
       plugin.settings.platform = platform;
+      plugin.settings.nodePath = nodePath;
       await plugin.saveSettings();
 
+      setOptionalInstallRuns(result.optionalInstallRuns);
       setPhase('done');
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       setError(message);
       setPhase('preview');
+    }
+  };
+
+  const handleInstallSelectionChange = (id: InstallItemId, checked: boolean) => {
+    setInstallSelectionTouched((prev) => new Set(prev).add(id));
+    setOptionalInstalls((prev) => withInstallSelection(prev, id, checked));
+  };
+
+  const handlePlatformChange = (nextPlatform: Platform) => {
+    setPlatform(nextPlatform);
+    setEnvironment(null);
+    setInstallSelectionTouched((prev) => {
+      const next = new Set(prev);
+      next.delete('platform-cli');
+      return next;
+    });
+  };
+
+  const handleNodePathChange = (value: string) => {
+    setNodePath(value);
+    setNodeMessage(null);
+    plugin.settings.nodePath = value;
+    void plugin.saveSettings();
+  };
+
+  const handleNodePathCommit = () => {
+    setEnvironmentRefreshKey((value) => value + 1);
+  };
+
+  const handleAutoDetectNode = async () => {
+    setNodeDetecting(true);
+    setNodeMessage(null);
+    try {
+      const result = await detectNode();
+      if (result.detected && result.path) {
+        setNodePath(result.path);
+        plugin.settings.nodePath = result.path;
+        await plugin.saveSettings();
+        setNodeMessage(`Detected Node.js ${result.version ?? ''} at ${result.path}`.trim());
+        setEnvironmentRefreshKey((value) => value + 1);
+      } else {
+        setNodeMessage('Node.js was not found. Install Node.js or enter its absolute path.');
+      }
+    } finally {
+      setNodeDetecting(false);
     }
   };
 
@@ -289,7 +656,27 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
             </div>
           )}
 
-          <PlatformGrid value={platform} onChange={setPlatform} />
+          <PlatformGrid value={platform} onChange={handlePlatformChange} />
+
+          <div>
+            <div className="knowlery-section-label">Environment & installs</div>
+            <div className="knowlery-wizard__preview-list">
+              <EnvironmentInstallsSection
+                snapshot={environment}
+                loading={environmentLoading}
+                error={environmentError}
+                platform={platform}
+                selection={optionalInstalls}
+                nodePath={nodePath}
+                nodeMessage={nodeMessage}
+                nodeDetecting={nodeDetecting}
+                onSelectionChange={handleInstallSelectionChange}
+                onNodePathChange={handleNodePathChange}
+                onNodePathCommit={handleNodePathCommit}
+                onAutoDetectNode={handleAutoDetectNode}
+              />
+            </div>
+          </div>
 
           <div>
             <div className="knowlery-section-label">Execution preview</div>
@@ -354,8 +741,13 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
           <button type="button" className="knowlery-btn knowlery-btn--ghost" onClick={props.onCancel}>
             Cancel
           </button>
-          <button type="button" className="knowlery-btn knowlery-btn--primary" onClick={handleSetup}>
-            {isReinstall ? 'Update vault' : 'Set up vault'}
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--primary"
+            onClick={handleSetup}
+            disabled={environmentLoading}
+          >
+            {environmentLoading ? 'Checking environment' : isReinstall ? 'Update vault' : 'Set up vault'}
             <IconArrowRight size={14} />
           </button>
         </div>
@@ -397,6 +789,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
               );
             })}
           </ul>
+
+          <OptionalInstallRunList runs={optionalInstallRuns} platform={platform} />
         </div>
 
         <div className="knowlery-wizard__footer">
@@ -407,6 +801,15 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   }
 
   /* ---- phase: done ---- */
+  const optionalInstallIssues = optionalInstallRuns.some((run) => (
+    run.status === 'failed' || run.status === 'skipped'
+  ));
+  const platformCliDetection = environment?.items.find((item) => item.id === 'platform-cli');
+  const platformCliRun = optionalInstallRuns.find((run) => run.id === 'platform-cli');
+  const claudianRun = optionalInstallRuns.find((run) => run.id === 'claudian');
+  const needsPlatformCliStep = platformCliDetection?.status === 'not-installed'
+    && platformCliRun?.status !== 'done';
+
   return (
     <div className="knowlery-wizard__phase">
       <PhaseSteps current="done" />
@@ -424,11 +827,29 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
             and configured your vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.
           </p>
 
+          <div className="knowlery-wizard__install-summary">
+            <div className="knowlery-section-label">Optional install outcomes</div>
+            {optionalInstallRuns.length > 0 ? (
+              <OptionalInstallRunList runs={optionalInstallRuns} platform={platform} showLabel={false} />
+            ) : (
+              <p>No optional installs were selected.</p>
+            )}
+          </div>
+
           <div className="knowlery-wizard__next-steps">
             <div className="knowlery-section-label">What to do next</div>
             <ol>
+              {optionalInstallIssues && (
+                <li>Review optional install messages above and retry anything that was skipped or failed</li>
+              )}
+              {needsPlatformCliStep && (
+                <li>Install {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'} before running agent workflows</li>
+              )}
+              {claudianRun?.status === 'done' && (
+                <li>Reload Obsidian if Claudian does not appear in Community plugins</li>
+              )}
               <li>Open <strong>KNOWLEDGE.md</strong> in the Config tab and describe your knowledge base</li>
-              <li>Try the <strong>cook</strong> skill — ask Claude Code to cook a new note</li>
+              <li>Try the <strong>cook</strong> skill with {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}</li>
               <li>Browse installed skills in the <strong>Skills tab</strong></li>
             </ol>
           </div>
