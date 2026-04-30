@@ -16,7 +16,6 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
   if (customPath) {
     const result = await tryNodeExecFile(execFile, customPath);
     if (result) return result;
-    return { detected: false, version: null, path: null };
   }
 
   // Use login shell to resolve node — GUI apps don't inherit the user's PATH

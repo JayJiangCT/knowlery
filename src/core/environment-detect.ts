@@ -54,16 +54,23 @@ export async function detectEnvironment(
 async function detectClaudian(app: App): Promise<InstallDetectionResult> {
   const manifestPath = normalizePath('.obsidian/plugins/claudian/manifest.json');
   const adapter = app.vault.adapter;
-  const installed = Platform.isMobile ? false : await adapter.exists(manifestPath);
+  const filesPresent = Platform.isMobile ? false : await adapter.exists(manifestPath);
+  const enabled = filesPresent && isPluginEnabled(app, 'claudian');
+  const status = enabled ? 'installed' : 'not-installed';
+  const detail = enabled
+    ? 'Plugin enabled'
+    : filesPresent
+      ? 'Plugin files detected but disabled'
+      : 'Not installed';
 
   return {
     id: 'claudian',
     label: 'Claudian',
     description: 'Adds an in-vault chat UI on top of the selected agent CLI.',
-    status: installed ? 'installed' : 'not-installed',
-    detail: installed ? 'Plugin files detected' : 'Not installed',
+    status,
+    detail,
     recommended: true,
-    selectedByDefault: !installed,
+    selectedByDefault: !enabled,
   };
 }
 
@@ -87,4 +94,23 @@ function detectSkillsTooling(nodeDetected: boolean): InstallDetectionResult {
     detail: 'Uses npx on demand',
     requiresNode: true,
   };
+}
+
+function isPluginEnabled(app: App, pluginId: string): boolean {
+  const plugins = (app as App & {
+    plugins?: {
+      enabledPlugins?: Set<string> | string[];
+    };
+  }).plugins;
+  const enabledPlugins = plugins?.enabledPlugins;
+
+  if (enabledPlugins instanceof Set) {
+    return enabledPlugins.has(pluginId);
+  }
+
+  if (Array.isArray(enabledPlugins)) {
+    return enabledPlugins.includes(pluginId);
+  }
+
+  return false;
 }
