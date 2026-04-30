@@ -35,6 +35,12 @@
   margin-block-start: 4px;
 }
 
+.knowlery-settings__node-message {
+  margin-block-start: var(--knowlery-space-xs);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
 .knowlery-settings__platform-badge {
   display: inline-flex;
   align-items: center;

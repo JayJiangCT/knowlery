@@ -635,6 +635,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
       } else {
         setNodeMessage('Node.js was not found. Install Node.js or enter its absolute path.');
       }
+    } catch (error) {
+      setNodeMessage(`Could not detect Node.js: ${formatWizardError(error)}`);
     } finally {
       setNodeDetecting(false);
     }
@@ -881,4 +883,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
       </div>
     </div>
   );
+}
+
+function formatWizardError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
