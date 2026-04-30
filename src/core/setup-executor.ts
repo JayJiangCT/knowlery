@@ -1,10 +1,17 @@
 import { App, normalizePath } from 'obsidian';
-import type { Manifest, Platform } from '../types';
+import type {
+  InstallExecutionState,
+  Manifest,
+  OptionalInstallSelection,
+  Platform,
+} from '../types';
 import { KNOWLEDGE_DIRS } from '../types';
-import { generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
+import { BUNDLED_SKILLS } from '../assets/skills';
+import { generateIndexBase, generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
 import { generatePlatformConfig } from './platform-adapter';
 import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from './skill-manager';
 import { installDefaultRules } from './rule-manager';
+import { runOptionalInstalls } from './environment-install';
 import { ensureDir, writeFile } from './vault-io';
 
 const KNOWLERY_DIR = '.knowlery';
@@ -23,11 +30,21 @@ export interface SetupProgress {
   done: boolean;
 }
 
+export interface ExecuteSetupOptions {
+  optionalInstalls?: OptionalInstallSelection;
+  nodePath?: string;
+  onOptionalInstallUpdate?: (state: InstallExecutionState) => void;
+}
+
+export interface ExecuteSetupResult {
+  optionalInstallRuns: InstallExecutionState[];
+}
+
 export function getSetupSteps(): SetupProgress[] {
   return [
     { step: 'directories', label: 'Creating knowledge directories', done: false },
-    { step: 'knowledge-files', label: 'Writing KNOWLEDGE.md and SCHEMA.md', done: false },
-    { step: 'skills', label: 'Installing 19 built-in skills', done: false },
+    { step: 'knowledge-files', label: 'Writing KNOWLEDGE.md, SCHEMA.md, and INDEX.base', done: false },
+    { step: 'skills', label: `Installing ${BUNDLED_SKILLS.length} built-in skills`, done: false },
     { step: 'platform-config', label: 'Generating agent configuration', done: false },
     { step: 'lock-files', label: 'Writing configuration files', done: false },
   ];
@@ -38,7 +55,8 @@ export async function executeSetup(
   platform: Platform,
   kbName: string,
   onProgress: (step: SetupStep) => void,
-): Promise<void> {
+  options: ExecuteSetupOptions = {},
+): Promise<ExecuteSetupResult> {
   onProgress('directories');
   for (const dir of KNOWLEDGE_DIRS) {
     await ensureDir(app, dir);
@@ -47,6 +65,7 @@ export async function executeSetup(
   onProgress('knowledge-files');
   await writeFile(app, 'KNOWLEDGE.md', generateKnowledgeMd(kbName));
   await writeFile(app, 'SCHEMA.md', generateSchemaMd());
+  await writeFile(app, 'INDEX.base', generateIndexBase());
 
   onProgress('skills');
   await installAllBuiltinSkills(app);
@@ -59,6 +78,19 @@ export async function executeSetup(
   const lock = buildInitialSkillsLock();
   await saveSkillsLock(app, lock);
   await writeManifest(app, platform, kbName);
+
+  let optionalInstallRuns: InstallExecutionState[] = [];
+  if (hasOptionalInstalls(options.optionalInstalls)) {
+    optionalInstallRuns = await runOptionalInstalls({
+      app,
+      platform,
+      selection: options.optionalInstalls,
+      nodePath: options.nodePath,
+      onUpdate: options.onOptionalInstallUpdate,
+    });
+  }
+
+  return { optionalInstallRuns };
 }
 
 async function writeManifest(app: App, platform: Platform, kbName: string): Promise<void> {
@@ -102,4 +134,8 @@ export async function writeManifestUpdate(
   await ensureDir(app, KNOWLERY_DIR);
   const path = normalizePath(MANIFEST_PATH);
   await app.vault.adapter.write(path, JSON.stringify(manifest, null, 2));
+}
+
+function hasOptionalInstalls(selection?: OptionalInstallSelection): selection is OptionalInstallSelection {
+  return Boolean(selection?.platformCli || selection?.claudian || selection?.skillsTooling);
 }

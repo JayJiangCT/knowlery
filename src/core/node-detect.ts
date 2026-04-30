@@ -11,12 +11,11 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
     return { detected: false, version: null, path: null };
   }
 
-  const { execFile } = await import('child_process');
+  const { execFile } = require('child_process') as typeof import('child_process');
 
   if (customPath) {
     const result = await tryNodeExecFile(execFile, customPath);
     if (result) return result;
-    return { detected: false, version: null, path: null };
   }
 
   // Use login shell to resolve node — GUI apps don't inherit the user's PATH
@@ -31,6 +30,20 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
   for (const nodePath of fallbackPaths) {
     const result = await tryNodeExecFile(execFile, nodePath);
     if (result) return result;
+  }
+
+  if (Platform.isWin) {
+    const localAppData = process.env.LOCALAPPDATA ?? '';
+    const programFiles = process.env.ProgramFiles ?? '';
+    const fallbackPaths = [
+      `${programFiles}\\nodejs\\node.exe`,
+      `${localAppData}\\Programs\\nodejs\\node.exe`,
+    ].filter(Boolean);
+
+    for (const nodePath of fallbackPaths) {
+      const result = await tryNodeExecFile(execFile, nodePath);
+      if (result) return result;
+    }
   }
 
   return { detected: false, version: null, path: null };

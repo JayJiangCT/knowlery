@@ -11,7 +11,7 @@ Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel
 
 In [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f), Andrej Karpathy describes a pattern different from one-off RAG: instead of re-deriving answers from raw notes on every question, an agent **incrementally builds and maintains a persistent wiki**—structured, interlinked markdown that sits between you and your sources. New material is read, distilled, and **folded into** entity pages, topic summaries, and cross-links; the base is **kept current** rather than re-scanned from scratch each time.
 
-Knowlery’s take is **aligned with that maintenance story** for your vault: it gives you the layout (`KNOWLEDGE.md`, `SCHEMA.md`, `entities/`, `concepts/`, `comparisons/`, `queries/`), agent skills, and health checks so a coding agent can **compile and maintain** structured knowledge pages from your notes—while keeping a clear boundary (your free-form notes stay yours; the agent works the shared map). It is an opinionated, Obsidian-native way to operationalize the “LLM wiki” idea on the desktop.
+Knowlery’s take is **aligned with that maintenance story** for your vault: it gives you the layout (`KNOWLEDGE.md`, `SCHEMA.md`, `INDEX.base`, `entities/`, `concepts/`, `comparisons/`, `queries/`), agent skills, and health checks so a coding agent can **compile and maintain** structured knowledge pages from your notes—while keeping a clear boundary (your free-form notes stay yours; the agent works the shared map). It is an opinionated, Obsidian-native way to operationalize the “LLM wiki” idea on the desktop.
 
 ### BYOAO
 
@@ -31,6 +31,8 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 - Node.js and npm, if you want to browse or install skills from the external skills registry.
 
 Knowlery is desktop-only because it uses local command-line tools and Electron desktop APIs.
+
+During the setup wizard, Knowlery can detect whether Claude Code, OpenCode, Node.js, and the external `skills` CLI are available. On desktop, the wizard can optionally help install or prepare missing agent tools, and can optionally install Claudian directly into your vault without requiring BRAT. These steps are opt-in; if a tool is already installed, Knowlery skips it.
 
 ### Agent chat in Obsidian (optional companions)
 
@@ -62,6 +64,7 @@ During setup, Knowlery can create or update these files and folders inside your 
 
 - `KNOWLEDGE.md`
 - `SCHEMA.md`
+- `INDEX.base`
 - `entities/`, `concepts/`, `comparisons/`, and `queries/`
 - `.knowlery/manifest.json`
 - `.agents/skills/` and `.agents/rules/`

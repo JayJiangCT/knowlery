@@ -176,6 +176,15 @@ export function ConfigTab() {
           <span className="knowlery-config__file-row-label">SCHEMA.md</span>
           <span className="knowlery-config__file-row-arrow"><IconArrowRight size={14} /></span>
         </button>
+
+        <button
+          className="knowlery-config__file-row"
+          onClick={() => openFile('INDEX.base')}
+        >
+          <span className="knowlery-config__file-row-icon"><IconFileText size={16} /></span>
+          <span className="knowlery-config__file-row-label">INDEX.base</span>
+          <span className="knowlery-config__file-row-arrow"><IconArrowRight size={14} /></span>
+        </button>
       </div>
 
       {/* Agent Rules section */}

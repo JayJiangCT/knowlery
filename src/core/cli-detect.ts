@@ -5,7 +5,7 @@ export interface CliDetection {
   opencode:   { installed: boolean; version?: string };
 }
 
-interface CliToolResult {
+export interface CliToolResult {
   installed: boolean;
   version?: string;
 }
@@ -27,6 +27,10 @@ export async function detectAgentCli(): Promise<CliDetection> {
     claudeCode: claudeResult,
     opencode: opencodeResult,
   };
+}
+
+export async function detectCliToolByName(toolName: string): Promise<CliToolResult> {
+  return detectCliTool(toolName);
 }
 
 function detectCliTool(toolName: string): Promise<CliToolResult> {

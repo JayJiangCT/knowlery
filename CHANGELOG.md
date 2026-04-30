@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.2.0] — 2026-04-30
+
+### New features
+
+- Setup wizard now detects Claude Code, OpenCode, Node.js, Claudian, and skills tooling before setup.
+- Optional onboarding installs can prepare missing agent tools, warm up `npx skills`, and install Claudian directly into the vault without BRAT.
+- Node.js recovery flow includes auto-detect, manual path entry, and an official download link.
+
+### Improvements
+
+- Installed tools are shown as read-only status rows, while only missing optional tools can be selected.
+- Optional install selection no longer re-runs environment checks on every checkbox click.
+- Running setup now uses compact circular progress indicators for queued, running, and verifying install work.
+- Setup wizard styling was tightened to match Knowlery and Obsidian UI conventions.
+
+### Compatibility notes
+
+- Existing users are not migrated automatically. Optional tool installation only runs from the setup wizard after explicit selection.
+- Existing vault files and agent configuration remain unchanged unless users re-run setup or maintenance actions.
+- Network and local command use remain user-initiated and are documented in the README.
+
 ## [v0.1.1] — 2026-04-22
 
 ### Documentation

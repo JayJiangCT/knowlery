@@ -43,6 +43,9 @@ class ConfirmModal extends Modal {
 }
 
 export class KnowlerySettingTab extends PluginSettingTab {
+  private nodeDetectMessage: string | null = null;
+  private nodeDetecting = false;
+
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
@@ -161,25 +164,40 @@ export class KnowlerySettingTab extends PluginSettingTab {
           }),
       )
       .addButton((btn) =>
-        btn.setButtonText('Auto-detect').onClick(async () => {
-          btn.setButtonText('Detecting…');
-          btn.setDisabled(true);
-          try {
-            const result = await detectNode();
-            if (result.detected && result.path) {
-              this.plugin.settings.nodePath = result.path;
-              await this.plugin.saveSettings();
-              new Notice(`Detected Node.js ${result.version} at ${result.path}`);
-            } else {
-              new Notice('Node.js not found. Install Node.js or enter the path manually.');
+        btn
+          .setButtonText(this.nodeDetecting ? 'Detecting…' : 'Auto-detect')
+          .setDisabled(this.nodeDetecting)
+          .onClick(async () => {
+            this.nodeDetecting = true;
+            this.nodeDetectMessage = 'Detecting Node.js...';
+            await this.display();
+            try {
+              const result = await detectNode();
+              if (result.detected && result.path) {
+                this.plugin.settings.nodePath = result.path;
+                await this.plugin.saveSettings();
+                this.nodeDetectMessage = `Detected Node.js ${result.version ?? ''} at ${result.path}`.trim();
+                new Notice(this.nodeDetectMessage);
+              } else {
+                this.nodeDetectMessage = 'Node.js not found. Install Node.js or enter the path manually.';
+                new Notice(this.nodeDetectMessage);
+              }
+            } catch (error) {
+              this.nodeDetectMessage = `Could not detect Node.js: ${formatSettingError(error)}`;
+              new Notice(this.nodeDetectMessage);
+            } finally {
+              this.nodeDetecting = false;
+              await this.display();
             }
-          } finally {
-            btn.setButtonText('Auto-detect');
-            btn.setDisabled(false);
-            this.display();
-          }
-        }),
+          }),
       );
+
+    if (this.nodeDetectMessage) {
+      containerEl.createDiv({
+        cls: 'knowlery-settings__node-message',
+        text: this.nodeDetectMessage,
+      });
+    }
   }
 
   private renderMaintenanceSection(containerEl: HTMLElement): void {
@@ -248,4 +266,8 @@ export class KnowlerySettingTab extends PluginSettingTab {
       kbName: this.plugin.settings.kbName,
     });
   }
+}
+
+function formatSettingError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
