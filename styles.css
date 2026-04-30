@@ -2372,8 +2372,9 @@
   gap: var(--knowlery-space-sm);
   padding: var(--knowlery-space-sm) var(--knowlery-space-md);
   background: color-mix(in srgb, var(--knowlery-error) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--knowlery-error) 30%, transparent);
-  border-inline-start: 3px solid var(--knowlery-error);
+  border: var(--knowlery-border);
+  border-color: color-mix(in srgb, var(--knowlery-error) 30%, transparent);
+  border-inline-start: var(--knowlery-space-2xs) solid var(--knowlery-error);
   border-radius: var(--knowlery-radius-sm);
   color: var(--knowlery-error);
   font-size: var(--knowlery-body-size);
@@ -2382,7 +2383,7 @@
 /* Progress track */
 .knowlery-wizard__progress-track {
   inline-size: 100%;
-  block-size: 4px;
+  block-size: var(--knowlery-space-xs);
   background: var(--background-modifier-border);
   border-radius: var(--knowlery-radius-pill);
   overflow: hidden;
@@ -2393,8 +2394,7 @@
   block-size: 100%;
   background: var(--interactive-accent);
   border-radius: var(--knowlery-radius-pill);
-  transition: inline-size 400ms ease;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
+  transition: inline-size var(--knowlery-transition-slow);
 }
 
 .knowlery-wizard__progress-label {
@@ -2442,7 +2442,7 @@
 }
 
 .knowlery-wizard__step-icon.is-spinning svg {
-  animation: knowlerySpin 1s linear infinite;
+  animation: knowlerySpin var(--knowlery-transition-slow) linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2506,7 +2506,7 @@
   justify-content: flex-end;
   gap: var(--knowlery-space-sm);
   padding: var(--knowlery-space-md) var(--knowlery-space-xl);
-  border-block-start: 1px solid var(--background-modifier-border);
+  border-block-start: var(--knowlery-border);
 }
 
 .knowlery-wizard__footer-hint {
@@ -2518,7 +2518,7 @@
   appearance: none;
   -webkit-appearance: none;
   block-size: auto !important;
-  min-block-size: 32px !important;
+  min-block-size: calc(var(--knowlery-space-xl) + var(--knowlery-space-md)) !important;
   padding: var(--knowlery-space-xs) var(--knowlery-space-md) !important;
   border-radius: var(--knowlery-radius-sm) !important;
   box-shadow: none !important;
@@ -2528,7 +2528,8 @@
 
 .modal .knowlery-modal .knowlery-wizard__footer button.knowlery-btn--primary {
   background: var(--interactive-accent) !important;
-  border: 1px solid var(--interactive-accent) !important;
+  border: var(--knowlery-border) !important;
+  border-color: var(--interactive-accent) !important;
   color: var(--text-on-accent) !important;
 }
 
@@ -2539,7 +2540,8 @@
 
 .modal .knowlery-modal .knowlery-wizard__footer button.knowlery-btn--ghost {
   background: transparent !important;
-  border: 1px solid transparent !important;
+  border: var(--knowlery-border) !important;
+  border-color: transparent !important;
   color: var(--text-muted) !important;
 }
 
