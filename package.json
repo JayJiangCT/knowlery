@@ -1,6 +1,6 @@
 {
   "name": "knowlery",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Turn your vault into an AI-powered knowledge base control panel.",
   "main": "main.js",
   "scripts": {
