@@ -11,7 +11,7 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
     return { detected: false, version: null, path: null };
   }
 
-  const { execFile } = await import('child_process');
+  const { execFile } = require('child_process') as typeof import('child_process');
 
   if (customPath) {
     const result = await tryNodeExecFile(execFile, customPath);
