@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { setIcon } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
 import type { DashboardTab, DashboardRefreshPayload } from '../types';
+import { CounterTab } from './CounterTab';
 import { SkillsTab } from './SkillsTab';
 import { ConfigTab } from './ConfigTab';
 import { HealthTab } from './HealthTab';
@@ -19,7 +20,8 @@ function formatRelativeTime(date: Date): string {
 }
 
 const TABS: { id: DashboardTab; label: string; icon: string }[] = [
-  { id: 'skills', label: 'Skills', icon: 'wrench' },
+  { id: 'counter', label: 'Counter', icon: 'chef-hat' },
+  { id: 'skills', label: 'Pantry', icon: 'wrench' },
   { id: 'config', label: 'Config', icon: 'settings' },
   { id: 'health', label: 'Health', icon: 'activity' },
 ];
@@ -42,7 +44,7 @@ function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: num
 export function DashboardApp() {
   const plugin = usePlugin();
   const [settings, updateSettings] = useSettings();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('skills');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('counter');
   const [initialized, setInitialized] = useState<boolean | null>(null);
   const [refreshingTab, setRefreshingTab] = useState<DashboardTab | null>(null);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
@@ -142,11 +144,13 @@ export function DashboardApp() {
     );
   }
 
-  const ActiveTabComponent = activeTab === 'skills'
-    ? SkillsTab
-    : activeTab === 'config'
-      ? ConfigTab
-      : HealthTab;
+  const ActiveTabComponent = activeTab === 'counter'
+    ? CounterTab
+    : activeTab === 'skills'
+      ? SkillsTab
+      : activeTab === 'config'
+        ? ConfigTab
+        : HealthTab;
 
   return (
     <div className="knowlery-dashboard">
