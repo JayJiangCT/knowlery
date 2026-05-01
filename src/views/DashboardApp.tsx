@@ -47,6 +47,7 @@ export function DashboardApp() {
   const [refreshingTab, setRefreshingTab] = useState<DashboardTab | null>(null);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<Record<DashboardTab, Date | null>>({
+    counter: null,
     skills: null,
     config: null,
     health: null,
