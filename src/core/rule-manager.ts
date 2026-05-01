@@ -73,3 +73,11 @@ export async function installDefaultRules(
   }
 }
 
+export async function installActivityLedgerRule(
+  app: App,
+  platform: Platform,
+): Promise<void> {
+  const template = RULE_TEMPLATES.find((rule) => rule.filename === 'activity-ledger.md');
+  if (!template) return;
+  await writeRule(app, platform, template.filename, template.content);
+}
