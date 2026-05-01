@@ -1,0 +1,92 @@
+# 参考
+
+本页列出 Knowlery 使用的文件、命令、skills 和安全边界。
+
+## 插件元数据
+
+| 字段 | 当前值 |
+| --- | --- |
+| Plugin ID | `knowlery` |
+| Minimum Obsidian app version | `1.7.2` |
+| Desktop-only manifest flag | `true` |
+| Main bundle | `main.js` |
+| Stylesheet | `styles.css` |
+
+## 创建的文件和文件夹
+
+| 路径 | Setup 创建 | 说明 |
+| --- | --- | --- |
+| `KNOWLEDGE.md` | 是 | Vault 操作指南 |
+| `SCHEMA.md` | 是 | 知识页面 schema |
+| `INDEX.base` | 是 | Bases index |
+| `entities/` | 是 | Agent-maintained entity pages |
+| `concepts/` | 是 | Agent-maintained concept pages |
+| `comparisons/` | 是 | Agent-maintained comparison pages |
+| `queries/` | 是 | Agent-maintained research threads |
+| `.knowlery/manifest.json` | 是 | Setup state |
+| `.agents/skills/` | 是 | Canonical skills |
+| `.agents/rules/` | OpenCode path | OpenCode rules |
+| `.claude/CLAUDE.md` | Claude Code path | Claude instructions |
+| `.claude/rules/` | Claude Code path | Claude Code rules |
+| `opencode.json` | OpenCode path | OpenCode config |
+| `skills-lock.json` | 是 | Skill lock state |
+
+## Built-In Skills
+
+| Name | Kind | 用途 |
+| --- | --- | --- |
+| `cook` | knowledge | 将笔记整理成知识页面 |
+| `ask` | knowledge | 从 vault 内容回答问题 |
+| `explore` | knowledge | 追踪想法时间线和连接 |
+| `challenge` | knowledge | 压力测试信念和 drift |
+| `ideas` | knowledge | 从 vault 内容生成想法 |
+| `audit` | knowledge | 检查 vault health 和结构 |
+| `organize` | knowledge | 建议结构改进 |
+| `obsidian-cli` | tooling | 使用 Obsidian CLI patterns |
+| `obsidian-markdown` | tooling | 编写 Obsidian markdown |
+| `obsidian-bases` | tooling | 处理 Bases files |
+| `json-canvas` | tooling | 处理 JSON Canvas |
+| `defuddle` | tooling | 从网页提取干净 markdown |
+| `vault-conventions` | tooling | 执行 vault naming conventions |
+
+## 默认 Rule Templates
+
+Knowlery 包含这些默认 rule templates：
+
+| Rule | 用途 |
+| --- | --- |
+| Citation required | 要求 vault 回答使用 wikilink citations |
+| Language preference | 匹配用户语言 |
+| Domain context | 描述 vault 的领域 |
+
+## Obsidian 中注册的命令
+
+Knowlery 会注册 command palette actions，用于打开 dashboard、初始化 vault、运行 diagnosis 和切换平台。
+
+具体 label 可能随 UI 演进，但命令面主要围绕 setup、dashboard access、health 和 platform migration。
+
+## Network Use
+
+Knowlery 不收集 telemetry。
+
+当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。
+
+## Local Command Use
+
+当你显式使用 CLI 相关功能或可选 setup preparation 时，Knowlery 可以运行本地命令。
+
+示例包括：
+
+- `claude`
+- `opencode`
+- `node`
+- `npx`
+- `skills`
+
+这些命令会在你的电脑上以你的用户权限运行。
+
+## 删除行为
+
+当你在 UI 中使用 delete 或 disable actions 时，Knowlery 可能删除 skill 或 rule 文件。
+
+Setup 不应该删除普通用户笔记。不过，对于重要 vault，仍然建议先测试，并使用版本控制或备份。

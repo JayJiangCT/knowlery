@@ -17,6 +17,8 @@ plan.md
 # Build artifacts
 node_modules/
 main.js
+docs-site/.vitepress/cache/
+docs-site/.vitepress/dist/
 *.js.map
 data.json
 .DS_Store

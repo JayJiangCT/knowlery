@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-labelledby="title desc">
+  <title id="title">Knowlery Knowledge Pot logo</title>
+  <desc id="desc">A warm chef hat above a simmering knowledge pot.</desc>
+  <defs>
+    <linearGradient id="pot" x1="52" y1="104" x2="126" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F19A47"/>
+      <stop offset="1" stop-color="#D96D32"/>
+    </linearGradient>
+    <linearGradient id="hat" x1="32" y1="14" x2="148" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF5"/>
+      <stop offset="1" stop-color="#FFECC8"/>
+    </linearGradient>
+  </defs>
+  <path d="M49 70c-15-5-23-18-18-32 5-16 24-21 38-9 7-17 27-26 45-18 16 7 24 25 16 41 15 0 27 10 27 26 0 16-13 29-31 29H58c-14 0-26-8-31-21" fill="url(#hat)" stroke="#3F2B20" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 102h80c0 28-16 46-40 46s-40-18-40-46Z" fill="url(#pot)" stroke="#3F2B20" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M41 101h98" stroke="#3F2B20" stroke-width="8" stroke-linecap="round"/>
+  <path d="M69 121h42" stroke="#FFF1C7" stroke-width="8" stroke-linecap="round"/>
+  <path d="M70 76c-7-12-4-22 7-30M93 74c-5-13 0-24 12-32M116 78c-4-9-2-17 7-24" stroke="#F3B85F" stroke-width="8" stroke-linecap="round"/>
+</svg>
