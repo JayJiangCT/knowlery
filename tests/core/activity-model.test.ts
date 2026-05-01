@@ -11,7 +11,7 @@ describe('parseActivityJsonl', () => {
         JSON.stringify({
           time: '2026-05-01T12:00:00.000Z',
           agent: 'codex',
-          type: 'discussion',
+          type: 'creation',
           topics: ['Knowlery', 'Product Strategy'],
           summary: 'Discussed Counter and Weekly Bake.',
           dimensions: ['strategy', 'reflection'],
@@ -30,6 +30,7 @@ describe('parseActivityJsonl', () => {
 
     expect(result.records).toHaveLength(1);
     expect(result.errors).toHaveLength(1);
+    expect(result.records[0].type).toBe('creation');
     expect(result.records[0].topics).toEqual(['Knowlery', 'Product Strategy']);
   });
 });
