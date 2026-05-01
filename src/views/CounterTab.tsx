@@ -1,21 +1,25 @@
-import { Notice } from 'obsidian';
+import { normalizePath, Notice } from 'obsidian';
 import { useCallback, useEffect, useState } from 'react';
 import { usePlugin } from '../context';
 import type { CounterSummary, DashboardRefreshPayload } from '../types';
 import { buildCounterSummary } from '../core/activity-model';
 import { readRecentActivityRecords } from '../core/activity-ledger';
-import { buildWeeklyBakeModel, writeWeeklyBakeReport } from '../core/weekly-bake';
+import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
-import { IconBookOpen, IconPlus, IconRefresh } from './Icons';
+import { IconBookOpen, IconExternalLink, IconPlus, IconRefresh } from './Icons';
+
+const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
 export function CounterTab() {
   const plugin = usePlugin();
   const [summary, setSummary] = useState<CounterSummary | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [latestReportExists, setLatestReportExists] = useState(false);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const result = await readRecentActivityRecords(plugin.app, 14);
     setSummary(buildCounterSummary(result.records, result.errors.length));
+    setLatestReportExists(await plugin.app.vault.adapter.exists(normalizePath(LATEST_REPORT_PATH)));
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -37,11 +41,31 @@ export function CounterTab() {
       const result = await readRecentActivityRecords(plugin.app, 7);
       const model = buildWeeklyBakeModel(result.records);
       const written = await writeWeeklyBakeReport(plugin.app, model);
+      setLatestReportExists(true);
       new Notice(`Weekly Bake generated: ${written.latestPath}`);
       await refresh();
     } finally {
       setGenerating(false);
     }
+  };
+
+  const openLatestReport = async () => {
+    const path = normalizePath(LATEST_REPORT_PATH);
+    const adapter = plugin.app.vault.adapter;
+    if (!(await adapter.exists(path))) {
+      new Notice('No Weekly Bake report has been generated yet.');
+      setLatestReportExists(false);
+      return;
+    }
+
+    const fullPath = (adapter as any).getFullPath(path) as string | undefined;
+    if (!fullPath) {
+      new Notice(`Weekly Bake report is at ${path}`);
+      return;
+    }
+
+    const { shell } = (window as any).require('electron');
+    shell.openPath(fullPath);
   };
 
   if (!summary) {
@@ -113,10 +137,20 @@ export function CounterTab() {
       <section className="knowlery-counter__section">
         <div className="knowlery-section-label">Weekly Bake</div>
         <div className="knowlery-counter__report-actions">
-          <button className="knowlery-btn knowlery-btn--outline" onClick={generateReport} disabled={generating}>
-            {generating ? <IconRefresh size={14} /> : <IconBookOpen size={14} />}
-            <span>{generating ? 'Generating...' : 'Generate report'}</span>
-          </button>
+          <div className="knowlery-counter__report-buttons">
+            <button className="knowlery-btn knowlery-btn--outline" onClick={generateReport} disabled={generating}>
+              {generating ? <IconRefresh size={14} /> : <IconBookOpen size={14} />}
+              <span>{generating ? 'Generating...' : 'Generate report'}</span>
+            </button>
+            <button
+              className="knowlery-btn knowlery-btn--outline"
+              onClick={openLatestReport}
+              disabled={!latestReportExists}
+            >
+              <IconExternalLink size={14} />
+              <span>Open latest</span>
+            </button>
+          </div>
           <span className="knowlery-counter__coverage">
             {summary.coverage.recordsLogged} records · {summary.coverage.malformedRecords} malformed
           </span>

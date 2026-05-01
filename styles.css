@@ -351,6 +351,13 @@
   gap: var(--knowlery-space-md);
 }
 
+.knowlery-counter__report-buttons {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--knowlery-space-sm);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Reflection capture                                                 */
 /* ------------------------------------------------------------------ */
