@@ -6,6 +6,8 @@ import { detectNode } from './core/node-detect';
 import { generateKnowledgeMd } from './assets/templates';
 import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/setup-executor';
 import { SetupWizardModal } from './modals/setup-wizard';
+import { installActivityLedgerRule } from './core/rule-manager';
+import { ACTIVITY_DIR, setActivityLoggingEnabled } from './core/activity-ledger';
 
 class ConfirmModal extends Modal {
   private confirmed = false;
@@ -86,6 +88,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
   private renderInitializedState(containerEl: HTMLElement): void {
     this.renderGeneralSection(containerEl);
     this.renderPlatformSection(containerEl);
+    this.renderActivitySection(containerEl);
     this.renderMaintenanceSection(containerEl);
   }
 
@@ -198,6 +201,35 @@ export class KnowlerySettingTab extends PluginSettingTab {
         text: this.nodeDetectMessage,
       });
     }
+  }
+
+  private renderActivitySection(containerEl: HTMLElement): void {
+    new Setting(containerEl).setName('Activity').setHeading();
+
+    new Setting(containerEl)
+      .setName('Activity logging')
+      .setDesc(`Store private activity summaries in ${ACTIVITY_DIR}. Agents should write summaries only, not full conversations.`)
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.activityLoggingEnabled)
+          .onChange(async (value) => {
+            this.plugin.settings.activityLoggingEnabled = value;
+            await this.plugin.saveSettings();
+            await setActivityLoggingEnabled(this.app, value);
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Activity ledger rule')
+      .setDesc('Install or refresh the agent rule that asks agents to leave private session receipts.')
+      .addButton((button) => {
+        button
+          .setButtonText('Refresh rule')
+          .onClick(async () => {
+            await installActivityLedgerRule(this.app, this.plugin.settings.platform);
+            new Notice('Activity ledger rule refreshed.');
+          });
+      });
   }
 
   private renderMaintenanceSection(containerEl: HTMLElement): void {
