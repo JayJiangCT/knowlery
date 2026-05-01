@@ -26,6 +26,8 @@ const TABS: { id: DashboardTab; label: string; icon: string }[] = [
   { id: 'health', label: 'Health', icon: 'activity' },
 ];
 
+const BRAND_SUBTITLE = 'Personal knowledge review space';
+
 function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -103,7 +105,7 @@ export function DashboardApp() {
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
-            <span className="knowlery-brand-header__subtitle">AI knowledge base control panel</span>
+            <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
           </div>
         </div>
       </div>
@@ -119,7 +121,7 @@ export function DashboardApp() {
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
-            <span className="knowlery-brand-header__subtitle">AI knowledge base control panel</span>
+            <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
           </div>
         </div>
 
@@ -160,7 +162,7 @@ export function DashboardApp() {
         </div>
         <div className="knowlery-brand-header__meta">
           <span className="knowlery-brand-header__title">Knowlery</span>
-          <span className="knowlery-brand-header__subtitle">AI knowledge base control panel</span>
+          <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
         </div>
         <div className="knowlery-brand-header__actions">
           {lastRefreshed[activeTab] && (
