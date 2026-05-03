@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePlugin } from '../context';
-import type { SkillInfo, DashboardRefreshPayload } from '../types';
+import type { CounterSummary, DashboardRefreshPayload, KnowledgeThreadStage, SkillInfo } from '../types';
+import { buildCounterSummary } from '../core/activity-model';
+import { readRecentActivityRecords } from '../core/activity-ledger';
 import { listSkills } from '../core/skill-manager';
 import { SkillBrowserModal } from '../modals/skill-browser';
 import { SkillDetailModal } from '../modals/skill-detail';
@@ -52,6 +54,39 @@ const GROUPS: GroupConfig[] = [
     Icon: IconPlus,
   },
 ];
+
+const MOVE_RECIPES: Record<KnowledgeThreadStage, { label: string; description: string; skills: string }> = {
+  Capture: {
+    label: 'Capture fresh material',
+    description: 'Turn a conversation, source, or rough idea into durable notes before the details fade.',
+    skills: 'cook',
+  },
+  Connect: {
+    label: 'Connect to older notes',
+    description: 'Look for reusable patterns, related concepts, and places where this thread belongs in the vault.',
+    skills: 'explore + cook',
+  },
+  Question: {
+    label: 'Challenge assumptions',
+    description: 'Check whether the thread has weak evidence, stale conclusions, or questions worth opening.',
+    skills: 'challenge + explore',
+  },
+  Clean: {
+    label: 'Clean the pantry',
+    description: 'Find drift, duplicate structure, missing metadata, and notes that need a quieter shape.',
+    skills: 'review + fix',
+  },
+  Create: {
+    label: 'Bake an output',
+    description: 'Turn the thread into a template, decision, outline, checklist, or other reusable artifact.',
+    skills: 'create + cook',
+  },
+  Reflect: {
+    label: 'Review the pattern',
+    description: 'Step back and notice how this topic is changing your thinking or knowledge habits.',
+    skills: 'review',
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /*  SkillRow                                                           */
@@ -138,10 +173,15 @@ function SkillGroup(props: {
 export function SkillsTab() {
   const plugin = usePlugin();
   const [skills, setSkills] = useState<SkillInfo[]>([]);
+  const [summary, setSummary] = useState<CounterSummary | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
-    const result = await listSkills(plugin.app);
-    setSkills(result);
+    const [skillResult, activityResult] = await Promise.all([
+      listSkills(plugin.app),
+      readRecentActivityRecords(plugin.app, 14),
+    ]);
+    setSkills(skillResult);
+    setSummary(buildCounterSummary(activityResult.records, activityResult.errors.length));
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -173,9 +213,9 @@ export function SkillsTab() {
     <div className="knowlery-skills">
       <div className="knowlery-skills__toolbar">
         <div>
-          <div className="knowlery-section-label">Skills</div>
+          <div className="knowlery-section-label">Pantry</div>
           <div className="knowlery-skills__toolbar-desc">
-            Agent capabilities installed in this vault.
+            Recipes and source skills for working with your knowledge base.
           </div>
         </div>
         <div className="knowlery-skills__actions">
@@ -203,6 +243,35 @@ export function SkillsTab() {
           <p className="knowlery-empty-state__hint">Run the setup wizard to install built-in skills.</p>
         </div>
       )}
+
+      <section className="knowlery-pantry-moves">
+        <div className="knowlery-section-label">Suggested moves</div>
+        <div className="knowlery-pantry-moves__grid">
+          {(summary?.knowledgeThreads ?? []).slice(0, 3).map((thread) => {
+            const recipe = MOVE_RECIPES[thread.nextMove];
+            return (
+              <article key={thread.id} className="knowlery-pantry-move">
+                <div className="knowlery-pantry-move__header">
+                  <div>
+                    <h3>{recipe.label}</h3>
+                    <span>{thread.title}</span>
+                  </div>
+                  <span className="knowlery-pantry-move__skills">{recipe.skills}</span>
+                </div>
+                <p>{recipe.description}</p>
+                <div className="knowlery-pantry-move__request">{thread.suggestedRequest}</div>
+              </article>
+            );
+          })}
+          {summary && summary.knowledgeThreads.length === 0 && (
+            <p className="knowlery-counter__empty">
+              No suggested moves yet. Once agents leave activity receipts, Pantry will recommend what to do next.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <div className="knowlery-section-label">Skill source</div>
 
       {grouped.byKind.map(({ config, items }) => (
         <SkillGroup

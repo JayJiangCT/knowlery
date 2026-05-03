@@ -797,6 +797,63 @@
   flex-shrink: 0;
 }
 
+.knowlery-pantry-moves {
+  margin-block-end: var(--knowlery-space-lg);
+}
+
+.knowlery-pantry-moves__grid {
+  display: grid;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-pantry-move {
+  border: var(--knowlery-border);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-primary);
+  padding-block: var(--knowlery-space-md);
+  padding-inline: var(--knowlery-space-md);
+}
+
+.knowlery-pantry-move__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-pantry-move h3 {
+  margin: 0;
+  color: var(--text-normal);
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-pantry-move__header span,
+.knowlery-pantry-move__request {
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-pantry-move__header .knowlery-pantry-move__skills {
+  flex: 0 0 auto;
+  border: var(--knowlery-border);
+  border-radius: var(--knowlery-radius-sm);
+  padding-block: var(--knowlery-space-2xs);
+  padding-inline: var(--knowlery-space-xs);
+  color: var(--text-accent);
+  background: var(--knowlery-accent-tint);
+}
+
+.knowlery-pantry-move p {
+  margin-block: var(--knowlery-space-sm);
+  margin-inline: 0;
+  color: var(--text-normal);
+}
+
+.knowlery-pantry-move__request {
+  border-inline-start: var(--knowlery-border-accent);
+  padding-inline-start: var(--knowlery-space-sm);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Section 9b: Skill group + grid layout                              */
 /* ------------------------------------------------------------------ */
