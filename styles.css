@@ -337,14 +337,10 @@
   color: var(--text-normal);
 }
 
-.knowlery-counter__thread-header .knowlery-counter__move {
+.knowlery-counter__thread-header .knowlery-counter__thread-state {
   flex: 0 0 auto;
-  border: var(--knowlery-border);
-  border-radius: var(--knowlery-radius-sm);
-  padding-block: var(--knowlery-space-2xs);
-  padding-inline: var(--knowlery-space-xs);
-  color: var(--text-accent);
-  background: var(--knowlery-accent-tint);
+  color: var(--text-faint);
+  font-weight: 500;
 }
 
 .knowlery-counter__suggested-request {

@@ -101,8 +101,8 @@ export function CounterTab() {
                       {new Date(thread.lastSeen).toLocaleDateString()}
                     </span>
                   </div>
-                  <span className="knowlery-counter__move">
-                    {thread.stage} → {thread.nextMove}
+                  <span className="knowlery-counter__thread-state">
+                    Stage: {thread.stage} · Next: {thread.nextMove}
                   </span>
                 </div>
                 <p>{thread.nextMoveReason}</p>
