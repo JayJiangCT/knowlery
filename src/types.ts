@@ -213,7 +213,24 @@ export interface ActivityThemeSummary {
   records: number;
 }
 
+export type KnowledgeThreadStage = 'Capture' | 'Connect' | 'Question' | 'Clean' | 'Create' | 'Reflect';
+
+export interface KnowledgeThreadSummary {
+  id: string;
+  title: string;
+  summary: string;
+  stage: KnowledgeThreadStage;
+  nextMove: KnowledgeThreadStage;
+  nextMoveReason: string;
+  suggestedRequest: string;
+  recordsCount: number;
+  relatedFiles: string[];
+  topics: string[];
+  lastSeen: string;
+}
+
 export interface CounterSummary {
+  knowledgeThreads: KnowledgeThreadSummary[];
   recurringThemes: ActivityThemeSummary[];
   recentAgentWork: ActivityRecord[];
   unbakedNotes: ActivityRecord[];

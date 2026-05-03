@@ -86,6 +86,34 @@ export function CounterTab() {
       </section>
 
       <section className="knowlery-counter__section">
+        <div className="knowlery-section-label">Active threads</div>
+        {summary.knowledgeThreads.length === 0 ? (
+          <EmptyCounterLine text="No active knowledge threads yet." />
+        ) : (
+          <div className="knowlery-counter__thread-list">
+            {summary.knowledgeThreads.map((thread) => (
+              <article key={thread.id} className="knowlery-counter__thread">
+                <div className="knowlery-counter__thread-header">
+                  <div>
+                    <h3>{thread.title}</h3>
+                    <span>
+                      {thread.recordsCount} records · {thread.relatedFiles.length} files ·{' '}
+                      {new Date(thread.lastSeen).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <span className="knowlery-counter__move">
+                    {thread.stage} → {thread.nextMove}
+                  </span>
+                </div>
+                <p>{thread.nextMoveReason}</p>
+                <div className="knowlery-counter__suggested-request">{thread.suggestedRequest}</div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="knowlery-counter__section">
         <div className="knowlery-section-label">Recurring themes</div>
         {summary.recurringThemes.length === 0 ? (
           <EmptyCounterLine text="No themes yet. Activity records will appear here after agents or reflections leave summaries." />
