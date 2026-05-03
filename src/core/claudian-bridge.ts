@@ -26,7 +26,6 @@ interface ClaudianView {
 
 interface ClaudianPlugin {
   activateView?: () => Promise<void> | void;
-  ensureViewOpen?: () => Promise<ClaudianView | null>;
   getView?: () => ClaudianView | null;
 }
 
@@ -50,13 +49,24 @@ async function ensureClaudianView(app: App): Promise<ClaudianView | null> {
   const existingView = plugin?.getView?.();
   if (existingView) return existingView;
 
-  const pluginOpenedView = await plugin?.ensureViewOpen?.();
+  await plugin?.activateView?.();
+  const pluginOpenedView = await waitForPluginView(plugin);
   if (pluginOpenedView) return pluginOpenedView;
 
   const leaf = await ensureClaudianLeaf(app);
   if (!leaf) return null;
 
   return leaf.view as unknown as ClaudianView;
+}
+
+async function waitForPluginView(plugin: ClaudianPlugin | null): Promise<ClaudianView | null> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < CLAUDIAN_READY_TIMEOUT_MS) {
+    const view = plugin?.getView?.();
+    if (view) return view;
+    await sleep(50);
+  }
+  return null;
 }
 
 function getClaudianPlugin(app: App): ClaudianPlugin | null {
