@@ -325,8 +325,7 @@
   font-size: var(--knowlery-body-size);
 }
 
-.knowlery-counter__thread-header span,
-.knowlery-counter__suggested-request {
+.knowlery-counter__thread-header span {
   color: var(--text-muted);
   font-size: var(--knowlery-meta-size);
 }
@@ -341,11 +340,6 @@
   flex: 0 0 auto;
   color: var(--text-faint);
   font-weight: 500;
-}
-
-.knowlery-counter__suggested-request {
-  border-inline-start: var(--knowlery-border-accent);
-  padding-inline-start: var(--knowlery-space-sm);
 }
 
 .knowlery-counter__theme {

@@ -106,7 +106,6 @@ export function CounterTab() {
                   </span>
                 </div>
                 <p>{thread.nextMoveReason}</p>
-                <div className="knowlery-counter__suggested-request">{thread.suggestedRequest}</div>
               </article>
             ))}
           </div>
