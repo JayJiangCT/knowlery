@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Notice } from 'obsidian';
 import { usePlugin } from '../context';
 import type { CounterSummary, DashboardRefreshPayload, KnowledgeThreadStage, SkillInfo } from '../types';
 import { buildCounterSummary } from '../core/activity-model';
+import { sendPromptToClaudian } from '../core/claudian-bridge';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { listSkills } from '../core/skill-manager';
 import { SkillBrowserModal } from '../modals/skill-browser';
@@ -12,8 +14,10 @@ import {
   IconPlus,
   IconInbox,
   IconBookOpen,
+  IconClipboard,
   IconWrench,
   IconDownload,
+  IconPlay,
   SkillIcon,
 } from './Icons';
 
@@ -209,6 +213,38 @@ export function SkillsTab() {
     };
   }, [skills]);
 
+  const writeMoveRequestToClipboard = async (request: string) => {
+    await navigator.clipboard.writeText(request);
+  };
+
+  const copyMoveRequest = async (request: string) => {
+    try {
+      await writeMoveRequestToClipboard(request);
+      new Notice('Move request copied.');
+    } catch {
+      new Notice('Failed to copy move request.');
+    }
+  };
+
+  const sendMoveRequest = async (request: string) => {
+    try {
+      const sent = await sendPromptToClaudian(plugin.app, request);
+      if (sent) {
+        new Notice('Move request sent to Claudian.');
+        return;
+      }
+    } catch {
+      // Fall through to the clipboard fallback below.
+    }
+
+    try {
+      await writeMoveRequestToClipboard(request);
+      new Notice('Claudian is not available. Request copied instead.');
+    } catch {
+      new Notice('Claudian is not available and the request could not be copied.');
+    }
+  };
+
   return (
     <div className="knowlery-skills">
       <div className="knowlery-skills__toolbar">
@@ -259,7 +295,27 @@ export function SkillsTab() {
                   <span className="knowlery-pantry-move__skills">{recipe.skills}</span>
                 </div>
                 <p>{recipe.description}</p>
-                <div className="knowlery-pantry-move__request">{thread.suggestedRequest}</div>
+                <div className="knowlery-pantry-move__request">
+                  <span>{thread.suggestedRequest}</span>
+                  <div className="knowlery-pantry-move__actions">
+                    <button
+                      type="button"
+                      className="knowlery-btn knowlery-btn--outline"
+                      onClick={() => copyMoveRequest(thread.suggestedRequest)}
+                    >
+                      <IconClipboard size={14} />
+                      <span>Copy</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="knowlery-btn knowlery-btn--outline"
+                      onClick={() => sendMoveRequest(thread.suggestedRequest)}
+                    >
+                      <IconPlay size={14} />
+                      <span>Send</span>
+                    </button>
+                  </div>
+                </div>
               </article>
             );
           })}

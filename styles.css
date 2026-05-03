@@ -835,12 +835,8 @@
 
 .knowlery-pantry-move__header .knowlery-pantry-move__skills {
   flex: 0 0 auto;
-  border: var(--knowlery-border);
-  border-radius: var(--knowlery-radius-sm);
-  padding-block: var(--knowlery-space-2xs);
-  padding-inline: var(--knowlery-space-xs);
-  color: var(--text-accent);
-  background: var(--knowlery-accent-tint);
+  color: var(--text-faint);
+  font-weight: 500;
 }
 
 .knowlery-pantry-move p {
@@ -850,8 +846,16 @@
 }
 
 .knowlery-pantry-move__request {
+  display: grid;
+  gap: var(--knowlery-space-sm);
   border-inline-start: var(--knowlery-border-accent);
   padding-inline-start: var(--knowlery-space-sm);
+}
+
+.knowlery-pantry-move__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--knowlery-space-sm);
 }
 
 /* ------------------------------------------------------------------ */
