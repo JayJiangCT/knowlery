@@ -2,7 +2,8 @@ import type { App } from 'obsidian';
 
 const CLAUDIAN_VIEW_TYPE = 'claudian-view';
 const CLAUDIAN_OPEN_COMMAND = 'claudian:open-view';
-const CLAUDIAN_READY_TIMEOUT_MS = 2000;
+const CLAUDIAN_PLUGIN_ID = 'claudian';
+const CLAUDIAN_READY_TIMEOUT_MS = 5000;
 
 interface ClaudianInputController {
   sendMessage?: (options?: { content?: string }) => Promise<void> | void;
@@ -23,19 +24,49 @@ interface ClaudianView {
   getTabManager?: () => ClaudianTabManager | null;
 }
 
+interface ClaudianPlugin {
+  activateView?: () => Promise<void> | void;
+  ensureViewOpen?: () => Promise<ClaudianView | null>;
+  getView?: () => ClaudianView | null;
+}
+
 export async function sendPromptToClaudian(app: App, prompt: string): Promise<boolean> {
-  const leaf = await ensureClaudianLeaf(app);
-  if (!leaf) return false;
+  const view = await ensureClaudianView(app);
+  if (!view) return false;
 
   // Claudian does not expose a public bridge yet; keep this guarded for the PoC.
-  const view = leaf.view as unknown as ClaudianView;
   const tab = await waitForActiveTab(view);
   const sendMessage = tab?.controllers?.inputController?.sendMessage;
   if (!sendMessage) return false;
 
-  await app.workspace.revealLeaf(leaf);
+  const leaf = app.workspace.getLeavesOfType(CLAUDIAN_VIEW_TYPE)[0];
+  if (leaf) await app.workspace.revealLeaf(leaf);
   await sendMessage.call(tab.controllers?.inputController, { content: prompt });
   return true;
+}
+
+async function ensureClaudianView(app: App): Promise<ClaudianView | null> {
+  const plugin = getClaudianPlugin(app);
+  const existingView = plugin?.getView?.();
+  if (existingView) return existingView;
+
+  const pluginOpenedView = await plugin?.ensureViewOpen?.();
+  if (pluginOpenedView) return pluginOpenedView;
+
+  const leaf = await ensureClaudianLeaf(app);
+  if (!leaf) return null;
+
+  return leaf.view as unknown as ClaudianView;
+}
+
+function getClaudianPlugin(app: App): ClaudianPlugin | null {
+  const plugins = (app as App & {
+    plugins?: {
+      plugins?: Record<string, unknown>;
+    };
+  }).plugins?.plugins;
+
+  return (plugins?.[CLAUDIAN_PLUGIN_ID] as ClaudianPlugin | undefined) ?? null;
 }
 
 async function ensureClaudianLeaf(app: App) {
@@ -43,7 +74,11 @@ async function ensureClaudianLeaf(app: App) {
   if (existing) return existing;
 
   await executeOpenCommand(app);
-  return waitForLeaf(app);
+  const leaf = await waitForLeaf(app);
+  if (!leaf) return null;
+
+  await app.workspace.revealLeaf(leaf);
+  return leaf;
 }
 
 async function executeOpenCommand(app: App): Promise<void> {
