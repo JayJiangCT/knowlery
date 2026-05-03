@@ -16,10 +16,12 @@ interface ClaudianTab {
 }
 
 interface ClaudianTabManager {
+  createNewConversation?: () => Promise<void> | void;
   getActiveTab?: () => ClaudianTab | null;
 }
 
 interface ClaudianView {
+  createNewTab?: () => Promise<void> | void;
   getActiveTab?: () => ClaudianTab | null;
   getTabManager?: () => ClaudianTabManager | null;
 }
@@ -33,6 +35,8 @@ export async function sendPromptToClaudian(app: App, prompt: string): Promise<bo
   const view = await ensureClaudianView(app);
   if (!view) return false;
 
+  await prepareFreshClaudianContext(view);
+
   // Claudian does not expose a public bridge yet; keep this guarded for the PoC.
   const tab = await waitForActiveTab(view);
   const sendMessage = tab?.controllers?.inputController?.sendMessage;
@@ -42,6 +46,16 @@ export async function sendPromptToClaudian(app: App, prompt: string): Promise<bo
   if (leaf) await app.workspace.revealLeaf(leaf);
   await sendMessage.call(tab.controllers?.inputController, { content: prompt });
   return true;
+}
+
+async function prepareFreshClaudianContext(view: ClaudianView): Promise<void> {
+  const tabBefore = view.getActiveTab?.() ?? view.getTabManager?.()?.getActiveTab?.() ?? null;
+  await view.createNewTab?.();
+
+  const tabAfter = await waitForAnyActiveTab(view);
+  if (tabAfter && tabAfter !== tabBefore) return;
+
+  await view.getTabManager?.()?.createNewConversation?.();
 }
 
 async function ensureClaudianView(app: App): Promise<ClaudianView | null> {
@@ -115,6 +129,16 @@ async function waitForActiveTab(view: ClaudianView): Promise<ClaudianTab | null>
   while (Date.now() - startedAt < CLAUDIAN_READY_TIMEOUT_MS) {
     const tab = view.getActiveTab?.() ?? view.getTabManager?.()?.getActiveTab?.() ?? null;
     if (tab?.controllers?.inputController?.sendMessage) return tab;
+    await sleep(50);
+  }
+  return null;
+}
+
+async function waitForAnyActiveTab(view: ClaudianView): Promise<ClaudianTab | null> {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < CLAUDIAN_READY_TIMEOUT_MS) {
+    const tab = view.getActiveTab?.() ?? view.getTabManager?.()?.getActiveTab?.() ?? null;
+    if (tab) return tab;
     await sleep(50);
   }
   return null;
