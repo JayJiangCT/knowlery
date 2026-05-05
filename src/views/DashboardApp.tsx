@@ -2,10 +2,11 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { setIcon } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
 import type { DashboardTab, DashboardRefreshPayload } from '../types';
-import { CounterTab } from './CounterTab';
+import { TodayTab } from './TodayTab';
+import { ThisNoteTab } from './ThisNoteTab';
+import { BakeTab } from './BakeTab';
 import { SkillsTab } from './SkillsTab';
-import { ConfigTab } from './ConfigTab';
-import { HealthTab } from './HealthTab';
+import { SystemTab } from './SystemTab';
 import { IconX } from './Icons';
 import { isVaultInitialized } from '../core/setup-executor';
 import { SetupWizardModal } from '../modals/setup-wizard';
@@ -20,10 +21,11 @@ function formatRelativeTime(date: Date): string {
 }
 
 const TABS: { id: DashboardTab; label: string; icon: string }[] = [
-  { id: 'counter', label: 'Counter', icon: 'chef-hat' },
-  { id: 'skills', label: 'Pantry', icon: 'wrench' },
-  { id: 'config', label: 'Config', icon: 'settings' },
-  { id: 'health', label: 'Health', icon: 'activity' },
+  { id: 'today', label: 'Today', icon: 'chef-hat' },
+  { id: 'note', label: 'This note', icon: 'file-text' },
+  { id: 'bake', label: 'Weekly Review', icon: 'book-open' },
+  { id: 'recipes', label: 'Review Menu', icon: 'list-checks' },
+  { id: 'system', label: 'System', icon: 'settings' },
 ];
 
 const BRAND_SUBTITLE = 'Personal knowledge review space';
@@ -46,15 +48,16 @@ function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: num
 export function DashboardApp() {
   const plugin = usePlugin();
   const [settings, updateSettings] = useSettings();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('counter');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('today');
   const [initialized, setInitialized] = useState<boolean | null>(null);
   const [refreshingTab, setRefreshingTab] = useState<DashboardTab | null>(null);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<Record<DashboardTab, Date | null>>({
-    counter: null,
-    skills: null,
-    config: null,
-    health: null,
+    today: null,
+    note: null,
+    bake: null,
+    recipes: null,
+    system: null,
   });
 
   useEffect(() => {
@@ -88,6 +91,13 @@ export function DashboardApp() {
     return () => plugin.events.offref(ref);
   }, [plugin, refreshingTab]);
 
+  useEffect(() => {
+    const ref = plugin.events.on('dashboard-open-tab', (tab: DashboardTab) => {
+      setActiveTab(tab);
+    });
+    return () => plugin.events.offref(ref);
+  }, [plugin]);
+
   const dismissBanner = useCallback(async () => {
     await updateSettings({ onboardingDismissed: true });
   }, [updateSettings]);
@@ -101,7 +111,7 @@ export function DashboardApp() {
       <div className="knowlery-dashboard">
         <div className="knowlery-brand-header">
           <div className="knowlery-brand-header__icon">
-            <ObsidianIcon icon="wrench" size={18} />
+            <ObsidianIcon icon="chef-hat" size={18} />
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
@@ -117,7 +127,7 @@ export function DashboardApp() {
       <div className="knowlery-dashboard">
         <div className="knowlery-brand-header">
           <div className="knowlery-brand-header__icon">
-            <ObsidianIcon icon="wrench" size={18} />
+            <ObsidianIcon icon="chef-hat" size={18} />
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
@@ -131,9 +141,9 @@ export function DashboardApp() {
           </div>
           <h3 className="knowlery-setup-prompt__title">Vault not set up</h3>
           <p className="knowlery-setup-prompt__desc">
-            This vault hasn't been configured for AI yet. Run the setup wizard to
-            create knowledge directories, install skills, and generate agent
-            configuration.
+            This vault has not been prepared for Knowlery yet. Run the setup
+            wizard to create knowledge directories, install review recipes, and prepare
+            agent configuration.
           </p>
           <button
             className="mod-cta knowlery-setup-prompt__btn"
@@ -146,19 +156,21 @@ export function DashboardApp() {
     );
   }
 
-  const ActiveTabComponent = activeTab === 'counter'
-    ? CounterTab
-    : activeTab === 'skills'
-      ? SkillsTab
-      : activeTab === 'config'
-        ? ConfigTab
-        : HealthTab;
+  const ActiveTabComponent = activeTab === 'today'
+    ? TodayTab
+    : activeTab === 'note'
+      ? ThisNoteTab
+      : activeTab === 'bake'
+        ? BakeTab
+        : activeTab === 'recipes'
+          ? SkillsTab
+          : SystemTab;
 
   return (
     <div className="knowlery-dashboard">
       <div className="knowlery-brand-header">
         <div className="knowlery-brand-header__icon">
-          <ObsidianIcon icon="wrench" size={18} />
+          <ObsidianIcon icon="chef-hat" size={18} />
         </div>
         <div className="knowlery-brand-header__meta">
           <span className="knowlery-brand-header__title">Knowlery</span>
@@ -204,8 +216,8 @@ export function DashboardApp() {
         {!settings.onboardingDismissed && (
           <div className="knowlery-banner">
             <div className="knowlery-banner__text">
-              <strong>Welcome to Knowlery!</strong> Your vault has been set up as
-              an AI-powered knowledge base.
+              <strong>Welcome to Knowlery!</strong> Your vault is ready for
+              personal knowledge review.
             </div>
             <button
               className="knowlery-banner__close"

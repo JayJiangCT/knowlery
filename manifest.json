@@ -1,9 +1,9 @@
 {
   "id": "knowlery",
   "name": "Knowlery",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.7.2",
-  "description": "Turn your vault into an AI-powered knowledge base control panel.",
+  "description": "A warm personal knowledge review space for Obsidian vaults.",
   "author": "Jay Jiang",
   "authorUrl": "https://github.com/JayJiangCT",
   "isDesktopOnly": true

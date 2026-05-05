@@ -11,6 +11,7 @@ import { SkillDetailModal } from '../modals/skill-detail';
 import { SkillEditorModal } from '../modals/skill-editor';
 import {
   IconChevronRight,
+  IconChevronDown,
   IconPlus,
   IconInbox,
   IconBookOpen,
@@ -31,8 +32,6 @@ interface GroupConfig {
   subtitle: string;
   Icon: React.ComponentType<{ size?: number }>;
 }
-
-type PantryView = 'suggested' | 'recipes' | 'source';
 
 interface PantryRecipe {
   id: string;
@@ -70,12 +69,6 @@ const GROUPS: GroupConfig[] = [
   },
 ];
 
-const PANTRY_VIEWS: Array<{ id: PantryView; label: string }> = [
-  { id: 'suggested', label: 'Suggested' },
-  { id: 'recipes', label: 'Recipes' },
-  { id: 'source', label: 'Source' },
-];
-
 const MOVE_RECIPES: Record<KnowledgeThreadStage, { label: string; description: string; skills: string }> = {
   Capture: {
     label: 'Capture fresh material',
@@ -98,7 +91,7 @@ const MOVE_RECIPES: Record<KnowledgeThreadStage, { label: string; description: s
     skills: 'review + fix',
   },
   Create: {
-    label: 'Bake an output',
+    label: 'Create an output',
     description: 'Turn the thread into a template, decision, outline, checklist, or other reusable artifact.',
     skills: 'create + cook',
   },
@@ -144,7 +137,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
   },
   {
     id: 'bake-output',
-    title: 'Bake an output',
+    title: 'Create an output',
     threadLabel: 'Reusable artifact or decision',
     description: 'Turn existing notes into a checklist, outline, template, proposal, or decision memo.',
     request: '请基于我的知识库内容，帮我把一个成熟主题转成可复用输出：提纲、模板、清单、方案或决策记录。',
@@ -239,11 +232,11 @@ function PantryMoveActions(props: {
     <div className="knowlery-pantry-move__actions">
       <button
         type="button"
-        className="knowlery-btn knowlery-btn--outline"
+      className="knowlery-btn knowlery-btn--outline"
         onClick={() => props.onCopy(props.request)}
       >
         <IconClipboard size={14} />
-        <span>Copy</span>
+        <span>Copy recipe prompt</span>
       </button>
       <button
         type="button"
@@ -251,7 +244,7 @@ function PantryMoveActions(props: {
         onClick={() => props.onSend(props.request)}
       >
         <IconPlay size={14} />
-        <span>Send</span>
+        <span>Send recipe to agent</span>
       </button>
     </div>
   );
@@ -265,7 +258,8 @@ export function SkillsTab() {
   const plugin = usePlugin();
   const [skills, setSkills] = useState<SkillInfo[]>([]);
   const [summary, setSummary] = useState<CounterSummary | null>(null);
-  const [activeView, setActiveView] = useState<PantryView>('suggested');
+  const [sourceExpanded, setSourceExpanded] = useState(false);
+  const [openRecipeId, setOpenRecipeId] = useState<string | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const [skillResult, activityResult] = await Promise.all([
@@ -337,95 +331,110 @@ export function SkillsTab() {
     <div className="knowlery-skills">
       <div className="knowlery-skills__toolbar">
         <div>
-          <div className="knowlery-section-label">Pantry</div>
+          <div className="knowlery-section-label">Review Menu</div>
           <div className="knowlery-skills__toolbar-desc">
-            Recipes for working with your knowledge base.
+            Natural language moves for keeping your knowledge base alive.
           </div>
-        </div>
-        <div className="knowlery-pantry-switcher" role="tablist" aria-label="Pantry view">
-          {PANTRY_VIEWS.map((view) => (
-            <button
-              key={view.id}
-              type="button"
-              className={`knowlery-pantry-switcher__item${activeView === view.id ? ' is-active' : ''}`}
-              onClick={() => setActiveView(view.id)}
-            >
-              {view.label}
-            </button>
-          ))}
         </div>
       </div>
 
-      {activeView === 'suggested' && (
-        <section className="knowlery-pantry-moves">
-          <div className="knowlery-section-label">Suggested moves</div>
-          <div className="knowlery-pantry-moves__grid">
-            {(summary?.knowledgeThreads ?? []).slice(0, 3).map((thread) => {
-              const recipe = MOVE_RECIPES[thread.nextMove];
-              return (
-                <article key={thread.id} className="knowlery-pantry-move">
-                  <div className="knowlery-pantry-move__header">
-                    <div>
-                      <h3>{recipe.label}</h3>
-                      <span>{thread.title}</span>
-                    </div>
-                    <span className="knowlery-pantry-move__skills">{recipe.skills}</span>
-                  </div>
-                  <p>{recipe.description}</p>
-                  <div className="knowlery-pantry-move__request">
-                    <span>{thread.suggestedRequest}</span>
-                    <PantryMoveActions
-                      request={thread.suggestedRequest}
-                      onCopy={copyMoveRequest}
-                      onSend={sendMoveRequest}
-                    />
-                  </div>
-                </article>
-              );
-            })}
-            {summary && summary.knowledgeThreads.length === 0 && (
-              <p className="knowlery-counter__empty">
-                No suggested moves yet. Once agents leave activity receipts, Pantry will recommend what to do next.
-              </p>
-            )}
-          </div>
-        </section>
-      )}
-
-      {activeView === 'recipes' && (
-        <section className="knowlery-pantry-moves">
-          <div className="knowlery-section-label">Recipe book</div>
-          <div className="knowlery-pantry-moves__grid">
-            {RECIPE_BOOK.map((recipe) => (
-              <article key={recipe.id} className="knowlery-pantry-move">
+      <section className="knowlery-pantry-moves">
+        <div className="knowlery-section-label">Suggested next moves</div>
+        <div className="knowlery-pantry-moves__grid">
+          {(summary?.knowledgeThreads ?? []).slice(0, 3).map((thread) => {
+            const recipe = MOVE_RECIPES[thread.nextMove];
+            return (
+              <article key={thread.id} className="knowlery-pantry-move">
                 <div className="knowlery-pantry-move__header">
                   <div>
-                    <h3>{recipe.title}</h3>
-                    <span>{recipe.threadLabel}</span>
+                    <h3>{recipe.label}</h3>
+                    <span>{thread.title}</span>
                   </div>
                   <span className="knowlery-pantry-move__skills">{recipe.skills}</span>
                 </div>
                 <p>{recipe.description}</p>
                 <div className="knowlery-pantry-move__request">
-                  <span>{recipe.request}</span>
+                  <span>{thread.suggestedRequest}</span>
                   <PantryMoveActions
-                    request={recipe.request}
+                    request={thread.suggestedRequest}
                     onCopy={copyMoveRequest}
                     onSend={sendMoveRequest}
                   />
                 </div>
               </article>
-            ))}
-          </div>
-        </section>
-      )}
+            );
+          })}
+          {summary && summary.knowledgeThreads.length === 0 && (
+            <p className="knowlery-counter__empty">
+              No suggested moves yet. Once agents leave activity receipts, Knowlery will recommend what to do next.
+            </p>
+          )}
+        </div>
+      </section>
 
-      {activeView === 'source' && (
-        <>
-          <div className="knowlery-skills__source-toolbar">
+      <section className="knowlery-pantry-moves">
+        <div className="knowlery-section-label">Review moves</div>
+        <div className="knowlery-pantry-moves__grid">
+          {RECIPE_BOOK.map((recipe) => (
+            <article key={recipe.id} className={`knowlery-pantry-move knowlery-pantry-move--recipe${openRecipeId === recipe.id ? ' is-open' : ''}`}>
+              <button
+                type="button"
+                className="knowlery-pantry-move__summary"
+                onClick={() => setOpenRecipeId((current) => current === recipe.id ? null : recipe.id)}
+                aria-expanded={openRecipeId === recipe.id}
+              >
+                <div>
+                  <h3>{recipe.title}</h3>
+                  <span>{recipe.threadLabel}</span>
+                </div>
+                <span className="knowlery-pantry-move__summary-meta">
+                  <span className="knowlery-pantry-move__skills">{recipe.skills}</span>
+                  {openRecipeId === recipe.id ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+                </span>
+              </button>
+              {openRecipeId === recipe.id && (
+                <div className="knowlery-pantry-move__details">
+                  <p>{recipe.description}</p>
+                  <div className="knowlery-pantry-move__request">
+                    <span>{recipe.request}</span>
+                    <PantryMoveActions
+                      request={recipe.request}
+                      onCopy={copyMoveRequest}
+                      onSend={sendMoveRequest}
+                    />
+                  </div>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="knowlery-source-disclosure">
+        <div className="knowlery-source-disclosure__header">
+          <div>
+            <div className="knowlery-section-label">Source skills</div>
+            <div className="knowlery-skills__toolbar-desc">
+              Advanced source prompts behind the review menu.
+            </div>
+          </div>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--outline"
+            onClick={() => setSourceExpanded((expanded) => !expanded)}
+            aria-expanded={sourceExpanded}
+          >
+            <IconBookOpen size={14} />
+            <span>{sourceExpanded ? 'Hide source skills' : 'View source skills'}</span>
+          </button>
+        </div>
+
+        {sourceExpanded && (
+          <>
+            <div className="knowlery-skills__source-toolbar">
             <div>
-              <div className="knowlery-section-label">Source skills</div>
-              <div className="knowlery-skills__toolbar-desc">Ingredients behind Pantry recipes.</div>
+              <div className="knowlery-section-label">Skill source library</div>
+              <div className="knowlery-skills__toolbar-desc">Create, browse, and inspect the canonical skill prompts.</div>
             </div>
             <div className="knowlery-skills__actions">
               <button
@@ -480,8 +489,9 @@ export function SkillsTab() {
               </div>
             </section>
           )}
-        </>
-      )}
+          </>
+        )}
+      </section>
     </div>
   );
 }

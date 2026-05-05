@@ -241,7 +241,7 @@ export interface CounterSummary {
   };
 }
 
-export type DashboardTab = 'counter' | 'skills' | 'config' | 'health';
+export type DashboardTab = 'today' | 'note' | 'bake' | 'recipes' | 'system';
 
 export interface DashboardRefreshPayload {
   tab: DashboardTab;
