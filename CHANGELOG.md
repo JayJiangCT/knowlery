@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.0-beta.2] — 2026-05-06
+
+### Internal beta
+
+- Fixes Today quick-action tooltip rendering by switching to Obsidian-native tooltips instead of custom CSS pseudo-elements.
+- Keeps the local build flow convenient by copying release assets into the default Test Vault only when that vault exists.
+
+### Beta notes
+
+- This prerelease is intended for internal testing through BRAT and GitHub prerelease assets.
+- Feedback should focus on dashboard polish, tooltip reliability, and the end-to-end beta install/update experience.
+
 ## [v0.3.0-beta.1] — 2026-05-05
 
 ### Internal beta

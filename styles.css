@@ -920,33 +920,6 @@
   box-shadow: none !important;
 }
 
-.knowlery-icon-action::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  inset-block-start: auto;
-  inset-block-end: calc(100% + var(--knowlery-space-xs));
-  inset-inline-end: 0;
-  z-index: var(--layer-tooltip);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(var(--knowlery-space-2xs));
-  white-space: nowrap;
-  border-radius: var(--knowlery-radius-sm);
-  background: var(--background-modifier-message);
-  color: var(--text-normal);
-  font-size: var(--knowlery-meta-size);
-  padding-block: var(--knowlery-space-xs);
-  padding-inline: var(--knowlery-space-sm);
-  box-shadow: var(--shadow-s);
-  transition: opacity var(--knowlery-transition-fast), transform var(--knowlery-transition-fast);
-}
-
-.knowlery-icon-action:hover::after,
-.knowlery-icon-action:focus-visible::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 /* ------------------------------------------------------------------ */
 /*  Section 7: Badge                                                   */
 /* ------------------------------------------------------------------ */

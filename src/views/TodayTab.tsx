@@ -1,5 +1,5 @@
-import { normalizePath, Notice } from 'obsidian';
-import { useCallback, useEffect, useState } from 'react';
+import { normalizePath, Notice, setTooltip } from 'obsidian';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePlugin } from '../context';
 import type { DashboardRefreshPayload } from '../types';
 import type { TodayModel } from '../core/today-model';
@@ -181,23 +181,38 @@ function TodayPrimaryAction(props: {
 
   return (
     <div className="knowlery-hero-actions">
-      <button
-        className="knowlery-icon-action"
-        onClick={() => props.onCopyRequest(model.primaryAction.request)}
-        data-tooltip="Copy prompt"
-      >
+      <IconActionButton label="Copy prompt" onClick={() => props.onCopyRequest(model.primaryAction.request)}>
         <IconClipboard size={14} />
-        <span className="knowlery-sr-only">Copy prompt</span>
-      </button>
-      <button
-        className="knowlery-icon-action"
-        onClick={() => props.onSendRequest(model.primaryAction.request)}
-        data-tooltip="Send to Claudian"
-      >
+      </IconActionButton>
+      <IconActionButton label="Send to Claudian" onClick={() => props.onSendRequest(model.primaryAction.request)}>
         <IconPlay size={14} />
-        <span className="knowlery-sr-only">Send to Claudian</span>
-      </button>
+      </IconActionButton>
     </div>
+  );
+}
+
+function IconActionButton(props: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!buttonRef.current) return;
+    setTooltip(buttonRef.current, props.label, { placement: 'top', delay: 300 });
+  }, [props.label]);
+
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className="knowlery-icon-action"
+      onClick={props.onClick}
+      aria-label={props.label}
+    >
+      {props.children}
+    </button>
   );
 }
 
