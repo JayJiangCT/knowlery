@@ -7,6 +7,7 @@ import {
   executeByoaoMigration,
   normalizeLegacySkillsLock,
 } from '../../src/core/legacy-byoao-migration';
+import { generateClaudeMd } from '../../src/assets/templates';
 
 function createMockApp(initialFiles: Record<string, string>): App {
   const files = new Map(Object.entries(initialFiles));
@@ -217,6 +218,7 @@ describe('executeByoaoMigration', () => {
       '.byoao/manifest.json': '{"version":"2.0.12"}',
       '.agents/skills/ask/SKILL.md': 'agents ask',
       '.claude/skills/ask/SKILL.md': 'custom claude ask',
+      '.claude/CLAUDE.md': '# Jay\n\n@../AGENTS.md\n\n## Vault Retrieval Trigger\nRun /cook to compile notes.',
       '.opencode/skills/trace/SKILL.md': 'trace skill',
       '.knowlery/manifest.json': '{"version":"legacy","platform":"opencode","kbName":"Custom Existing"}',
       'SCHEMA.md': 'keep schema',
@@ -238,6 +240,7 @@ describe('executeByoaoMigration', () => {
 
     expect(files.get('SCHEMA.md')).toBe('keep schema');
     expect(files.get('INDEX.base')).toBe('keep index');
+    expect(files.get('.claude/CLAUDE.md')).toBe(generateClaudeMd());
     expect(files.get('.claude/skills/ask/SKILL.md')).toBe('custom claude ask');
     expect(files.get('.agents/skills/trace/SKILL.md')).toBe('trace skill');
     expect(files.get('.claude/skills/trace/SKILL.md')).toBe('trace skill');

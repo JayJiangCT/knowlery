@@ -220,7 +220,7 @@ export async function buildByoaoMigrationPreview(app: App): Promise<ByoaoMigrati
   if (!(await adapter.exists(normalizeLegacyPath(KNOWLERY_MANIFEST_PATH)))) {
     create.push(KNOWLERY_MANIFEST_PATH);
   }
-  if (!(await adapter.exists(normalizeLegacyPath('.claude/CLAUDE.md')))) {
+  if (await shouldWriteClaudeMd(app)) {
     create.push('.claude/CLAUDE.md');
   }
 
@@ -260,7 +260,7 @@ export async function executeByoaoMigration(
 
   await ensureMigrationDir(app, '.claude');
   await ensureMigrationDir(app, '.claude/rules');
-  await writeFileIfMissing(app, '.claude/CLAUDE.md', generateClaudeMd());
+  await writeClaudeMdForMigration(app);
   await installMissingDefaultRules(app);
 
   await ensureMigrationDir(app, AGENTS_SKILLS_DIR);
@@ -315,6 +315,30 @@ async function installMissingDefaultRules(app: App): Promise<void> {
   for (const template of RULE_TEMPLATES) {
     await writeFileIfMissing(app, `.claude/rules/${template.filename}`, template.content);
   }
+}
+
+async function writeClaudeMdForMigration(app: App): Promise<void> {
+  if (!(await shouldWriteClaudeMd(app))) return;
+  await writeMigrationFile(app, '.claude/CLAUDE.md', generateClaudeMd());
+}
+
+async function shouldWriteClaudeMd(app: App): Promise<boolean> {
+  const path = normalizeLegacyPath('.claude/CLAUDE.md');
+  const adapter = app.vault.adapter;
+  if (!(await adapter.exists(path))) return true;
+
+  const content = await adapter.read(path);
+  return isLegacyByoaoClaudeMd(content);
+}
+
+function isLegacyByoaoClaudeMd(content: string): boolean {
+  return (
+    content.includes('@../AGENTS.md') ||
+    content.includes('@/AGENTS.md') ||
+    /\bVault Retrieval Trigger\b/i.test(content) ||
+    /\bRun\s+\/cook\b/i.test(content) ||
+    /\bRun\s+\/health\b/i.test(content)
+  );
 }
 
 async function writeFileIfMissing(app: App, path: string, content: string): Promise<boolean> {

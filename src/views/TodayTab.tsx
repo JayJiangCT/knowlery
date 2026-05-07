@@ -82,6 +82,13 @@ export function TodayTab() {
     plugin.events.trigger('dashboard-open-tab', 'recipes');
   };
 
+  const scanVaultHealth = () => {
+    plugin.events.trigger('dashboard-open-tab', 'system');
+    window.setTimeout(() => {
+      plugin.events.trigger('dashboard-run-health-diagnosis');
+    }, 0);
+  };
+
   if (!model) return <div className="knowlery-today" />;
 
   return (
@@ -120,7 +127,13 @@ export function TodayTab() {
         {model.stage === 'returning' ? (
           <ReturningToday model={model} />
         ) : (
-          <FirstSteps model={model} onAddReflection={addReflection} onCopyRequest={copyRequest} onOpenRecipes={openRecipes} />
+          <FirstSteps
+            model={model}
+            onAddReflection={addReflection}
+            onCopyRequest={copyRequest}
+            onOpenRecipes={openRecipes}
+            onScanVaultHealth={scanVaultHealth}
+          />
         )}
       </section>
     </div>
@@ -221,6 +234,7 @@ function FirstSteps(props: {
   onAddReflection: () => void;
   onCopyRequest: (request?: string) => void;
   onOpenRecipes: () => void;
+  onScanVaultHealth: () => void;
 }) {
   return (
     <div className="knowlery-today__steps">
@@ -231,6 +245,7 @@ function FirstSteps(props: {
           className="knowlery-today__step"
           onClick={() => {
             if (action.label === 'Add reflection') props.onAddReflection();
+            else if (action.label === 'Scan vault health') props.onScanVaultHealth();
             else if (action.kind === 'agent-request') props.onCopyRequest(action.request);
             else props.onOpenRecipes();
           }}

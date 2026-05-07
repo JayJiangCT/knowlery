@@ -545,10 +545,30 @@
   box-shadow: none;
 }
 
+.knowlery-dashboard button.knowlery-today__step {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid !important;
+  block-size: auto !important;
+  min-block-size: 54px !important;
+  padding-block: var(--knowlery-space-md) !important;
+  padding-inline: var(--knowlery-space-md) !important;
+  line-height: var(--line-height-normal);
+  white-space: normal;
+  text-align: start;
+}
+
 .knowlery-today__step:hover,
 .knowlery-today__step:focus-visible {
   border-color: var(--background-modifier-border-hover);
   background: var(--background-modifier-hover);
+}
+
+.knowlery-dashboard button.knowlery-today__step:hover,
+.knowlery-dashboard button.knowlery-today__step:focus-visible,
+.knowlery-dashboard button.knowlery-today__step:active {
+  background: var(--background-modifier-hover) !important;
+  box-shadow: none !important;
 }
 
 .knowlery-today__step span {
