@@ -139,6 +139,14 @@
   line-height: 1.5;
 }
 
+.mod-left-split .workspace-leaf-content[data-type="knowlery-dashboard"] > .view-content.knowlery-dashboard {
+  border-inline-end: var(--knowlery-border);
+}
+
+.mod-right-split .workspace-leaf-content[data-type="knowlery-dashboard"] > .view-content.knowlery-dashboard {
+  border-inline-start: var(--knowlery-border);
+}
+
 /* Brand header */
 .knowlery-brand-header {
   display: flex;
