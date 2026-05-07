@@ -22,7 +22,7 @@ main.js
 docs-site/.vitepress/cache/
 docs-site/.vitepress/dist/
 .venv*/
-media/promo/
+media/
 *.js.map
 data.json
 .DS_Store
