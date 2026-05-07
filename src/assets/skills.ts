@@ -336,14 +336,15 @@ Use the Obsidian CLI to interact with the vault programmatically.
 
 ## Default operating rule
 
-Vault-grounded retrieval must use Obsidian CLI. Do not use \`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`, or external knowledge/search connectors as substitutes for searching or reading vault notes.
+Vault-grounded operations must use Obsidian CLI. Do not use \`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`, direct file tools (\`Write\`, \`Edit\`, \`MultiEdit\`), or external knowledge/search connectors as substitutes for searching, reading, creating, or updating vault notes.
 
 For any question about the vault, notes, wiki, knowledge base, or accumulated work:
 
 1. Start with \`obsidian search query="..."\` or \`obsidian search:context query="..."\`
 2. Read candidate notes with \`obsidian read file="..."\`
-3. Use raw shell only after the CLI command fails, is unavailable, or cannot express the operation
-4. If falling back, state the failed/unsupported CLI step and keep fallback scope narrow
+3. Create new notes with \`obsidian create path="..." content="..."\`
+4. Use raw shell or direct file tools only after the CLI command fails, is unavailable, or cannot express the operation
+5. If falling back, state the failed/unsupported CLI step and keep fallback scope narrow
 
 Do not start routine vault work by running \`obsidian help\`.
 
@@ -381,6 +382,16 @@ kind: tooling
 # Obsidian Flavored Markdown
 
 Write markdown using Obsidian's extensions.
+
+## Vault write contract
+
+When writing markdown into a vault, use Obsidian CLI instead of direct file tools.
+
+- Search existing notes first with \`obsidian search query="..."\` or \`obsidian search:context query="..."\`
+- Read candidate notes with \`obsidian read file="..."\`
+- Create new notes with \`obsidian create path="..." content="..."\`
+- Do not use direct \`Write\`, \`Edit\`, or \`MultiEdit\` on vault notes unless the Obsidian CLI write path fails or is unavailable
+- If falling back, state the failed/unsupported CLI step before writing
 
 ## Key Features
 

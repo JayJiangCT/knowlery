@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.2.3] — 2026-05-07
+
+### Fixes
+
+- Agent vault-operation instructions now cover note creation and updates, preventing agents from using direct `Write` / `Edit` tools instead of Obsidian CLI when creating knowledge pages.
+- The bundled Obsidian Markdown skill now repeats the vault write contract because writing workflows often load that skill without loading the Obsidian CLI skill.
+
 ## [v0.2.2] — 2026-05-07
 
 ### Fixes

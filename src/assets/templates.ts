@@ -17,11 +17,13 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 ## Operating Rules
 
-### Obsidian CLI Only
+### Obsidian CLI Vault Operations Contract
 
-**Mandatory for vault-grounded retrieval:** use Obsidian CLI for note-centric vault operations. Do not use raw shell search (\`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`) or external knowledge/search connectors as substitutes for vault retrieval.
+**Mandatory for vault-grounded operations:** use Obsidian CLI for all note-centric vault operations, including search, read, list, link inspection, property inspection, note creation, and note updates. Do not use raw shell commands (\`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`), direct file tools (\`Write\`, \`Edit\`, \`MultiEdit\`), or external knowledge/search connectors as substitutes for vault operations.
 
 For any question about this vault, notes, wiki, knowledge base, or accumulated work, the first search step must be \`obsidian search query="..."\` or \`obsidian search:context query="..."\`. Read candidate notes with \`obsidian read\`, not \`cat\`.
+
+When creating a knowledge page, first search for existing coverage with \`obsidian search\`, then create the page with \`obsidian create path="..." content="..."\`. Do not create or update vault notes with direct \`Write\` / \`Edit\` tools unless an Obsidian CLI write command fails, is unavailable, or cannot express the operation.
 
 Fallback is allowed only after an Obsidian CLI command fails, is unavailable, or cannot express the operation. When falling back, state the failed/unsupported CLI step and keep fallback scope narrow, such as \`rg --files entities concepts comparisons queries\` for path enumeration only.
 
@@ -67,6 +69,16 @@ When answering questions from this vault (not general knowledge):
 7. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
 
 Every claim must be backed by vault notes found through the Obsidian CLI retrieval path. See \`/ask\` for the full specification.
+
+## Knowledge Creation and Updates
+
+When asked to capture, digest, summarize, or "sink" knowledge into this vault:
+
+1. Run \`obsidian search query="..."\` or \`obsidian search:context query="..."\` to find existing pages and avoid duplicates
+2. Read likely pages with \`obsidian read file="..."\`
+3. If creating a new page, use \`obsidian create path="entities/example.md" content="..."\`
+4. If updating an existing page, use the Obsidian CLI write/update command available locally; if unavailable, state that before using a narrow fallback
+5. Never use direct \`Write\` / \`Edit\` tools as the first write path for vault notes
 
 ## Available Skills
 

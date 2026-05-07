@@ -25,13 +25,23 @@ assert.match(installScript, /Invoke-RestMethod https:\/\/claude\.ai\/install\.ps
 assert.match(installScript, /Invoke-Expression/);
 
 const knowledge = generateKnowledgeMd('Test Knowledge Base');
-assert.match(knowledge, /Mandatory for vault-grounded retrieval/);
+assert.match(knowledge, /Mandatory for vault-grounded operations/);
 assert.match(knowledge, /the first search step must be `obsidian search query="\.\.\."`/);
-assert.match(knowledge, /Do not use raw shell search/);
+assert.match(knowledge, /Do not use raw shell commands/);
+assert.match(knowledge, /direct file tools/);
+assert.match(knowledge, /Knowledge Creation and Updates/);
+assert.match(knowledge, /Never use direct `Write` \/ `Edit` tools as the first write path/);
 assert.doesNotMatch(knowledge, /Prefer Obsidian CLI for note-centric vault operations/);
 
 const obsidianCliSkill = BUNDLED_SKILLS.find((candidate) => candidate.name === 'obsidian-cli');
 assert.ok(obsidianCliSkill);
-assert.match(obsidianCliSkill.content, /Vault-grounded retrieval must use Obsidian CLI/);
-assert.match(obsidianCliSkill.content, /Do not use `grep`, `rg`, `find`, `ls`, `cat`/);
+assert.match(obsidianCliSkill.content, /Vault-grounded operations must use Obsidian CLI/);
+assert.match(obsidianCliSkill.content, /direct file tools \(`Write`, `Edit`, `MultiEdit`\)/);
 assert.match(obsidianCliSkill.content, /Start with `obsidian search query="\.\.\."`/);
+assert.match(obsidianCliSkill.content, /Create new notes with `obsidian create path="\.\.\." content="\.\.\."`/);
+
+const obsidianMarkdownSkill = BUNDLED_SKILLS.find((candidate) => candidate.name === 'obsidian-markdown');
+assert.ok(obsidianMarkdownSkill);
+assert.match(obsidianMarkdownSkill.content, /Vault write contract/);
+assert.match(obsidianMarkdownSkill.content, /Create new notes with `obsidian create path="\.\.\." content="\.\.\."`/);
+assert.match(obsidianMarkdownSkill.content, /Do not use direct `Write`, `Edit`, or `MultiEdit` on vault notes/);
