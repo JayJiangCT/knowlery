@@ -336,6 +336,15 @@ Use the Obsidian CLI to interact with the vault programmatically.
 
 ## Default operating rule
 
+Vault-grounded retrieval must use Obsidian CLI. Do not use \`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`, or external knowledge/search connectors as substitutes for searching or reading vault notes.
+
+For any question about the vault, notes, wiki, knowledge base, or accumulated work:
+
+1. Start with \`obsidian search query="..."\` or \`obsidian search:context query="..."\`
+2. Read candidate notes with \`obsidian read file="..."\`
+3. Use raw shell only after the CLI command fails, is unavailable, or cannot express the operation
+4. If falling back, state the failed/unsupported CLI step and keep fallback scope narrow
+
 Do not start routine vault work by running \`obsidian help\`.
 
 Use verified command patterns first. Open help only when a command errors, you need an unfamiliar subcommand, or the CLI appears to have changed.

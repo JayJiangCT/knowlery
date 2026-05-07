@@ -19,7 +19,11 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 ### Obsidian CLI Only
 
-**Prefer Obsidian CLI for note-centric vault operations.** Use bash only when the CLI cannot express the task cleanly, such as a folder-listing fallback during knowledge retrieval.
+**Mandatory for vault-grounded retrieval:** use Obsidian CLI for note-centric vault operations. Do not use raw shell search (\`grep\`, \`rg\`, \`find\`, \`ls\`, \`cat\`) or external knowledge/search connectors as substitutes for vault retrieval.
+
+For any question about this vault, notes, wiki, knowledge base, or accumulated work, the first search step must be \`obsidian search query="..."\` or \`obsidian search:context query="..."\`. Read candidate notes with \`obsidian read\`, not \`cat\`.
+
+Fallback is allowed only after an Obsidian CLI command fails, is unavailable, or cannot express the operation. When falling back, state the failed/unsupported CLI step and keep fallback scope narrow, such as \`rg --files entities concepts comparisons queries\` for path enumeration only.
 
 | Task | Command |
 |------|---------|
@@ -54,15 +58,15 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 
 When answering questions from this vault (not general knowledge):
 
-1. Read \`INDEX.base\` first (compiled knowledge map)
-2. Run \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` to enumerate compiled pages
-3. Read \`SCHEMA.md\` for tag taxonomy and domain rules
-4. Run \`obsidian search query="..."\` with key concepts; merge results
+1. Run \`obsidian search query="..."\` or \`obsidian search:context query="..."\` with the user's key terms and synonyms
+2. Read \`INDEX.base\` (compiled knowledge map)
+3. Run \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` to enumerate compiled pages
+4. Read \`SCHEMA.md\` for tag taxonomy and domain rules
 5. Use \`obsidian property:read\` and \`obsidian read\` on promising paths — prefer agent pages, \`status: reviewed\` over \`draft\`, recent \`updated\`
-6. If the Base query cannot give usable paths, fall back to \`rg --files entities concepts comparisons queries\`
+6. If the Base query cannot give usable paths, fall back to \`rg --files entities concepts comparisons queries\` only for path enumeration
 7. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
 
-Every claim must be backed by vault notes. See \`/ask\` for the full specification.
+Every claim must be backed by vault notes found through the Obsidian CLI retrieval path. See \`/ask\` for the full specification.
 
 ## Available Skills
 

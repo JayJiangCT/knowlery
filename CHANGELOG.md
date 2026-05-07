@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.2.2] — 2026-05-07
+
+### Fixes
+
+- Agent retrieval instructions now make Obsidian CLI usage mandatory for vault-grounded questions, preventing agents from using raw shell search or external connectors before `obsidian search` / `obsidian read`.
+
 ## [v0.2.1] — 2026-05-07
 
 ### Fixes
