@@ -1,10 +1,11 @@
 {
   "name": "knowlery",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Turn your vault into an AI-powered knowledge base control panel.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
+    "test": "node tests/run-tests.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",

@@ -7,6 +7,10 @@ import type {
   Platform,
 } from '../types';
 import { installClaudian } from './claudian-installer';
+import {
+  buildClaudeCodePowerShellInstallScript,
+  buildWindowsCommandInvocation,
+} from './command-runner';
 import { detectNode } from './node-detect';
 
 const INSTALL_ORDER: InstallItemId[] = ['platform-cli', 'claudian', 'skills-tooling'];
@@ -116,7 +120,7 @@ async function installSkillsTooling(nodePath?: string): Promise<string> {
 
 async function installClaudeCodeCli(): Promise<string> {
   if (ObsidianPlatform.isWin) {
-    await runPowerShellCommand('irm https://claude.ai/install.ps1 | iex', 180000);
+    await runPowerShellCommand(buildClaudeCodePowerShellInstallScript(), 180000);
     const installed = await verifyCommandInPowerShell('claude');
     return formatInstalledDetail('Claude Code', installed.version, installed.path);
   }
@@ -192,8 +196,9 @@ function runCommand(
 
   if (ObsidianPlatform.isWin) {
     const executable = command === 'npm' || command === 'npx' ? `${command}.cmd` : command;
+    const invocation = buildWindowsCommandInvocation(executable, args);
     return new Promise((resolve, reject) => {
-      execFile(executable, args, { timeout }, (error, stdout, stderr) => {
+      execFile(invocation.executable, invocation.args, { timeout }, (error, stdout, stderr) => {
         if (error) {
           reject(new Error(stderr?.trim() || error.message));
           return;

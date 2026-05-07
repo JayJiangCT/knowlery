@@ -862,15 +862,18 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
 
       <div className="knowlery-wizard__body">
         <div className="knowlery-wizard__done-content">
-          <div className="knowlery-wizard__done-icon">
-            <IconCheckCircle size={48} />
+          <div className={`knowlery-wizard__done-icon${optionalInstallIssues ? ' is-warning' : ''}`}>
+            {optionalInstallIssues ? <IconAlertCircle size={48} /> : <IconCheckCircle size={48} />}
           </div>
           <p className="knowlery-wizard__done-title">
-            {isReinstall ? 'Vault updated!' : 'Your vault is ready!'}
+            {optionalInstallIssues
+              ? 'Vault configured, optional installs need attention'
+              : isReinstall ? 'Vault updated!' : 'Your vault is ready!'}
           </p>
           <p className="knowlery-wizard__done-desc">
             Knowlery has {isReinstall ? 'updated' : 'installed'} {BUNDLED_SKILLS.length} skills
             and configured your vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.
+            {optionalInstallIssues ? ' Review the optional install outcomes before running agent workflows.' : ''}
           </p>
 
           <div className="knowlery-wizard__install-summary">

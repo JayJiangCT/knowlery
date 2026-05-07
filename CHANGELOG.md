@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.2.1] — 2026-05-07
+
+### Fixes
+
+- Windows setup now enables TLS 1.2 before running the Claude Code PowerShell installer.
+- Windows optional installs now run `.cmd` tools such as `npm.cmd` and `npx.cmd` through `cmd.exe`, avoiding `spawn EINVAL`.
+- Setup completion messaging now distinguishes vault configuration success from optional install failures.
+
 ## [v0.2.0] — 2026-04-30
 
 ### New features

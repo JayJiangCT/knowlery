@@ -2480,11 +2480,19 @@
   margin-block-end: var(--knowlery-space-md);
 }
 
+.knowlery-wizard__done-icon.is-warning {
+  color: var(--knowlery-warning);
+}
+
 .knowlery-wizard__done-title {
   font-size: var(--knowlery-lg-size);
   font-weight: 700;
   color: var(--knowlery-success);
   margin-block-end: var(--knowlery-space-xs);
+}
+
+.knowlery-wizard__done-icon.is-warning + .knowlery-wizard__done-title {
+  color: var(--text-normal);
 }
 
 .knowlery-wizard__done-desc {
