@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.0-beta.3] — 2026-05-07
+
+### Internal beta
+
+- Adds a one-click conservative migration path for legacy BYOAO vaults, preserving existing files while configuring Knowlery for Claude Code.
+- Imports legacy OpenCode skills into `.agents/skills`, syncs missing Claude skill copies, and normalizes Knowlery skill lock metadata.
+- Replaces legacy BYOAO `.claude/CLAUDE.md` guidance with the Knowlery include-based Claude config when migration detects old BYOAO instructions.
+- Fixes Today quick actions so `Scan vault health` opens System diagnostics and starts a health scan.
+- Polishes Today suggested-step button layout inside Obsidian so labels and helper text render cleanly.
+
+### Beta notes
+
+- This prerelease is intended for internal BYOAO migration testing through BRAT and GitHub prerelease assets.
+- Feedback should focus on migration safety, legacy skill preservation, Claude Code config correctness, and Today/System workflow polish.
+
 ## [v0.3.0-beta.2] — 2026-05-06
 
 ### Internal beta
