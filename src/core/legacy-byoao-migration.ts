@@ -27,7 +27,7 @@ export interface ByoaoMigrationPreview {
   signals: string[];
   preserve: string[];
   importSkills: string[];
-  installSkills: string[];
+  installBundledSkills: string[];
   create: string[];
   skip: string[];
   warnings: string[];
@@ -239,7 +239,7 @@ export async function buildByoaoMigrationPreview(app: App): Promise<ByoaoMigrati
     signals: detection.signals,
     preserve: sortedUnique(preserve),
     importSkills: mergePlan.importFromOpenCode,
-    installSkills: mergePlan.installBundled,
+    installBundledSkills: mergePlan.installBundled,
     create: sortedUnique(create),
     skip,
     warnings,
@@ -249,7 +249,7 @@ export async function buildByoaoMigrationPreview(app: App): Promise<ByoaoMigrati
 export async function executeByoaoMigration(
   app: App,
   options: ExecuteByoaoMigrationOptions,
-): Promise<void> {
+): Promise<ByoaoMigrationPreview> {
   for (const dir of KNOWLEDGE_DIRS) {
     await ensureMigrationDir(app, dir);
   }
@@ -306,6 +306,8 @@ export async function executeByoaoMigration(
   await writeMigrationFile(app, SKILLS_LOCK_PATH, JSON.stringify(lock, null, 2));
 
   await writeMigrationManifest(app, options.kbName);
+
+  return buildByoaoMigrationPreview(app);
 }
 
 export async function installMissingDefaultRules(app: App): Promise<void> {
@@ -361,6 +363,16 @@ async function writeMigrationManifest(app: App, kbName: string): Promise<void> {
   const existingManifest = existing.value && typeof existing.value === 'object'
     ? existing.value as Partial<Manifest>
     : null;
+  if (
+    existingManifest?.platform === 'claude-code' &&
+    existingManifest.kbName === kbName &&
+    typeof existingManifest.version === 'string' &&
+    typeof existingManifest.createdAt === 'string' &&
+    typeof existingManifest.updatedAt === 'string'
+  ) {
+    return;
+  }
+
   const now = new Date().toISOString();
   const manifest: Manifest = {
     version: '0.1.0',

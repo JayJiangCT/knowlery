@@ -169,6 +169,7 @@ describe('buildByoaoMigrationPreview', () => {
     expect(preview.preserve).toContain('SCHEMA.md');
     expect(preview.preserve).toContain('INDEX.base');
     expect(preview.importSkills).toContain('trace');
+    expect(preview.installBundledSkills).toContain('cook');
     expect(preview.skip).toContain('ask exists in .agents/skills; skipped .opencode/skills copy');
     expect(preview.create).toContain('.knowlery/manifest.json');
     expect(preview.create).toContain('KNOWLEDGE.md');
@@ -190,15 +191,24 @@ describe('executeByoaoMigration', () => {
       'AGENTS.md': 'BYOAO vault',
     });
 
-    await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
-    await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
+    const firstPreview = await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
 
     const files = (app as unknown as { __files: Map<string, string> }).__files;
+    const firstManifest = files.get('.knowlery/manifest.json');
+
+    const secondPreview = await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
+
     expect(files.get('SCHEMA.md')).toBe('keep schema');
     expect(files.get('INDEX.base')).toBe('keep index');
     expect(files.get('.agents/skills/trace/SKILL.md')).toBe('trace skill');
     expect(files.get('.claude/skills/trace/SKILL.md')).toBe('trace skill');
     expect(files.get('.knowlery/manifest.json')).toContain('"platform": "claude-code"');
+    expect(files.get('.knowlery/manifest.json')).toBe(firstManifest);
     expect(files.get('skills-lock.json')).toContain('"trace"');
+    expect(firstPreview.detected).toBe(true);
+    expect(secondPreview.detected).toBe(true);
+    expect(secondPreview.importSkills).toEqual([]);
+    expect(secondPreview.installBundledSkills).toEqual([]);
+    expect(secondPreview.create).toEqual([]);
   });
 });
