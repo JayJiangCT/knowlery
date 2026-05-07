@@ -677,6 +677,11 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     }
   };
 
+  const handleUseNormalSetup = () => {
+    setError(null);
+    setSetupMode('normal');
+  };
+
   const handleInstallSelectionChange = (id: InstallItemId, checked: boolean) => {
     setInstallSelectionTouched((prev) => new Set(prev).add(id));
     setOptionalInstalls((prev) => withInstallSelection(prev, id, checked));
@@ -848,7 +853,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
           </div>
 
           <div className="knowlery-wizard__footer">
-            <button type="button" className="knowlery-btn knowlery-btn--ghost" onClick={() => setSetupMode('normal')}>
+            <button type="button" className="knowlery-btn knowlery-btn--ghost" onClick={handleUseNormalSetup}>
               Use normal setup
             </button>
             <button
