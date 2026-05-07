@@ -27,7 +27,16 @@ jobs:
 
       - name: Validate tag matches manifest version
         run: |
-          node -e "const fs=require('fs'); const tag=process.env.GITHUB_REF_NAME; const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8')); if (tag !== manifest.version) { console.error(`Tag ${tag} does not match manifest version ${manifest.version}`); process.exit(1); }"
+          node <<'NODE'
+          const fs = require('fs');
+          const tag = process.env.GITHUB_REF_NAME || '';
+          const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          const normalizedTag = tag.replace(/^v/, '');
+          if (normalizedTag !== manifest.version) {
+            console.error(`Tag ${tag} does not match manifest version ${manifest.version}`);
+            process.exit(1);
+          }
+          NODE
 
       - name: Build
         run: npm run build
