@@ -310,14 +310,14 @@ export async function executeByoaoMigration(
   return buildByoaoMigrationPreview(app);
 }
 
-export async function installMissingDefaultRules(app: App): Promise<void> {
+async function installMissingDefaultRules(app: App): Promise<void> {
   await ensureMigrationDir(app, '.claude/rules');
   for (const template of RULE_TEMPLATES) {
     await writeFileIfMissing(app, `.claude/rules/${template.filename}`, template.content);
   }
 }
 
-export async function writeFileIfMissing(app: App, path: string, content: string): Promise<boolean> {
+async function writeFileIfMissing(app: App, path: string, content: string): Promise<boolean> {
   const normalized = normalizeLegacyPath(path);
   if (await app.vault.adapter.exists(normalized)) return false;
   await ensureParentDirs(app, normalized);
@@ -325,7 +325,7 @@ export async function writeFileIfMissing(app: App, path: string, content: string
   return true;
 }
 
-export async function listSkillNames(app: App, dir: string): Promise<string[]> {
+async function listSkillNames(app: App, dir: string): Promise<string[]> {
   const normalizedDir = normalizeLegacyPath(dir);
   const adapter = app.vault.adapter;
   if (!(await adapter.exists(normalizedDir))) return [];
@@ -342,7 +342,7 @@ export async function listSkillNames(app: App, dir: string): Promise<string[]> {
   return sortedUnique(names);
 }
 
-export async function readJsonBestEffort(
+async function readJsonBestEffort(
   app: App,
   path: string,
 ): Promise<{ value: unknown; parseFailed: boolean }> {

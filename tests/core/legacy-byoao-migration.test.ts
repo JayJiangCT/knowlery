@@ -11,6 +11,12 @@ import {
 function createMockApp(initialFiles: Record<string, string>): App {
   const files = new Map(Object.entries(initialFiles));
   const dirs = new Set<string>();
+  const calls = {
+    create: 0,
+    modify: 0,
+    createFolder: 0,
+    adapterWrite: 0,
+  };
 
   for (const path of files.keys()) {
     const parts = path.split('/');
@@ -27,6 +33,7 @@ function createMockApp(initialFiles: Record<string, string>): App {
       return content;
     },
     write: async (path: string, content: string) => {
+      calls.adapterWrite += 1;
       files.set(path, content);
       const parts = path.split('/');
       for (let i = 1; i < parts.length; i += 1) {
@@ -60,13 +67,37 @@ function createMockApp(initialFiles: Record<string, string>): App {
     },
   };
 
+  const addParentDirs = (path: string) => {
+    const parts = path.split('/');
+    for (let i = 1; i < parts.length; i += 1) {
+      dirs.add(parts.slice(0, i).join('/'));
+    }
+  };
+
   return {
     vault: {
       adapter,
+      createFolder: async (path: string) => {
+        calls.createFolder += 1;
+        dirs.add(path);
+      },
+      getFolderByPath: (path: string) => dirs.has(path) ? ({ path } as never) : null,
       getFileByPath: (path: string) => files.has(path) ? ({ path } as never) : null,
       cachedRead: async (file: { path: string }) => files.get(file.path) || '',
+      create: async (path: string, content: string) => {
+        calls.create += 1;
+        if (files.has(path)) throw new Error(`File already exists: ${path}`);
+        addParentDirs(path);
+        files.set(path, content);
+      },
+      modify: async (file: { path: string }, content: string) => {
+        calls.modify += 1;
+        if (!files.has(file.path)) throw new Error(`Missing file: ${file.path}`);
+        files.set(file.path, content);
+      },
     },
     __files: files,
+    __calls: calls,
   } as unknown as App;
 }
 
@@ -194,6 +225,9 @@ describe('executeByoaoMigration', () => {
     });
 
     const files = (app as unknown as { __files: Map<string, string> }).__files;
+    const calls = (app as unknown as {
+      __calls: { create: number; modify: number; createFolder: number; adapterWrite: number };
+    }).__calls;
     const existingManifest = files.get('.knowlery/manifest.json');
 
     const firstPreview = await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
@@ -210,6 +244,9 @@ describe('executeByoaoMigration', () => {
     expect(files.get('.knowlery/manifest.json')).toBe(existingManifest);
     expect(files.get('.knowlery/manifest.json')).toBe(firstManifest);
     expect(files.get('skills-lock.json')).toContain('"trace"');
+    expect(calls.createFolder).toBeGreaterThan(0);
+    expect(calls.create).toBeGreaterThan(0);
+    expect(calls.modify).toBeGreaterThan(0);
     expect(firstPreview.detected).toBe(true);
     expect(secondPreview.detected).toBe(true);
     expect(secondPreview.importSkills).toEqual([]);
