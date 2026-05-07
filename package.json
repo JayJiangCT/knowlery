@@ -1,14 +1,16 @@
 {
   "name": "knowlery",
-  "version": "0.2.0",
-  "description": "Turn your vault into an AI-powered knowledge base control panel.",
+  "version": "0.3.0-beta.3",
+  "description": "A warm personal knowledge review space for Obsidian vaults.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
-    "docs:preview": "vitepress preview docs-site"
+    "docs:preview": "vitepress preview docs-site",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "obsidian",
@@ -28,7 +30,8 @@
     "semver": "^7.7.4",
     "tslib": "^2.6.0",
     "typescript": "^5.4.0",
-    "vitepress": "^1.6.4"
+    "vitepress": "^1.6.4",
+    "vitest": "^0.34.6"
   },
   "dependencies": {
     "react": "^18.2.0",

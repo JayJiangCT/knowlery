@@ -131,7 +131,13 @@ export function HealthTab() {
       loadStats();
       loadIntegrity(payload);
     });
-    return () => plugin.events.offref(ref);
+    const runRef = plugin.events.on('dashboard-run-health-diagnosis', () => {
+      void handleRunDiagnosis();
+    });
+    return () => {
+      plugin.events.offref(ref);
+      plugin.events.offref(runRef);
+    };
   }, [plugin, loadStats, loadIntegrity]);
 
   const handleRunDiagnosis = async () => {

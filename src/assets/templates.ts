@@ -1,7 +1,7 @@
 export function generateKnowledgeMd(kbName: string): string {
   return `# ${kbName}
 
-This vault is an AI-powered knowledge base. Your notes are the raw material — the agent compiles them into structured, cross-referenced knowledge pages.
+This vault is an agent-assisted knowledge base. Your notes are the raw material — the agent helps turn them into structured, cross-referenced knowledge pages.
 
 ## Vault Structure
 

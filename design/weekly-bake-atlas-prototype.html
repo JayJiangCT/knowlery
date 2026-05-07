@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Knowledge Review Atlas Prototype</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f5f0;
+      --surface: #fffdf8;
+      --surface-soft: #f0ede6;
+      --text: #25221e;
+      --muted: #6f685f;
+      --faint: #9b9287;
+      --border: #ded8ce;
+      --accent: #7d5f45;
+      --accent-2: #54726c;
+      --accent-3: #8a6c93;
+      --accent-soft: #ede4d8;
+      --shadow: 0 24px 70px rgba(35, 30, 22, 0.08);
+      --radius: 10px;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-serif: ui-serif, "Iowan Old Style", "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #171614;
+        --surface: #22201d;
+        --surface-soft: #2b2824;
+        --text: #eee9df;
+        --muted: #b8b0a5;
+        --faint: #8f867a;
+        --border: #3e3933;
+        --accent: #d2b48c;
+        --accent-2: #94bbb4;
+        --accent-3: #c3a8ca;
+        --accent-soft: #332b22;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.55;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin-inline: auto;
+      padding: 28px 24px 72px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-block-end: 42px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      inline-size: 38px;
+      block-size: 38px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 1rem;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .lang-switch {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+    }
+
+    .lang-switch button {
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .lang-switch button.is-active {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.7fr);
+      gap: 28px;
+      align-items: end;
+      margin-block-end: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      max-width: 780px;
+      font-family: var(--font-serif);
+      font-size: clamp(2.6rem, 6vw, 5.6rem);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      font-weight: 740;
+    }
+
+    .brief {
+      margin-block-start: 22px;
+      max-width: 720px;
+      color: var(--muted);
+      font-family: var(--font-serif);
+      font-size: 1.18rem;
+      line-height: 1.75;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      padding: 18px;
+      border-inline-end: 1px solid var(--border);
+    }
+
+    .metric:last-child {
+      border-inline-end: 0;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-block-start: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-block-end: 18px;
+    }
+
+    .panel h2 {
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .timeline-card {
+      position: relative;
+      min-block-size: 154px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      padding: 14px;
+      text-align: start;
+      cursor: pointer;
+    }
+
+    .timeline-card.is-active {
+      border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+      background: color-mix(in srgb, var(--accent-soft) 64%, transparent);
+    }
+
+    .timeline-card time {
+      display: block;
+      color: var(--faint);
+      font-size: 0.78rem;
+      margin-block-end: 10px;
+    }
+
+    .timeline-card strong {
+      display: block;
+      line-height: 1.25;
+      margin-block-end: 8px;
+    }
+
+    .timeline-card span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .timeline-detail {
+      margin-block-start: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 0.55fr);
+      gap: 16px;
+      padding-block-start: 16px;
+      border-block-start: 1px solid var(--border);
+    }
+
+    .timeline-detail h3 {
+      margin-block-end: 8px;
+      font-size: 1rem;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-block-start: 12px;
+    }
+
+    .tag {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      padding: 4px 8px;
+      font-size: 0.78rem;
+    }
+
+    .graph {
+      inline-size: 100%;
+      min-block-size: 360px;
+    }
+
+    .graph text,
+    .hex text {
+      fill: var(--muted);
+      font-family: var(--font-sans);
+      font-size: 12px;
+    }
+
+    .graph line {
+      stroke: var(--border);
+      stroke-width: 1.4;
+    }
+
+    .node circle {
+      stroke: var(--surface);
+      stroke-width: 3;
+    }
+
+    .hex {
+      inline-size: 100%;
+      block-size: auto;
+    }
+
+    .hex-grid {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .hex-axis {
+      stroke: var(--border);
+      stroke-width: 1;
+    }
+
+    .hex-shape {
+      fill: color-mix(in srgb, var(--accent-2) 28%, transparent);
+      stroke: var(--accent-2);
+      stroke-width: 2.4;
+    }
+
+    .extension-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .extension {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 16px;
+      padding-block: 12px;
+      border-block-start: 1px solid var(--border);
+    }
+
+    .extension:first-child {
+      border-block-start: 0;
+      padding-block-start: 0;
+    }
+
+    .extension-title {
+      font-weight: 680;
+    }
+
+    .extension-flow {
+      display: grid;
+      gap: 8px;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .flow-row span:first-child {
+      color: var(--faint);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .menu {
+      display: grid;
+      gap: 12px;
+    }
+
+    .move {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--surface-soft);
+    }
+
+    .move strong {
+      display: block;
+      margin-block-end: 6px;
+    }
+
+    .move p {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .prompt {
+      margin-block-start: 10px;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px;
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 920px) {
+      .hero,
+      .layout,
+      .timeline-detail {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        padding-inline: 16px;
+      }
+
+      .summary-strip,
+      .timeline,
+      .extension {
+        grid-template-columns: 1fr;
+      }
+
+      .metric {
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--border);
+      }
+
+      .metric:last-child {
+        border-block-end: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18h6" />
+            <path d="M10 22h4" />
+            <path d="M12 2v2" />
+            <path d="M4.9 4.9l1.4 1.4" />
+            <path d="M19.1 4.9l-1.4 1.4" />
+            <path d="M8 14a6 6 0 1 1 8 0c-.8.7-1.4 1.8-1.7 3h-4.6c-.3-1.2-.9-2.3-1.7-3Z" />
+          </svg>
+        </div>
+        <div>
+          <strong>Knowledge Barkery</strong>
+          <span data-i18n="brandSub">Weekly knowledge review atlas</span>
+        </div>
+      </div>
+      <div class="lang-switch" aria-label="Language">
+        <button type="button" class="is-active" data-lang="en">EN</button>
+        <button type="button" data-lang="zh">中文</button>
+      </div>
+    </div>
+
+    <section class="hero" aria-labelledby="title">
+      <div>
+        <p class="eyebrow" data-i18n="period">May 1-3, 2026 · 4 AI sessions</p>
+        <h1 id="title" data-i18n="title">Your AI conversations are turning into three knowledge trails.</h1>
+        <p class="brief" data-i18n="brief">The strongest trail is attention mechanics, with dopamine and flow forming a reusable cognitive model. A second literary trail is emerging around suffering, change, and cross-book comparison. The travel note is useful, but remains mostly practical material.</p>
+      </div>
+      <div class="summary-strip" aria-label="Summary metrics">
+        <div class="metric"><strong>3</strong><span data-i18n="metricTrails">active trails</span></div>
+        <div class="metric"><strong>13</strong><span data-i18n="metricFiles">vault files touched</span></div>
+        <div class="metric"><strong>8</strong><span data-i18n="metricLearned">learning highlights</span></div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <h2 data-i18n="timelineTitle">Knowledge Timeline</h2>
+            <span class="panel-note" data-i18n="timelineNote">Click a session to inspect the trail.</span>
+          </div>
+          <div class="timeline" id="timeline"></div>
+          <div class="timeline-detail" id="timeline-detail"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2 data-i18n="graphTitle">Topic Constellation</h2>
+            <span class="panel-note" data-i18n="graphNote">Topics that appeared together are linked.</span>
+          </div>
+          <svg class="graph" viewBox="0 0 780 360" role="img" aria-label="Topic constellation">
+            <line x1="160" y1="108" x2="284" y2="72" />
+            <line x1="160" y1="108" x2="290" y2="150" />
+            <line x1="290" y1="150" x2="404" y2="118" />
+            <line x1="284" y1="72" x2="404" y2="118" />
+            <line x1="520" y1="235" x2="635" y2="198" />
+            <line x1="520" y1="235" x2="642" y2="284" />
+            <line x1="635" y1="198" x2="642" y2="284" />
+            <line x1="296" y1="280" x2="392" y2="242" />
+            <g class="node"><circle cx="160" cy="108" r="46" fill="var(--accent)" /><text x="160" y="112" text-anchor="middle" fill="#fff" data-i18n="topicAttention">Attention</text></g>
+            <g class="node"><circle cx="284" cy="72" r="30" fill="var(--accent-2)" /><text x="284" y="76" text-anchor="middle" data-i18n="topicDopamine">Dopamine</text></g>
+            <g class="node"><circle cx="290" cy="150" r="32" fill="var(--accent-2)" /><text x="290" y="154" text-anchor="middle" data-i18n="topicFlow">Flow</text></g>
+            <g class="node"><circle cx="404" cy="118" r="36" fill="var(--accent-3)" /><text x="404" y="122" text-anchor="middle" data-i18n="topicGame">Game vs Reading</text></g>
+            <g class="node"><circle cx="520" cy="235" r="38" fill="var(--accent)" /><text x="520" y="239" text-anchor="middle" data-i18n="topicLiterature">Literature</text></g>
+            <g class="node"><circle cx="635" cy="198" r="30" fill="var(--accent-3)" /><text x="635" y="202" text-anchor="middle" data-i18n="topicRebirth">Rebirth</text></g>
+            <g class="node"><circle cx="642" cy="284" r="33" fill="var(--accent-2)" /><text x="642" y="288" text-anchor="middle" data-i18n="topicChange">Change</text></g>
+            <g class="node"><circle cx="296" cy="280" r="31" fill="var(--accent-2)" /><text x="296" y="284" text-anchor="middle" data-i18n="topicTravel">Travel</text></g>
+            <g class="node"><circle cx="392" cy="242" r="26" fill="var(--accent-3)" /><text x="392" y="246" text-anchor="middle" data-i18n="topicParenting">Parenting</text></g>
+          </svg>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2 data-i18n="extensionTitle">Knowledge Extensions</h2>
+            <span class="panel-note" data-i18n="extensionNote">How conversations stretched into files and questions.</span>
+          </div>
+          <div class="extension-list" id="extensions"></div>
+        </section>
+      </div>
+
+      <aside class="stack">
+        <section class="panel">
+          <div class="panel-header">
+            <h2 data-i18n="hexTitle">Knowledge Hexagon</h2>
+          </div>
+          <svg class="hex" viewBox="0 0 320 320" role="img" aria-label="Knowledge hexagon">
+            <polygon class="hex-grid" points="160,38 266,99 266,221 160,282 54,221 54,99" />
+            <polygon class="hex-grid" points="160,80 229,120 229,200 160,240 91,200 91,120" />
+            <polygon class="hex-grid" points="160,122 193,141 193,179 160,198 127,179 127,141" />
+            <line class="hex-axis" x1="160" y1="160" x2="160" y2="38" />
+            <line class="hex-axis" x1="160" y1="160" x2="266" y2="99" />
+            <line class="hex-axis" x1="160" y1="160" x2="266" y2="221" />
+            <line class="hex-axis" x1="160" y1="160" x2="160" y2="282" />
+            <line class="hex-axis" x1="160" y1="160" x2="54" y2="221" />
+            <line class="hex-axis" x1="160" y1="160" x2="54" y2="99" />
+            <polygon class="hex-shape" points="160,62 240,114 218,193 160,226 94,198 89,119" />
+            <text x="160" y="22" text-anchor="middle" data-i18n="hexResearch">Research</text>
+            <text x="288" y="95" text-anchor="start" data-i18n="hexCreation">Creation</text>
+            <text x="288" y="228" text-anchor="start" data-i18n="hexConnection">Connection</text>
+            <text x="160" y="310" text-anchor="middle" data-i18n="hexReflection">Reflection</text>
+            <text x="32" y="228" text-anchor="end" data-i18n="hexStructure">Structure</text>
+            <text x="32" y="95" text-anchor="end" data-i18n="hexAction">Action</text>
+          </svg>
+          <p class="panel-note" data-i18n="hexNote">This week is strong in research and creation. Connection is the next lever.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2 data-i18n="menuTitle">Next Review Menu</h2>
+          </div>
+          <div class="menu" id="menu"></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const copy = {
+      en: {
+        brandSub: 'Weekly knowledge review atlas',
+        period: 'May 1-3, 2026 · 4 AI sessions',
+        title: 'Your AI conversations are turning into three knowledge trails.',
+        brief: 'The strongest trail is attention mechanics, with dopamine and flow forming a reusable cognitive model. A second literary trail is emerging around suffering, change, and cross-book comparison. The travel note is useful, but remains mostly practical material.',
+        metricTrails: 'active trails',
+        metricFiles: 'vault files touched',
+        metricLearned: 'learning highlights',
+        timelineTitle: 'Knowledge Timeline',
+        timelineNote: 'Click a session to inspect the trail.',
+        graphTitle: 'Topic Constellation',
+        graphNote: 'Topics that appeared together are linked.',
+        extensionTitle: 'Knowledge Extensions',
+        extensionNote: 'How conversations stretched into files and questions.',
+        hexTitle: 'Knowledge Hexagon',
+        hexResearch: 'Research',
+        hexCreation: 'Creation',
+        hexConnection: 'Connection',
+        hexReflection: 'Reflection',
+        hexStructure: 'Structure',
+        hexAction: 'Action',
+        hexNote: 'This week is strong in research and creation. Connection is the next lever.',
+        menuTitle: 'Next Review Menu',
+        topicAttention: 'Attention',
+        topicDopamine: 'Dopamine',
+        topicFlow: 'Flow',
+        topicGame: 'Game vs Reading',
+        topicLiterature: 'Literature',
+        topicRebirth: 'Rebirth',
+        topicChange: 'Change',
+        topicTravel: 'Travel',
+        topicParenting: 'Parenting',
+        learnedLabel: 'Learned',
+        questionLabel: 'Question',
+        filesLabel: 'Files',
+        moveLabel: 'Move'
+      },
+      zh: {
+        brandSub: '每周知识轨迹复盘',
+        period: '2026 年 5 月 1-3 日 · 4 次 AI 会话',
+        title: '你和 AI 的讨论正在形成三条知识线索。',
+        brief: '最强的线索是注意力机制，多巴胺和心流正在形成一个可复用的认知模型。第二条文学线索围绕痛苦、变化和跨书对比浮现。旅行笔记有实用价值，但目前仍更像待整理的材料。',
+        metricTrails: '活跃线索',
+        metricFiles: '触达文件',
+        metricLearned: '学习要点',
+        timelineTitle: '知识时间线',
+        timelineNote: '点击会话查看线索细节。',
+        graphTitle: '主题星图',
+        graphNote: '同一会话中共同出现的主题会被连接。',
+        extensionTitle: '知识延伸',
+        extensionNote: '从 AI 讨论到文件、问题和下一步。',
+        hexTitle: '知识六边形',
+        hexResearch: '研究',
+        hexCreation: '创作',
+        hexConnection: '连接',
+        hexReflection: '反思',
+        hexStructure: '结构',
+        hexAction: '行动',
+        hexNote: '这周研究和创作较强，连接是下一步最值得推进的杠杆。',
+        menuTitle: '下周复盘菜单',
+        topicAttention: '注意力',
+        topicDopamine: '多巴胺',
+        topicFlow: '心流',
+        topicGame: '游戏 vs 阅读',
+        topicLiterature: '文学',
+        topicRebirth: '轮回',
+        topicChange: '变化',
+        topicTravel: '旅行',
+        topicParenting: '亲子',
+        learnedLabel: '学到',
+        questionLabel: '问题',
+        filesLabel: '文件',
+        moveLabel: '动作'
+      }
+    };
+
+    const sessions = [
+      {
+        date: 'May 1',
+        title: { en: 'Nan’an family trip', zh: '南安亲子一日游' },
+        summary: {
+          en: 'A practical route from Xiamen to Jiurishan and Qingjing Taoyuan. Useful as planning material, but not yet connected to a broader travel knowledge structure.',
+          zh: '从厦门出发到九日山和清境桃源的实用路线。它有规划价值，但还没有连接到更大的旅行知识结构。'
+        },
+        learned: { en: 'Jiurishan and Qingjing Taoyuan can be linked into one calm day trip.', zh: '九日山和清境桃源适合串联成一个亲子一日游。' },
+        question: { en: 'Which travel notes deserve reusable templates?', zh: '哪些旅行笔记值得沉淀成可复用模板？' },
+        files: ['Traveling/2026-05-02 南安亲子一日游.md'],
+        topics: ['Travel', 'Parenting', 'Planning']
+      },
+      {
+        date: 'May 1',
+        title: { en: 'Attention structure cleanup', zh: '注意力结构补全' },
+        summary: {
+          en: 'Existing attention notes were upgraded into a richer structure: flow state, dopamine, threshold adaptation, and reusable concept/comparison templates.',
+          zh: '注意力相关笔记被补全为更完整的结构：心流、多巴胺、认知阈值，以及可复用的 concept/comparison 模板。'
+        },
+        learned: { en: 'The attention trail is small, but structurally strong enough to become a reusable template.', zh: '注意力线索虽然文件不多，但结构质量足够高，可以抽象成模板。' },
+        question: { en: 'Should Anna Lembke’s pleasure-pain model become an anchor note?', zh: 'Anna Lembke 的快乐-痛苦天平是否应该成为锚点笔记？' },
+        files: ['concepts/心流状态.md', 'concepts/多巴胺.md', 'concepts/认知阈值上升效应.md'],
+        topics: ['Attention', 'Dopamine', 'Flow']
+      },
+      {
+        date: 'May 2',
+        title: { en: 'Why games hold attention', zh: '游戏如何劫持注意力' },
+        summary: {
+          en: 'The AI discussion extended into neuroscience: dopamine reward, variable-ratio reinforcement, flow synchronization, and the contrast between games and reading.',
+          zh: '这次 AI 讨论延伸到神经科学：多巴胺奖赏、变动比率强化、心流同步，以及游戏和阅读的注意力差异。'
+        },
+        learned: { en: 'Flow can be understood as synchronization between attention networks and reward networks.', zh: '心流可以理解为注意力网络和奖赏网络的同步。' },
+        question: { en: 'How can the brain recover tolerance for low-stimulation activities?', zh: '大脑如何恢复对低刺激活动的耐受？' },
+        files: ['concepts/游戏如何劫持大脑的注意力机制.md', 'comparisons/游戏vs阅读-注意力机制对比.md'],
+        topics: ['Attention', 'Dopamine', 'Gaming', 'Reading']
+      },
+      {
+        date: 'May 3',
+        title: { en: 'Literary review trail', zh: '文学复盘线索' },
+        summary: {
+          en: 'Book notes began to connect across Life and Death Are Wearing Me Out, Zebra, and The Plague. The emerging thread is crisis, suffering, rebirth, and different views of change.',
+          zh: '《生死疲劳》《斑马》《鼠疫》开始建立连接。正在浮现的线索是危机、苦难、轮回，以及东西方对变化的不同理解。'
+        },
+        learned: { en: 'Rebirth and Heraclitus’ river create a strong East-West comparison of change.', zh: '六道轮回和赫拉克利特之河形成了很强的东西方变化观对比。' },
+        question: { en: 'Is life primarily about suffering, transformation, or endurance?', zh: '人活着到底是为了吃苦、变化，还是承受？' },
+        files: ['Books/《生死疲劳》.md', 'Books/《斑马》.md', 'Books/《鼠疫》.md'],
+        topics: ['Literature', 'Rebirth', 'Change']
+      }
+    ];
+
+    const moves = [
+      {
+        title: { en: 'Reconnect the attention trail', zh: '重新连接注意力线索' },
+        body: { en: 'Link attention mechanics to reading notes, education, productivity, and addiction models.', zh: '把注意力机制连接到阅读、教育、效率和成瘾模型。' },
+        prompt: { en: 'Review my recent notes on attention, dopamine, flow, games and reading. Find older notes that connect to them, then suggest reusable concept or comparison pages.', zh: '请回看我最近关于注意力、多巴胺、心流、游戏和阅读的笔记，找出能连接的旧笔记，并建议可复用的概念页或对比页。' }
+      },
+      {
+        title: { en: 'Challenge the game-reading model', zh: '挑战游戏/阅读模型' },
+        body: { en: 'Pressure-test the neuroscience explanation before it becomes a settled belief.', zh: '在把神经科学解释沉淀成结论前，先检查它是否过度简化。' },
+        prompt: { en: 'Challenge my current explanation of why games hold attention better than reading. Find weak assumptions, missing evidence, and counterexamples.', zh: '请挑战我关于“为什么游戏比阅读更能抓住注意力”的解释，找出薄弱假设、缺失证据和反例。' }
+      },
+      {
+        title: { en: 'Bake the literature comparison', zh: '烘焙文学对比' },
+        body: { en: 'Turn the literary trail into a comparison page across rebirth, suffering, crisis, and change.', zh: '把文学线索整理成关于轮回、痛苦、危机和变化的对比页。' },
+        prompt: { en: 'Create a comparison note connecting Life and Death Are Wearing Me Out, Zebra, and The Plague around suffering, crisis, rebirth, and views of change.', zh: '请创建一篇对比笔记，连接《生死疲劳》《斑马》《鼠疫》中关于痛苦、危机、轮回和变化观的内容。' }
+      }
+    ];
+
+    let lang = 'en';
+    let activeSession = 2;
+
+    function t(key) {
+      return copy[lang][key] || key;
+    }
+
+    function applyLanguage(nextLang) {
+      lang = nextLang;
+      document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+      document.querySelectorAll('[data-i18n]').forEach((node) => {
+        const key = node.getAttribute('data-i18n');
+        node.textContent = t(key);
+      });
+      document.querySelectorAll('.lang-switch button').forEach((button) => {
+        button.classList.toggle('is-active', button.dataset.lang === lang);
+      });
+      renderTimeline();
+      renderExtensions();
+      renderMenu();
+    }
+
+    function renderTimeline() {
+      const root = document.getElementById('timeline');
+      root.innerHTML = sessions.map((session, index) => `
+        <button type="button" class="timeline-card ${index === activeSession ? 'is-active' : ''}" data-index="${index}">
+          <time>${session.date}</time>
+          <strong>${session.title[lang]}</strong>
+          <span>${session.topics.join(' · ')}</span>
+        </button>
+      `).join('');
+      root.querySelectorAll('button').forEach((button) => {
+        button.addEventListener('click', () => {
+          activeSession = Number(button.dataset.index);
+          renderTimeline();
+        });
+      });
+      const session = sessions[activeSession];
+      document.getElementById('timeline-detail').innerHTML = `
+        <div>
+          <h3>${session.title[lang]}</h3>
+          <p>${session.summary[lang]}</p>
+          <div class="tag-row">${session.topics.map((topic) => `<span class="tag">${topic}</span>`).join('')}</div>
+        </div>
+        <div>
+          <div class="flow-row"><span>${t('learnedLabel')}</span><p>${session.learned[lang]}</p></div>
+          <div class="flow-row"><span>${t('questionLabel')}</span><p>${session.question[lang]}</p></div>
+          <div class="flow-row"><span>${t('filesLabel')}</span><p>${session.files.join('<br>')}</p></div>
+        </div>
+      `;
+    }
+
+    function renderExtensions() {
+      document.getElementById('extensions').innerHTML = sessions.slice(1).map((session) => `
+        <div class="extension">
+          <div class="extension-title">${session.title[lang]}</div>
+          <div class="extension-flow">
+            <div class="flow-row"><span>${t('learnedLabel')}</span><p>${session.learned[lang]}</p></div>
+            <div class="flow-row"><span>${t('questionLabel')}</span><p>${session.question[lang]}</p></div>
+            <div class="flow-row"><span>${t('moveLabel')}</span><p>${lang === 'zh' ? '连接旧笔记并沉淀成结构' : 'Connect older notes and turn the trail into structure'}</p></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMenu() {
+      document.getElementById('menu').innerHTML = moves.map((move) => `
+        <div class="move">
+          <strong>${move.title[lang]}</strong>
+          <p>${move.body[lang]}</p>
+          <div class="prompt">${move.prompt[lang]}</div>
+        </div>
+      `).join('');
+    }
+
+    document.querySelectorAll('.lang-switch button').forEach((button) => {
+      button.addEventListener('click', () => applyLanguage(button.dataset.lang));
+    });
+
+    applyLanguage('en');
+  </script>
+</body>
+</html>

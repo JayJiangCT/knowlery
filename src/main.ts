@@ -2,6 +2,7 @@ import { Events, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
 import { SetupWizardModal } from './modals/setup-wizard';
+import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 
@@ -38,6 +39,18 @@ export default class KnowleryPlugin extends Plugin {
       callback: async () => {
         await this.activateDashboard();
         this.events.trigger('dashboard-refresh');
+      },
+    });
+
+    this.addCommand({
+      id: 'add-reflection',
+      name: 'Add reflection',
+      callback: () => {
+        new ReflectionCaptureModal(
+          this.app,
+          this,
+          () => this.events.trigger('dashboard-refresh'),
+        ).open();
       },
     });
 

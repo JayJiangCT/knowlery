@@ -11,7 +11,8 @@ specs/
 plugins/
 AGENTS.md
 .envrc
-.env.promo
+.env.*
+!.env.example
 skills-lock.json
 plan.md
 
@@ -20,7 +21,7 @@ node_modules/
 main.js
 docs-site/.vitepress/cache/
 docs-site/.vitepress/dist/
-.venv-promo/
+.venv*/
 media/
 *.js.map
 data.json

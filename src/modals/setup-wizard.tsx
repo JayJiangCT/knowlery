@@ -13,6 +13,11 @@ import type {
 } from '../types';
 import { DEFAULT_OPTIONAL_INSTALL_SELECTION, KNOWLEDGE_DIRS } from '../types';
 import { executeSetup, getSetupSteps, readManifest, type SetupStep } from '../core/setup-executor';
+import {
+  buildByoaoMigrationPreview,
+  executeByoaoMigration,
+  type ByoaoMigrationPreview,
+} from '../core/legacy-byoao-migration';
 import { detectEnvironment, type EnvironmentDetectSnapshot } from '../core/environment-detect';
 import { detectNode } from '../core/node-detect';
 import { BUNDLED_SKILLS } from '../assets/skills';
@@ -520,6 +525,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   const plugin = usePlugin();
 
   const [existingManifest, setExistingManifest] = useState<Manifest | null>(null);
+  const [migrationPreview, setMigrationPreview] = useState<ByoaoMigrationPreview | null>(null);
+  const [setupMode, setSetupMode] = useState<'normal' | 'byoao-migration'>('normal');
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<WizardPhase>('preview');
   const [platform, setPlatform] = useState<Platform>('claude-code');
@@ -544,14 +551,45 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
   }, [installSelectionTouched]);
 
   useEffect(() => {
-    readManifest(plugin.app).then((m) => {
-      if (m) {
-        setExistingManifest(m);
-        setPlatform(m.platform);
+    let cancelled = false;
+
+    async function loadVaultState() {
+      try {
+        const manifest = await readManifest(plugin.app);
+        if (cancelled) return;
+
+        if (manifest) {
+          setExistingManifest(manifest);
+          setPlatform(manifest.platform);
+          return;
+        }
+
+        const preview = await buildByoaoMigrationPreview(plugin.app);
+        if (cancelled) return;
+
+        setMigrationPreview(preview);
+        if (preview.detected) {
+          setSetupMode('byoao-migration');
+          setPlatform('claude-code');
+        }
+      } catch (e) {
+        if (cancelled) return;
+        const message = e instanceof Error ? e.message : String(e);
+        setSetupMode('normal');
+        setError(`Could not check for BYOAO migration: ${message}`);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
-  }, []);
+    }
+
+    void loadVaultState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [plugin.app]);
 
   useEffect(() => {
     if (loading || phase !== 'preview') {
@@ -627,6 +665,32 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     }
   };
 
+  const handleMigration = async () => {
+    setError(null);
+    setPhase('running');
+    setCompletedSteps(new Set(getSetupSteps().map((step) => step.step)));
+    setOptionalInstallRuns([]);
+
+    try {
+      const preview = await executeByoaoMigration(plugin.app, {
+        kbName: plugin.settings.kbName,
+      });
+      setMigrationPreview(preview);
+      plugin.settings.platform = 'claude-code';
+      await plugin.saveSettings();
+      setPhase('done');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setError(message);
+      setPhase('preview');
+    }
+  };
+
+  const handleUseNormalSetup = () => {
+    setError(null);
+    setSetupMode('normal');
+  };
+
   const handleInstallSelectionChange = (id: InstallItemId, checked: boolean) => {
     setInstallSelectionTouched((prev) => new Set(prev).add(id));
     setOptionalInstalls((prev) => withInstallSelection(prev, id, checked));
@@ -687,6 +751,145 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
 
   /* ---- phase: preview ---- */
   if (phase === 'preview') {
+    if (setupMode === 'byoao-migration' && migrationPreview) {
+      const migrationSkills = [
+        ...migrationPreview.importSkills.map((skill) => ({ key: `import-${skill}`, name: skill })),
+        ...migrationPreview.installBundledSkills.map((skill) => ({ key: `bundled-${skill}`, name: skill })),
+      ];
+      const visibleMigrationSkills = migrationSkills.slice(0, 8);
+      const migrationSkillsRemaining = migrationSkills.length - visibleMigrationSkills.length;
+      const migrationNotes = [
+        ...migrationPreview.skip.map((note, index) => ({ key: `skip-${index}-${note}`, text: note })),
+        ...migrationPreview.warnings.map((warning, index) => ({ key: `warning-${index}-${warning}`, text: warning })),
+      ];
+      const visibleMigrationNotes = migrationNotes.slice(0, 8);
+      const migrationNotesRemaining = migrationNotes.length - visibleMigrationNotes.length;
+
+      return (
+        <div className="knowlery-wizard__phase">
+          <PhaseSteps current="preview" />
+
+          <div className="knowlery-wizard__body">
+            <p className="knowlery-wizard__intro">
+              Knowlery found an existing BYOAO vault. Migration will preserve your BYOAO/OpenCode files,
+              import legacy skills, and configure Claude Code.
+            </p>
+
+            {error && (
+              <div className="knowlery-wizard__error">
+                <span className="knowlery-wizard__error-icon">
+                  <IconAlertCircle size={16} />
+                </span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div>
+              <div className="knowlery-section-label">Migration preview</div>
+              <div className="knowlery-wizard__preview-list">
+                <PreviewSection
+                  title={`Detected BYOAO signals (${migrationPreview.signals.length})`}
+                  icon={<IconCheckCircle size={16} />}
+                  defaultOpen
+                >
+                  <ul className="knowlery-wizard__dir-list">
+                    {migrationPreview.signals.map((signal) => (
+                      <li key={signal}>{signal}</li>
+                    ))}
+                  </ul>
+                </PreviewSection>
+
+                <PreviewSection
+                  title={`Skills to import (${migrationPreview.importSkills.length + migrationPreview.installBundledSkills.length})`}
+                  icon={<IconWrench size={16} />}
+                  defaultOpen
+                >
+                  <div className="knowlery-wizard__skill-grid">
+                    {visibleMigrationSkills.map((skill) => (
+                      <div key={skill.key} className="knowlery-wizard__skill-item">
+                        <span className="knowlery-wizard__skill-icon"><SkillIcon name={skill.name} size={14} /></span>
+                        <span>{skill.name}</span>
+                      </div>
+                    ))}
+                    {migrationSkillsRemaining > 0 && (
+                      <div className="knowlery-wizard__skill-more">
+                        ... and {migrationSkillsRemaining} more
+                      </div>
+                    )}
+                    {migrationSkills.length === 0 && (
+                      <div className="knowlery-wizard__skill-more">No missing skills to import.</div>
+                    )}
+                  </div>
+                </PreviewSection>
+
+                <PreviewSection
+                  title={`Files to create or repair (${migrationPreview.create.length})`}
+                  icon={<IconFolder size={16} />}
+                >
+                  <ul className="knowlery-wizard__dir-list">
+                    {migrationPreview.create.map((path) => (
+                      <li key={path}>
+                        <code>{path}</code>
+                      </li>
+                    ))}
+                    {migrationPreview.create.length === 0 && (
+                      <li>No files need to be created or repaired.</li>
+                    )}
+                  </ul>
+                </PreviewSection>
+
+                <PreviewSection
+                  title={`Files preserved (${migrationPreview.preserve.length})`}
+                  icon={<IconSettings size={16} />}
+                >
+                  <ul className="knowlery-wizard__dir-list">
+                    {migrationPreview.preserve.map((path) => (
+                      <li key={path}>
+                        <code>{path}</code>
+                      </li>
+                    ))}
+                    {migrationPreview.preserve.length === 0 && (
+                      <li>No legacy files need preservation.</li>
+                    )}
+                  </ul>
+                </PreviewSection>
+
+                {(migrationPreview.skip.length > 0 || migrationPreview.warnings.length > 0) && (
+                  <PreviewSection
+                    title={`Notes and warnings (${migrationPreview.skip.length + migrationPreview.warnings.length})`}
+                    icon={<IconAlertCircle size={16} />}
+                  >
+                    <ul className="knowlery-wizard__dir-list">
+                      {visibleMigrationNotes.map((note) => (
+                        <li key={note.key}>{note.text}</li>
+                      ))}
+                      {migrationNotesRemaining > 0 && (
+                        <li>... and {migrationNotesRemaining} more</li>
+                      )}
+                    </ul>
+                  </PreviewSection>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="knowlery-wizard__footer">
+            <button type="button" className="knowlery-btn knowlery-btn--ghost" onClick={handleUseNormalSetup}>
+              Use normal setup
+            </button>
+            <button
+              type="button"
+              className="knowlery-btn knowlery-btn--primary"
+              onClick={handleMigration}
+            >
+              Migrate to Knowlery
+              <IconArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="knowlery-wizard__phase">
         <PhaseSteps current="preview" />
@@ -840,7 +1043,9 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
         </div>
 
         <div className="knowlery-wizard__footer">
-          <span className="knowlery-wizard__footer-hint">Setting up your vault...</span>
+          <span className="knowlery-wizard__footer-hint">
+            {setupMode === 'byoao-migration' ? 'Migrating your BYOAO vault...' : 'Setting up your vault...'}
+          </span>
         </div>
       </div>
     );
@@ -866,21 +1071,35 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
             <IconCheckCircle size={48} />
           </div>
           <p className="knowlery-wizard__done-title">
-            {isReinstall ? 'Vault updated!' : 'Your vault is ready!'}
+            {setupMode === 'byoao-migration'
+              ? 'BYOAO migration complete!'
+              : isReinstall ? 'Vault updated!' : 'Your vault is ready!'}
           </p>
           <p className="knowlery-wizard__done-desc">
-            Knowlery has {isReinstall ? 'updated' : 'installed'} {BUNDLED_SKILLS.length} skills
-            and configured your vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.
+            {setupMode === 'byoao-migration'
+              ? 'Knowlery preserved your BYOAO/OpenCode files, imported legacy skills, and configured Claude Code.'
+              : <>Knowlery has {isReinstall ? 'updated' : 'installed'} {BUNDLED_SKILLS.length} skills
+                and configured your vault for {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}.</>}
           </p>
 
-          <div className="knowlery-wizard__install-summary">
-            <div className="knowlery-section-label">Optional install outcomes</div>
-            {optionalInstallRuns.length > 0 ? (
-              <OptionalInstallRunList runs={optionalInstallRuns} platform={platform} showLabel={false} />
-            ) : (
-              <p>No optional installs were selected.</p>
-            )}
-          </div>
+          {setupMode === 'byoao-migration' ? (
+            <div className="knowlery-wizard__install-summary">
+              <div className="knowlery-section-label">Migration summary</div>
+              <p>
+                Imported {migrationPreview?.importSkills.length ?? 0} legacy skills and installed{' '}
+                {migrationPreview?.installBundledSkills.length ?? 0} bundled skills.
+              </p>
+            </div>
+          ) : (
+            <div className="knowlery-wizard__install-summary">
+              <div className="knowlery-section-label">Optional install outcomes</div>
+              {optionalInstallRuns.length > 0 ? (
+                <OptionalInstallRunList runs={optionalInstallRuns} platform={platform} showLabel={false} />
+              ) : (
+                <p>No optional installs were selected.</p>
+              )}
+            </div>
+          )}
 
           <div className="knowlery-wizard__next-steps">
             <div className="knowlery-section-label">What to do next</div>

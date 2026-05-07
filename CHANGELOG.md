@@ -1,5 +1,50 @@
 # Changelog
 
+## [v0.3.0-beta.3] — 2026-05-07
+
+### Internal beta
+
+- Adds a one-click conservative migration path for legacy BYOAO vaults, preserving existing files while configuring Knowlery for Claude Code.
+- Imports legacy OpenCode skills into `.agents/skills`, syncs missing Claude skill copies, and normalizes Knowlery skill lock metadata.
+- Replaces legacy BYOAO `.claude/CLAUDE.md` guidance with the Knowlery include-based Claude config when migration detects old BYOAO instructions.
+- Fixes Today quick actions so `Scan vault health` opens System diagnostics and starts a health scan.
+- Polishes Today suggested-step button layout inside Obsidian so labels and helper text render cleanly.
+
+### Beta notes
+
+- This prerelease is intended for internal BYOAO migration testing through BRAT and GitHub prerelease assets.
+- Feedback should focus on migration safety, legacy skill preservation, Claude Code config correctness, and Today/System workflow polish.
+
+## [v0.3.0-beta.2] — 2026-05-06
+
+### Internal beta
+
+- Fixes Today quick-action tooltip rendering by switching to Obsidian-native tooltips instead of custom CSS pseudo-elements.
+- Keeps the local build flow convenient by copying release assets into the default Test Vault only when that vault exists.
+
+### Beta notes
+
+- This prerelease is intended for internal testing through BRAT and GitHub prerelease assets.
+- Feedback should focus on dashboard polish, tooltip reliability, and the end-to-end beta install/update experience.
+
+## [v0.3.0-beta.1] — 2026-05-05
+
+### Internal beta
+
+- Repositions Knowlery from a one-time vault setup utility into a personal knowledge review space.
+- Adds the new dashboard structure: Today, This note, Weekly Review, Review Menu, and System.
+- Introduces lightweight activity receipts, active knowledge trails, manual reflections, and next-move recommendations.
+- Adds explicit agent handoff flows for copying review prompts or sending them to Claudian when available.
+- Upgrades weekly reporting into a local Knowledge Review Atlas with an English default, Chinese toggle, knowledge hexagon, timeline, topic constellation, extensions, and next batch prompts.
+- Hides raw source skills behind the Review Menu so users can start from natural language workflows.
+- Adds internal beta testing guidance for fresh, existing, and returning vault testers.
+
+### Beta notes
+
+- This prerelease is intended for internal testing through BRAT and GitHub prerelease assets.
+- Do not treat this as the final public 0.3.0 release.
+- Beta feedback should focus on first-use clarity, review workflow usefulness, Claudian handoff reliability, and Knowledge Review Atlas quality.
+
 ## [v0.2.0] — 2026-04-30
 
 ### New features

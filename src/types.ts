@@ -98,6 +98,7 @@ export interface KnowlerySettings {
   platform: Platform;
   nodePath: string;
   onboardingDismissed: boolean;
+  activityLoggingEnabled: boolean;
 }
 
 export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
@@ -152,6 +153,7 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   platform: 'claude-code',
   nodePath: '',
   onboardingDismissed: false,
+  activityLoggingEnabled: true,
 };
 
 export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
@@ -168,7 +170,78 @@ export const BUILTIN_SKILL_NAMES = [
   'json-canvas', 'defuddle', 'vault-conventions',
 ] as const;
 
-export type DashboardTab = 'skills' | 'config' | 'health';
+export const ActivityDimensionSchema = z.enum([
+  'research',
+  'creation',
+  'building',
+  'strategy',
+  'reflection',
+  'maintenance',
+]);
+export type ActivityDimension = z.infer<typeof ActivityDimensionSchema>;
+
+export const ActivityRecordSchema = z.object({
+  time: z.string(),
+  agent: z.string().min(1),
+  type: z.enum(['discussion', 'implementation', 'research', 'creation', 'reflection', 'maintenance']),
+  topics: z.array(z.string()).default([]),
+  summary: z.string().min(1),
+  dimensions: z.array(ActivityDimensionSchema).default([]),
+  questions: z.array(z.string()).default([]),
+  learned: z.array(z.string()).default([]),
+  thinking: z.array(z.string()).default([]),
+  followups: z.array(z.string()).default([]),
+  relatedFiles: z.array(z.string()).default([]),
+  captureState: z.enum(['unbaked', 'baked', 'ignored']).default('unbaked'),
+  source: z.object({
+    kind: z.enum(['agent-session', 'manual-reflection', 'imported']),
+    visibility: z.enum(['private-summary']),
+  }),
+});
+export type ActivityRecord = z.infer<typeof ActivityRecordSchema>;
+
+export interface ActivityParseError {
+  path: string;
+  line: number;
+  message: string;
+}
+
+export interface ActivityThemeSummary {
+  name: string;
+  count: number;
+  lastSeen: string;
+  records: number;
+}
+
+export type KnowledgeThreadStage = 'Capture' | 'Connect' | 'Question' | 'Clean' | 'Create' | 'Reflect';
+
+export interface KnowledgeThreadSummary {
+  id: string;
+  title: string;
+  summary: string;
+  stage: KnowledgeThreadStage;
+  nextMove: KnowledgeThreadStage;
+  nextMoveReason: string;
+  suggestedRequest: string;
+  recordsCount: number;
+  relatedFiles: string[];
+  topics: string[];
+  lastSeen: string;
+}
+
+export interface CounterSummary {
+  knowledgeThreads: KnowledgeThreadSummary[];
+  recurringThemes: ActivityThemeSummary[];
+  recentAgentWork: ActivityRecord[];
+  unbakedNotes: ActivityRecord[];
+  tasteProfile: Record<ActivityDimension, number>;
+  coverage: {
+    recordsLogged: number;
+    malformedRecords: number;
+  };
+}
+
+export type DashboardTab = 'today' | 'note' | 'bake' | 'recipes' | 'system';
 
 export interface DashboardRefreshPayload {
   tab: DashboardTab;
