@@ -1,9 +1,12 @@
 # Knowlery
 
 [![Release](https://img.shields.io/github/v/release/jayjiangct/knowlery?label=release&style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
+[![Docs](https://img.shields.io/badge/docs-official-blue?style=flat-square)](https://jayjiangct.github.io/knowlery/)
 [![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square)](LICENSE)
 
 Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
+
+Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
 ## Inspiration: LLM Wiki & BYOAO
 
