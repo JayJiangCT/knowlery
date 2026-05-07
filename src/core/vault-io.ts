@@ -1,4 +1,8 @@
-import { App, normalizePath } from 'obsidian';
+import type { App } from 'obsidian';
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, '/').replace(/\/+/g, '/');
+}
 
 export async function ensureDir(app: App, path: string): Promise<void> {
   const normalized = normalizePath(path);

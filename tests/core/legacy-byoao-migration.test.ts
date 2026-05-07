@@ -1,9 +1,74 @@
 import { describe, expect, it } from 'vitest';
+import type { App } from 'obsidian';
 import {
+  buildByoaoMigrationPreview,
   buildSkillMergePlan,
   classifyByoaoLegacySignals,
+  executeByoaoMigration,
   normalizeLegacySkillsLock,
 } from '../../src/core/legacy-byoao-migration';
+
+function createMockApp(initialFiles: Record<string, string>): App {
+  const files = new Map(Object.entries(initialFiles));
+  const dirs = new Set<string>();
+
+  for (const path of files.keys()) {
+    const parts = path.split('/');
+    for (let i = 1; i < parts.length; i += 1) {
+      dirs.add(parts.slice(0, i).join('/'));
+    }
+  }
+
+  const adapter = {
+    exists: async (path: string) => files.has(path) || dirs.has(path),
+    read: async (path: string) => {
+      const content = files.get(path);
+      if (content === undefined) throw new Error(`Missing file: ${path}`);
+      return content;
+    },
+    write: async (path: string, content: string) => {
+      files.set(path, content);
+      const parts = path.split('/');
+      for (let i = 1; i < parts.length; i += 1) {
+        dirs.add(parts.slice(0, i).join('/'));
+      }
+    },
+    mkdir: async (path: string) => {
+      dirs.add(path);
+    },
+    list: async (path: string) => {
+      const prefix = `${path}/`;
+      const listedFiles: string[] = [];
+      const listedFolders = new Set<string>();
+
+      for (const file of files.keys()) {
+        if (!file.startsWith(prefix)) continue;
+        const rest = file.slice(prefix.length);
+        const first = rest.split('/')[0];
+        if (rest.includes('/')) listedFolders.add(`${path}/${first}`);
+        else listedFiles.push(file);
+      }
+
+      for (const dir of dirs) {
+        if (!dir.startsWith(prefix)) continue;
+        const rest = dir.slice(prefix.length);
+        if (!rest || rest.includes('/')) continue;
+        listedFolders.add(`${path}/${rest}`);
+      }
+
+      return { files: listedFiles.sort(), folders: [...listedFolders].sort() };
+    },
+  };
+
+  return {
+    vault: {
+      adapter,
+      getFileByPath: (path: string) => files.has(path) ? ({ path } as never) : null,
+      cachedRead: async (file: { path: string }) => files.get(file.path) || '',
+    },
+    __files: files,
+  } as unknown as App;
+}
 
 describe('classifyByoaoLegacySignals', () => {
   it('detects BYOAO from manifest, OpenCode skills, AGENTS.md, and knowledge directories', () => {
@@ -82,5 +147,58 @@ describe('normalizeLegacySkillsLock', () => {
         },
       },
     });
+  });
+});
+
+describe('buildByoaoMigrationPreview', () => {
+  it('reports preserved, imported, created, skipped, and warning items', async () => {
+    const app = createMockApp({
+      '.byoao/manifest.json': '{bad json',
+      '.agents/skills/ask/SKILL.md': 'agents ask',
+      '.opencode/skills/ask/SKILL.md': 'opencode ask',
+      '.opencode/skills/trace/SKILL.md': 'trace',
+      'SCHEMA.md': 'existing schema',
+      'INDEX.base': 'existing index',
+      'AGENTS.md': 'BYOAO vault',
+      'skills-lock.json': '{bad json',
+    });
+
+    const preview = await buildByoaoMigrationPreview(app);
+
+    expect(preview.detected).toBe(true);
+    expect(preview.preserve).toContain('SCHEMA.md');
+    expect(preview.preserve).toContain('INDEX.base');
+    expect(preview.importSkills).toContain('trace');
+    expect(preview.skip).toContain('ask exists in .agents/skills; skipped .opencode/skills copy');
+    expect(preview.create).toContain('.knowlery/manifest.json');
+    expect(preview.create).toContain('KNOWLEDGE.md');
+    expect(preview.warnings).toEqual([
+      'Could not parse .byoao/manifest.json; migration will continue.',
+      'Could not parse skills-lock.json; Knowlery will rebuild it.',
+    ]);
+  });
+});
+
+describe('executeByoaoMigration', () => {
+  it('does not overwrite existing root files and is safe to run twice', async () => {
+    const app = createMockApp({
+      '.byoao/manifest.json': '{"version":"2.0.12"}',
+      '.agents/skills/ask/SKILL.md': 'agents ask',
+      '.opencode/skills/trace/SKILL.md': 'trace skill',
+      'SCHEMA.md': 'keep schema',
+      'INDEX.base': 'keep index',
+      'AGENTS.md': 'BYOAO vault',
+    });
+
+    await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
+    await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
+
+    const files = (app as unknown as { __files: Map<string, string> }).__files;
+    expect(files.get('SCHEMA.md')).toBe('keep schema');
+    expect(files.get('INDEX.base')).toBe('keep index');
+    expect(files.get('.agents/skills/trace/SKILL.md')).toBe('trace skill');
+    expect(files.get('.claude/skills/trace/SKILL.md')).toBe('trace skill');
+    expect(files.get('.knowlery/manifest.json')).toContain('"platform": "claude-code"');
+    expect(files.get('skills-lock.json')).toContain('"trace"');
   });
 });
