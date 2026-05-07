@@ -18,7 +18,7 @@ const records = [
     followups: [],
     relatedFiles: ['concepts/心流状态.md'],
     captureState: 'unbaked' as const,
-    source: { kind: 'agent-session' as const, visibility: 'private-summary' as const },
+    source: { kind: 'agent-session' as const, visibility: 'private-summary' as const, surface: 'knowledge' as const },
   },
 ];
 
@@ -31,7 +31,7 @@ describe('agent review request contract', () => {
     expect(request.resultPath).toBe('.knowlery/reviews/daily-review-2026-05-03.json');
     expect(request.context.topTopics).toEqual(['注意力机制', '心流']);
     expect(request.prompt).toContain('.knowlery/reviews/daily-review-2026-05-03.json');
-    expect(request.prompt).toContain('只写入结果文件');
+    expect(request.prompt).toContain('Only write to the result file');
     expect(request.prompt).toContain('"title"');
   });
 

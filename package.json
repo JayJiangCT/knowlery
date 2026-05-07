@@ -1,6 +1,6 @@
 {
   "name": "knowlery",
-  "version": "0.3.0-beta.3",
+  "version": "0.3.0-beta.4",
   "description": "A warm personal knowledge review space for Obsidian vaults.",
   "main": "main.js",
   "scripts": {
@@ -9,8 +9,8 @@
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
     "docs:preview": "vitepress preview docs-site",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --dir tests",
+    "test:watch": "vitest --dir tests"
   },
   "keywords": [
     "obsidian",

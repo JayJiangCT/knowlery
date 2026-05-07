@@ -32,6 +32,36 @@ describe('parseActivityJsonl', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.records[0].type).toBe('creation');
     expect(result.records[0].topics).toEqual(['Knowlery', 'Product Strategy']);
+    expect(result.records[0].source.surface).toBe('knowledge');
+  });
+
+  it('accepts a pretty-printed activity object even when the agent misses JSONL formatting', () => {
+    const result = parseActivityJsonl(
+      JSON.stringify({
+        time: '2026-05-07T13:10:00.000Z',
+        agent: 'claude',
+        type: 'discussion',
+        topics: ['Vault Maintenance', 'Knowledge Base'],
+        summary: 'Ran first knowledge base maintenance pass.',
+        dimensions: ['maintenance', 'strategy'],
+        questions: ['Which gap should be tackled first?'],
+        learned: ['Glossary terms need better granularity.'],
+        thinking: ['Maintenance should be reviewed before becoming knowledge pages.'],
+        followups: ['Split top glossary terms into entities.'],
+        relatedFiles: ['INDEX.base'],
+        captureState: 'unbaked',
+        source: {
+          kind: 'agent-session',
+          visibility: 'private-summary',
+          surface: 'system',
+        },
+      }, null, 2),
+      '.knowlery/activity/2026-05-07.jsonl',
+    );
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0].source.surface).toBe('system');
   });
 });
 
@@ -51,7 +81,7 @@ describe('buildCounterSummary', () => {
         followups: ['Design Activity Ledger schema'],
         relatedFiles: [],
         captureState: 'unbaked',
-        source: { kind: 'agent-session', visibility: 'private-summary' },
+        source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
       },
       {
         time: '2026-05-01T13:00:00.000Z',
@@ -66,7 +96,7 @@ describe('buildCounterSummary', () => {
         followups: [],
         relatedFiles: [],
         captureState: 'baked',
-        source: { kind: 'manual-reflection', visibility: 'private-summary' },
+        source: { kind: 'manual-reflection', visibility: 'private-summary', surface: 'knowledge' },
       },
     ]);
 
@@ -92,7 +122,7 @@ describe('buildCounterSummary', () => {
         followups: [],
         relatedFiles: ['Traveling/2026-05-02 南安亲子一日游.md'],
         captureState: 'unbaked',
-        source: { kind: 'agent-session', visibility: 'private-summary' },
+        source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
       },
       {
         time: '2026-05-01T13:00:00.000Z',
@@ -107,7 +137,7 @@ describe('buildCounterSummary', () => {
         followups: [],
         relatedFiles: [],
         captureState: 'unbaked',
-        source: { kind: 'agent-session', visibility: 'private-summary' },
+        source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
       },
       {
         time: '2026-05-01T14:00:00.000Z',
@@ -122,7 +152,7 @@ describe('buildCounterSummary', () => {
         followups: [],
         relatedFiles: [],
         captureState: 'baked',
-        source: { kind: 'agent-session', visibility: 'private-summary' },
+        source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
       },
     ]);
 
@@ -133,7 +163,36 @@ describe('buildCounterSummary', () => {
       stage: 'Capture',
       nextMove: 'Connect',
     });
-    expect(summary.knowledgeThreads[0].suggestedRequest).toContain('旧笔记');
+    expect(summary.knowledgeThreads[0].suggestedRequest).toContain('older notes');
     expect(summary.knowledgeThreads[0].relatedFiles).toEqual(['Traveling/2026-05-02 南安亲子一日游.md']);
+  });
+
+  it('keeps system maintenance records out of knowledge threads', () => {
+    const summary = buildCounterSummary([
+      {
+        time: '2026-05-07T12:00:00.000Z',
+        agent: 'claude',
+        type: 'maintenance',
+        topics: ['knowledge base maintenance', 'vault audit'],
+        summary: 'Completed a vault maintenance pass and wrote a report.',
+        dimensions: ['maintenance'],
+        questions: [],
+        learned: [],
+        thinking: [],
+        followups: ['Review generated report before turning findings into knowledge pages.'],
+        relatedFiles: ['.knowlery/reports/maintenance-pass.md'],
+        captureState: 'baked',
+        source: {
+          kind: 'agent-session',
+          visibility: 'private-summary',
+          surface: 'system',
+        },
+      },
+    ]);
+
+    expect(summary.coverage.recordsLogged).toBe(1);
+    expect(summary.recentAgentWork).toHaveLength(1);
+    expect(summary.recurringThemes).toHaveLength(0);
+    expect(summary.knowledgeThreads).toHaveLength(0);
   });
 });

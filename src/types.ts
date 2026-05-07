@@ -196,6 +196,7 @@ export const ActivityRecordSchema = z.object({
   source: z.object({
     kind: z.enum(['agent-session', 'manual-reflection', 'imported']),
     visibility: z.enum(['private-summary']),
+    surface: z.enum(['knowledge', 'system']).default('knowledge'),
   }),
 });
 export type ActivityRecord = z.infer<typeof ActivityRecordSchema>;

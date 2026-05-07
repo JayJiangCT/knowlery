@@ -528,19 +528,21 @@
 
 .knowlery-today__steps {
   display: grid;
-  gap: var(--knowlery-space-sm);
+  gap: var(--knowlery-space-xs);
 }
 
 .knowlery-today__step {
   display: grid;
-  gap: var(--knowlery-space-2xs);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
   inline-size: 100%;
   border: var(--knowlery-border);
-  border-radius: var(--knowlery-radius-md);
-  background: var(--background-primary);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-secondary);
   color: var(--text-normal);
-  padding-block: var(--knowlery-space-md);
-  padding-inline: var(--knowlery-space-md);
+  padding-block: var(--knowlery-space-sm);
+  padding-inline: var(--knowlery-space-sm);
   text-align: start;
   box-shadow: none;
 }
@@ -550,9 +552,9 @@
   -webkit-appearance: none;
   display: grid !important;
   block-size: auto !important;
-  min-block-size: 54px !important;
-  padding-block: var(--knowlery-space-md) !important;
-  padding-inline: var(--knowlery-space-md) !important;
+  min-block-size: 42px !important;
+  padding-block: var(--knowlery-space-sm) !important;
+  padding-inline: var(--knowlery-space-sm) !important;
   line-height: var(--line-height-normal);
   white-space: normal;
   text-align: start;
@@ -562,6 +564,7 @@
 .knowlery-today__step:focus-visible {
   border-color: var(--background-modifier-border-hover);
   background: var(--background-modifier-hover);
+  color: var(--text-normal);
 }
 
 .knowlery-dashboard button.knowlery-today__step:hover,
@@ -571,13 +574,33 @@
   box-shadow: none !important;
 }
 
-.knowlery-today__step span {
+.knowlery-today__step-copy {
+  display: grid;
+  gap: var(--knowlery-space-2xs);
+  min-inline-size: 0;
+}
+
+.knowlery-today__step-copy span {
   font-weight: 600;
 }
 
-.knowlery-today__step small {
+.knowlery-today__step-copy small {
   color: var(--text-muted);
   font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-today__step-icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--knowlery-radius-sm);
+  color: var(--text-accent);
+  background: var(--knowlery-accent-tint);
+}
+
+.knowlery-today__step-chevron {
+  color: var(--text-faint);
 }
 
 @media (max-width: 640px) {

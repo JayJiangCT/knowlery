@@ -33,7 +33,27 @@ const record: ActivityRecord = {
   followups: [],
   relatedFiles: ['concepts/心流状态.md'],
   captureState: 'unbaked',
-  source: { kind: 'agent-session', visibility: 'private-summary' },
+  source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
+};
+
+const maintenanceRecord: ActivityRecord = {
+  time: '2026-05-07T12:00:00.000Z',
+  agent: 'claude',
+  type: 'maintenance',
+  topics: ['knowledge base maintenance', 'vault audit'],
+  summary: 'Completed a vault maintenance pass and produced findings.',
+  dimensions: ['maintenance'],
+  questions: [],
+  learned: [],
+  thinking: [],
+  followups: ['Review the maintenance findings.'],
+  relatedFiles: ['.knowlery/reports/maintenance-pass.md'],
+  captureState: 'baked',
+  source: {
+    kind: 'agent-session',
+    visibility: 'private-summary',
+    surface: 'system',
+  },
 };
 
 describe('buildTodayModel', () => {
@@ -51,6 +71,9 @@ describe('buildTodayModel', () => {
     expect(model.stage).toBe('first-maintenance');
     expect(model.title).toContain('already has material');
     expect(model.primaryAction.label).toBe('Prepare first cook');
+    expect(model.primaryAction.request).toContain('Activity Ledger');
+    expect(model.primaryAction.request).not.toContain('JSON object');
+    expect(model.primaryAction.request).not.toContain('.jsonl');
   });
 
   it('summarizes returning users from recent activity', () => {
@@ -60,5 +83,17 @@ describe('buildTodayModel', () => {
     expect(model.title).toContain('注意力机制');
     expect(model.primaryAction.label).toBe('Prepare next move');
     expect(model.stats[0].value).toBe('1');
+  });
+
+  it('presents maintenance-only activity as a system update, not an active knowledge thread', () => {
+    const model = buildTodayModel(existingStats, [maintenanceRecord]);
+
+    expect(model.stage).toBe('returning');
+    expect(model.title).toContain('Latest maintenance pass completed');
+    expect(model.title).not.toContain('Recently you have been shaping');
+    expect(model.body).toContain('Review the maintenance findings');
+    expect(model.primaryAction.label).toBe('Open review menu');
+    expect(model.summary.knowledgeThreads).toHaveLength(0);
+    expect(model.stats[1]).toEqual({ label: 'active threads', value: '0' });
   });
 });

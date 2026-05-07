@@ -10,8 +10,9 @@ import { readLatestDailyReviewResult } from '../core/agent-review';
 import { getVaultStats } from '../core/vault-health';
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
+import { withActivityLedgerReminder } from '../core/agent-request';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
-import { IconBookOpen, IconClipboard, IconPlay, IconPlus, IconRefresh } from './Icons';
+import { IconBookOpen, IconChevronRight, IconClipboard, IconPlay, IconPlus, IconRefresh, IconSearch } from './Icons';
 
 export function TodayTab() {
   const plugin = usePlugin();
@@ -44,7 +45,7 @@ export function TodayTab() {
       return;
     }
     try {
-      await navigator.clipboard.writeText(request);
+      await navigator.clipboard.writeText(withActivityLedgerReminder(request));
       new Notice('Agent request copied.');
     } catch {
       new Notice('Could not copy agent request.');
@@ -57,7 +58,7 @@ export function TodayTab() {
       return;
     }
 
-    const sent = await sendPromptToClaudian(plugin.app, request);
+    const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(request));
     if (sent) {
       new Notice('Request sent to Claudian.');
       return;
@@ -106,6 +107,7 @@ export function TodayTab() {
           onCopyRequest={copyRequest}
           onSendRequest={sendRequest}
           onGenerateReport={generateReport}
+          onOpenRecipes={openRecipes}
         />
       </section>
 
@@ -172,6 +174,7 @@ function TodayPrimaryAction(props: {
   onCopyRequest: (request?: string) => void;
   onSendRequest: (request?: string) => void;
   onGenerateReport: () => void;
+  onOpenRecipes: () => void;
 }) {
   const { model } = props;
   if (model.stage === 'empty-vault') {
@@ -188,6 +191,15 @@ function TodayPrimaryAction(props: {
       <button className="knowlery-btn knowlery-btn--outline" onClick={props.onGenerateReport} disabled={props.busy}>
         {props.busy ? <IconRefresh size={14} /> : <IconBookOpen size={14} />}
         <span>{props.busy ? 'Generating...' : model.primaryAction.label}</span>
+      </button>
+    );
+  }
+
+  if (model.primaryAction.kind === 'local') {
+    return (
+      <button className="knowlery-btn knowlery-btn--outline" onClick={props.onOpenRecipes}>
+        <IconBookOpen size={14} />
+        <span>{model.primaryAction.label}</span>
       </button>
     );
   }
@@ -250,8 +262,14 @@ function FirstSteps(props: {
             else props.onOpenRecipes();
           }}
         >
-          <span>{action.label}</span>
-          <small>{action.kind === 'agent-request' ? 'Prepares an agent request' : 'Works locally in Knowlery'}</small>
+          <span className="knowlery-today__step-icon">
+            {action.label === 'Scan vault health' ? <IconSearch size={16} /> : <IconBookOpen size={16} />}
+          </span>
+          <span className="knowlery-today__step-copy">
+            <span>{action.label}</span>
+            <small>{action.kind === 'agent-request' ? 'Prepares an agent request' : 'Works locally in Knowlery'}</small>
+          </span>
+          <IconChevronRight size={16} className="knowlery-today__step-chevron" />
         </button>
       ))}
     </div>

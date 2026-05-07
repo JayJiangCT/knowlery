@@ -6,6 +6,7 @@ import type { CounterSummary, DashboardRefreshPayload } from '../types';
 import { buildCounterSummary } from '../core/activity-model';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
+import { withActivityLedgerReminder } from '../core/agent-request';
 import { IconClipboard, IconPlay, IconRefresh } from './Icons';
 
 export function ThisNoteTab() {
@@ -51,14 +52,14 @@ export function ThisNoteTab() {
     });
     return {
       threads,
-      request: `请围绕当前笔记「${file.basename}」做一次知识复盘：先找出相关旧笔记和对比笔记，再判断哪些连接、问题或结构值得写回知识库。`,
+      request: `Review the current note "${file.basename}": find related older notes and comparisons, then identify which connections, questions, or structures are worth writing back to the knowledge base.`,
     };
   }, [file, summary]);
 
   const copyRequest = async () => {
     if (!noteContext) return;
     try {
-      await navigator.clipboard.writeText(noteContext.request);
+      await navigator.clipboard.writeText(withActivityLedgerReminder(noteContext.request));
       new Notice('Current note request copied.');
     } catch {
       new Notice('Could not copy current note request.');
@@ -67,7 +68,7 @@ export function ThisNoteTab() {
 
   const sendRequest = async () => {
     if (!noteContext) return;
-    const sent = await sendPromptToClaudian(plugin.app, noteContext.request);
+    const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(noteContext.request));
     if (sent) {
       new Notice('Current note request sent to Claudian.');
       return;

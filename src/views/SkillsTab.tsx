@@ -4,6 +4,7 @@ import { usePlugin } from '../context';
 import type { CounterSummary, DashboardRefreshPayload, KnowledgeThreadStage, SkillInfo } from '../types';
 import { buildCounterSummary } from '../core/activity-model';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
+import { withActivityLedgerReminder } from '../core/agent-request';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { listSkills } from '../core/skill-manager';
 import { SkillBrowserModal } from '../modals/skill-browser';
@@ -108,7 +109,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
     title: 'Digest new material',
     threadLabel: 'Fresh notes, clips, or conversations',
     description: 'Turn rough material into durable notes, concepts, and index updates.',
-    request: '请帮我把最近新增或未整理的材料沉淀进知识库，提炼关键概念、相关实体、可复用结构，并更新必要的索引。',
+    request: 'Help me distill recently added or unprocessed material into the knowledge base — extract key concepts, related entities, reusable structures, and update the necessary indexes.',
     skills: 'cook',
   },
   {
@@ -116,7 +117,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
     title: 'Connect a thread',
     threadLabel: 'A topic that keeps coming back',
     description: 'Find older notes, adjacent themes, and reusable patterns around one active topic.',
-    request: '请帮我选择一个最近反复出现的主题，回看相关旧笔记，找出连接、复用经验、结构缺口，以及值得进一步沉淀的部分。',
+    request: 'Pick a topic that keeps coming back recently. Review related older notes, find connections, reusable patterns, structural gaps, and parts worth distilling further.',
     skills: 'explore + cook',
   },
   {
@@ -124,7 +125,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
     title: 'Pressure-test an idea',
     threadLabel: 'A belief, plan, or conclusion',
     description: 'Check assumptions, missing evidence, counterexamples, and open questions.',
-    request: '请帮我检查最近一个重要想法：哪些结论缺少证据，哪些假设需要挑战，哪些反例或风险值得记录进知识库。',
+    request: 'Help me pressure-test a recent important idea: which conclusions lack evidence, which assumptions should be challenged, and which counterexamples or risks are worth recording in the knowledge base.',
     skills: 'challenge + ask',
   },
   {
@@ -132,7 +133,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
     title: 'Clean the pantry',
     threadLabel: 'Vault structure and metadata',
     description: 'Review drift, duplicates, frontmatter gaps, broken links, and index hygiene.',
-    request: '请帮我检查知识库当前的结构健康：断链、重复内容、frontmatter 缺口、索引漂移，以及需要整理的目录或笔记。',
+    request: 'Check the current structural health of the knowledge base: broken links, duplicate content, frontmatter gaps, index drift, and directories or notes that need organizing.',
     skills: 'audit + organize',
   },
   {
@@ -140,7 +141,7 @@ const RECIPE_BOOK: PantryRecipe[] = [
     title: 'Create an output',
     threadLabel: 'Reusable artifact or decision',
     description: 'Turn existing notes into a checklist, outline, template, proposal, or decision memo.',
-    request: '请基于我的知识库内容，帮我把一个成熟主题转成可复用输出：提纲、模板、清单、方案或决策记录。',
+    request: 'Based on my knowledge base content, help me turn a mature topic into a reusable output: an outline, template, checklist, proposal, or decision memo.',
     skills: 'ask + ideas + cook',
   },
 ];
@@ -296,7 +297,7 @@ export function SkillsTab() {
   }, [skills]);
 
   const writeMoveRequestToClipboard = async (request: string) => {
-    await navigator.clipboard.writeText(request);
+    await navigator.clipboard.writeText(withActivityLedgerReminder(request));
   };
 
   const copyMoveRequest = async (request: string) => {
@@ -310,7 +311,7 @@ export function SkillsTab() {
 
   const sendMoveRequest = async (request: string) => {
     try {
-      const sent = await sendPromptToClaudian(plugin.app, request);
+      const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(request));
       if (sent) {
         new Notice('Move request sent to Claudian.');
         return;

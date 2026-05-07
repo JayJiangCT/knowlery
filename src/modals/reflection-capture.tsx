@@ -87,7 +87,7 @@ function ReflectionCaptureForm(props: {
       followups: [],
       relatedFiles: [],
       captureState: 'unbaked',
-      source: { kind: 'manual-reflection', visibility: 'private-summary' },
+      source: { kind: 'manual-reflection', visibility: 'private-summary', surface: 'knowledge' },
     });
     setSaving(false);
   };

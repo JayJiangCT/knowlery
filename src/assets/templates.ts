@@ -19,7 +19,7 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 ### Obsidian CLI Only
 
-**Prefer Obsidian CLI for note-centric vault operations.** Use bash only when the CLI cannot express the task cleanly, such as a folder-listing fallback during knowledge retrieval.
+**Use Obsidian CLI for note-centric vault operations.** Do not start vault discovery with raw Bash commands such as \`ls\`, \`find\`, \`grep\`, or \`cat\`. Use Bash only when Obsidian CLI is unavailable, a verified Obsidian CLI command fails, or the task is non-note environment diagnostics. State the fallback reason before using Bash.
 
 | Task | Command |
 |------|---------|
@@ -33,7 +33,7 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 | Check links | \`obsidian links file="..."\` |
 | Check backlinks | \`obsidian backlinks file="..."\` |
 
-Obsidian CLI resolves wikilinks, understands frontmatter and aliases, and maintains link graph consistency. Raw bash treats files as plain text and breaks the semantic layer.
+Obsidian CLI resolves wikilinks, understands frontmatter and aliases, and maintains link graph consistency. Raw Bash treats files as plain text and breaks the semantic layer.
 
 Do not start routine work by running \`obsidian help\`. Use the verified command patterns above first, and only open help when:
 

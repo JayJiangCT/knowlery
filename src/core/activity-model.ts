@@ -24,33 +24,81 @@ export function parseActivityJsonl(
 ): { records: ActivityRecord[]; errors: ActivityParseError[] } {
   const records: ActivityRecord[] = [];
   const errors: ActivityParseError[] = [];
+  let buffer = '';
+  let bufferStartLine = 0;
 
   content.split(/\r?\n/).forEach((line, index) => {
     const trimmed = line.trim();
-    if (!trimmed) return;
+    if (!trimmed && !buffer) return;
 
-    try {
-      const parsed = JSON.parse(trimmed);
-      const result = ActivityRecordSchema.safeParse(parsed);
-      if (result.success) {
-        records.push(result.data);
-      } else {
-        errors.push({
-          path,
-          line: index + 1,
-          message: result.error.issues[0]?.message ?? 'Invalid activity record',
-        });
+    if (buffer) {
+      buffer += `\n${line}`;
+      if (tryReadActivityRecord(buffer, path, bufferStartLine, records, errors)) {
+        buffer = '';
       }
-    } catch (error) {
-      errors.push({
-        path,
-        line: index + 1,
-        message: error instanceof Error ? error.message : 'Could not parse JSON',
-      });
+      return;
     }
+
+    if (tryReadActivityRecord(trimmed, path, index + 1, records, errors)) {
+      return;
+    }
+
+    if (trimmed.startsWith('{')) {
+      buffer = line;
+      bufferStartLine = index + 1;
+      return;
+    }
+
+    pushJsonParseError(trimmed, path, index + 1, errors);
   });
 
+  if (buffer) {
+    pushJsonParseError(buffer, path, bufferStartLine, errors);
+  }
+
   return { records, errors };
+}
+
+function tryReadActivityRecord(
+  candidate: string,
+  path: string,
+  line: number,
+  records: ActivityRecord[],
+  errors: ActivityParseError[],
+): boolean {
+  try {
+    const parsed = JSON.parse(candidate);
+    const result = ActivityRecordSchema.safeParse(parsed);
+    if (result.success) {
+      records.push(result.data);
+    } else {
+      errors.push({
+        path,
+        line,
+        message: result.error.issues[0]?.message ?? 'Invalid activity record',
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function pushJsonParseError(
+  candidate: string,
+  path: string,
+  line: number,
+  errors: ActivityParseError[],
+): void {
+  try {
+    JSON.parse(candidate);
+  } catch (error) {
+    errors.push({
+      path,
+      line,
+      message: error instanceof Error ? error.message : 'Could not parse JSON',
+    });
+  }
 }
 
 export function buildCounterSummary(
@@ -58,6 +106,7 @@ export function buildCounterSummary(
   malformedRecords = 0,
 ): CounterSummary {
   const sorted = [...records].sort((a, b) => b.time.localeCompare(a.time));
+  const knowledgeRecords = sorted.filter(isKnowledgeActivityRecord);
   const themeMap = new Map<string, ActivityThemeSummary>();
   const tasteProfile = Object.fromEntries(
     DIMENSIONS.map((dimension) => [dimension, 0]),
@@ -67,7 +116,9 @@ export function buildCounterSummary(
     for (const dimension of record.dimensions) {
       tasteProfile[dimension] += 1;
     }
+  }
 
+  for (const record of knowledgeRecords) {
     for (const topic of record.topics) {
       const key = normalizeTopic(topic);
       if (!key) continue;
@@ -89,18 +140,24 @@ export function buildCounterSummary(
   }
 
   return {
-    knowledgeThreads: buildKnowledgeThreads(sorted),
+    knowledgeThreads: buildKnowledgeThreads(knowledgeRecords),
     recurringThemes: [...themeMap.values()]
       .sort((a, b) => b.count - a.count || b.lastSeen.localeCompare(a.lastSeen))
       .slice(0, 8),
     recentAgentWork: sorted.slice(0, 6),
-    unbakedNotes: sorted.filter((record) => record.captureState === 'unbaked').slice(0, 5),
+    unbakedNotes: knowledgeRecords.filter((record) => record.captureState === 'unbaked').slice(0, 5),
     tasteProfile,
     coverage: {
       recordsLogged: records.length,
       malformedRecords,
     },
   };
+}
+
+function isKnowledgeActivityRecord(record: ActivityRecord): boolean {
+  if (record.source.surface === 'system') return false;
+  if (record.type === 'maintenance') return false;
+  return !record.dimensions.includes('maintenance');
 }
 
 function buildKnowledgeThreads(records: ActivityRecord[]): KnowledgeThreadSummary[] {
@@ -215,18 +272,18 @@ function explainNextMove(stage: KnowledgeThreadStage, nextMove: KnowledgeThreadS
 
 function buildSuggestedRequest(title: string, nextMove: KnowledgeThreadStage): string {
   if (nextMove === 'Connect') {
-    return `帮我回看最近关于「${title}」的内容，找出它们和旧笔记的连接、可复用经验，以及值得沉淀成模板的部分。`;
+    return `Review my recent notes about "${title}". Find connections to older notes, reusable patterns, and parts worth turning into templates.`;
   }
   if (nextMove === 'Question') {
-    return `帮我检查最近关于「${title}」的讨论，哪些结论缺少证据，哪些假设需要挑战，哪些地方可能过时。`;
+    return `Check my recent discussions about "${title}". Which conclusions lack evidence? Which assumptions should be challenged? What might be outdated?`;
   }
   if (nextMove === 'Clean') {
-    return `帮我检查「${title}」相关笔记是否有断链、重复、缺少 frontmatter 或结构漂移，并给出整理建议。`;
+    return `Check notes related to "${title}" for broken links, duplicates, missing frontmatter, or structural drift, and suggest how to clean them up.`;
   }
   if (nextMove === 'Create') {
-    return `基于我最近关于「${title}」的知识，帮我生成一个可复用输出：提纲、模板、方案或下一步行动清单。`;
+    return `Based on my recent knowledge about "${title}", generate a reusable output: an outline, template, plan, or next-step action list.`;
   }
-  return `帮我把最近关于「${title}」的材料沉淀进知识库，提炼关键概念、相关实体，并更新索引。`;
+  return `Help me distill recent material about "${title}" into the knowledge base - extract key concepts, related entities, and update the index.`;
 }
 
 function summarizeThread(

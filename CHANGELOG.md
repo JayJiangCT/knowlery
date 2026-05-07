@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.0-beta.4] — 2026-05-07
+
+### Internal beta
+
+- Keeps maintenance and system activity receipts out of Today active knowledge threads while still counting them as recent agent work.
+- Adds `source.surface` to activity receipts so agents can distinguish user knowledge work from system, setup, audit, and maintenance logs.
+- Makes agent handoff prompts append a compact Activity Ledger reminder without exposing JSONL schema in Claudian.
+- Accepts both proper JSONL and pretty-printed activity receipt objects when reading `.knowlery/activity`.
+- Tightens first-cook prompts so agents summarize maintenance findings in chat instead of creating report notes by default.
+- Strengthens Obsidian CLI guidance and Activity Ledger rules for Claude Code.
+- Polishes Today suggested-step buttons into compact action rows.
+
+### Beta notes
+
+- This prerelease is intended for Jay WorkSpace validation of first-cook, Claudian handoff, Activity Ledger receipts, and Today state boundaries.
+- After updating through BRAT or release assets, reload Obsidian/Knowlery before testing Claudian handoff behavior.
+
 ## [v0.3.0-beta.3] — 2026-05-07
 
 ### Internal beta

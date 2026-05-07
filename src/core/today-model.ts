@@ -51,7 +51,7 @@ export function buildTodayModel(stats: VaultStats, records: ActivityRecord[]): T
     primaryAction: {
       label: 'Prepare first cook',
       kind: 'agent-request',
-      request: '请帮我对这个 vault 做第一次知识库维护：选择几篇已有笔记，提炼关键概念、相关实体、结构缺口，并建议如何把它们沉淀成更可复用的知识结构。',
+      request: buildFirstCookRequest(),
     },
     secondaryActions: [
       { label: 'Scan vault health', kind: 'local' },
@@ -66,7 +66,29 @@ export function buildTodayModel(stats: VaultStats, records: ActivityRecord[]): T
   };
 }
 
+function buildFirstCookRequest(): string {
+  return [
+    'Run a first knowledge base maintenance pass on this vault:',
+    '',
+    '1. Pick a handful of existing notes that have the most potential for reuse.',
+    '2. Extract key concepts, related entities, and structural gaps.',
+    '3. Suggest how to turn them into a more reusable knowledge structure (entities, concepts, comparisons, or queries).',
+    '4. Summarize your findings in the chat, with concrete recommendations.',
+    '',
+    'Do not create new vault notes unless I explicitly ask for a persistent report or knowledge pages.',
+    'The private Activity Ledger receipt is allowed if that vault rule is enabled; it is not a report or knowledge page.',
+  ].join('\n');
+}
+
 function buildReturningModel(summary: CounterSummary): TodayModel {
+  const thread = summary.knowledgeThreads[0];
+  if (!thread) {
+    const latestSystemActivity = summary.recentAgentWork.find(isSystemActivityRecord);
+    if (latestSystemActivity) {
+      return buildSystemActivityModel(summary, latestSystemActivity);
+    }
+  }
+
   const firstTheme = summary.recurringThemes[0]?.name;
   const secondTheme = summary.recurringThemes[1]?.name;
   const topicPhrase = firstTheme && secondTheme
@@ -74,8 +96,6 @@ function buildReturningModel(summary: CounterSummary): TodayModel {
     : firstTheme
       ? `「${firstTheme}」`
       : 'recent knowledge work';
-  const thread = summary.knowledgeThreads[0];
-
   return {
     stage: 'returning',
     title: `Recently you have been shaping ${topicPhrase}.`,
@@ -98,4 +118,37 @@ function buildReturningModel(summary: CounterSummary): TodayModel {
     ],
     summary,
   };
+}
+
+function buildSystemActivityModel(summary: CounterSummary, record: ActivityRecord): TodayModel {
+  const followup = record.followups[0];
+  return {
+    stage: 'returning',
+    title: record.type === 'maintenance'
+      ? 'Latest maintenance pass completed.'
+      : 'Latest agent output is ready for review.',
+    body: followup
+      ? `${record.summary} ${followup}`
+      : `${record.summary} Review it before turning any findings into knowledge pages.`,
+    primaryAction: {
+      label: 'Open review menu',
+      kind: 'local',
+    },
+    secondaryActions: [
+      { label: 'Generate Weekly Atlas', kind: 'report' },
+      { label: 'Open review menu', kind: 'local' },
+    ],
+    stats: [
+      { label: 'activity records', value: String(summary.coverage.recordsLogged) },
+      { label: 'active threads', value: String(summary.knowledgeThreads.length) },
+      { label: 'unbaked notes', value: String(summary.unbakedNotes.length) },
+    ],
+    summary,
+  };
+}
+
+function isSystemActivityRecord(record: ActivityRecord): boolean {
+  if (record.source.surface === 'system') return true;
+  if (record.type === 'maintenance') return true;
+  return record.dimensions.includes('maintenance');
 }

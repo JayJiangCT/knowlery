@@ -17,7 +17,7 @@ describe('Weekly Bake report', () => {
         followups: ['Create Counter'],
         relatedFiles: [],
         captureState: 'unbaked',
-        source: { kind: 'agent-session', visibility: 'private-summary' },
+        source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
       },
     ], new Date('2026-05-01T15:00:00.000Z'));
 
