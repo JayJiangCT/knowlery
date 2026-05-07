@@ -185,24 +185,29 @@ describe('executeByoaoMigration', () => {
     const app = createMockApp({
       '.byoao/manifest.json': '{"version":"2.0.12"}',
       '.agents/skills/ask/SKILL.md': 'agents ask',
+      '.claude/skills/ask/SKILL.md': 'custom claude ask',
       '.opencode/skills/trace/SKILL.md': 'trace skill',
+      '.knowlery/manifest.json': '{"version":"legacy","platform":"opencode","kbName":"Custom Existing"}',
       'SCHEMA.md': 'keep schema',
       'INDEX.base': 'keep index',
       'AGENTS.md': 'BYOAO vault',
     });
 
+    const files = (app as unknown as { __files: Map<string, string> }).__files;
+    const existingManifest = files.get('.knowlery/manifest.json');
+
     const firstPreview = await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
 
-    const files = (app as unknown as { __files: Map<string, string> }).__files;
     const firstManifest = files.get('.knowlery/manifest.json');
 
     const secondPreview = await executeByoaoMigration(app, { kbName: 'Jay WorkSpace' });
 
     expect(files.get('SCHEMA.md')).toBe('keep schema');
     expect(files.get('INDEX.base')).toBe('keep index');
+    expect(files.get('.claude/skills/ask/SKILL.md')).toBe('custom claude ask');
     expect(files.get('.agents/skills/trace/SKILL.md')).toBe('trace skill');
     expect(files.get('.claude/skills/trace/SKILL.md')).toBe('trace skill');
-    expect(files.get('.knowlery/manifest.json')).toContain('"platform": "claude-code"');
+    expect(files.get('.knowlery/manifest.json')).toBe(existingManifest);
     expect(files.get('.knowlery/manifest.json')).toBe(firstManifest);
     expect(files.get('skills-lock.json')).toContain('"trace"');
     expect(firstPreview.detected).toBe(true);

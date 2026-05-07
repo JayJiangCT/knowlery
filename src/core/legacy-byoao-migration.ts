@@ -294,7 +294,7 @@ export async function executeByoaoMigration(
     const sourcePath = `${AGENTS_SKILLS_DIR}/${name}/SKILL.md`;
     if (!(await app.vault.adapter.exists(normalizeLegacyPath(sourcePath)))) continue;
     const content = await app.vault.adapter.read(normalizeLegacyPath(sourcePath));
-    await writeMigrationFile(app, `${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
+    await writeFileIfMissing(app, `${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
   }
 
   const existingLock = await readJsonBestEffort(app, SKILLS_LOCK_PATH);
@@ -359,26 +359,14 @@ export async function readJsonBestEffort(
 
 async function writeMigrationManifest(app: App, kbName: string): Promise<void> {
   await ensureMigrationDir(app, KNOWLERY_DIR);
-  const existing = await readJsonBestEffort(app, KNOWLERY_MANIFEST_PATH);
-  const existingManifest = existing.value && typeof existing.value === 'object'
-    ? existing.value as Partial<Manifest>
-    : null;
-  if (
-    existingManifest?.platform === 'claude-code' &&
-    existingManifest.kbName === kbName &&
-    typeof existingManifest.version === 'string' &&
-    typeof existingManifest.createdAt === 'string' &&
-    typeof existingManifest.updatedAt === 'string'
-  ) {
-    return;
-  }
+  if (await app.vault.adapter.exists(normalizeLegacyPath(KNOWLERY_MANIFEST_PATH))) return;
 
   const now = new Date().toISOString();
   const manifest: Manifest = {
     version: '0.1.0',
     platform: 'claude-code',
     kbName,
-    createdAt: typeof existingManifest?.createdAt === 'string' ? existingManifest.createdAt : now,
+    createdAt: now,
     updatedAt: now,
   };
 
