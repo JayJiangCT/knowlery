@@ -195,4 +195,37 @@ describe('buildCounterSummary', () => {
     expect(summary.recurringThemes).toHaveLength(0);
     expect(summary.knowledgeThreads).toHaveLength(0);
   });
+
+  it('keeps knowledge analysis records visible even when they include maintenance work', () => {
+    const result = parseActivityJsonl(
+      JSON.stringify({
+        time: '2026-05-07T22:55:00.000Z',
+        agent: 'claude',
+        type: 'analysis',
+        topics: ['AWS Outage Incident', 'Knowledge Base Review'],
+        summary: 'Reviewed an incident report and identified knowledge base updates.',
+        dimensions: ['analysis', 'maintenance'],
+        questions: ['Should this incident become a reusable concept?'],
+        learned: ['Business and infrastructure errors should be separated.'],
+        thinking: ['The reusable insight belongs in the knowledge base.'],
+        followups: ['Create an error classification concept page.'],
+        relatedFiles: ['queries/AWS Outage Impact on Relay DSP - Incident Report (2026-05-07).md'],
+        captureState: 'unbaked',
+        source: {
+          kind: 'agent-session',
+          visibility: 'private-summary',
+          surface: 'knowledge',
+        },
+      }),
+      '.knowlery/activity/2026-05-07.jsonl',
+    );
+
+    expect(result.errors).toHaveLength(0);
+    const summary = buildCounterSummary(result.records);
+
+    expect(summary.knowledgeThreads).toHaveLength(1);
+    expect(summary.knowledgeThreads[0].title).toBe('AWS Outage Incident');
+    expect(summary.unbakedNotes).toHaveLength(1);
+    expect(summary.tasteProfile.analysis).toBe(1);
+  });
 });

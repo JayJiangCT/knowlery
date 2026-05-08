@@ -150,5 +150,5 @@ function buildSystemActivityModel(summary: CounterSummary, record: ActivityRecor
 function isSystemActivityRecord(record: ActivityRecord): boolean {
   if (record.source.surface === 'system') return true;
   if (record.type === 'maintenance') return true;
-  return record.dimensions.includes('maintenance');
+  return false;
 }

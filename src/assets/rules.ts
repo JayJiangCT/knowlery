@@ -87,6 +87,7 @@ Write one compact JSON object on a single line. Do not pretty-print the object a
 
 Allowed dimensions:
 
+- \`analysis\`
 - \`research\`
 - \`creation\`
 - \`building\`
@@ -100,6 +101,7 @@ Use \`captureState: "baked"\` only when the useful result has already been captu
 Use \`source.surface: "knowledge"\` for user knowledge work that should influence Today, active threads, and review suggestions.
 Use \`source.surface: "system"\` for setup, diagnostics, vault maintenance, agent operation logs, and generated reports. System records should summarize what happened, but they are not knowledge threads.
 
+For analysis work that reviews evidence, incidents, documents, or notes and creates reusable knowledge follow-ups, use \`type: "analysis"\`, include \`"analysis"\` in \`dimensions\`, and set \`source.surface: "knowledge"\`.
 For maintenance or audit work, use \`type: "maintenance"\`, include \`"maintenance"\` in \`dimensions\`, and set \`source.surface: "system"\`.
 
 An Activity Ledger receipt is a private system receipt, not a persistent report note or knowledge page. If a task says not to create new vault notes, still append the Activity Ledger record when logging is enabled.

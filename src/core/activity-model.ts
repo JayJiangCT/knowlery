@@ -10,6 +10,7 @@ import type {
 import { ActivityRecordSchema } from '../types';
 
 const DIMENSIONS: ActivityDimension[] = [
+  'analysis',
   'research',
   'creation',
   'building',
@@ -157,7 +158,7 @@ export function buildCounterSummary(
 function isKnowledgeActivityRecord(record: ActivityRecord): boolean {
   if (record.source.surface === 'system') return false;
   if (record.type === 'maintenance') return false;
-  return !record.dimensions.includes('maintenance');
+  return true;
 }
 
 function buildKnowledgeThreads(records: ActivityRecord[]): KnowledgeThreadSummary[] {

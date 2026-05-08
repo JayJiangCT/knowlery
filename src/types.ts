@@ -171,6 +171,7 @@ export const BUILTIN_SKILL_NAMES = [
 ] as const;
 
 export const ActivityDimensionSchema = z.enum([
+  'analysis',
   'research',
   'creation',
   'building',
@@ -183,7 +184,7 @@ export type ActivityDimension = z.infer<typeof ActivityDimensionSchema>;
 export const ActivityRecordSchema = z.object({
   time: z.string(),
   agent: z.string().min(1),
-  type: z.enum(['discussion', 'implementation', 'research', 'creation', 'reflection', 'maintenance']),
+  type: z.enum(['discussion', 'implementation', 'analysis', 'research', 'creation', 'reflection', 'maintenance']),
   topics: z.array(z.string()).default([]),
   summary: z.string().min(1),
   dimensions: z.array(ActivityDimensionSchema).default([]),

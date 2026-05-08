@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.3.1] — 2026-05-08
+
+### Fixes
+
+- Restores Active threads for knowledge-analysis receipts that include maintenance follow-up work.
+- Accepts `analysis` as an Activity Ledger record type and dimension so agent receipts from real cook sessions are not dropped.
+- Keeps explicit `source.surface: "system"` and `type: "maintenance"` records out of Active threads while allowing `source.surface: "knowledge"` records to remain visible.
+- Clarifies the Activity Ledger rule so evidence review and incident/document analysis should be logged as knowledge analysis, not system maintenance.
+
 ## [v0.3.0] — 2026-05-08
 
 ### Release

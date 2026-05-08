@@ -56,6 +56,22 @@ const maintenanceRecord: ActivityRecord = {
   },
 };
 
+const knowledgeAnalysisRecord: ActivityRecord = {
+  time: '2026-05-07T22:55:00.000Z',
+  agent: 'claude',
+  type: 'analysis',
+  topics: ['AWS Outage Incident', 'Knowledge Base Review'],
+  summary: 'Reviewed an incident report and identified knowledge base updates.',
+  dimensions: ['analysis', 'maintenance'],
+  questions: [],
+  learned: [],
+  thinking: [],
+  followups: ['Create an error classification concept page.'],
+  relatedFiles: ['queries/AWS Outage Impact on Relay DSP - Incident Report (2026-05-07).md'],
+  captureState: 'unbaked',
+  source: { kind: 'agent-session', visibility: 'private-summary', surface: 'knowledge' },
+};
+
 describe('buildTodayModel', () => {
   it('guides empty vaults toward one first note', () => {
     const model = buildTodayModel(emptyStats, []);
@@ -95,5 +111,14 @@ describe('buildTodayModel', () => {
     expect(model.primaryAction.label).toBe('Open review menu');
     expect(model.summary.knowledgeThreads).toHaveLength(0);
     expect(model.stats[1]).toEqual({ label: 'active threads', value: '0' });
+  });
+
+  it('prefers knowledge threads over system updates when both are present', () => {
+    const model = buildTodayModel(existingStats, [maintenanceRecord, knowledgeAnalysisRecord]);
+
+    expect(model.stage).toBe('returning');
+    expect(model.title).toContain('AWS Outage Incident');
+    expect(model.title).not.toContain('Latest maintenance pass completed');
+    expect(model.stats[1]).toEqual({ label: 'active threads', value: '1' });
   });
 });
