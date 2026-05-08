@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.2] — 2026-05-08
+
+### Fixes
+
+- Makes agent handoff prompts end with a verifiable Activity Ledger checklist.
+- Requires agents to report whether the receipt was written or skipped, the path used, and a short reason.
+- Keeps the checklist compact without embedding the full Activity Ledger JSON schema in every prompt.
+
 ## [v0.3.1] — 2026-05-08
 
 ### Fixes
