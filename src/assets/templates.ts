@@ -274,11 +274,19 @@ views:
 `;
 }
 
-export function generateClaudeMd(): string {
-  return `@../KNOWLEDGE.md
-@../SCHEMA.md
-@../INDEX.base
-`;
+export function generateClaudeMd(ruleImportPaths: string[] = []): string {
+  const ruleImports = [...new Set(ruleImportPaths)]
+    .filter((path) => path.endsWith('.md'))
+    .sort((a, b) => a.localeCompare(b))
+    .map((path) => `@rules/${path}`);
+
+  return [
+    '@../KNOWLEDGE.md',
+    '@../SCHEMA.md',
+    '@../INDEX.base',
+    ...ruleImports,
+    '',
+  ].join('\n');
 }
 
 export function generateOpenCodeJson(kbName: string): string {

@@ -71,8 +71,8 @@ export async function executeSetup(
   await installAllBuiltinSkills(app);
 
   onProgress('platform-config');
-  await generatePlatformConfig(app, platform, kbName);
   await installDefaultRules(app, platform);
+  await generatePlatformConfig(app, platform, kbName);
 
   onProgress('lock-files');
   const lock = buildInitialSkillsLock();

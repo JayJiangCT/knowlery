@@ -2,6 +2,7 @@ import { App, normalizePath } from 'obsidian';
 import type { Platform } from '../types';
 import { generateClaudeMd, generateOpenCodeJson } from '../assets/templates';
 import { ensureDir, writeFile } from './vault-io';
+import { collectRuleImportPaths } from './rule-imports';
 
 export async function generatePlatformConfig(
   app: App,
@@ -18,7 +19,8 @@ export async function generatePlatformConfig(
 async function generateClaudeCodeConfig(app: App): Promise<void> {
   await ensureDir(app, '.claude');
   await ensureDir(app, '.claude/rules');
-  await writeFile(app, '.claude/CLAUDE.md', generateClaudeMd());
+  const ruleImports = await collectRuleImportPaths(app, '.claude/rules');
+  await writeFile(app, '.claude/CLAUDE.md', generateClaudeMd(ruleImports));
 }
 
 async function generateOpenCodeConfig(app: App, kbName: string): Promise<void> {
@@ -71,4 +73,3 @@ async function cleanupPlatformConfig(app: App, platform: Platform): Promise<void
     if (await adapter.exists(path)) await adapter.remove(path);
   }
 }
-

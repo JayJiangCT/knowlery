@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.0] — 2026-05-08
+
+### Release
+
+- Promotes the internal review-space beta to the stable v0.3.0 release after multi-day vault testing.
+- Adds the new Knowlery dashboard: Today, This note, Weekly Review, Review Menu, and System.
+- Introduces Activity Ledger receipts, active knowledge threads, manual reflections, and next-move recommendations.
+- Adds Weekly Review Atlas generation and optional daily review polishing with agent output cards.
+- Adds conservative BYOAO migration for existing vaults, preserving user files and custom skills.
+- Improves Claudian handoff prompts and keeps maintenance/system receipts out of active knowledge threads.
+- Explicitly imports Claude Code rules from `.claude/rules/*.md` into `.claude/CLAUDE.md`, including future user-added rules, while preserving OpenCode compatibility through `.agents/rules/*.md`.
+
+### Compatibility notes
+
+- Existing Claude Code vaults will sync Knowlery-managed rule imports into `.claude/CLAUDE.md` when the plugin loads.
+- Activity written by external agents may still require pressing Refresh if Obsidian does not emit a vault change event for hidden `.knowlery` files.
+
 ## [v0.3.0-beta.4] — 2026-05-07
 
 ### Internal beta

@@ -2,6 +2,7 @@ import { App, normalizePath } from 'obsidian';
 import type { Platform, RuleInfo } from '../types';
 import { RULE_TEMPLATES, type RuleTemplate } from '../assets/rules';
 import { getRulesDir } from './platform-adapter';
+import { syncClaudeRuleImports as syncClaudeRuleImportBlock } from './rule-imports';
 import { ensureDir, writeFile } from './vault-io';
 
 export function getRuleTemplates(): RuleTemplate[] {
@@ -50,6 +51,7 @@ export async function writeRule(
   const rulesDir = getRulesDir(platform);
   await ensureDir(app, rulesDir);
   await writeFile(app, `${rulesDir}/${filename}`, content);
+  await syncClaudeRuleImports(app, platform);
 }
 
 export async function deleteRule(
@@ -62,6 +64,7 @@ export async function deleteRule(
   if (await app.vault.adapter.exists(path)) {
     await app.vault.adapter.remove(path);
   }
+  await syncClaudeRuleImports(app, platform);
 }
 
 export async function installDefaultRules(
@@ -80,4 +83,9 @@ export async function installActivityLedgerRule(
   const template = RULE_TEMPLATES.find((rule) => rule.filename === 'activity-ledger.md');
   if (!template) return;
   await writeRule(app, platform, template.filename, template.content);
+}
+
+async function syncClaudeRuleImports(app: App, platform: Platform): Promise<void> {
+  if (platform !== 'claude-code') return;
+  await syncClaudeRuleImportBlock(app);
 }

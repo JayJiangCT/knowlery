@@ -5,6 +5,7 @@ import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
+import { syncClaudeRuleImports } from './core/rule-imports';
 
 export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
@@ -71,6 +72,8 @@ export default class KnowleryPlugin extends Plugin {
           'Knowlery: This vault isn\'t set up for AI yet. Use the command palette to initialize.',
           10000,
         );
+      } else if (this.settings.platform === 'claude-code') {
+        await syncClaudeRuleImports(this.app);
       }
 
       let refreshTimer: ReturnType<typeof setTimeout> | null = null;
