@@ -87,7 +87,10 @@ function detectCliToolWindows(toolName: string): Promise<CliToolResult> {
         return;
       }
       const binaryPath = whereStdout.trim().split('\n')[0].trim();
-      execFile(binaryPath, ['--version'], { timeout: 5000 }, (versionError, versionStdout) => {
+      const versionCallback = (
+        versionError: import('child_process').ExecFileException | null,
+        versionStdout: string,
+      ) => {
         if (versionError) {
           // Binary found but --version failed — still consider it installed
           resolve({ installed: true });
@@ -95,7 +98,30 @@ function detectCliToolWindows(toolName: string): Promise<CliToolResult> {
         }
         const version = versionStdout.trim().split('\n')[0].trim() || undefined;
         resolve({ installed: true, version });
-      });
+      };
+
+      // CVE-2024-27980: Node refuses to spawn .cmd/.bat via execFile without shell:true.
+      // Where.exe commonly returns .cmd shims for npm-installed CLIs (e.g. claude.cmd),
+      // so route those through cmd.exe.
+      if (/\.(cmd|bat)$/i.test(binaryPath)) {
+        const cmdLine = formatWindowsCmdLine(binaryPath, ['--version']);
+        execFile('cmd.exe', ['/d', '/s', '/c', cmdLine], { timeout: 5000 }, versionCallback);
+      } else {
+        execFile(binaryPath, ['--version'], { timeout: 5000 }, versionCallback);
+      }
     });
   });
+}
+
+function formatWindowsCmdLine(command: string, args: string[]): string {
+  return [command, ...args].map(quoteForWindowsCmd).join(' ');
+}
+
+function quoteForWindowsCmd(value: string): string {
+  if (value === '') return '""';
+  if (!/[\s"&<>|^()%!,;=]/.test(value)) return value;
+  const escaped = value
+    .replace(/(\\*)"/g, '$1$1\\"')
+    .replace(/(\\+)$/, '$1$1');
+  return `"${escaped}"`;
 }

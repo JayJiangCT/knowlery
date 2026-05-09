@@ -116,14 +116,84 @@ async function installSkillsTooling(nodePath?: string): Promise<string> {
 
 async function installClaudeCodeCli(): Promise<string> {
   if (ObsidianPlatform.isWin) {
-    await runPowerShellCommand('irm https://claude.ai/install.ps1 | iex', 180000);
-    const installed = await verifyCommandInPowerShell('claude');
-    return formatInstalledDetail('Claude Code', installed.version, installed.path);
+    return installClaudeCodeOnWindows();
   }
 
   await runShellCommand('curl -fsSL https://claude.ai/install.sh | bash', 180000);
   const installed = await verifyCommandInShell('claude');
   return formatInstalledDetail('Claude Code', installed.version, installed.path);
+}
+
+async function installClaudeCodeOnWindows(): Promise<string> {
+  // Anthropic publishes Claude Code via winget (Anthropic.ClaudeCode); winget is more
+  // reliable than `irm | iex` on Windows 11 (avoids SmartScreen / proxy / TLS issues),
+  // so try it first and fall back to the documented PowerShell script.
+  let primaryError: string | null = null;
+  if (await commandExistsInPowerShell('winget')) {
+    try {
+      await runCommand(
+        'winget',
+        [
+          'install',
+          '--id',
+          'Anthropic.ClaudeCode',
+          '--silent',
+          '--accept-source-agreements',
+          '--accept-package-agreements',
+        ],
+        300000,
+      );
+    } catch (error) {
+      primaryError = formatError(error);
+    }
+  } else {
+    primaryError = 'winget not available';
+  }
+
+  if (primaryError) {
+    try {
+      await runPowerShellCommand('irm https://claude.ai/install.ps1 | iex', 180000);
+    } catch (psError) {
+      throw new Error(
+        `winget install failed (${primaryError}); fallback PowerShell script also failed (${formatError(psError)}).`,
+      );
+    }
+  }
+
+  const installed = await verifyClaudeCodeOnWindows();
+  return formatInstalledDetail('Claude Code', installed.version, installed.path);
+}
+
+async function verifyClaudeCodeOnWindows(): Promise<{ path: string; version: string | null }> {
+  // Both winget and the official irm script land claude.exe at %USERPROFILE%\.local\bin
+  // (anthropics/claude-code issues #11571, #27634, #27867). PATH may not refresh in this
+  // process after install, so check the known location first before falling back to PATH.
+  const userProfile = process.env.USERPROFILE ?? '';
+  if (userProfile) {
+    const candidate = join(userProfile, '.local', 'bin', 'claude.exe');
+    try {
+      const versionResult = await runCommand(candidate, ['--version'], 30000);
+      return {
+        path: candidate,
+        version: firstLine(versionResult.stdout) || null,
+      };
+    } catch {
+      // ignore and fall back to PATH-based lookup
+    }
+  }
+  return verifyCommandInPowerShell('claude');
+}
+
+async function commandExistsInPowerShell(name: string): Promise<boolean> {
+  try {
+    await runPowerShellCommand(
+      `$null = Get-Command ${name} -ErrorAction Stop`,
+      15000,
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function installOpenCodeCli(nodePath?: string): Promise<string> {
@@ -193,13 +263,26 @@ function runCommand(
   if (ObsidianPlatform.isWin) {
     const executable = command === 'npm' || command === 'npx' ? `${command}.cmd` : command;
     return new Promise((resolve, reject) => {
-      execFile(executable, args, { timeout }, (error, stdout, stderr) => {
+      const handler = (
+        error: import('child_process').ExecFileException | null,
+        stdout: string,
+        stderr: string,
+      ) => {
         if (error) {
           reject(new Error(stderr?.trim() || error.message));
           return;
         }
         resolve({ stdout, stderr });
-      });
+      };
+
+      if (isCmdScriptPath(executable)) {
+        // Node 18.20.2+ refuses to spawn .cmd/.bat via execFile (CVE-2024-27980).
+        // Invoke cmd.exe with a properly-quoted command line instead.
+        const cmdLine = formatWindowsCmdLine(executable, args);
+        execFile('cmd.exe', ['/d', '/s', '/c', cmdLine], { timeout }, handler);
+      } else {
+        execFile(executable, args, { timeout }, handler);
+      }
     });
   }
 
@@ -354,4 +437,23 @@ function isMissingBrewError(error: unknown): boolean {
   return message.includes('brew: command not found')
     || message.includes('brew: no such file or directory')
     || message.includes('enoent');
+}
+
+function isCmdScriptPath(path: string): boolean {
+  return /\.(cmd|bat)$/i.test(path);
+}
+
+function formatWindowsCmdLine(command: string, args: string[]): string {
+  return [command, ...args].map(quoteForWindowsCmd).join(' ');
+}
+
+function quoteForWindowsCmd(value: string): string {
+  if (value === '') return '""';
+  if (!/[\s"&<>|^()%!,;=]/.test(value)) return value;
+  // Escape per CommandLineToArgvW rules: double trailing backslashes and
+  // backslashes preceding embedded quotes, then escape the embedded quotes.
+  const escaped = value
+    .replace(/(\\*)"/g, '$1$1\\"')
+    .replace(/(\\+)$/, '$1$1');
+  return `"${escaped}"`;
 }

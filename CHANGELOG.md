@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.3.3] — 2026-05-08
+
+### Fixes
+
+- Fixes Windows 11 install failures where `npx skills`, `npm install -g opencode-ai`, and `<tool>.cmd --version` calls aborted with `EINVAL` (Node 18.20.2+ refuses to spawn `.cmd`/`.bat` via `execFile` after CVE-2024-27980). All `.cmd`/`.bat` invocations now go through `cmd.exe /d /s /c` with proper Windows argument quoting in `environment-install.ts`, `cli-detect.ts`, and the skill browser modal.
+- Switches the Windows Claude Code installer to `winget install --id Anthropic.ClaudeCode` (with `--silent --accept-source-agreements --accept-package-agreements`) and falls back to the documented `irm https://claude.ai/install.ps1 | iex` script only when winget is unavailable, matching Anthropic's official Windows setup guidance.
+- Verifies Claude Code on Windows by checking `%USERPROFILE%\.local\bin\claude.exe` directly before falling back to PATH lookup, since both winget and the irm script land the binary there but PATH may not refresh in the current Obsidian process (anthropics/claude-code issues #11571, #27634, #27867).
+
 ## [v0.3.2] — 2026-05-08
 
 ### Fixes

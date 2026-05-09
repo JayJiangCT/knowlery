@@ -71,12 +71,28 @@ function getShellProfileScript(shell: string, home: string): string {
     : `source "${home}/.bash_profile" 2>/dev/null; source "${home}/.bashrc" 2>/dev/null;`;
 }
 
+function formatWindowsCmdLine(command: string, args: string[]): string {
+  return [command, ...args].map(quoteForWindowsCmd).join(' ');
+}
+
+function quoteForWindowsCmd(value: string): string {
+  if (value === '') return '""';
+  if (!/[\s"&<>|^()%!,;=]/.test(value)) return value;
+  const escaped = value
+    .replace(/(\\*)"/g, '$1$1\\"')
+    .replace(/(\\+)$/, '$1$1');
+  return `"${escaped}"`;
+}
+
 function runSkillsCommand(args: string[], cwd: string, timeout = 30000): Promise<string> {
   const { execFile } = require('child_process') as typeof import('child_process');
 
   if (Platform.isWin) {
     return new Promise((resolve, reject) => {
-      execFile('npx.cmd', ['skills', ...args], { timeout, cwd }, (error, stdout, stderr) => {
+      // CVE-2024-27980: Node refuses to spawn .cmd/.bat via execFile without shell:true.
+      // Invoke npx.cmd through cmd.exe with a properly-quoted command line.
+      const cmdLine = formatWindowsCmdLine('npx.cmd', ['skills', ...args]);
+      execFile('cmd.exe', ['/d', '/s', '/c', cmdLine], { timeout, cwd }, (error, stdout, stderr) => {
         if (error) {
           reject(new Error(stderr?.trim() || error.message));
           return;
