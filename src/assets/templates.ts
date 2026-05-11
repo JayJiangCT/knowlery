@@ -72,77 +72,100 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 |-------|---------|
 | \`/cook\` | Digest notes and sources into knowledge pages, maintain INDEX.base |
 | \`/ask\` | Answer questions from vault content with citations |
-| \`/explore\` | Trace idea timelines or find connections between topics |
+| \`/trace\` | Trace idea timelines or find connections between topics |
 | \`/challenge\` | Pressure-test beliefs or track intention-vs-action gaps |
 | \`/ideas\` | Generate actionable ideas from vault content |
-| \`/audit\` | Check vault health, frontmatter, and structural integrity |
+| \`/health\` | Check vault health, frontmatter, and structural integrity |
 | \`/organize\` | Reorganize directory structure (dry-run by default) |
+| \`/connect\` | Find and strengthen connections between knowledge pages |
+| \`/drift\` | Detect knowledge drift and evolving understanding |
+| \`/mise\` | Full vault mise en place diagnostic |
+| \`/prep\` | Prepare raw notes for cooking |
+| \`/wiki\` | Manage the INDEX.base wiki index |
 
 ### Quick Reference
 
 - New material to process → \`/cook\`
 - Question about vault content → \`/ask\`
-- How did X evolve? How are A and B related? → \`/explore\`
+- How did X evolve? How are A and B related? → \`/trace\`
 - Is this belief solid? Am I following through? → \`/challenge\`
 - What should I work on? → \`/ideas\`
-- Anything broken or stale? → \`/audit\`
+- Anything broken or stale? → \`/health\`
 - Files in wrong places? → \`/organize\`
+- Strengthen connections → \`/connect\`
+- Knowledge drifting? → \`/drift\`
+- Full vault diagnostic → \`/mise\`
+- Prep notes before cooking → \`/prep\`
+- Manage wiki index → \`/wiki\`
 `;
 }
 
 export function generateSchemaMd(): string {
   return `# Knowledge Schema
 
-This file defines the structure for knowledge pages in this vault.
+Knowledge taxonomy and conventions for this vault.
 
-## Entity Schema
+## Knowledge Domains
 
-\`\`\`yaml
----
-type: entity
-aliases: []
-tags: []
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-\`\`\`
+_No domains defined yet. The agent adds domains here as knowledge pages are created._
 
-## Concept Schema
+## Tag Taxonomy
 
-\`\`\`yaml
----
-type: concept
-aliases: []
-tags: []
-related: []
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-\`\`\`
+Tags follow these conventions:
+- 2-5 tags per page, alphabetically sorted
+- Tags should be singular (use \`#project\` not \`#projects\`)
+- New tags should be added here first before use
 
-## Comparison Schema
+### Current Tags
 
-\`\`\`yaml
----
-type: comparison
-items: []
-tags: []
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-\`\`\`
+| Tag | Usage | Description |
+|-----|-------|-------------|
 
-## Query Schema
+_No tags defined yet. The agent adds tags here as knowledge pages are created._
 
-\`\`\`yaml
----
-type: query
-status: open | resolved
-tags: []
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
----
-\`\`\`
+## Domain Taxonomy
+
+| Domain | Description |
+|--------|-------------|
+
+_No domains defined yet. The agent adds domains here as knowledge pages are created._
+
+## Agent Page Conventions
+
+| Directory | Purpose |
+|-----------|---------|
+| \`entities/\` | Concrete, named things (people, organizations, products, systems) |
+| \`concepts/\` | Abstract ideas (methods, rules, decisions, processes) |
+| \`comparisons/\` | Side-by-side analyses of options |
+| \`queries/\` | User-question-driven answers worth keeping |
+
+## Frontmatter Schema
+
+See the /cook skill specification for the complete frontmatter schema. Key required fields:
+
+- \`title\` — concise one-line summary
+- \`date\` — primary temporal anchor (ISO 8601)
+- \`created\` — page creation date
+- \`updated\` — last content change date (bump on every edit)
+- \`type\` — one of: entity, concept, comparison, query
+- \`tags\` — 2-5 tags from this taxonomy, alphabetically sorted
+- \`sources\` — relative paths to contributing notes
+
+## Page Thresholds
+
+- Create a page when: entity/concept appears in 2+ notes OR is central subject of one note
+- Split a page when: it exceeds ~200 lines
+- Do NOT create pages for: passing mentions, minor details, out-of-domain topics
+
+## Custom Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| \`status\` | text | Page status (active, draft, archived) |
+| \`domain\` | text | Knowledge domain |
+| \`description\` | text | Short description/summary |
+| \`references\` | list | Related wikilink references |
+| \`author\` | text | Content author |
 `;
 }
 
