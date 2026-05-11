@@ -4,10 +4,9 @@
 
 ### Skills
 
-- Replaces all 11 bundled skill stubs (marketing descriptions only) with full operational content from `docs/files/skills/`, enabling the complete cook pipeline including SCHEMA.md taxonomy sync.
+- Replaces all bundled skill stubs (marketing descriptions only) with full operational content from `docs/files/skills/`, enabling the complete cook pipeline including SCHEMA.md taxonomy sync.
 - Renames `explore` → `trace`, `audit` → `health`, `vault-conventions` → `conventions` to match canonical skill names.
-- Adds 6 previously missing skills: `connect`, `drift`, `mise`, `prep`, `wiki`, `vault-thinking`.
-- Total bundled skills: 19 (12 knowledge + 7 tooling).
+- Total bundled skills: 13 (7 knowledge + 6 tooling).
 
 ### Improvements
 

@@ -77,11 +77,6 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 | \`/ideas\` | Generate actionable ideas from vault content |
 | \`/health\` | Check vault health, frontmatter, and structural integrity |
 | \`/organize\` | Reorganize directory structure (dry-run by default) |
-| \`/connect\` | Find and strengthen connections between knowledge pages |
-| \`/drift\` | Detect knowledge drift and evolving understanding |
-| \`/mise\` | Full vault mise en place diagnostic |
-| \`/prep\` | Prepare raw notes for cooking |
-| \`/wiki\` | Manage the INDEX.base wiki index |
 
 ### Quick Reference
 
@@ -92,11 +87,6 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 - What should I work on? → \`/ideas\`
 - Anything broken or stale? → \`/health\`
 - Files in wrong places? → \`/organize\`
-- Strengthen connections → \`/connect\`
-- Knowledge drifting? → \`/drift\`
-- Full vault diagnostic → \`/mise\`
-- Prep notes before cooking → \`/prep\`
-- Manage wiki index → \`/wiki\`
 `;
 }
 
