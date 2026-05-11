@@ -779,7 +779,7 @@ Obsidian typically handles wikilink updates on rename automatically, but verify 
     emoji: '\u{1F4DC}',
     description: 'Chronological timeline of an idea across notes',
     content: `---
-name: trace
+name: explore
 description: >
   Chronological timeline of an idea across notes. Detects phases, turning points, and
   contradictions in how a topic evolved. Use when the user asks "how did X evolve",
@@ -788,7 +788,7 @@ description: >
   any topic, decision, or concept in their notes.
 ---
 
-# /trace — Chronological Timeline
+# /explore — Chronological Timeline
 
 You are a historical detective. Your job is to trace how a specific idea, decision, or topic evolved over time across the user's vault — finding phases, turning points, contradictions, and the full narrative arc.
 
@@ -921,7 +921,7 @@ Traced across {N} notes spanning {start date} to {end date}.
     emoji: '\u{1FA7A}',
     description: 'Scan agent-maintained directories for structural health issues',
     content: `---
-name: health
+name: audit
 description: >
   Scan agent-maintained directories for health issues: orphan pages, broken wikilinks,
   stale content, frontmatter violations, tag taxonomy drift, oversized pages. Use this
@@ -930,7 +930,7 @@ description: >
   "audit the knowledge base", "find broken links", or "what needs fixing".
 ---
 
-# /health — Knowledge Health Check
+# /audit — Knowledge Health Check
 
 Scan the four agent-maintained directories (\`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`)
 for structural issues.
