@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.4] — 2026-05-11
+
+### Skills
+
+- Replaces all 11 bundled skill stubs (marketing descriptions only) with full operational content from `docs/files/skills/`, enabling the complete cook pipeline including SCHEMA.md taxonomy sync.
+- Renames `explore` → `trace`, `audit` → `health`, `vault-conventions` → `conventions` to match canonical skill names.
+- Adds 6 previously missing skills: `connect`, `drift`, `mise`, `prep`, `wiki`, `vault-thinking`.
+- Total bundled skills: 19 (12 knowledge + 7 tooling).
+
+### Improvements
+
+- Enhances `generateSchemaMd()` template with Tag Taxonomy table, Domain Taxonomy table, Agent Page Conventions, Frontmatter Schema reference, Page Thresholds, and Custom Fields — giving the cook skill proper anchor sections from day one.
+- Updates the KNOWLEDGE.md skill table with corrected skill names and all new skills.
+
+### Bug Fixes
+
+- Fixes SCHEMA.md never being updated after `/cook` — the deployed cook skill now contains the full 7-step pipeline including Step 5 (Sync SCHEMA.md) instead of a marketing stub with no operational instructions.
+
 ## [v0.3.3] — 2026-05-08
 
 ### Fixes
