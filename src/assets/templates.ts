@@ -72,20 +72,20 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 |-------|---------|
 | \`/cook\` | Digest notes and sources into knowledge pages, maintain INDEX.base |
 | \`/ask\` | Answer questions from vault content with citations |
-| \`/trace\` | Trace idea timelines or find connections between topics |
+| \`/explore\` | Trace idea timelines or find connections between topics |
 | \`/challenge\` | Pressure-test beliefs or track intention-vs-action gaps |
 | \`/ideas\` | Generate actionable ideas from vault content |
-| \`/health\` | Check vault health, frontmatter, and structural integrity |
+| \`/audit\` | Check vault health, frontmatter, and structural integrity |
 | \`/organize\` | Reorganize directory structure (dry-run by default) |
 
 ### Quick Reference
 
 - New material to process → \`/cook\`
 - Question about vault content → \`/ask\`
-- How did X evolve? How are A and B related? → \`/trace\`
+- How did X evolve? How are A and B related? → \`/explore\`
 - Is this belief solid? Am I following through? → \`/challenge\`
 - What should I work on? → \`/ideas\`
-- Anything broken or stale? → \`/health\`
+- Anything broken or stale? → \`/audit\`
 - Files in wrong places? → \`/organize\`
 `;
 }

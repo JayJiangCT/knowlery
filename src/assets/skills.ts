@@ -774,7 +774,7 @@ Obsidian typically handles wikilink updates on rename automatically, but verify 
 `,
   },
   {
-    name: 'trace',
+    name: 'explore',
     kind: 'knowledge',
     emoji: '\u{1F4DC}',
     description: 'Chronological timeline of an idea across notes',
@@ -916,7 +916,7 @@ Traced across {N} notes spanning {start date} to {end date}.
 `,
   },
   {
-    name: 'health',
+    name: 'audit',
     kind: 'knowledge',
     emoji: '\u{1FA7A}',
     description: 'Scan agent-maintained directories for structural health issues',
@@ -1349,7 +1349,7 @@ formulas:
 `,
   },
   {
-    name: 'conventions',
+    name: 'vault-conventions',
     kind: 'tooling',
     emoji: '\u{1F4D0}',
     description: 'Vault-specific note-writing conventions',
