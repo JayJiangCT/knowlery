@@ -6,6 +6,7 @@ import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
+import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 
 export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
@@ -72,8 +73,18 @@ export default class KnowleryPlugin extends Plugin {
           'Knowlery: This vault isn\'t set up for AI yet. Use the command palette to initialize.',
           10000,
         );
-      } else if (this.settings.platform === 'claude-code') {
-        await syncClaudeRuleImports(this.app);
+      } else {
+        if (this.settings.platform === 'claude-code') {
+          await syncClaudeRuleImports(this.app);
+        }
+
+        const pluginVersion = this.manifest.version;
+        if (this.settings.lastSyncedVersion !== pluginVersion) {
+          await syncBuiltinSkills(this.app);
+          await migrateSchemaMd(this.app);
+          this.settings.lastSyncedVersion = pluginVersion;
+          await this.saveSettings();
+        }
       }
 
       let refreshTimer: ReturnType<typeof setTimeout> | null = null;

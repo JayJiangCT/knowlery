@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.5] — 2026-05-11
+
+### Improvements
+
+- Auto-syncs bundled skill content on plugin load when the plugin version changes, so existing users receive skill updates without re-initializing.
+- Migrates SCHEMA.md non-destructively on version upgrade — inserts missing anchor sections (Tag Taxonomy, Domain Taxonomy, Agent Page Conventions, Frontmatter Schema, Page Thresholds, Custom Fields) without overwriting existing user content.
+- Tracks `lastSyncedVersion` in plugin settings to ensure migrations run once per version, not on every load.
+
+### Compatibility notes
+
+- Custom and forked skills are never overwritten by the auto-sync. Only `source: 'builtin'` skills are updated.
+- Disabled builtin skills get updated content on disk but remain disabled (not copied to `.claude/skills/`).
+- Users whose SCHEMA.md already has all anchor sections (e.g., from a recent initialize) will see no changes.
+
 ## [v0.3.4] — 2026-05-11
 
 ### Skills
