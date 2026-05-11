@@ -99,6 +99,7 @@ export interface KnowlerySettings {
   nodePath: string;
   onboardingDismissed: boolean;
   activityLoggingEnabled: boolean;
+  lastSyncedVersion: string;
 }
 
 export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
@@ -154,6 +155,7 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   nodePath: '',
   onboardingDismissed: false,
   activityLoggingEnabled: true,
+  lastSyncedVersion: '',
 };
 
 export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
