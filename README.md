@@ -6,6 +6,8 @@
 
 Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
 
+In v0.3.5, bundled skills now auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
+
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
 ## Inspiration: LLM Wiki & BYOAO
@@ -66,7 +68,7 @@ Knowlery can be installed as a beta plugin through BRAT before it is listed in t
 During setup, Knowlery can create or update these files and folders inside your vault:
 
 - `KNOWLEDGE.md`
-- `SCHEMA.md`
+- `SCHEMA.md` (Knowledge taxonomy and page conventions)
 - `INDEX.base`
 - `entities/`, `concepts/`, `comparisons/`, and `queries/`
 - `.knowlery/manifest.json`

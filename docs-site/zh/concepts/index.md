@@ -1,6 +1,6 @@
 # 核心概念
 
-理解 Knowlery 最容易的方式，是把它看作一个 vault 的小厨房。你的笔记是食材。Skills 是菜谱。Rules 是厨房习惯。Agent 会把这些原料烹饪成结构化知识页面，并且结果仍然是人类可读的 markdown。
+理解 Knowlery 最容易的方式，是把它看作一个 vault 的小厨房。你的笔记是食材。Skills 是菜谱。Rules 是厨房习惯。Agent 会把这些原料烹饪成结构化知识页面，并保持共享的 taxonomy 指南仍然是人类可读的 markdown。
 
 ## 知识烹饪
 
@@ -19,7 +19,7 @@ Setup wizard 会创建四个顶层知识目录：
 | `comparisons/` | `comparison` | 相关对象之间的并排分析 |
 | `queries/` | `query` | 保存的问题、调查和研究线索 |
 
-这些页面既应该方便人阅读，也应该方便 agent 稳定处理。具体结构定义在 `SCHEMA.md` 中。
+这些页面既应该方便人阅读，也应该方便 agent 稳定处理。具体结构由 `SCHEMA.md` 指导。
 
 ## `KNOWLEDGE.md`
 
@@ -35,18 +35,30 @@ Agent 在进入这个 vault 工作时，应该尽早阅读它。
 
 ## `SCHEMA.md`
 
-`SCHEMA.md` 定义每类知识页面的 frontmatter。
+`SCHEMA.md` 是编译后的知识层所使用的活文档 convention 文件。
 
-当前 schema 覆盖：
+当前模板把内容分成这些部分：
 
-| 类型 | 结构 |
+- Knowledge Domains
+- Tag Taxonomy
+- Domain Taxonomy
+- Agent Page Conventions
+- Frontmatter Schema
+- Page Thresholds
+- Custom Fields
+
+模板会鼓励使用 `title`、`date`、`created`、`updated`、`type`、`tags`、`sources` 等字段，并允许 `status`、`domain`、`description`、`references`、`author` 这类可选字段。
+
+Health diagnostics 仍然只检查知识页面的最小必需字段：
+
+| 类型 | 最小字段 |
 | --- | --- |
-| Entity | `type`、`aliases`、`tags`、`created`、`updated` |
-| Concept | `type`、`aliases`、`tags`、`related`、`created`、`updated` |
-| Comparison | `type`、`items`、`tags`、`created`、`updated` |
-| Query | `type`、`status`、`tags`、`created`、`updated` |
+| Entity | `type`、`created` |
+| Concept | `type`、`created` |
+| Comparison | `type`、`items`、`created` |
+| Query | `type`、`status`、`created` |
 
-Health diagnostics 会使用这些结构来检查知识目录中缺失的 frontmatter。
+`SCHEMA.md` 是给人和 agent 共同使用的指南；Health tab 只负责确认页面至少已经可识别。
 
 ## `INDEX.base`
 
@@ -62,12 +74,12 @@ Knowlery 当前内置这些 skills：
 
 | Skill | 用途 |
 | --- | --- |
-| `cook` | 将笔记整理成知识页面并维护 `INDEX.base` |
+| `cook` | 将笔记整理成知识页面并同步 `SCHEMA.md` taxonomy |
 | `ask` | 基于 vault 内容回答问题 |
 | `explore` | 追踪时间线并发现连接 |
 | `challenge` | 压力测试信念并检测 drift |
 | `ideas` | 从 vault 内容生成可行动想法 |
-| `audit` | 检查 vault 健康状态和结构完整性 |
+| `audit` | 扫描 agent 维护目录中的结构健康问题 |
 | `organize` | 建议 vault 结构调整 |
 | `obsidian-cli` | 使用 Obsidian CLI patterns |
 | `obsidian-markdown` | 编写 Obsidian-flavored markdown |

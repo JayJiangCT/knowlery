@@ -18,7 +18,7 @@ hero:
 
 features:
   - title: 知识烹饪
-    details: 将原始笔记整理成 entities、concepts、comparisons、queries，让 agent 能稳定读取和维护。
+    details: 将原始笔记整理成 entities、concepts、comparisons、queries，并持续维护 SCHEMA.md 的 taxonomy 与 conventions。
   - title: Agent Skills
     details: 管理用于整理笔记、提问、探索连接、挑战假设、审计 vault 的 prompt skills。
   - title: 平台配置

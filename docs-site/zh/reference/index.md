@@ -17,7 +17,7 @@
 | 路径 | Setup 创建 | 说明 |
 | --- | --- | --- |
 | `KNOWLEDGE.md` | 是 | Vault 操作指南 |
-| `SCHEMA.md` | 是 | 知识页面 schema |
+| `SCHEMA.md` | 是 | 知识分类与页面约定 |
 | `INDEX.base` | 是 | Bases index |
 | `entities/` | 是 | Agent-maintained entity pages |
 | `concepts/` | 是 | Agent-maintained concept pages |
@@ -26,6 +26,7 @@
 | `.knowlery/manifest.json` | 是 | Setup state |
 | `.agents/skills/` | 是 | Canonical skills |
 | `.agents/rules/` | OpenCode path | OpenCode rules |
+| `.claude/skills/` | 是 | 为 Claude Code 镜像的内置 skills |
 | `.claude/CLAUDE.md` | Claude Code path | Claude instructions |
 | `.claude/rules/` | Claude Code path | Claude Code rules |
 | `opencode.json` | OpenCode path | OpenCode config |
@@ -35,12 +36,12 @@
 
 | Name | Kind | 用途 |
 | --- | --- | --- |
-| `cook` | knowledge | 将笔记整理成知识页面 |
+| `cook` | knowledge | 将笔记整理成知识页面并同步 `SCHEMA.md` taxonomy |
 | `ask` | knowledge | 从 vault 内容回答问题 |
 | `explore` | knowledge | 追踪想法时间线和连接 |
 | `challenge` | knowledge | 压力测试信念和 drift |
 | `ideas` | knowledge | 从 vault 内容生成想法 |
-| `audit` | knowledge | 检查 vault health 和结构 |
+| `audit` | knowledge | 扫描 agent 维护目录中的结构健康问题 |
 | `organize` | knowledge | 建议结构改进 |
 | `obsidian-cli` | tooling | 使用 Obsidian CLI patterns |
 | `obsidian-markdown` | tooling | 编写 Obsidian markdown |
@@ -84,6 +85,12 @@ Knowlery 不收集 telemetry。
 - `skills`
 
 这些命令会在你的电脑上以你的用户权限运行。
+
+## 升级行为
+
+当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，并通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`。
+
+custom 和 forked skills 会被保留。被禁用的 built-in skills 会继续保持禁用状态，即使磁盘上的 bundled copy 已刷新。
 
 ## 删除行为
 

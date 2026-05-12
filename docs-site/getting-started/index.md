@@ -42,6 +42,8 @@ The setup wizard asks you to choose a platform:
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
 | OpenCode | `opencode.json` plus `.agents/rules/` |
 
+If you are upgrading from an older release, v0.3.5 will auto-sync bundled skills and migrate `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
+
 ## What Setup Creates
 
 Knowlery creates the knowledge workspace and agent configuration in your vault:
@@ -49,7 +51,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | Path | Purpose |
 | --- | --- |
 | `KNOWLEDGE.md` | Human and agent-facing vault operating guide |
-| `SCHEMA.md` | Frontmatter structure for knowledge pages |
+| `SCHEMA.md` | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Obsidian Bases index for compiled knowledge pages |
 | `entities/` | Named things such as people, tools, organizations, and projects |
 | `concepts/` | Ideas, frameworks, theories, and mental models |
@@ -58,6 +60,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `.knowlery/manifest.json` | Knowlery setup metadata |
 | `.agents/skills/` | Canonical installed skill files |
 | `.agents/rules/` | OpenCode rules and shared agent rules |
+| `.claude/skills/` | Mirrored built-in skill files for Claude Code |
 | `.claude/CLAUDE.md` | Claude Code vault instructions |
 | `.claude/rules/` | Claude Code rules |
 | `opencode.json` | OpenCode configuration |

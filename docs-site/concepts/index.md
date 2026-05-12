@@ -1,6 +1,6 @@
 # Core Concepts
 
-Knowlery is easiest to understand as a small kitchen for your vault. Your notes are the ingredients. Skills are recipes. Rules are kitchen habits. The agent cooks structured knowledge pages that remain readable in plain markdown.
+Knowlery is easiest to understand as a small kitchen for your vault. Your notes are the ingredients. Skills are recipes. Rules are kitchen habits. The agent cooks structured knowledge pages and keeps the shared taxonomy guide readable in plain markdown.
 
 ## Knowledge Cookery
 
@@ -19,7 +19,7 @@ The setup wizard creates four top-level knowledge directories:
 | `comparisons/` | `comparison` | Side-by-side analysis of related things |
 | `queries/` | `query` | Saved questions, investigations, and research threads |
 
-These pages are meant to be readable by humans and predictable for agents. The shape is defined in `SCHEMA.md`.
+These pages are meant to be readable by humans and predictable for agents. The shape is guided by `SCHEMA.md`.
 
 ## `KNOWLEDGE.md`
 
@@ -35,18 +35,30 @@ Agents should read it early when working in the vault.
 
 ## `SCHEMA.md`
 
-`SCHEMA.md` defines the frontmatter expected for each knowledge page type.
+`SCHEMA.md` is the living convention file for the compiled knowledge layer.
 
-The current schema covers:
+The current template groups the guidance into:
 
-| Type | Required shape |
+- Knowledge Domains
+- Tag Taxonomy
+- Domain Taxonomy
+- Agent Page Conventions
+- Frontmatter Schema
+- Page Thresholds
+- Custom Fields
+
+The template encourages fields like `title`, `date`, `created`, `updated`, `type`, `tags`, and `sources`, plus optional fields such as `status`, `domain`, `description`, `references`, and `author`.
+
+Health diagnostics still use a smaller minimum check for knowledge pages:
+
+| Type | Minimum fields |
 | --- | --- |
-| Entity | `type`, `aliases`, `tags`, `created`, `updated` |
-| Concept | `type`, `aliases`, `tags`, `related`, `created`, `updated` |
-| Comparison | `type`, `items`, `tags`, `created`, `updated` |
-| Query | `type`, `status`, `tags`, `created`, `updated` |
+| Entity | `type`, `created` |
+| Concept | `type`, `created` |
+| Comparison | `type`, `items`, `created` |
+| Query | `type`, `status`, `created` |
 
-Health diagnostics use this structure to find missing frontmatter in knowledge directories.
+`SCHEMA.md` is the shared guide for agents and humans. The health tab only checks the minimum fields that keep knowledge pages recognizable.
 
 ## `INDEX.base`
 
@@ -62,12 +74,12 @@ Knowlery currently ships these built-in skills:
 
 | Skill | Purpose |
 | --- | --- |
-| `cook` | Digest notes into knowledge pages and maintain `INDEX.base` |
+| `cook` | Digest notes into knowledge pages and keep `SCHEMA.md` taxonomy in sync |
 | `ask` | Answer questions against vault content |
 | `explore` | Trace timelines and find connections |
 | `challenge` | Pressure-test beliefs and detect drift |
 | `ideas` | Generate actionable ideas from vault content |
-| `audit` | Check vault health and structural integrity |
+| `audit` | Scan agent-maintained directories for structural health issues |
 | `organize` | Suggest vault restructuring |
 | `obsidian-cli` | Work with Obsidian through CLI patterns |
 | `obsidian-markdown` | Write Obsidian-flavored markdown |

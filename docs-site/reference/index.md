@@ -17,7 +17,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Path | Created by setup | Notes |
 | --- | --- | --- |
 | `KNOWLEDGE.md` | Yes | Vault operating guide |
-| `SCHEMA.md` | Yes | Knowledge page schema |
+| `SCHEMA.md` | Yes | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Yes | Bases index |
 | `entities/` | Yes | Agent-maintained entity pages |
 | `concepts/` | Yes | Agent-maintained concept pages |
@@ -26,6 +26,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.knowlery/manifest.json` | Yes | Setup state |
 | `.agents/skills/` | Yes | Canonical skills |
 | `.agents/rules/` | OpenCode path | Rules for OpenCode |
+| `.claude/skills/` | Yes | Mirrored built-in skills for Claude Code |
 | `.claude/CLAUDE.md` | Claude Code path | Claude instructions |
 | `.claude/rules/` | Claude Code path | Rules for Claude Code |
 | `opencode.json` | OpenCode path | OpenCode config |
@@ -35,12 +36,12 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 
 | Name | Kind | Purpose |
 | --- | --- | --- |
-| `cook` | knowledge | Digest notes into knowledge pages |
+| `cook` | knowledge | Digest notes into knowledge pages and keep `SCHEMA.md` aligned |
 | `ask` | knowledge | Answer questions from vault content |
 | `explore` | knowledge | Trace idea timelines and bridges |
 | `challenge` | knowledge | Pressure-test beliefs and drift |
 | `ideas` | knowledge | Generate ideas from vault content |
-| `audit` | knowledge | Check vault health and structure |
+| `audit` | knowledge | Scan agent-maintained directories for structural health issues |
 | `organize` | knowledge | Suggest structure improvements |
 | `obsidian-cli` | tooling | Use Obsidian CLI patterns |
 | `obsidian-markdown` | tooling | Write Obsidian markdown |
@@ -84,6 +85,12 @@ Examples include:
 - `skills`
 
 These commands run on your computer with your user permissions.
+
+## Upgrade Behavior
+
+When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, and migrates `SCHEMA.md` by inserting any missing anchor sections.
+
+Custom and forked skills are preserved. Disabled built-in skills keep their disabled state, even though the on-disk bundled copy is refreshed.
 
 ## Deletion Behavior
 

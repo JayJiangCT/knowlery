@@ -42,6 +42,8 @@ Setup wizard 会要求你选择一个平台：
 | Claude Code | `.claude/CLAUDE.md` 和 `.claude/rules/` |
 | OpenCode | `opencode.json` 和 `.agents/rules/` |
 
+如果你是从旧版本升级，v0.3.5 会在插件第一次加载时自动同步 bundled skills，并就地迁移 `SCHEMA.md`。custom 和 forked skills 不会被覆盖。
+
 ## Setup 会创建什么
 
 Knowlery 会在 vault 中创建知识工作区和 agent 配置：
@@ -49,7 +51,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | 路径 | 用途 |
 | --- | --- |
 | `KNOWLEDGE.md` | 给人和 agent 看的 vault 操作指南 |
-| `SCHEMA.md` | 知识页面 frontmatter 结构 |
+| `SCHEMA.md` | 知识分类与页面约定 |
 | `INDEX.base` | 编译知识页面的 Obsidian Bases 索引 |
 | `entities/` | 人、工具、组织、项目等命名对象 |
 | `concepts/` | 想法、框架、理论、心智模型 |
@@ -58,6 +60,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `.knowlery/manifest.json` | Knowlery setup 元数据 |
 | `.agents/skills/` | skills 的 canonical 存放位置 |
 | `.agents/rules/` | OpenCode rules 和共享 agent rules |
+| `.claude/skills/` | 为 Claude Code 镜像的内置 skills |
 | `.claude/CLAUDE.md` | Claude Code vault instructions |
 | `.claude/rules/` | Claude Code rules |
 | `opencode.json` | OpenCode 配置 |

@@ -18,7 +18,7 @@ hero:
 
 features:
   - title: Knowledge Cookery
-    details: Transform raw notes into structured entities, concepts, comparisons, and saved queries that agents can read consistently.
+    details: Transform raw notes into structured entities, concepts, comparisons, and saved queries while keeping SCHEMA.md's taxonomy and conventions current.
   - title: Agent Skills
     details: Install and manage prompt skills for cooking notes, asking questions, exploring relationships, challenging assumptions, and auditing the vault.
   - title: Platform Setup
