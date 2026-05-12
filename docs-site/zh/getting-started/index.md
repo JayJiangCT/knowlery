@@ -46,6 +46,16 @@ Setup wizard 会要求你选择一个平台：
 
 如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
 
+## 以图看安装
+
+setup wizard 会先给出一个预览，说明接下来会在 vault 里创建什么。
+
+![Knowlery setup preview](/images/knowlery-setup-preview.png)
+
+安装完成后，会出现完成页，里面有后续步骤和直接进入 dashboard 的入口。
+
+![Knowlery setup complete](/images/knowlery-setup-done.png)
+
 ## Setup 会创建什么
 
 Knowlery 会在 vault 中创建知识工作区和 agent 配置：
