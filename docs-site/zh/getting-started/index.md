@@ -42,7 +42,7 @@ Setup wizard 会要求你选择一个平台：
 | Claude Code | `.claude/CLAUDE.md` 和 `.claude/rules/` |
 | OpenCode | `opencode.json` 和 `.agents/rules/` |
 
-如果你是从旧版本升级，v0.3.5 会在插件第一次加载时自动同步 bundled skills，并就地迁移 `SCHEMA.md`。custom 和 forked skills 不会被覆盖。
+如果你是从旧版本升级，v0.3.6 会在插件第一次加载时自动同步 bundled skills，并就地迁移 `SCHEMA.md`。custom 和 forked skills 不会被覆盖。
 
 如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
 

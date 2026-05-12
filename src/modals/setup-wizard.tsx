@@ -1113,9 +1113,10 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
               {claudianRun?.status === 'done' && (
                 <li>Reload Obsidian if Claudian does not appear in Community plugins</li>
               )}
-              <li>Open <strong>KNOWLEDGE.md</strong> in the Config tab and describe your knowledge base</li>
-              <li>Try the <strong>cook</strong> skill with {platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}</li>
-              <li>Browse installed skills in the <strong>Skills tab</strong></li>
+              <li>Open the <strong>dashboard</strong> and start with <strong>Today</strong> for your current activity summary</li>
+              <li>Use <strong>This note</strong> when you want a focused review of the note you are editing</li>
+              <li>Open the <strong>Review Menu</strong> to browse bundled skills and reusable review prompts</li>
+              <li>Visit <strong>System</strong> when you want diagnostics or configuration maintenance</li>
             </ol>
           </div>
         </div>

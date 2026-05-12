@@ -6,7 +6,7 @@
 
 Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, review the current note, generate weekly atlases, and run vault health diagnostics.
 
-In v0.3.5, bundled skills auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
+In v0.3.6, Knowlery keeps the bundled skill auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 

@@ -23,6 +23,16 @@ export async function syncBuiltinSkills(app: App): Promise<void> {
     await ensureDir(app, `${SKILLS_DIR}/${skill.name}`);
     await writeFile(app, `${SKILLS_DIR}/${skill.name}/SKILL.md`, skill.content);
 
+    // Write reference files (L2+) for bundled skills
+    if (skill.references) {
+      for (const [relPath, refContent] of Object.entries(skill.references)) {
+        const fullPath = `${SKILLS_DIR}/${skill.name}/${relPath}`;
+        const parentDir = fullPath.split('/').slice(0, -1).join('/');
+        await ensureDir(app, parentDir);
+        await writeFile(app, fullPath, refContent);
+      }
+    }
+
     if (!entry || (entry.source === 'builtin' && !entry.disabled)) {
       await copySkillToClaudeDir(app, skill.name);
     }

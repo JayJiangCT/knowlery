@@ -2,7 +2,7 @@ import { App, normalizePath } from 'obsidian';
 import type { SkillInfo, SkillsLock, SkillLockEntry, SkillDetail, SkillKind } from '../types';
 import { BUNDLED_SKILLS } from '../assets/skills';
 import matter from 'gray-matter';
-import { ensureDir, writeFile } from './vault-io';
+import { ensureDir, writeFile, copyDirectory } from './vault-io';
 
 const SKILLS_DIR = '.agents/skills';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
@@ -85,32 +85,50 @@ export async function installAllBuiltinSkills(app: App): Promise<void> {
   await ensureDir(app, normalizePath(CLAUDE_SKILLS_DIR));
 
   for (const skill of BUNDLED_SKILLS) {
-    await writeSkillFile(app, skill.name, skill.content);
+    await writeSkillFile(app, skill.name, skill.content, skill.references);
     await copySkillToClaudeDir(app, skill.name);
   }
 }
 
-async function writeSkillFile(app: App, name: string, content: string): Promise<void> {
+async function writeSkillFile(app: App, name: string, content: string, references?: Record<string, string>): Promise<void> {
   await ensureDir(app, `${SKILLS_DIR}/${name}`);
   await writeFile(app, `${SKILLS_DIR}/${name}/SKILL.md`, content);
+
+  if (references) {
+    for (const [relPath, refContent] of Object.entries(references)) {
+      const fullPath = `${SKILLS_DIR}/${name}/${relPath}`;
+      const parentDir = fullPath.split('/').slice(0, -1).join('/');
+      await ensureDir(app, parentDir);
+      await writeFile(app, fullPath, refContent);
+    }
+  }
 }
 
 export async function copySkillToClaudeDir(app: App, name: string): Promise<void> {
-  await ensureDir(app, `${CLAUDE_SKILLS_DIR}/${name}`);
+  const srcDir = normalizePath(`${SKILLS_DIR}/${name}`);
+  const destDir = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}`);
 
-  const sourcePath = normalizePath(`${SKILLS_DIR}/${name}/SKILL.md`);
-  const sourceFile = app.vault.getFileByPath(sourcePath);
+  if (!(await app.vault.adapter.exists(srcDir))) return;
 
+  await ensureDir(app, destDir);
+  const skillMdPath = `${srcDir}/SKILL.md`;
+  const sourceFile = app.vault.getFileByPath(skillMdPath);
   let content: string;
   if (sourceFile) {
     content = await app.vault.cachedRead(sourceFile);
-  } else if (await app.vault.adapter.exists(sourcePath)) {
-    content = await app.vault.adapter.read(sourcePath);
+  } else if (await app.vault.adapter.exists(skillMdPath)) {
+    content = await app.vault.adapter.read(skillMdPath);
   } else {
     return;
   }
+  await writeFile(app, `${destDir}/SKILL.md`, content);
 
-  await writeFile(app, `${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
+  // Copy any subdirectories (references/, etc.) recursively
+  const listing = await app.vault.adapter.list(srcDir);
+  for (const folderPath of listing.folders) {
+    const relativePath = folderPath.slice(srcDir.length + 1);
+    await copyDirectory(app, folderPath, `${destDir}/${relativePath}`);
+  }
 }
 
 export async function loadSkillsLock(app: App): Promise<SkillsLock> {
@@ -257,16 +275,9 @@ export async function markSkillInstalledFromRegistry(
 
 export async function disableSkill(app: App, name: string): Promise<void> {
   const adapter = app.vault.adapter;
-  const filePath = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`);
-  if (await adapter.exists(filePath)) {
-    await adapter.remove(filePath);
-  }
   const dirPath = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}`);
   if (await adapter.exists(dirPath)) {
-    const listing = await adapter.list(dirPath);
-    if (listing.files.length === 0 && listing.folders.length === 0) {
-      await adapter.rmdir(dirPath, false);
-    }
+    await adapter.rmdir(dirPath, true);
   }
 
   const lock = await loadSkillsLock(app);

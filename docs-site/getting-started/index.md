@@ -42,7 +42,7 @@ The setup wizard asks you to choose a platform:
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
 | OpenCode | `opencode.json` plus `.agents/rules/` |
 
-If you are upgrading from an older release, v0.3.5 auto-syncs bundled skills and migrates `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
+If you are upgrading from an older release, v0.3.6 auto-syncs bundled skills and migrates `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
 
 If Knowlery detects an older BYOAO vault, the setup wizard can switch into migration mode and preserve the existing BYOAO/OpenCode files while configuring Knowlery for Claude Code.
 
