@@ -6,6 +6,7 @@ export interface BundledSkill {
   description: string;
   content: string;
   kind: SkillKind;
+  references?: Record<string, string>;  // relative path → file content (L2+)
 }
 
 export const BUNDLED_SKILLS: BundledSkill[] = [
@@ -324,6 +325,8 @@ Every claim must be backed by at least one vault note. Do not use general knowle
 
 <What the vault doesn't cover that would help answer more completely>
 
+> **Critical gaps?** If gaps materially weaken this answer, read \`references/gap-resolution.md\` for the knowledge-solicitation protocol before continuing.
+
 ## Related Questions
 
 - Consider exploring: "..."
@@ -359,6 +362,108 @@ Use \`obsidian create\` to save. Ask the user where they'd like it saved.
 - **Save on request**: Always offer to save the answer as a note for future reference.
 - **Bases + CLI:** The wiki index is **\`INDEX.base\`** in Obsidian; discovery via CLI is **\`obsidian properties\`** (by \`type\` and other fields), **\`obsidian search\`**, and related commands — not a duplicate markdown index file.
 `,
+    references: {
+      'references/gap-resolution.md': `---
+name: gap-resolution
+description: >
+  Protocol for when /ask detects knowledge gaps that materially weaken the answer.
+  Loaded on demand by the agent — not part of the core /ask L1 prompt.
+---
+
+# Knowledge Gap Resolution Protocol
+
+Use this protocol when Step 2-3 of /ask reveal gaps that **materially weaken the answer**.
+Do NOT activate this for minor omissions or tangential gaps the user didn't ask about.
+
+## When to Activate
+
+Activate when ALL of these are true:
+
+1. The user's question directly depends on the missing knowledge
+2. The vault has **zero** relevant pages (not just insufficient — completely absent)
+3. The gap is in the user's domain, not general knowledge the agent can reason about
+
+Do NOT activate for:
+- Gaps in general knowledge (the agent should reason, not ask)
+- Marginal details that don't change the answer's substance
+- Topics the user didn't ask about (tangential gaps stay in the passive Gaps section)
+
+## Protocol
+
+### Step 1: Identify the Gap Precisely
+
+Before asking the user, narrow the gap to a specific, answerable question:
+
+**Bad:** "I don't know about your project"
+**Good:** "I don't have any notes about the authentication flow for the mobile app — specifically, whether you use OAuth2, SAML, or a custom token system"
+
+### Step 2: Ask the User
+
+After presenting your answer (including the Gaps section), append a structured request:
+
+\`\`\`markdown
+## Knowledge Request
+
+To improve answers about **{topic}**, I need information on:
+
+1. **{specific question 1}** — {why it matters for the answer}
+2. **{specific question 2}** — {why it matters for the answer}
+
+You can:
+- Tell me directly and I'll create a note
+- Point me to an existing note or document
+- Skip for now (I'll note this as a known gap)
+\`\`\`
+
+### Step 3: Capture the Response
+
+If the user provides information:
+
+1. **Summarize** what they said back to them for confirmation
+2. **Create a draft note** using \`obsidian create\`:
+
+\`\`\`yaml
+---
+title: "{topic}"
+type: entity
+date: {today}
+created: {today}
+updated: {today}
+tags: [{domain}]
+status: draft
+sources: [conversation]
+---
+\`\`\`
+
+3. **Add the content** — organize the user's input into the note body with clear sections
+4. **Confirm** — tell the user where the note was saved and suggest running \`/cook\` to compile it into a knowledge page
+
+If the user points to an existing note:
+- Read it with \`obsidian read\`
+- Re-attempt the original answer with the new context
+
+If the user skips:
+- Leave the gap in the answer's Gaps section (no action needed)
+
+### Step 4: Re-answer (Optional)
+
+If the captured information significantly changes the answer, offer to revise:
+
+> "Based on what you told me, my answer changes. Want me to update it?"
+
+Do not re-answer automatically — the user may have moved on.
+
+## Boundary with /cook
+
+This protocol handles **small, immediate gaps** — a few facts the user can explain in a sentence or two. For larger knowledge ingestion:
+
+- Multiple related gaps → suggest \`/cook\` instead
+- User pastes a long document → suggest \`/cook\` with the document
+- Gap requires research, not user input → do not ask; note it passively
+
+The note created here is a **draft source note** (status: draft). It becomes a proper knowledge page after \`/cook\` processes it.
+`,
+    },
   },
   {
     name: 'challenge',
