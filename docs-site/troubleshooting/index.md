@@ -42,14 +42,14 @@ If the registry cannot be used, built-in and custom skills still work.
 
 ## Built-In Skills Are Missing
 
-Open Health and check **Skills installed**.
+Open System, then check **Skills installed** in Health.
 
 Built-in skills are expected at `.agents/skills/<name>/SKILL.md`.
 
 If some are missing:
 
 1. Re-run setup in a test vault to compare expected output.
-2. Use the Skills tab to re-enable disabled skills when possible.
+2. Use the Review Menu to re-enable disabled skills when possible.
 3. Use maintenance actions to re-initialize or repair the vault if the installation is incomplete.
 
 ## Claude Code Config Is Missing

@@ -6,7 +6,7 @@ This guide walks through installing Knowlery, initializing a vault, and understa
 
 Knowlery targets Obsidian desktop and requires community plugins to be enabled.
 
-You also need Claude Code or OpenCode if you want to run agent workflows against the vault. Node.js and npm are required for external skill registry browsing and optional tool preparation.
+You also need Claude Code or OpenCode if you want to run agent workflows against the vault. Node.js and npm are required for optional tool preparation and the external skill browser.
 
 ::: tip Desktop behavior
 Knowlery uses local command-line tools and Electron desktop APIs for agent-oriented features. The current plugin manifest marks it as desktop-only.
@@ -42,7 +42,9 @@ The setup wizard asks you to choose a platform:
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
 | OpenCode | `opencode.json` plus `.agents/rules/` |
 
-If you are upgrading from an older release, v0.3.5 will auto-sync bundled skills and migrate `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
+If you are upgrading from an older release, v0.3.5 auto-syncs bundled skills and migrates `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
+
+If Knowlery detects an older BYOAO vault, the setup wizard can switch into migration mode and preserve the existing BYOAO/OpenCode files while configuring Knowlery for Claude Code.
 
 ## What Setup Creates
 
@@ -50,7 +52,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 
 | Path | Purpose |
 | --- | --- |
-| `KNOWLEDGE.md` | Human and agent-facing vault operating guide |
+| `KNOWLEDGE.md` | Vault operating guide for humans and agents |
 | `SCHEMA.md` | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Obsidian Bases index for compiled knowledge pages |
 | `entities/` | Named things such as people, tools, organizations, and projects |
@@ -74,18 +76,20 @@ Missing optional tools are shown as selectable install or preparation steps. Alr
 
 ## Open the Dashboard
 
-After setup, open the Knowlery dashboard. It has three main tabs:
+After setup, open the Knowlery dashboard. It has five main tabs:
 
 | Tab | Use it for |
 | --- | --- |
-| Skills | Browse, inspect, fork, enable, disable, edit, and delete skills |
-| Config | Open `KNOWLEDGE.md`, open `SCHEMA.md`, and manage rules |
-| Health | View vault stats, run structural diagnosis, and check setup integrity |
+| Today | Start from the current activity context and choose the next small move |
+| This note | Review the active Markdown note and prepare a focused prompt |
+| Weekly Review | Generate a Knowledge Atlas and optionally send a polish request |
+| Review Menu | Browse source skills, suggested next moves, and reusable review recipes |
+| System | Run health checks and open the underlying configuration files |
 
 ## Recommended First Session
 
 1. Initialize a clean test vault first.
-2. Read the generated `KNOWLEDGE.md`.
-3. Open the Skills tab and inspect `cook`, `ask`, and `audit`.
+2. Read the generated `KNOWLEDGE.md` and `SCHEMA.md`.
+3. Open Today, This note, and Review Menu to see how Knowlery frames work.
 4. Add one or two real notes to the vault.
-5. Use your agent to run a knowledge workflow, then review the generated knowledge pages.
+5. Generate a Weekly Atlas, then open System and run a diagnosis.

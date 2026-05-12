@@ -6,7 +6,7 @@
 
 Knowlery 面向 Obsidian desktop，并需要启用 community plugins。
 
-如果你想让 agent 真正基于 vault 工作，还需要 Claude Code 或 OpenCode。外部 skill registry 浏览和可选工具准备需要 Node.js 与 npm。
+如果你想让 agent 真正基于 vault 工作，还需要 Claude Code 或 OpenCode。可选工具准备和外部 skill browser 需要 Node.js 与 npm。
 
 ::: tip 桌面行为
 Knowlery 会使用本地命令行工具和 Electron desktop API 来支持 agent 相关功能。当前插件 manifest 标记为 desktop-only。
@@ -44,6 +44,8 @@ Setup wizard 会要求你选择一个平台：
 
 如果你是从旧版本升级，v0.3.5 会在插件第一次加载时自动同步 bundled skills，并就地迁移 `SCHEMA.md`。custom 和 forked skills 不会被覆盖。
 
+如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
+
 ## Setup 会创建什么
 
 Knowlery 会在 vault 中创建知识工作区和 agent 配置：
@@ -74,18 +76,20 @@ Setup wizard 可以检测 Claude Code、OpenCode、Node.js、Claudian 和 skills
 
 ## 打开 Dashboard
 
-Setup 完成后，打开 Knowlery dashboard。它有三个主要 tab：
+Setup 完成后，打开 Knowlery dashboard。它有五个主要 tab：
 
 | Tab | 用途 |
 | --- | --- |
-| Skills | 浏览、查看、fork、启用、禁用、编辑和删除 skills |
-| Config | 打开 `KNOWLEDGE.md`、打开 `SCHEMA.md`、管理 rules |
-| Health | 查看 vault stats、运行结构诊断、检查设置完整性 |
+| Today | 从当前活动上下文开始，选择一个小的下一步 |
+| This note | review 当前 Markdown 笔记并准备专注的 prompt |
+| Weekly Review | 生成 Knowledge Atlas，并在需要时发送 polish request |
+| Review Menu | 浏览 source skills、建议的下一步和可复用的 review recipes |
+| System | 运行 health checks，并打开底层配置文件 |
 
 ## 推荐的第一次使用方式
 
 1. 先在一个干净 test vault 中初始化。
-2. 阅读生成的 `KNOWLEDGE.md`。
-3. 打开 Skills tab，查看 `cook`、`ask` 和 `audit`。
+2. 阅读生成的 `KNOWLEDGE.md` 和 `SCHEMA.md`。
+3. 打开 Today、This note 和 Review Menu，理解 Knowlery 的 review 方式。
 4. 往 vault 中加入一两篇真实笔记。
-5. 让 agent 执行一次知识工作流，然后 review 生成的知识页面。
+5. 生成一次 Weekly Atlas，然后打开 System 运行诊断。

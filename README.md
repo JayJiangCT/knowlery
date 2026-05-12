@@ -4,9 +4,9 @@
 [![Docs](https://img.shields.io/badge/docs-official-blue?style=flat-square)](https://jayjiangct.github.io/knowlery/)
 [![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square)](LICENSE)
 
-Knowlery turns an Obsidian vault into an AI-powered knowledge base control panel. It helps initialize a vault structure, install and manage agent skills, configure agent rules, and run vault health diagnostics for Claude Code and OpenCode workflows.
+Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, review the current note, generate weekly atlases, and run vault health diagnostics.
 
-In v0.3.5, bundled skills now auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
+In v0.3.5, bundled skills auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
@@ -65,10 +65,10 @@ Knowlery can be installed as a beta plugin through BRAT before it is listed in t
 
 ## What Knowlery Creates
 
-During setup, Knowlery can create or update these files and folders inside your vault:
+During setup and normal use, Knowlery can create or update these files and folders inside your vault:
 
 - `KNOWLEDGE.md`
-- `SCHEMA.md` (Knowledge taxonomy and page conventions)
+- `SCHEMA.md` (knowledge taxonomy and page conventions)
 - `INDEX.base`
 - `entities/`, `concepts/`, `comparisons/`, and `queries/`
 - `.knowlery/manifest.json`
@@ -76,6 +76,9 @@ During setup, Knowlery can create or update these files and folders inside your 
 - `.claude/skills/`, `.claude/rules/`, and `.claude/CLAUDE.md`
 - `opencode.json`, when OpenCode is selected
 - `skills-lock.json`
+- `.knowlery/activity/`, when activity logging is enabled
+- `.knowlery/reports/`, when Weekly Review generates an atlas
+- `.knowlery/requests/` and `.knowlery/reviews/`, when daily review polish is used
 
 Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI.
 

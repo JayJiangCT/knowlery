@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Knowlery
-  text: 把你的 vault 烹饪成 AI 可读的知识库。
-  tagline: "Knowlery 将 Obsidian 变成一个温暖、有结构的 AI 知识库控制台：初始化 vault、管理 skills 与 rules、检查健康状态，并为 Claude Code 与 OpenCode 准备 agent 可理解的知识层。"
+  text: 把你的 vault 变成一个以 review 为中心的知识空间。
+  tagline: "Knowlery 为 Claude Code 和 OpenCode 提供一个五区 review surface：Today、This note、Weekly Review、Review Menu、System。"
   image:
     src: /knowlery-pot.svg
     alt: Knowlery Knowledge Pot logo
@@ -17,34 +17,36 @@ hero:
       link: /zh/concepts/
 
 features:
-  - title: 知识烹饪
-    details: 将原始笔记整理成 entities、concepts、comparisons、queries，并持续维护 SCHEMA.md 的 taxonomy 与 conventions。
-  - title: Agent Skills
-    details: 管理用于整理笔记、提问、探索连接、挑战假设、审计 vault 的 prompt skills。
-  - title: 平台配置
-    details: 为 Claude Code 或 OpenCode 生成配置，让 agent 从第一轮对话就理解这个 vault 的约定。
-  - title: Vault Health
-    details: 检查孤立笔记、损坏 wikilinks、缺失 frontmatter、设置缺口与配置漂移。
+  - title: Today
+    details: 从一篇笔记、一条 reflection 或一个活跃 thread 开始，得到一个小而明确的下一步。
+  - title: This note
+    details: 结合上下文 review 当前 Markdown 笔记，并准备专注的 prompt 或下一步动作。
+  - title: Weekly Review
+    details: 基于最近活动生成本地 Knowledge Atlas，必要时再交给 agent 打磨。
+  - title: Review Menu
+    details: 将 source skills 收进自然语言动作、prompt 和技能详情里。
+  - title: System
+    details: 检查 vault health、打开底层配置文件，并维护 agent 设置。
 ---
 
 <section class="knowlery-panel">
 
 ## Knowlery 是什么
 
-Knowlery 是一个 Obsidian 插件，适合那些希望笔记不只是 markdown 文件堆积的人。它在你、vault 和 AI coding agents 之间建立一个共享工作层。
+Knowlery 是一个 Obsidian 插件，适合那些希望在 vault 上叠一层 review 导向工作面的人。
 
-你的自由笔记仍然属于你。Knowlery 给 agent 一个结构化工作区：`entities/`、`concepts/`、`comparisons/`、`queries/`、`KNOWLEDGE.md`、`SCHEMA.md`、`INDEX.base`、skills、rules 和平台配置。
+你的自由笔记仍然属于你。Knowlery 给 agent 一个结构化工作区：`entities/`、`concepts/`、`comparisons/`、`queries/`、`KNOWLEDGE.md`、`SCHEMA.md`、`INDEX.base`、skills、rules、activity receipts 和平台配置。
 
 </section>
 
 <section class="knowlery-grid">
   <div class="knowlery-card">
     <h3>面向 Obsidian 用户</h3>
-    <p>初始化 vault，保持结构可见，并通过 dashboard 管理 skills、rules 和健康检查。</p>
+    <p>初始化 vault，保持结构可见，并通过 dashboard review 笔记、线程和 atlas 输出。</p>
   </div>
   <div class="knowlery-card">
     <h3>面向 agent 工作流</h3>
-    <p>为 Claude Code 或 OpenCode 提供持久的说明和稳定的知识地图，而不是每次会话都重新堆上下文。</p>
+    <p>为 Claude Code 或 OpenCode 提供持久说明、activity receipts 和稳定的知识地图，而不是每次会话都重新堆上下文。</p>
   </div>
 </section>
 

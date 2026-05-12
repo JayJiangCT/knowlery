@@ -1,14 +1,22 @@
 # Core Concepts
 
-Knowlery is easiest to understand as a small kitchen for your vault. Your notes are the ingredients. Skills are recipes. Rules are kitchen habits. The agent cooks structured knowledge pages and keeps the shared taxonomy guide readable in plain markdown.
+Knowlery is easiest to understand as a review layer on top of your vault. Your notes are the source material. Skills are reusable prompts. Rules are the guardrails. The dashboard turns recent activity into a small set of actions instead of a pile of options.
 
-## Knowledge Cookery
+## Review Space
 
-Knowledge cookery means turning raw notes into maintained, structured knowledge.
+Knowlery is not trying to replace your notes. It keeps a boundary between human-authored markdown and agent-maintained review material.
 
-Knowlery does not replace your personal notes. It creates a separate compiled layer that agents can update while preserving the boundary between human notes and agent-maintained pages.
+The dashboard centers on five surfaces:
 
-## The Compiled Knowledge Layer
+| Surface | Use |
+| --- | --- |
+| Today | Start from the current activity context and choose a next move |
+| This note | Review the active Markdown note in context |
+| Weekly Review | Generate a local Knowledge Atlas and optional polish request |
+| Review Menu | Browse source skills and reusable review recipes |
+| System | Run diagnostics and maintain configuration |
+
+## Compiled Knowledge Layer
 
 The setup wizard creates four top-level knowledge directories:
 
@@ -19,15 +27,14 @@ The setup wizard creates four top-level knowledge directories:
 | `comparisons/` | `comparison` | Side-by-side analysis of related things |
 | `queries/` | `query` | Saved questions, investigations, and research threads |
 
-These pages are meant to be readable by humans and predictable for agents. The shape is guided by `SCHEMA.md`.
+These pages are meant to be readable by humans and predictable for agents. The shape is guided by `SCHEMA.md`, but health checks only enforce a minimum frontmatter core.
 
 ## `KNOWLEDGE.md`
 
-`KNOWLEDGE.md` is the vault's operating guide. It explains:
+`KNOWLEDGE.md` is the vault's operating guide. It tells agents:
 
-- Which directories belong to the agent.
-- Which directories belong to the user.
-- How the agent should retrieve knowledge.
+- Which directories belong to the agent and which belong to the user.
+- How to retrieve knowledge with Obsidian-friendly commands.
 - Which skills are available.
 - How to cite vault sources with wikilinks.
 
@@ -35,9 +42,9 @@ Agents should read it early when working in the vault.
 
 ## `SCHEMA.md`
 
-`SCHEMA.md` is the living convention file for the compiled knowledge layer.
+`SCHEMA.md` is a living convention file, not just a frontmatter template.
 
-The current template groups the guidance into:
+The current template groups guidance into:
 
 - Knowledge Domains
 - Tag Taxonomy
@@ -47,7 +54,7 @@ The current template groups the guidance into:
 - Page Thresholds
 - Custom Fields
 
-The template encourages fields like `title`, `date`, `created`, `updated`, `type`, `tags`, and `sources`, plus optional fields such as `status`, `domain`, `description`, `references`, and `author`.
+It encourages fields like `title`, `date`, `created`, `updated`, `type`, `tags`, and `sources`, plus optional fields such as `status`, `domain`, `description`, `references`, and `author`.
 
 Health diagnostics still use a smaller minimum check for knowledge pages:
 
@@ -58,19 +65,17 @@ Health diagnostics still use a smaller minimum check for knowledge pages:
 | Comparison | `type`, `items`, `created` |
 | Query | `type`, `status`, `created` |
 
-`SCHEMA.md` is the shared guide for agents and humans. The health tab only checks the minimum fields that keep knowledge pages recognizable.
-
 ## `INDEX.base`
 
 `INDEX.base` is an Obsidian Bases index over the compiled knowledge layer.
 
 It groups and sorts knowledge pages, exposes useful properties, and gives agents a stable map before they start reading individual files.
 
-## Skills
+## Skills and Review Menu
 
 Skills are markdown prompt packages installed in `.agents/skills/<name>/SKILL.md`.
 
-Knowlery currently ships these built-in skills:
+The Review Menu exposes the source skills behind the scenes:
 
 | Skill | Purpose |
 | --- | --- |
@@ -88,11 +93,18 @@ Knowlery currently ships these built-in skills:
 | `defuddle` | Extract clean markdown from web pages |
 | `vault-conventions` | Document and enforce vault naming conventions |
 
-## Rules
+The skill browser can install registry skills, and skill detail views can copy example prompts, open the source file, or run a skill through the configured agent CLI.
 
-Rules are markdown instructions for agent behavior. Knowlery installs default rule templates and lets you add, edit, view, or delete rules from the Config tab.
+## Activity Ledger and Weekly Atlas
 
-Claude Code rules live in `.claude/rules/`. OpenCode rules live in `.agents/rules/`.
+Knowlery records lightweight private activity receipts in `.knowlery/activity/` when logging is enabled.
+
+Those receipts feed:
+
+- Today thread summaries and next moves.
+- This note suggestions.
+- Weekly Review atlases in `.knowlery/reports/latest.html` and `.knowlery/reports/weekly/<week-label>.html`.
+- Optional daily review requests and results in `.knowlery/requests/` and `.knowlery/reviews/`.
 
 ## Platform Adapters
 
@@ -105,9 +117,18 @@ Knowlery supports two agent platforms:
 
 Switching platforms regenerates the target platform config and can migrate rules from the previous platform directory.
 
+## Companion Chat
+
+Knowlery can send prompts to a companion chat UI when it is available:
+
+- Claudian for Claude Code.
+- `obsidian-agent-client` for OpenCode.
+
+That keeps review prompts inside the vault instead of pushing them into a separate app.
+
 ## Vault Health
 
-The Health tab checks two things:
+The System tab checks two things:
 
 - **Content structure:** note counts, wikilink counts, knowledge page counts, orphan notes, broken wikilinks, missing frontmatter.
 - **Configuration integrity:** expected files, directories, rules, built-in skills, agent CLI detection, and platform config.

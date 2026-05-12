@@ -12,6 +12,16 @@
 | Main bundle | `main.js` |
 | Stylesheet | `styles.css` |
 
+## Dashboard Surfaces
+
+| Surface | 用途 |
+| --- | --- |
+| Today | 当前活动摘要和下一步 |
+| This note | 当前笔记 review 和 prompt 准备 |
+| Weekly Review | Atlas 生成和 daily review polish |
+| Review Menu | 推荐动作和 source skills |
+| System | 诊断和配置维护 |
+
 ## 创建的文件和文件夹
 
 | 路径 | Setup 创建 | 说明 |
@@ -31,6 +41,10 @@
 | `.claude/rules/` | Claude Code path | Claude Code rules |
 | `opencode.json` | OpenCode path | OpenCode config |
 | `skills-lock.json` | 是 | Skill lock state |
+| `.knowlery/activity/` | Activity logging | 私有 activity receipts |
+| `.knowlery/reports/` | Weekly Review | 本地 Knowledge Atlas 输出 |
+| `.knowlery/requests/` | Daily polish | Daily review requests |
+| `.knowlery/reviews/` | Daily polish | Daily review results |
 
 ## Built-In Skills
 
@@ -50,6 +64,15 @@
 | `defuddle` | tooling | 从网页提取干净 markdown |
 | `vault-conventions` | tooling | 执行 vault naming conventions |
 
+## Settings Sections
+
+| Section | 控制内容 |
+| --- | --- |
+| General | 知识库名称和 Node.js 路径 |
+| Platform | Claude Code / OpenCode 切换 |
+| Activity | Activity logging 和 activity ledger rule |
+| Maintenance | 重新生成 agent config 和重新初始化 vault |
+
 ## 默认 Rule Templates
 
 Knowlery 包含这些默认 rule templates：
@@ -62,9 +85,27 @@ Knowlery 包含这些默认 rule templates：
 
 ## Obsidian 中注册的命令
 
-Knowlery 会注册 command palette actions，用于打开 dashboard、初始化 vault、运行 diagnosis 和切换平台。
+Knowlery 会注册 command palette actions，用于打开 dashboard、初始化 vault、运行诊断、添加 reflection 和切换平台。
 
-具体 label 可能随 UI 演进，但命令面主要围绕 setup、dashboard access、health 和 platform migration。
+具体 label 可能随 UI 演进，但命令面主要围绕 review、setup、diagnosis 和 platform migration。
+
+## Activity Ledger
+
+Activity receipts 存在于 `.knowlery/activity/YYYY-MM-DD.jsonl`。
+
+它们是私有摘要，不是普通 knowledge pages。settings 中的 activity toggle 可以通过写入 `.knowlery/activity-disabled` 来关闭记录。
+
+## Weekly Atlas and Daily Review
+
+Weekly Review 会把 HTML 输出写到：
+
+- `.knowlery/reports/latest.html`
+- `.knowlery/reports/weekly/<week-label>.html`
+
+Daily review polish 使用：
+
+- `.knowlery/requests/daily-review-YYYY-MM-DD.json`
+- `.knowlery/reviews/daily-review-YYYY-MM-DD.json`
 
 ## Network Use
 

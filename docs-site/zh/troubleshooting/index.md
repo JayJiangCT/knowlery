@@ -42,14 +42,14 @@ Skill browser 依赖 Node.js、npm，以及通过 `npx skills` 调用的外部 s
 
 ## Built-In Skills 缺失
 
-打开 Health 并检查 **Skills installed**。
+打开 System，然后在 Health 里检查 **Skills installed**。
 
 Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 如果有缺失：
 
 1. 在 test vault 中重新运行 setup，对比预期输出。
-2. 如果 skill 是被禁用的，尝试从 Skills tab 重新启用。
+2. 如果 skill 是被禁用的，尝试从 Review Menu 重新启用。
 3. 如果安装不完整，可以使用 maintenance actions 重新初始化或修复 vault。
 
 ## Claude Code Config 缺失

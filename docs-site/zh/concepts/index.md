@@ -1,12 +1,20 @@
 # 核心概念
 
-理解 Knowlery 最容易的方式，是把它看作一个 vault 的小厨房。你的笔记是食材。Skills 是菜谱。Rules 是厨房习惯。Agent 会把这些原料烹饪成结构化知识页面，并保持共享的 taxonomy 指南仍然是人类可读的 markdown。
+理解 Knowlery 最容易的方式，是把它看作 vault 上的一层 review surface。你的笔记是原始材料。Skills 是可复用的 prompt。Rules 是约束。Dashboard 会把最近活动整理成 Today、This note、Weekly Review、Review Menu 和 System 五个面板。
 
-## 知识烹饪
+## Review Space
 
-知识烹饪指的是：把原始笔记转化为可维护、结构化的知识。
+Knowlery 不会取代你的个人笔记。它会在自由笔记和 agent 维护内容之间保留边界。
 
-Knowlery 不会取代你的个人笔记。它会创建一个独立的 compiled layer，让 agent 可以维护这个层，同时保留“人写的自由笔记”和“agent 维护的知识页面”之间的边界。
+五个 dashboard 面板分别负责：
+
+| 面板 | 用途 |
+| --- | --- |
+| Today | 从当前活动上下文开始，选择下一步 |
+| This note | review 当前 Markdown 笔记 |
+| Weekly Review | 生成本地 Knowledge Atlas 和可选的 polish request |
+| Review Menu | 浏览 source skills 和可复用的 review recipes |
+| System | 运行诊断并维护配置 |
 
 ## 编译后的知识层
 
@@ -19,7 +27,7 @@ Setup wizard 会创建四个顶层知识目录：
 | `comparisons/` | `comparison` | 相关对象之间的并排分析 |
 | `queries/` | `query` | 保存的问题、调查和研究线索 |
 
-这些页面既应该方便人阅读，也应该方便 agent 稳定处理。具体结构由 `SCHEMA.md` 指导。
+这些页面既应该方便人阅读，也应该方便 agent 稳定处理。具体结构由 `SCHEMA.md` 指导，但 Health 只会检查最小 frontmatter 核心。
 
 ## `KNOWLEDGE.md`
 
@@ -35,7 +43,7 @@ Agent 在进入这个 vault 工作时，应该尽早阅读它。
 
 ## `SCHEMA.md`
 
-`SCHEMA.md` 是编译后的知识层所使用的活文档 convention 文件。
+`SCHEMA.md` 是知识层的活文档，不只是 frontmatter 模板。
 
 当前模板把内容分成这些部分：
 
@@ -58,15 +66,13 @@ Health diagnostics 仍然只检查知识页面的最小必需字段：
 | Comparison | `type`、`items`、`created` |
 | Query | `type`、`status`、`created` |
 
-`SCHEMA.md` 是给人和 agent 共同使用的指南；Health tab 只负责确认页面至少已经可识别。
-
 ## `INDEX.base`
 
 `INDEX.base` 是覆盖 compiled knowledge layer 的 Obsidian Bases 索引。
 
 它会对知识页面进行分组和排序，展示有用属性，并在 agent 读取单个文件前提供一个稳定地图。
 
-## Skills
+## Skills 和 Review Menu
 
 Skills 是安装在 `.agents/skills/<name>/SKILL.md` 的 markdown prompt packages。
 
@@ -88,11 +94,18 @@ Knowlery 当前内置这些 skills：
 | `defuddle` | 从网页中提取干净 markdown |
 | `vault-conventions` | 记录并执行 vault 命名约定 |
 
-## Rules
+Review Menu 会把这些 source skills 收起来，并提供可复制、可发送、可运行的 review prompts。
 
-Rules 是约束 agent 行为的 markdown instructions。Knowlery 会安装默认 rule templates，并允许你在 Config tab 中新增、编辑、查看或删除 rules。
+## Activity Ledger 和 Weekly Atlas
 
-Claude Code rules 位于 `.claude/rules/`。OpenCode rules 位于 `.agents/rules/`。
+当 activity logging 开启时，Knowlery 会把轻量的私有 activity receipts 写入 `.knowlery/activity/`。
+
+这些 receipts 会驱动：
+
+- Today 的线程摘要和下一步建议。
+- This note 的相关上下文。
+- Weekly Review 生成的 Knowledge Atlas，位置在 `.knowlery/reports/latest.html` 和 `.knowlery/reports/weekly/<week-label>.html`。
+- 可选的 daily review request 与结果文件，位置在 `.knowlery/requests/` 和 `.knowlery/reviews/`。
 
 ## Platform Adapters
 
@@ -105,9 +118,18 @@ Knowlery 支持两个 agent 平台：
 
 切换平台时，Knowlery 会重新生成目标平台配置，并可以迁移之前平台目录中的 rules。
 
+## Companion Chat
+
+Knowlery 可以把 prompt 发给 companion chat UI（如果它可用）：
+
+- Claude Code 场景下用 Claudian。
+- OpenCode 场景下用 `obsidian-agent-client`。
+
+这样 review prompt 可以留在 vault 里，而不是被丢到另一个 app 中。
+
 ## Vault Health
 
-Health tab 检查两类内容：
+System tab 会检查两类内容：
 
 - **内容结构：** notes 数量、wikilinks 数量、知识页面数量、孤立笔记、损坏 wikilinks、缺失 frontmatter。
 - **配置完整性：** 预期文件、目录、rules、内置 skills、agent CLI detection 和平台配置。
