@@ -3,10 +3,12 @@ import { DEFAULT_SETTINGS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './
 import { DashboardView } from './views/dashboard-view';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
+import { ReleaseNotesModal } from './modals/release-notes-modal';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
+import { getReleaseNote } from './assets/release-notes';
 
 interface SettingApp {
   setting: {
@@ -89,17 +91,21 @@ export default class KnowleryPlugin extends Plugin {
           10000,
         );
       } else {
+        const pluginVersion = this.manifest.version;
+        const previousSyncedVersion = this.settings.lastSyncedVersion;
+
         if (this.settings.platform === 'claude-code') {
           await syncClaudeRuleImports(this.app);
         }
 
-        const pluginVersion = this.manifest.version;
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           await syncBuiltinSkills(this.app);
           await migrateSchemaMd(this.app);
           this.settings.lastSyncedVersion = pluginVersion;
           await this.saveSettings();
         }
+
+        await this.maybeShowReleaseNotes(pluginVersion, previousSyncedVersion !== '');
       }
 
       let refreshTimer: number | null = null;
@@ -148,5 +154,38 @@ export default class KnowleryPlugin extends Plugin {
   onSetupComplete() {
     this.events.trigger('setup-complete');
     void this.activateDashboard();
+  }
+
+  private async maybeShowReleaseNotes(
+    pluginVersion: string,
+    hasSeenPreviousVersion: boolean,
+  ): Promise<void> {
+    const note = getReleaseNote(pluginVersion);
+    if (!note) {
+      this.settings.lastSeenReleaseVersion = pluginVersion;
+      await this.saveSettings();
+      return;
+    }
+
+    if (!this.settings.lastSeenReleaseVersion && !hasSeenPreviousVersion) {
+      this.settings.lastSeenReleaseVersion = pluginVersion;
+      await this.saveSettings();
+      return;
+    }
+
+    if (this.settings.lastSeenReleaseVersion === pluginVersion) {
+      return;
+    }
+
+    new ReleaseNotesModal(this.app, this, {
+      note,
+      onClose: () => {
+        this.settings.lastSeenReleaseVersion = pluginVersion;
+        void this.saveSettings();
+      },
+      onOpenDashboard: () => {
+        void this.activateDashboard();
+      },
+    }).open();
   }
 }

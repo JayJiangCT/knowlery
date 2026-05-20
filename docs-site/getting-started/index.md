@@ -12,9 +12,18 @@ You also need Claude Code or OpenCode if you want to run agent workflows against
 Knowlery uses local command-line tools and Electron desktop APIs for agent-oriented features. The current plugin manifest marks it as desktop-only.
 :::
 
-## Install With BRAT
+## Install from Community plugins
 
-BRAT is the Beta Reviewers Auto-update Tool for Obsidian. Use it when Knowlery is not yet installed from the community plugin directory.
+Install Knowlery from Obsidian's community plugin directory for normal use.
+
+1. Open **Settings -> Community plugins** in Obsidian.
+2. Select **Browse**.
+3. Search for **Knowlery**.
+4. Install and enable the plugin.
+
+## Install beta builds with BRAT
+
+BRAT is the Beta Reviewers Auto-update Tool for Obsidian. Use it only when you want to test preview builds before they are published to the community plugin directory.
 
 1. Install BRAT in Obsidian.
 2. Open BRAT settings.

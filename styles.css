@@ -2262,6 +2262,119 @@
 }
 
 /* ------------------------------------------------------------------ */
+/*  Section 13b: Release notes modal                                  */
+/* ------------------------------------------------------------------ */
+
+.knowlery-release-modal {
+  max-inline-size: min(720px, calc(100vw - (var(--knowlery-space-xl) + var(--knowlery-space-xl))));
+}
+
+.knowlery-release-modal .modal-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+.knowlery-release {
+  display: flex;
+  flex-direction: column;
+  max-block-size: calc(100vh - (var(--knowlery-space-2xl) + var(--knowlery-space-2xl)));
+}
+
+.knowlery-release__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--knowlery-space-lg);
+  padding: var(--knowlery-space-2xl) var(--knowlery-space-2xl) var(--knowlery-space-xl);
+}
+
+.knowlery-release__title {
+  margin: var(--knowlery-space-xs) 0 0;
+  color: var(--text-normal);
+  font-size: var(--font-ui-larger);
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.knowlery-release__subtitle {
+  margin: var(--knowlery-space-sm) 0 0;
+  color: var(--text-muted);
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-release__hero {
+  margin-inline: var(--knowlery-space-2xl);
+  padding: var(--knowlery-space-xl);
+  border: var(--knowlery-border);
+  border-radius: var(--knowlery-radius-lg);
+  background: var(--background-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--knowlery-space-md);
+}
+
+.knowlery-release__hero-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  flex-shrink: 0;
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--knowlery-accent-tint-strong);
+  color: var(--text-accent);
+}
+
+.knowlery-release__hero p {
+  margin: 0;
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  line-height: 1.55;
+}
+
+.knowlery-release__section {
+  padding: var(--knowlery-space-xl) var(--knowlery-space-2xl);
+  overflow-y: auto;
+}
+
+.knowlery-release__section h3 {
+  margin: 0 0 var(--knowlery-space-md);
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: 700;
+}
+
+.knowlery-release__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-md);
+  margin: 0;
+  padding-inline-start: var(--knowlery-space-xl);
+}
+
+.knowlery-release__list li {
+  padding-inline-start: var(--knowlery-space-xs);
+  color: var(--text-muted);
+}
+
+.knowlery-release__list strong {
+  color: var(--text-normal);
+}
+
+.knowlery-release__list span {
+  display: block;
+  margin-block-start: var(--knowlery-space-xs);
+  line-height: 1.5;
+}
+
+.knowlery-release__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--knowlery-space-sm);
+  padding: var(--knowlery-space-lg) var(--knowlery-space-2xl);
+  border-block-start: var(--knowlery-border);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Section 14: Skill detail modal                                     */
 /* ------------------------------------------------------------------ */
 

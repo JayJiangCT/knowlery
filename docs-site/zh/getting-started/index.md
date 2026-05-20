@@ -12,9 +12,18 @@ Knowlery 面向 Obsidian desktop，并需要启用 community plugins。
 Knowlery 会使用本地命令行工具和 Electron desktop API 来支持 agent 相关功能。当前插件 manifest 标记为 desktop-only。
 :::
 
-## 使用 BRAT 安装
+## 从 Community plugins 安装
 
-BRAT 是 Obsidian 的 Beta Reviewers Auto-update Tool。Knowlery 尚未从 community plugin directory 安装时，可以用 BRAT 安装 beta 版本。
+日常使用时，请直接从 Obsidian 的 community plugin directory 安装 Knowlery。
+
+1. 在 Obsidian 中打开 **Settings -> Community plugins**。
+2. 点击 **Browse**。
+3. 搜索 **Knowlery**。
+4. 安装并启用插件。
+
+## 使用 BRAT 安装 beta 版本
+
+BRAT 是 Obsidian 的 Beta Reviewers Auto-update Tool。只有在你想测试尚未发布到 community plugin directory 的 preview builds 时，才需要使用 BRAT。
 
 1. 在 Obsidian 中安装 BRAT。
 2. 打开 BRAT 设置。

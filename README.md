@@ -46,11 +46,20 @@ Knowlery focuses on **vault layout, skills, rules, and health** for agent workfl
 - **[Claudian](https://github.com/YishenTu/claudian)** — embeds Claude Code, Codex, and related flows in the vault; file read/write and bash from a chat UI.
 - **[obsidian-agent-client](https://github.com/RAIT-09/obsidian-agent-client)** — brings agents in via Agent Client Protocol (ACP) (e.g. Claude Code, Codex, Gemini CLI) with multi-session and MCP support.
 
-## Install with BRAT
+## Install from Community plugins
+
+Knowlery is available from Obsidian's community plugin directory.
+
+1. Open **Settings -> Community plugins** in Obsidian.
+2. Select **Browse**.
+3. Search for **Knowlery**.
+4. Install and enable the plugin.
+
+## Install beta builds with BRAT
 
 BRAT is the **Beta Reviewers Auto-update Tool** for Obsidian. Upstream project: [`TfTHacker/obsidian42-brat`](https://github.com/TfTHacker/obsidian42-brat) (documentation: [tfthacker.com/BRAT](https://tfthacker.com/BRAT)).
 
-Knowlery can be installed as a beta plugin through BRAT before it is listed in the community plugin directory.
+Use BRAT only when you want to test preview builds before they are published to the community plugin directory.
 
 1. Install the **BRAT** plugin in Obsidian (from Community plugins, or build from the [BRAT repository](https://github.com/TfTHacker/obsidian42-brat) above).
 2. Open **BRAT** settings.
