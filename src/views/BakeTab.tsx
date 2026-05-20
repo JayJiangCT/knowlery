@@ -15,6 +15,18 @@ import { IconBookOpen, IconExternalLink, IconRefresh, IconPlay } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
+interface FullPathAdapter {
+  getFullPath: (path: string) => string | undefined;
+}
+
+interface ElectronWindow {
+  require: (moduleName: 'electron') => {
+    shell: {
+      openPath: (path: string) => Promise<string>;
+    };
+  };
+}
+
 export function BakeTab() {
   const plugin = usePlugin();
   const [generating, setGenerating] = useState(false);
@@ -75,7 +87,7 @@ export function BakeTab() {
       });
 
       if (sent) {
-        new Notice('Review polish request sent to Claudian.');
+        new Notice('Review polish request sent to claudian.');
         return;
       }
 
@@ -94,19 +106,19 @@ export function BakeTab() {
     const path = normalizePath(LATEST_REPORT_PATH);
     const adapter = plugin.app.vault.adapter;
     if (!(await adapter.exists(path))) {
-      new Notice('No Weekly Atlas has been generated yet.');
+      new Notice('No weekly atlas has been generated yet.');
       setLatestReportExists(false);
       return;
     }
 
-    const fullPath = (adapter as any).getFullPath(path) as string | undefined;
+    const fullPath = (adapter as typeof adapter & FullPathAdapter).getFullPath(path);
     if (!fullPath) {
       new Notice(`Weekly Atlas is at ${path}`);
       return;
     }
 
-    const { shell } = (window as any).require('electron');
-    shell.openPath(fullPath);
+    const { shell } = (window as Window & ElectronWindow).require('electron');
+    void shell.openPath(fullPath);
   };
 
   return (

@@ -9,6 +9,12 @@ import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
 import { getRulesDir } from './platform-adapter';
 import { detectAgentCli } from './cli-detect';
 
+interface ObsidianElectronBridge {
+  ipcRenderer?: {
+    sendSync: (channel: string, value: unknown) => unknown;
+  };
+}
+
 export function getVaultStats(app: App): VaultStats {
   const mdFiles = app.vault.getMarkdownFiles();
   let wikilinksCount = 0;
@@ -88,7 +94,7 @@ async function checkFrontmatter(
 
   for (const file of files) {
     const dir = file.path.split('/')[0];
-    if (!KNOWLEDGE_DIRS.includes(dir as any)) continue;
+    if (!isKnowledgeDir(dir)) continue;
 
     const cache = app.metadataCache.getFileCache(file);
     const fm = cache?.frontmatter;
@@ -161,7 +167,7 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
 
   let obsidianCli = false;
   try {
-    const electron = (window as any).electron;
+    const electron = (window as Window & { electron?: ObsidianElectronBridge }).electron;
     if (electron?.ipcRenderer) {
       obsidianCli = !!electron.ipcRenderer.sendSync('cli', null);
     }
@@ -187,4 +193,8 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
     opencodeCli: cliDetection.opencode.installed,
     platform,
   };
+}
+
+function isKnowledgeDir(dir: string): dir is (typeof KNOWLEDGE_DIRS)[number] {
+  return (KNOWLEDGE_DIRS as readonly string[]).includes(dir);
 }

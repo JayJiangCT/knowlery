@@ -82,13 +82,17 @@ During setup and normal use, Knowlery can create or update these files and folde
 
 Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI.
 
-## Network and Command Use
+## Permissions and Disclosures
 
 Knowlery does not collect telemetry.
 
-The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. This may connect to external services used by the skills CLI. Registry skill installation writes copied skill files into your vault.
+Knowlery reads and writes files inside your vault to create and maintain the knowledge base layout, bundled skills, rules, activity summaries, review requests, and generated reports listed above. It also reads Obsidian's configured plugin directory when detecting or installing optional companion plugins.
 
-Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`, and `skills` when you explicitly use CLI-related features. These commands run on your computer with your user permissions.
+Network access is opt-in and feature-specific. The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. The setup wizard can download the latest Claudian release from GitHub when you choose to install that optional companion plugin.
+
+Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`, and `skills` when you explicitly use CLI-related features. These commands run on your computer with your user permissions. Knowlery does not send vault contents to those tools by itself; agent requests are created only from the actions you trigger.
+
+Some companion tools or services used with Knowlery, including Claude Code, OpenCode, registry skills, or model providers configured outside Knowlery, may require separate accounts or paid usage. Knowlery itself is free and does not process payments.
 
 ## Development
 

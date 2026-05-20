@@ -199,7 +199,9 @@ function SkillBrowserContent(props: { onClose: () => void; onChange?: () => void
     );
   }
 
-  const vaultPath = (plugin.app.vault.adapter as any).basePath as string;
+  const vaultPath = (plugin.app.vault.adapter as typeof plugin.app.vault.adapter & {
+    basePath: string;
+  }).basePath;
 
   const handleSearch = async () => {
     const trimmed = query.trim();

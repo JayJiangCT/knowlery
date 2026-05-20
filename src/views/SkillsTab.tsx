@@ -313,7 +313,7 @@ export function SkillsTab() {
     try {
       const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(request));
       if (sent) {
-        new Notice('Move request sent to Claudian.');
+        new Notice('Move request sent to claudian.');
         return;
       }
     } catch {

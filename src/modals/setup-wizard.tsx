@@ -44,7 +44,7 @@ export class SetupWizardModal extends Modal {
   }
 
   onOpen() {
-    this.setTitle('Set up Knowlery');
+    this.setTitle('Set up knowlery');
     this.modalEl.addClass('knowlery-wizard-modal');
     this.contentEl.addClass('knowlery-modal');
     this.root = createRoot(this.contentEl);

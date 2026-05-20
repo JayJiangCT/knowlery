@@ -8,6 +8,20 @@ import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 
+interface SettingApp {
+  setting: {
+    open: () => void;
+    openTabById: (id: string) => void;
+  };
+}
+
+interface CollapsibleWorkspace {
+  rightSplit?: {
+    collapsed?: boolean;
+    expand: () => void;
+  };
+}
+
 export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
   events = new Events();
@@ -17,8 +31,8 @@ export default class KnowleryPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 
-    this.addRibbonIcon('chef-hat', 'Open Knowlery dashboard', () => {
-      this.activateDashboard();
+    this.addRibbonIcon('chef-hat', 'Open knowlery dashboard', () => {
+      void this.activateDashboard();
     });
 
     this.addCommand({
@@ -60,8 +74,9 @@ export default class KnowleryPlugin extends Plugin {
       id: 'switch-platform',
       name: 'Switch platform',
       callback: () => {
-        (this.app as any).setting.open();
-        (this.app as any).setting.openTabById(this.manifest.id);
+        const appWithSettings = this.app as typeof this.app & SettingApp;
+        appWithSettings.setting.open();
+        appWithSettings.setting.openTabById(this.manifest.id);
       },
     });
 
@@ -87,10 +102,10 @@ export default class KnowleryPlugin extends Plugin {
         }
       }
 
-      let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+      let refreshTimer: number | null = null;
       const throttledRefresh = () => {
         if (refreshTimer) return;
-        refreshTimer = setTimeout(() => {
+        refreshTimer = window.setTimeout(() => {
           refreshTimer = null;
           this.events.trigger('dashboard-refresh');
         }, 5000);
@@ -122,7 +137,7 @@ export default class KnowleryPlugin extends Plugin {
       await leaf!.setViewState({ type: VIEW_TYPE_DASHBOARD, active: true });
     }
     if (leaf) {
-      const rightSplit = workspace.rightSplit as any;
+      const rightSplit = (workspace as typeof workspace & CollapsibleWorkspace).rightSplit;
       if (rightSplit?.collapsed) {
         rightSplit.expand();
       }
@@ -132,6 +147,6 @@ export default class KnowleryPlugin extends Plugin {
 
   onSetupComplete() {
     this.events.trigger('setup-complete');
-    this.activateDashboard();
+    void this.activateDashboard();
   }
 }

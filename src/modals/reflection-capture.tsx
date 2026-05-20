@@ -36,7 +36,7 @@ export class ReflectionCaptureModal extends Modal {
             onCancel={() => this.close()}
             onSave={async (record) => {
               await appendActivityRecord(this.app, record);
-              new Notice('Reflection added to Knowlery activity.');
+              new Notice('Reflection added to knowlery activity.');
               this.onSaved?.();
               this.close();
             }}

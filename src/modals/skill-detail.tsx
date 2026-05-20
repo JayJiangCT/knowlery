@@ -4,10 +4,8 @@ import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin, useSettings } from '../context';
 import type { SkillInfo } from '../types';
-import { copySkillCommand, runSkillViaCli } from '../core/skill-executor';
+import { copySkillCommand } from '../core/skill-executor';
 import { disableSkill, enableSkill, deleteSkill } from '../core/skill-manager';
-import { detectAgentCli } from '../core/cli-detect';
-import type { CliDetection } from '../core/cli-detect';
 import { SkillEditorModal } from './skill-editor';
 import {
   IconX,
@@ -15,7 +13,6 @@ import {
   IconInfo,
   IconList,
   IconCode,
-  IconPlay,
   IconClipboard,
   IconBookOpen,
   SkillIcon,
@@ -29,6 +26,18 @@ const COMPANION_URLS: Record<string, string> = {
   'claude-code': 'https://github.com/YishenTu/claudian',
   'opencode': 'https://github.com/RAIT-09/obsidian-agent-client',
 };
+
+interface FullPathAdapter {
+  getFullPath: (path: string) => string;
+}
+
+interface ElectronWindow {
+  require: (moduleName: 'electron') => {
+    shell: {
+      openPath: (path: string) => Promise<string>;
+    };
+  };
+}
 
 /* ------------------------------------------------------------------ */
 /*  Modal wrapper                                                      */
@@ -88,7 +97,6 @@ function SkillDetailContent(props: {
 
   const [copied, setCopied] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [cliDetection, setCliDetection] = useState<CliDetection | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const whatItDoesRef = useRef<HTMLDivElement>(null);
@@ -108,12 +116,6 @@ function SkillDetailContent(props: {
       : 'Tooling';
 
   useEffect(() => {
-    detectAgentCli()
-      .then(setCliDetection)
-      .catch(() => setCliDetection({ claudeCode: { installed: false }, opencode: { installed: false } }));
-  }, []);
-
-  useEffect(() => {
     const el = whatItDoesRef.current;
     if (!el || !whatItDoes) return;
     el.replaceChildren();
@@ -126,24 +128,18 @@ function SkillDetailContent(props: {
   useEffect(() => {
     if (!scrollToExample || !exampleRef.current) return;
     const el = exampleRef.current;
-    requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
+    window.requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
   }, [scrollToExample]);
 
   const companionName =
     settings.platform === 'claude-code' ? 'Claudian' : 'obsidian-agent-client';
   const companionUrl = COMPANION_URLS[settings.platform];
 
-  const canRun =
-    cliDetection !== null &&
-    (settings.platform === 'claude-code'
-      ? cliDetection.claudeCode.installed
-      : cliDetection.opencode.installed);
-
   const handleCopy = async () => {
     try {
       await copySkillCommand(skill);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      window.setTimeout(() => setCopied(false), 1500);
     } catch {
       new Notice('Failed to copy to clipboard.');
     }
@@ -156,15 +152,10 @@ function SkillDetailContent(props: {
       new Notice(`SKILL.md not found for "${skill.name}"`);
       return;
     }
-    const fullPath = (adapter as any).getFullPath(path) as string;
+    const fullPath = (adapter as typeof adapter & FullPathAdapter).getFullPath(path);
     // electron is external in esbuild config
-    const { shell } = (window as any).require('electron');
-    shell.openPath(fullPath);
-  };
-
-  const handleRun = () => {
-    const cli = settings.platform === 'claude-code' ? 'claude' : 'opencode';
-    void runSkillViaCli(skill, cli);
+    const { shell } = (window as Window & ElectronWindow).require('electron');
+    void shell.openPath(fullPath);
   };
 
   const handleDisable = async () => {

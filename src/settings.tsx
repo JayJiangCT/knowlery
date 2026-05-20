@@ -67,7 +67,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private renderUninitializedState(containerEl: HTMLElement): void {
     const banner = containerEl.createDiv({ cls: 'knowlery-settings-banner' });
-    banner.createEl('h3', { text: 'Vault not set up' });
+    new Setting(banner).setName('Vault not set up').setHeading();
     banner.createEl('p', {
       text: 'This vault hasn\'t been configured for AI yet. Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.',
     });
@@ -78,7 +78,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     bannerBtn.addEventListener('click', () => {
       new SetupWizardModal(this.plugin.app, this.plugin, () => {
         this.plugin.onSetupComplete();
-        this.display();
+        void this.display();
       }).open();
     });
 
@@ -93,8 +93,6 @@ export class KnowlerySettingTab extends PluginSettingTab {
   }
 
   private renderGeneralSection(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName('General').setHeading();
-
     new Setting(containerEl)
       .setName('Knowledge base name')
       .setDesc('Updates KNOWLEDGE.md and regenerates agent config when saved.')

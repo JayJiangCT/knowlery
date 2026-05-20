@@ -29,8 +29,10 @@ function RuleCard(props: {
         setConfirmDelete(false);
       }
     };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
+    const doc = menuRef.current?.doc;
+    if (!doc) return;
+    doc.addEventListener('mousedown', handleOutside);
+    return () => doc.removeEventListener('mousedown', handleOutside);
   }, [menuOpen]);
 
   const firstLine = rule.content

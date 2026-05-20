@@ -52,7 +52,7 @@ export async function detectEnvironment(
 }
 
 async function detectClaudian(app: App): Promise<InstallDetectionResult> {
-  const manifestPath = normalizePath('.obsidian/plugins/claudian/manifest.json');
+  const manifestPath = normalizePath(`${app.vault.configDir}/plugins/claudian/manifest.json`);
   const adapter = app.vault.adapter;
   const filesPresent = Platform.isMobile ? false : await adapter.exists(manifestPath);
   const enabled = filesPresent && isPluginEnabled(app, 'claudian');

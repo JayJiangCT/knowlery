@@ -60,7 +60,7 @@ export function TodayTab() {
 
     const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(request));
     if (sent) {
-      new Notice('Request sent to Claudian.');
+      new Notice('Request sent to claudian.');
       return;
     }
 

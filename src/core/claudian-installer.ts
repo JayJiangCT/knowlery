@@ -1,8 +1,6 @@
 import { App, Platform, normalizePath, requestUrl } from 'obsidian';
 
 const CLAUDIAN_PLUGIN_ID = 'claudian';
-const CLAUDIAN_PLUGIN_DIR = '.obsidian/plugins/claudian';
-const COMMUNITY_PLUGINS_PATH = '.obsidian/community-plugins.json';
 const GITHUB_RELEASE_URL = 'https://api.github.com/repos/YishenTu/claudian/releases/latest';
 const REQUIRED_ASSETS = ['main.js', 'manifest.json', 'styles.css'] as const;
 
@@ -40,6 +38,14 @@ export interface ClaudianInstallResult {
   enabledDetail: string;
 }
 
+function getClaudianPluginDir(app: App): string {
+  return normalizePath(`${app.vault.configDir}/plugins/${CLAUDIAN_PLUGIN_ID}`);
+}
+
+function getCommunityPluginsPath(app: App): string {
+  return normalizePath(`${app.vault.configDir}/community-plugins.json`);
+}
+
 export async function installClaudian(app: App): Promise<ClaudianInstallResult> {
   if (Platform.isMobile) {
     throw new Error('Claudian installation is only available on desktop.');
@@ -47,15 +53,16 @@ export async function installClaudian(app: App): Promise<ClaudianInstallResult> 
 
   const release = await fetchLatestRelease();
   const assets = resolveRequiredAssets(release.assets ?? []);
+  const pluginDir = getClaudianPluginDir(app);
 
-  await ensureAdapterDir(app, '.obsidian');
-  await ensureAdapterDir(app, '.obsidian/plugins');
-  await ensureAdapterDir(app, CLAUDIAN_PLUGIN_DIR);
+  await ensureAdapterDir(app, app.vault.configDir);
+  await ensureAdapterDir(app, `${app.vault.configDir}/plugins`);
+  await ensureAdapterDir(app, pluginDir);
 
   for (const assetName of REQUIRED_ASSETS) {
     const asset = assets[assetName];
     const response = await requestUrl(asset.browser_download_url);
-    const targetPath = normalizePath(`${CLAUDIAN_PLUGIN_DIR}/${assetName}`);
+    const targetPath = normalizePath(`${pluginDir}/${assetName}`);
     await app.vault.adapter.write(targetPath, response.text);
   }
 
@@ -67,9 +74,9 @@ export async function installClaudian(app: App): Promise<ClaudianInstallResult> 
     installed: true,
     enabled: enableResult.enabled,
     version,
-    installPath: CLAUDIAN_PLUGIN_DIR,
+    installPath: pluginDir,
     releaseUrl,
-    installDetail: `Installed Claudian ${version} to ${CLAUDIAN_PLUGIN_DIR}.`,
+    installDetail: `Installed Claudian ${version} to ${pluginDir}.`,
     enabledDetail: enableResult.detail,
   };
 }
@@ -175,7 +182,7 @@ async function writeCommunityPluginState(
   if (!pluginIds.includes(CLAUDIAN_PLUGIN_ID)) {
     pluginIds.push(CLAUDIAN_PLUGIN_ID);
     await app.vault.adapter.write(
-      normalizePath(COMMUNITY_PLUGINS_PATH),
+      getCommunityPluginsPath(app),
       JSON.stringify(pluginIds, null, 2),
     );
   }
@@ -202,7 +209,7 @@ async function writeCommunityPluginState(
 }
 
 async function readCommunityPlugins(app: App): Promise<CommunityPluginsReadResult> {
-  const path = normalizePath(COMMUNITY_PLUGINS_PATH);
+  const path = getCommunityPluginsPath(app);
   if (!(await app.vault.adapter.exists(path))) {
     return { ok: true, pluginIds: [] };
   }

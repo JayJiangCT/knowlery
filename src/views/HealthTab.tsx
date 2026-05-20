@@ -10,6 +10,13 @@ import {
   IconPlay,
 } from './Icons';
 
+interface SettingApp {
+  setting?: {
+    open?: () => void;
+    openTabById?: (id: string) => void;
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  ExpandableList                                                     */
 /* ------------------------------------------------------------------ */
@@ -153,8 +160,9 @@ export function HealthTab() {
 
   const openSettings = () => {
     // Open Obsidian settings to the Knowlery tab
-    (plugin.app as any).setting?.open();
-    (plugin.app as any).setting?.openTabById?.(plugin.manifest.id);
+    const appWithSettings = plugin.app as typeof plugin.app & SettingApp;
+    appWithSettings.setting?.open?.();
+    appWithSettings.setting?.openTabById?.(plugin.manifest.id);
   };
 
   const formatTime = (date: Date): string => {

@@ -70,7 +70,7 @@ export function ThisNoteTab() {
     if (!noteContext) return;
     const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(noteContext.request));
     if (sent) {
-      new Notice('Current note request sent to Claudian.');
+      new Notice('Current note request sent to claudian.');
       return;
     }
     await copyRequest();

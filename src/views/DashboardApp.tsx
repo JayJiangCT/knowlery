@@ -179,7 +179,7 @@ export function DashboardApp() {
         <div className="knowlery-brand-header__actions">
           {lastRefreshed[activeTab] && (
             <span className="knowlery-brand-header__timestamp">
-              Checked {formatRelativeTime(lastRefreshed[activeTab]!)}
+              Checked {formatRelativeTime(lastRefreshed[activeTab])}
             </span>
           )}
           <button
