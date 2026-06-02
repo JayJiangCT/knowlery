@@ -1,7 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { setIcon } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
-import type { DashboardTab, DashboardRefreshPayload } from '../types';
+import type { DashboardRefreshPayload } from '../types';
+
+// Local tab type — replaced by DashboardScreen in Task 2.2
+type TabId = 'today' | 'note' | 'bake' | 'recipes';
 import { TodayTab } from './TodayTab';
 import { ThisNoteTab } from './ThisNoteTab';
 import { BakeTab } from './BakeTab';
@@ -19,7 +22,7 @@ function formatRelativeTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-const TABS: { id: DashboardTab; label: string; icon: string }[] = [
+const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'today', label: 'Today', icon: 'chef-hat' },
   { id: 'note', label: 'This note', icon: 'file-text' },
   { id: 'bake', label: 'Weekly Review', icon: 'book-open' },
@@ -46,16 +49,11 @@ function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: num
 export function DashboardApp() {
   const plugin = usePlugin();
   const [settings, updateSettings] = useSettings();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('today');
+  const [activeTab, setActiveTab] = useState<TabId>('today');
   const [initialized, setInitialized] = useState<boolean | null>(null);
-  const [refreshingTab, setRefreshingTab] = useState<DashboardTab | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
-  const [lastRefreshed, setLastRefreshed] = useState<Record<DashboardTab, Date | null>>({
-    today: null,
-    note: null,
-    bake: null,
-    recipes: null,
-  });
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
 
   useEffect(() => {
     isVaultInitialized(plugin.app).then(setInitialized);
@@ -69,27 +67,25 @@ export function DashboardApp() {
   }, [plugin]);
 
   const handleRefresh = useCallback(() => {
-    if (refreshingTab) return;
+    if (refreshing) return;
     const nextRequestId = refreshRequestId + 1;
     setRefreshRequestId(nextRequestId);
-    setRefreshingTab(activeTab);
+    setRefreshing(true);
     plugin.events.trigger('dashboard-refresh', {
-      tab: activeTab,
       requestId: nextRequestId,
     } satisfies DashboardRefreshPayload);
-  }, [plugin, activeTab, refreshRequestId, refreshingTab]);
+  }, [plugin, refreshRequestId, refreshing]);
 
   useEffect(() => {
-    const ref = plugin.events.on('dashboard-refresh-complete', (payload: DashboardRefreshPayload) => {
-      if (payload.tab !== refreshingTab) return;
-      setLastRefreshed((prev) => ({ ...prev, [payload.tab]: new Date() }));
-      setRefreshingTab(null);
+    const ref = plugin.events.on('dashboard-refresh-complete', (_payload: DashboardRefreshPayload) => {
+      setLastRefreshed(new Date());
+      setRefreshing(false);
     });
     return () => plugin.events.offref(ref);
-  }, [plugin, refreshingTab]);
+  }, [plugin]);
 
   useEffect(() => {
-    const ref = plugin.events.on('dashboard-open-tab', (tab: DashboardTab) => {
+    const ref = plugin.events.on('dashboard-open-tab', (tab: TabId) => {
       setActiveTab(tab);
     });
     return () => plugin.events.offref(ref);
@@ -172,22 +168,22 @@ export function DashboardApp() {
           <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
         </div>
         <div className="knowlery-brand-header__actions">
-          {lastRefreshed[activeTab] && (
+          {lastRefreshed && (
             <span className="knowlery-brand-header__timestamp">
-              Checked {formatRelativeTime(lastRefreshed[activeTab])}
+              Checked {formatRelativeTime(lastRefreshed)}
             </span>
           )}
           <button
             className="knowlery-header-action"
             onClick={handleRefresh}
-            disabled={refreshingTab !== null}
+            disabled={refreshing}
           >
             <ObsidianIcon
               icon="refresh-cw"
               size={14}
-              className={refreshingTab === activeTab ? 'knowlery-spin' : undefined}
+              className={refreshing ? 'knowlery-spin' : undefined}
             />
-            {refreshingTab === activeTab ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         </div>
       </div>

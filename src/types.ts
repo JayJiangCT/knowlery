@@ -247,9 +247,8 @@ export interface CounterSummary {
   };
 }
 
-export type DashboardTab = 'today' | 'note' | 'bake' | 'recipes';
+export type DashboardScreen = 'home' | 'all-moves' | 'all-activity' | 'move-detail';
 
 export interface DashboardRefreshPayload {
-  tab: DashboardTab;
   requestId: number;
 }
