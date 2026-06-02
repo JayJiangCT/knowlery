@@ -54,10 +54,8 @@ export function DashboardApp() {
     const recheck = () => {
       isVaultInitialized(plugin.app).then(setInitialized);
     };
-    plugin.events.on('setup-complete', recheck);
-    return () => {
-      plugin.events.off('setup-complete', recheck);
-    };
+    const ref = plugin.events.on('setup-complete', recheck);
+    return () => plugin.events.offref(ref);
   }, [plugin]);
 
   const handleRefresh = useCallback(() => {
@@ -167,7 +165,7 @@ export function DashboardApp() {
         </div>
       </div>
 
-      <div className="knowlery-tab-content" role="tabpanel">
+      <div className="knowlery-tab-content">
         {!settings.onboardingDismissed && (
           <div className="knowlery-banner">
             <div className="knowlery-banner__text">
