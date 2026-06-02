@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Notice } from 'obsidian';
 import { usePlugin } from '../context';
 import type { SkillInfo } from '../types';
 import { listSkills } from '../core/skill-manager';
@@ -140,8 +141,11 @@ export function SkillsLibrary() {
   const [skills, setSkills] = useState<SkillInfo[]>([]);
 
   const refresh = useCallback(async () => {
-    const skillResult = await listSkills(plugin.app);
-    setSkills(skillResult);
+    try {
+      setSkills(await listSkills(plugin.app));
+    } catch {
+      new Notice('Failed to load skills.');
+    }
   }, [plugin]);
 
   useEffect(() => {
