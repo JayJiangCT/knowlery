@@ -8,7 +8,7 @@ import { buildTodayModel } from '../core/today-model';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { getVaultStats } from '../core/vault-health';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
-import { withActivityLedgerReminder } from '../core/agent-request';
+import { sendPromptToAgent, copyPrompt } from './request-actions';
 import type { DailyReviewParseResult, DailyReviewRequest } from '../core/agent-review';
 import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest } from '../core/agent-review';
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
@@ -94,12 +94,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       new Notice('No agent request prepared yet.');
       return;
     }
-    try {
-      await navigator.clipboard.writeText(withActivityLedgerReminder(request));
-      new Notice('Agent request copied.');
-    } catch {
-      new Notice('Could not copy agent request.');
-    }
+    await copyPrompt(request);
   };
 
   const sendRequest = async (request?: string) => {
@@ -107,12 +102,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       new Notice('No agent request prepared yet.');
       return;
     }
-    const sent = await sendPromptToClaudian(plugin.app, withActivityLedgerReminder(request));
-    if (sent) {
-      new Notice('Request sent to claudian.');
-      return;
-    }
-    await copyRequest(request);
+    await sendPromptToAgent(plugin.app, request);
   };
 
   const generateReport = async () => {
