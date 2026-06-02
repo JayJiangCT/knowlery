@@ -1,5 +1,5 @@
 import type { TFile } from 'obsidian';
-import { Notice, setTooltip } from 'obsidian';
+import { normalizePath, Notice, setTooltip } from 'obsidian';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePlugin } from '../context';
 import type { DashboardRefreshPayload, DashboardScreen } from '../types';
@@ -9,8 +9,25 @@ import { readRecentActivityRecords } from '../core/activity-ledger';
 import { getVaultStats } from '../core/vault-health';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
 import { withActivityLedgerReminder } from '../core/agent-request';
+import type { DailyReviewParseResult, DailyReviewRequest } from '../core/agent-review';
+import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest } from '../core/agent-review';
+import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
-import { IconClipboard, IconPlus } from './Icons';
+import { IconBookOpen, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
+
+const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
+
+interface FullPathAdapter {
+  getFullPath: (path: string) => string | undefined;
+}
+
+interface ElectronWindow {
+  require: (moduleName: 'electron') => {
+    shell: {
+      openPath: (path: string) => Promise<string>;
+    };
+  };
+}
 
 export function DashboardHome(props: { navigate: (screen: DashboardScreen, payload?: unknown) => void }) {
   const plugin = usePlugin();
@@ -18,9 +35,28 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const initialFile = plugin.app.workspace.getActiveFile();
   const [file, setFile] = useState<TFile | null>(initialFile?.extension === 'md' ? initialFile : null);
 
+  // Weekly summary state
+  const [generating, setGenerating] = useState(false);
+  const [polishing, setPolishing] = useState(false);
+  const [latestReportExists, setLatestReportExists] = useState(false);
+  const [recordCount, setRecordCount] = useState(0);
+  const [dailyReview, setDailyReview] = useState<{
+    request: DailyReviewRequest;
+    requestExists: boolean;
+    result: DailyReviewParseResult | null;
+  } | null>(null);
+
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
     setModel(buildTodayModel(getVaultStats(plugin.app), activity.records));
+    setRecordCount(activity.records.length);
+    setLatestReportExists(await plugin.app.vault.adapter.exists(normalizePath(LATEST_REPORT_PATH)));
+    const request = buildDailyReviewRequest(activity.records);
+    setDailyReview({
+      request,
+      requestExists: await plugin.app.vault.adapter.exists(normalizePath(request.requestPath)),
+      result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
+    });
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -74,6 +110,63 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       return;
     }
     await copyRequest(request);
+  };
+
+  const generateReport = async () => {
+    setGenerating(true);
+    try {
+      const result = await readRecentActivityRecords(plugin.app, 7);
+      const written = await writeWeeklyBakeReport(plugin.app, buildWeeklyBakeModel(result.records));
+      setLatestReportExists(true);
+      new Notice(`Weekly summary generated: ${written.latestPath}`);
+      await refresh();
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const openLatestReport = async () => {
+    const path = normalizePath(LATEST_REPORT_PATH);
+    const adapter = plugin.app.vault.adapter;
+    if (!(await adapter.exists(path))) {
+      new Notice('No weekly summary has been generated yet.');
+      setLatestReportExists(false);
+      return;
+    }
+    const fullPath = (adapter as typeof adapter & FullPathAdapter).getFullPath(path);
+    if (!fullPath) {
+      new Notice(`Weekly summary is at ${path}`);
+      return;
+    }
+    const { shell } = (window as Window & ElectronWindow).require('electron');
+    void shell.openPath(fullPath);
+  };
+
+  const polishWithAgent = async () => {
+    setPolishing(true);
+    try {
+      const result = await readRecentActivityRecords(plugin.app, 7);
+      const request = buildDailyReviewRequest(result.records);
+      await writeDailyReviewRequest(plugin.app, request);
+      const sent = await sendPromptToClaudian(plugin.app, request.prompt);
+      setDailyReview({
+        request,
+        requestExists: true,
+        result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
+      });
+      if (sent) {
+        new Notice('Review polish request sent to claudian.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(request.prompt);
+        new Notice('Claudian is not available. Review request copied.');
+      } catch {
+        new Notice('Claudian is not available, and the request could not be copied.');
+      }
+    } finally {
+      setPolishing(false);
+    }
   };
 
   const noteRequest = useMemo(() => {
@@ -130,6 +223,46 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         ) : (
           <p className="knowlery-home__note-empty">Open a Markdown note and Knowlery will suggest one small maintenance move for it.</p>
         )}
+      </section>
+
+      <section className="knowlery-home__week">
+        <div className="knowlery-section-label">This week</div>
+        <article className="knowlery-home__week-card">
+          <div className="knowlery-home__week-header">
+            <h3>Weekly summary</h3>
+            <span className="knowlery-home__week-count">{recordCount} records</span>
+          </div>
+          <div className="knowlery-home__week-actions">
+            <button
+              type="button"
+              className="knowlery-btn knowlery-btn--primary"
+              onClick={generateReport}
+              disabled={generating}
+            >
+              {generating ? <IconRefresh size={14} /> : <IconBookOpen size={14} />}
+              <span>{generating ? 'Generating…' : 'Generate summary'}</span>
+            </button>
+            <button
+              type="button"
+              className="knowlery-btn knowlery-btn--outline"
+              onClick={openLatestReport}
+              disabled={!latestReportExists}
+            >
+              <IconExternalLink size={14} />
+              <span>Open last report</span>
+            </button>
+            <button
+              type="button"
+              className="knowlery-btn knowlery-btn--outline"
+              onClick={polishWithAgent}
+              disabled={polishing}
+            >
+              {polishing ? <IconRefresh size={14} /> : <IconPlay size={14} />}
+              <span>{polishing ? 'Preparing…' : 'Send for review'}</span>
+            </button>
+          </div>
+          <WeeklyReviewStatus dailyReview={dailyReview} onCheckResult={() => refresh()} />
+        </article>
       </section>
 
       <section className="knowlery-home__stats" aria-label="Vault stats">
@@ -206,4 +339,45 @@ function IconActionButton(props: { label: string; onClick: () => void; children:
       {props.children}
     </button>
   );
+}
+
+function WeeklyReviewStatus(props: {
+  dailyReview: {
+    request: DailyReviewRequest;
+    requestExists: boolean;
+    result: DailyReviewParseResult | null;
+  } | null;
+  onCheckResult: () => void;
+}) {
+  if (!props.dailyReview) return null;
+
+  const { request, requestExists, result } = props.dailyReview;
+
+  if (result?.ok) {
+    return (
+      <article className="knowlery-home__week-result">
+        <h3>{result.result.title}</h3>
+        <p>{result.result.summary}</p>
+        <span>Next recipe: {result.result.nextRecipe}</span>
+      </article>
+    );
+  }
+
+  if (result && !result.ok) {
+    return <p className="knowlery-home__week-state">Result file exists, but the JSON is malformed: {result.error}</p>;
+  }
+
+  if (requestExists) {
+    return (
+      <div className="knowlery-home__week-pending">
+        <p className="knowlery-home__week-state">Request created. Waiting for agent result at {request.resultPath}.</p>
+        <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={props.onCheckResult}>
+          <IconRefresh size={14} />
+          <span>Check result</span>
+        </button>
+      </div>
+    );
+  }
+
+  return null;
 }
