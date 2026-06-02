@@ -362,7 +362,7 @@ function WeeklyReviewStatus(props: {
       <article className="knowlery-home__week-result">
         <h3>{result.result.title}</h3>
         <p>{result.result.summary}</p>
-        <span>Next recipe: {result.result.nextRecipe}</span>
+        <span>Next move: {result.result.nextRecipe}</span>
       </article>
     );
   }

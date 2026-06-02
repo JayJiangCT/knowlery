@@ -46,16 +46,16 @@ export function buildTodayModel(stats: VaultStats, records: ActivityRecord[]): T
 
   return {
     stage: 'first-maintenance',
-    title: 'Your vault already has material. Let’s do the first cook.',
+    title: 'Your vault already has material. Let’s do the first pass.',
     body: 'Pick existing notes and turn them into a more reusable knowledge structure. Knowlery will start with a gentle baseline instead of asking you to rebuild everything.',
     primaryAction: {
-      label: 'Prepare first cook',
+      label: 'Prepare first pass',
       kind: 'agent-request',
       request: buildFirstCookRequest(),
     },
     secondaryActions: [
       { label: 'Scan vault health', kind: 'local' },
-      { label: 'Open recipes', kind: 'local' },
+      { label: 'Open moves', kind: 'local' },
     ],
     stats: [
       { label: 'markdown notes', value: String(stats.notesCount) },
@@ -101,20 +101,20 @@ function buildReturningModel(summary: CounterSummary): TodayModel {
     title: `Recently you have been shaping ${topicPhrase}.`,
     body: thread
       ? `${thread.nextMoveReason} A small next move is enough: ${thread.nextMove.toLowerCase()} this thread before adding more material.`
-      : 'Your recent activity is ready for a quiet review. Look for one note or thread that is worth baking into a reusable shape.',
+      : 'Your recent activity is ready for a quiet review. Look for one note or thread worth turning into a reusable shape.',
     primaryAction: {
       label: thread ? 'Prepare next move' : 'Review recent work',
       kind: 'agent-request',
       request: thread?.suggestedRequest,
     },
     secondaryActions: [
-      { label: 'Generate Weekly Atlas', kind: 'report' },
+      { label: 'Generate summary', kind: 'report' },
       { label: 'Open review menu', kind: 'local' },
     ],
     stats: [
       { label: 'activity records', value: String(summary.coverage.recordsLogged) },
       { label: 'active threads', value: String(summary.knowledgeThreads.length) },
-      { label: 'unbaked notes', value: String(summary.unbakedNotes.length) },
+      { label: 'unprocessed notes', value: String(summary.unbakedNotes.length) },
     ],
     summary,
   };
@@ -135,13 +135,13 @@ function buildSystemActivityModel(summary: CounterSummary, record: ActivityRecor
       kind: 'local',
     },
     secondaryActions: [
-      { label: 'Generate Weekly Atlas', kind: 'report' },
+      { label: 'Generate summary', kind: 'report' },
       { label: 'Open review menu', kind: 'local' },
     ],
     stats: [
       { label: 'activity records', value: String(summary.coverage.recordsLogged) },
       { label: 'active threads', value: String(summary.knowledgeThreads.length) },
-      { label: 'unbaked notes', value: String(summary.unbakedNotes.length) },
+      { label: 'unprocessed notes', value: String(summary.unbakedNotes.length) },
     ],
     summary,
   };

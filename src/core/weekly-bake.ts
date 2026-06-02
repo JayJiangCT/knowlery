@@ -88,7 +88,7 @@ export function generateWeeklyBakeHtml(model: WeeklyBakeModel): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Knowledge Review Atlas ${escapeHtml(model.weekLabel)}</title>
+  <title>Weekly Knowledge Summary ${escapeHtml(model.weekLabel)}</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -424,7 +424,7 @@ export function generateWeeklyBakeHtml(model: WeeklyBakeModel): string {
       <div class="topbar">
         <div class="brand">
           <p class="meta">Knowledge Barkery</p>
-          <p class="muted">Weekly knowledge review atlas</p>
+          <p class="muted">Weekly knowledge summary</p>
         </div>
         <div class="language" aria-label="Language">
           <button type="button" data-lang="en" aria-pressed="true">English</button>
@@ -594,8 +594,8 @@ function buildOpeningSummary(summary: CounterSummary, locale: AtlasLocale): stri
   const firstTheme = summary.recurringThemes[0]?.name;
   if (!firstTheme) {
     return locale === 'zh'
-      ? '这周还没有可复盘的知识活动。等 agent 或手动 reflection 留下记录后，Knowledge Atlas 会把它们整理成可以继续思考的线索。'
-      : 'There is not enough knowledge activity to review yet. Once agents or manual reflections leave lightweight receipts, this atlas will turn them into trails you can revisit.';
+      ? '这周还没有可复盘的知识活动。等 agent 或手动 reflection 留下记录后，这份周总结会把它们整理成可以继续思考的线索。'
+      : 'There is not enough knowledge activity to review yet. Once agents or manual reflections leave lightweight receipts, this summary will turn them into trails you can revisit.';
   }
 
   const secondTheme = summary.recurringThemes[1]?.name;
@@ -908,7 +908,7 @@ const ZH_LABELS = {
 };
 
 const EN_LABELS = {
-  title: 'Knowledge Review Atlas',
+  title: 'Weekly Knowledge Summary',
   generated: 'Generated',
   records: 'activity records',
   threads: 'active trails',
