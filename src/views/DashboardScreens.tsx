@@ -1,4 +1,3 @@
-import { Notice } from 'obsidian';
 import { useEffect, useState } from 'react';
 import { usePlugin } from '../context';
 import type { ActivityRecord, DashboardMove, DashboardScreen } from '../types';
@@ -7,13 +6,13 @@ import { readRecentActivityRecords } from '../core/activity-ledger';
 import { sendPromptToAgent, copyPrompt } from './request-actions';
 import { IconChevronLeft, IconChevronRight, IconClipboard } from './Icons';
 
-function Back(props: { navigate: (s: DashboardScreen, payload?: unknown) => void; label: string }) {
+function Back(props: { navigate: (s: DashboardScreen, payload?: unknown) => void; label: string; ariaDestination?: string }) {
   return (
     <button
       type="button"
       className="knowlery-screen__back"
       onClick={() => props.navigate('home')}
-      aria-label={`Back to ${props.label}`}
+      aria-label={`Back to ${props.ariaDestination ?? props.label}`}
     >
       <IconChevronLeft size={16} />
       {props.label}
@@ -93,7 +92,7 @@ function MoveDetailScreen(props: {
 
   return (
     <div className="knowlery-screen">
-      <Back navigate={props.navigate} label="Back" />
+      <Back navigate={props.navigate} label="Back" ariaDestination="home" />
       <section className="knowlery-screen__detail">
         <h2 className="knowlery-screen__detail-title">{move.title}</h2>
         {move.skillTag && (
