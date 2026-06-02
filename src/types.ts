@@ -249,6 +249,15 @@ export interface CounterSummary {
 
 export type DashboardScreen = 'home' | 'all-moves' | 'all-activity' | 'move-detail';
 
+export interface DashboardMove {
+  id: string;
+  title: string;
+  meta: string;
+  description: string;
+  prompt: string;
+  skillTag: string;
+}
+
 export interface DashboardRefreshPayload {
   requestId: number;
 }

@@ -6,6 +6,7 @@ import { buildCounterSummary } from '../core/activity-model';
 import { sendPromptToClaudian } from '../core/claudian-bridge';
 import { withActivityLedgerReminder } from '../core/agent-request';
 import { readRecentActivityRecords } from '../core/activity-ledger';
+import { RECIPE_BOOK } from '../core/moves';
 import {
   IconChevronRight,
   IconChevronDown,
@@ -17,14 +18,28 @@ import {
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
 
-interface PantryRecipe {
+// PantryRecipe shape is now DashboardMove in src/core/moves.ts.
+// RECIPE_BOOK is imported from there; keep a local alias for the
+// SkillsTab rendering until this file is deleted in Task 3.5.
+type PantryRecipe = {
   id: string;
   title: string;
   threadLabel: string;
   description: string;
   request: string;
   skills: string;
-}
+};
+
+// Map the shared DashboardMove shape to the local PantryRecipe shape used
+// by the existing SkillsTab rendering below.
+const RECIPE_BOOK_LOCAL: PantryRecipe[] = RECIPE_BOOK.map((m) => ({
+  id: m.id,
+  title: m.title,
+  threadLabel: m.meta,
+  description: m.description,
+  request: m.prompt,
+  skills: m.skillTag,
+}));
 
 const MOVE_RECIPES: Record<KnowledgeThreadStage, { label: string; description: string; skills: string }> = {
   Capture: {
@@ -58,49 +73,6 @@ const MOVE_RECIPES: Record<KnowledgeThreadStage, { label: string; description: s
     skills: 'review',
   },
 };
-
-const RECIPE_BOOK: PantryRecipe[] = [
-  {
-    id: 'digest-new-material',
-    title: 'Digest new material',
-    threadLabel: 'Fresh notes, clips, or conversations',
-    description: 'Turn rough material into durable notes, concepts, and index updates.',
-    request: 'Help me distill recently added or unprocessed material into the knowledge base — extract key concepts, related entities, reusable structures, and update the necessary indexes.',
-    skills: 'cook',
-  },
-  {
-    id: 'connect-thread',
-    title: 'Connect a thread',
-    threadLabel: 'A topic that keeps coming back',
-    description: 'Find older notes, adjacent themes, and reusable patterns around one active topic.',
-    request: 'Pick a topic that keeps coming back recently. Review related older notes, find connections, reusable patterns, structural gaps, and parts worth distilling further.',
-    skills: 'explore + cook',
-  },
-  {
-    id: 'pressure-test',
-    title: 'Pressure-test an idea',
-    threadLabel: 'A belief, plan, or conclusion',
-    description: 'Check assumptions, missing evidence, counterexamples, and open questions.',
-    request: 'Help me pressure-test a recent important idea: which conclusions lack evidence, which assumptions should be challenged, and which counterexamples or risks are worth recording in the knowledge base.',
-    skills: 'challenge + ask',
-  },
-  {
-    id: 'clean-pantry',
-    title: 'Clean the pantry',
-    threadLabel: 'Vault structure and metadata',
-    description: 'Review drift, duplicates, frontmatter gaps, broken links, and index hygiene.',
-    request: 'Check the current structural health of the knowledge base: broken links, duplicate content, frontmatter gaps, index drift, and directories or notes that need organizing.',
-    skills: 'audit + organize',
-  },
-  {
-    id: 'bake-output',
-    title: 'Create an output',
-    threadLabel: 'Reusable artifact or decision',
-    description: 'Turn existing notes into a checklist, outline, template, proposal, or decision memo.',
-    request: 'Based on my knowledge base content, help me turn a mature topic into a reusable output: an outline, template, checklist, proposal, or decision memo.',
-    skills: 'ask + ideas + cook',
-  },
-];
 
 function PantryMoveActions(props: {
   request: string;
@@ -232,7 +204,7 @@ export function SkillsTab() {
       <section className="knowlery-pantry-moves">
         <div className="knowlery-section-label">Review moves</div>
         <div className="knowlery-pantry-moves__grid">
-          {RECIPE_BOOK.map((recipe) => (
+          {RECIPE_BOOK_LOCAL.map((recipe) => (
             <article key={recipe.id} className={`knowlery-pantry-move knowlery-pantry-move--recipe${openRecipeId === recipe.id ? ' is-open' : ''}`}>
               <button
                 type="button"

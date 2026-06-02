@@ -2,7 +2,7 @@ import type { TFile } from 'obsidian';
 import { normalizePath, Notice, setTooltip } from 'obsidian';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePlugin } from '../context';
-import type { DashboardRefreshPayload, DashboardScreen } from '../types';
+import type { ActivityRecord, DashboardMove, DashboardRefreshPayload, DashboardScreen } from '../types';
 import type { TodayModel } from '../core/today-model';
 import { buildTodayModel } from '../core/today-model';
 import { readRecentActivityRecords } from '../core/activity-ledger';
@@ -12,8 +12,9 @@ import { withActivityLedgerReminder } from '../core/agent-request';
 import type { DailyReviewParseResult, DailyReviewRequest } from '../core/agent-review';
 import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest } from '../core/agent-review';
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
+import { RECIPE_BOOK } from '../core/moves';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
-import { IconBookOpen, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
+import { IconBookOpen, IconChevronRight, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
@@ -40,6 +41,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const [polishing, setPolishing] = useState(false);
   const [latestReportExists, setLatestReportExists] = useState(false);
   const [recordCount, setRecordCount] = useState(0);
+  const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [dailyReview, setDailyReview] = useState<{
     request: DailyReviewRequest;
     requestExists: boolean;
@@ -49,6 +51,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
     setModel(buildTodayModel(getVaultStats(plugin.app), activity.records));
+    setRecords(activity.records);
     setRecordCount(activity.records.length);
     setLatestReportExists(await plugin.app.vault.adapter.exists(normalizePath(LATEST_REPORT_PATH)));
     const request = buildDailyReviewRequest(activity.records);
@@ -193,6 +196,12 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         />
       </section>
 
+      <SuggestedMovesSection
+        moves={RECIPE_BOOK}
+        onMoveClick={(move) => props.navigate('move-detail', move)}
+        onViewAll={() => props.navigate('all-moves')}
+      />
+
       <section className="knowlery-home__note">
         <div className="knowlery-section-label">This note</div>
         {file ? (
@@ -224,6 +233,11 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
           <p className="knowlery-home__note-empty">Open a Markdown note and Knowlery will suggest one small maintenance move for it.</p>
         )}
       </section>
+
+      <RecentActivitySection
+        records={records}
+        onViewAll={() => props.navigate('all-activity')}
+      />
 
       <section className="knowlery-home__week">
         <div className="knowlery-section-label">This week</div>
@@ -380,4 +394,74 @@ function WeeklyReviewStatus(props: {
   }
 
   return null;
+}
+
+const MOVES_CAP = 3;
+
+function SuggestedMovesSection(props: {
+  moves: DashboardMove[];
+  onMoveClick: (move: DashboardMove) => void;
+  onViewAll: () => void;
+}) {
+  const { moves } = props;
+  const shown = moves.slice(0, MOVES_CAP);
+  return (
+    <section className="knowlery-home__moves">
+      <div className="knowlery-section-label">Suggested moves</div>
+      {shown.map((move) => (
+        <button
+          key={move.id}
+          type="button"
+          className="knowlery-home__move"
+          onClick={() => props.onMoveClick(move)}
+        >
+          <div className="knowlery-home__move-body">
+            <span className="knowlery-home__move-title">{move.title}</span>
+            <span className="knowlery-home__move-meta">{move.meta}</span>
+          </div>
+          <IconChevronRight size={14} />
+        </button>
+      ))}
+      {moves.length > MOVES_CAP && (
+        <button
+          type="button"
+          className="knowlery-home__viewall"
+          onClick={props.onViewAll}
+        >
+          View all ({moves.length}) →
+        </button>
+      )}
+    </section>
+  );
+}
+
+const ACTIVITY_CAP = 3;
+
+function RecentActivitySection(props: {
+  records: ActivityRecord[];
+  onViewAll: () => void;
+}) {
+  const { records } = props;
+  if (records.length === 0) return null;
+  const shown = records.slice(0, ACTIVITY_CAP);
+  return (
+    <section className="knowlery-home__activity">
+      <div className="knowlery-section-label">Recent activity</div>
+      {shown.map((record, index) => (
+        <div key={`${record.time}-${index}`} className="knowlery-home__act">
+          <span className="knowlery-home__act-summary">{record.summary}</span>
+          <span className="knowlery-home__act-meta">{record.time.slice(0, 10)}</span>
+        </div>
+      ))}
+      {records.length > ACTIVITY_CAP && (
+        <button
+          type="button"
+          className="knowlery-home__viewall"
+          onClick={props.onViewAll}
+        >
+          View all ({records.length}) →
+        </button>
+      )}
+    </section>
+  );
 }
