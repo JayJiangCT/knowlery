@@ -52,12 +52,14 @@ export class KnowlerySettingTab extends PluginSettingTab {
   private nodeDetectMessage: string | null = null;
   private nodeDetecting = false;
   private advancedRoot: Root | null = null;
+  private tabOpen = false;
 
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
 
   hide(): void {
+    this.tabOpen = false;
     this.advancedRoot?.unmount();
     this.advancedRoot = null;
   }
@@ -65,10 +67,13 @@ export class KnowlerySettingTab extends PluginSettingTab {
   async display(): Promise<void> {
     this.advancedRoot?.unmount();
     this.advancedRoot = null;
+    this.tabOpen = true;
     const { containerEl } = this;
     containerEl.empty();
 
     const initialized = await isVaultInitialized(this.plugin.app);
+
+    if (!this.tabOpen) return;
 
     if (!initialized) {
       this.renderUninitializedState(containerEl);
@@ -90,7 +95,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     bannerBtn.addEventListener('click', () => {
       new SetupWizardModal(this.plugin.app, this.plugin, () => {
         this.plugin.onSetupComplete();
-        void this.display();
+        if (this.tabOpen) void this.display();
       }).open();
     });
 
@@ -169,7 +174,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
               this.plugin.settings.platform = otherPlatform;
               await this.plugin.saveSettings();
               new Notice(`Switched to ${otherLabel}`);
-              this.display();
+              if (this.tabOpen) this.display();
             },
           ).open();
         }),
@@ -213,7 +218,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
               new Notice(this.nodeDetectMessage);
             } finally {
               this.nodeDetecting = false;
-              await this.display();
+              if (this.tabOpen) await this.display();
             }
           }),
       );
