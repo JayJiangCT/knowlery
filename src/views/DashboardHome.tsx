@@ -141,6 +141,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       const result = await readRecentActivityRecords(plugin.app, 7);
       const request = buildDailyReviewRequest(result.records);
       await writeDailyReviewRequest(plugin.app, request);
+      // Weekly review sends the structured request prompt as-is (no ledger-reminder wrapper).
       const sent = await sendPromptToClaudian(plugin.app, request.prompt);
       setDailyReview({
         request,
@@ -243,7 +244,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               onClick={generateReport}
               disabled={generating}
             >
-              {generating ? <IconRefresh size={14} /> : <IconBookOpen size={14} />}
+              {generating ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconBookOpen size={14} />}
               <span>{generating ? 'Generating…' : 'Generate summary'}</span>
             </button>
             <button
@@ -261,7 +262,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               onClick={polishWithAgent}
               disabled={polishing}
             >
-              {polishing ? <IconRefresh size={14} /> : <IconPlay size={14} />}
+              {polishing ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconPlay size={14} />}
               <span>{polishing ? 'Preparing…' : 'Send for review'}</span>
             </button>
           </div>

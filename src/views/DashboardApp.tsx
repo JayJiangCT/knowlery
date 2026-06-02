@@ -144,25 +144,27 @@ export function DashboardApp() {
           <span className="knowlery-brand-header__title">Knowlery</span>
           <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
         </div>
-        <div className="knowlery-brand-header__actions">
-          {lastRefreshed && (
-            <span className="knowlery-brand-header__timestamp">
-              Checked {formatRelativeTime(lastRefreshed)}
-            </span>
-          )}
-          <button
-            className="knowlery-header-action"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <ObsidianIcon
-              icon="refresh-cw"
-              size={14}
-              className={refreshing ? 'knowlery-spin' : undefined}
-            />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
+        {screen === 'home' && (
+          <div className="knowlery-brand-header__actions">
+            {lastRefreshed && (
+              <span className="knowlery-brand-header__timestamp">
+                Checked {formatRelativeTime(lastRefreshed)}
+              </span>
+            )}
+            <button
+              className="knowlery-header-action"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <ObsidianIcon
+                icon="refresh-cw"
+                size={14}
+                className={refreshing ? 'knowlery-spin' : undefined}
+              />
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="knowlery-tab-content">
