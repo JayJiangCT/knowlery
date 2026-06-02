@@ -1,5 +1,6 @@
+import type { TFile } from 'obsidian';
 import { Notice, setTooltip } from 'obsidian';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePlugin } from '../context';
 import type { DashboardRefreshPayload, DashboardScreen } from '../types';
 import type { TodayModel } from '../core/today-model';
@@ -14,6 +15,8 @@ import { IconClipboard, IconPlus } from './Icons';
 export function DashboardHome(props: { navigate: (screen: DashboardScreen, payload?: unknown) => void }) {
   const plugin = usePlugin();
   const [model, setModel] = useState<TodayModel | null>(null);
+  const initialFile = plugin.app.workspace.getActiveFile();
+  const [file, setFile] = useState<TFile | null>(initialFile?.extension === 'md' ? initialFile : null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
@@ -28,6 +31,20 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     });
     return () => plugin.events.offref(ref);
   }, [plugin, refresh]);
+
+  useEffect(() => {
+    const fileOpenRef = plugin.app.workspace.on('file-open', (nextFile) => {
+      if (nextFile?.extension === 'md') setFile(nextFile);
+    });
+    const activeLeafRef = plugin.app.workspace.on('active-leaf-change', () => {
+      const activeFile = plugin.app.workspace.getActiveFile();
+      if (activeFile?.extension === 'md') setFile(activeFile);
+    });
+    return () => {
+      plugin.app.workspace.offref(fileOpenRef);
+      plugin.app.workspace.offref(activeLeafRef);
+    };
+  }, [plugin]);
 
   const addReflection = () => {
     new ReflectionCaptureModal(plugin.app, plugin, () => refresh()).open();
@@ -59,6 +76,11 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     await copyRequest(request);
   };
 
+  const noteRequest = useMemo(() => {
+    if (!file) return null;
+    return `Review the current note "${file.basename}": find related older notes and comparisons, then identify which connections, questions, or structures are worth writing back to the knowledge base.`;
+  }, [file]);
+
   if (!model) return <div className="knowlery-home" />;
 
   return (
@@ -76,6 +98,38 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
           onSendRequest={sendRequest}
           onNavigateAllMoves={() => props.navigate('all-moves')}
         />
+      </section>
+
+      <section className="knowlery-home__note">
+        <div className="knowlery-section-label">This note</div>
+        {file ? (
+          <article className="knowlery-home__note-card">
+            <div className="knowlery-home__note-header">
+              <h3>{file.basename}</h3>
+              <span className="knowlery-home__note-path">{file.path}</span>
+            </div>
+            <p>{noteRequest}</p>
+            <div className="knowlery-home__note-actions">
+              <button
+                type="button"
+                className="knowlery-btn knowlery-btn--primary"
+                onClick={() => sendRequest(noteRequest ?? undefined)}
+              >
+                <span>Send to agent</span>
+              </button>
+              <button
+                type="button"
+                className="knowlery-btn knowlery-btn--outline"
+                onClick={() => copyRequest(noteRequest ?? undefined)}
+              >
+                <IconClipboard size={14} />
+                <span>Copy prompt</span>
+              </button>
+            </div>
+          </article>
+        ) : (
+          <p className="knowlery-home__note-empty">Open a Markdown note and Knowlery will suggest one small maintenance move for it.</p>
+        )}
       </section>
 
       <section className="knowlery-home__stats" aria-label="Vault stats">
