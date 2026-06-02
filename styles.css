@@ -3742,3 +3742,16 @@
   flex-direction: column;
   gap: var(--knowlery-space-md);
 }
+
+.knowlery-skills__source-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--knowlery-space-md);
+  margin-block-end: var(--knowlery-space-md);
+}
+
+.knowlery-skills__source-toolbar .knowlery-section-label {
+  margin-block: 0;
+}
