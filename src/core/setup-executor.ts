@@ -121,7 +121,8 @@ export async function readManifest(app: App): Promise<Manifest | null> {
 }
 
 export async function isVaultInitialized(app: App): Promise<boolean> {
-  return app.vault.adapter.exists(normalizePath(MANIFEST_PATH));
+  return (await app.vault.adapter.exists(normalizePath(MANIFEST_PATH)))
+    || (await app.vault.adapter.exists(normalizePath('KNOWLEDGE.md')));
 }
 
 export async function writeManifestUpdate(
