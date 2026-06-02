@@ -1,6 +1,10 @@
 import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { StrictMode } from 'react';
+import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from './main';
 import type { Platform } from './types';
+import { PluginContext } from './context';
+import { SettingsAdvanced } from './views/SettingsAdvanced';
 import { generatePlatformConfig, migratePlatform } from './core/platform-adapter';
 import { detectNode } from './core/node-detect';
 import { generateKnowledgeMd } from './assets/templates';
@@ -47,12 +51,20 @@ class ConfirmModal extends Modal {
 export class KnowlerySettingTab extends PluginSettingTab {
   private nodeDetectMessage: string | null = null;
   private nodeDetecting = false;
+  private advancedRoot: Root | null = null;
 
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
 
+  hide(): void {
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
+  }
+
   async display(): Promise<void> {
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
     const { containerEl } = this;
     containerEl.empty();
 
@@ -90,6 +102,19 @@ export class KnowlerySettingTab extends PluginSettingTab {
     this.renderPlatformSection(containerEl);
     this.renderActivitySection(containerEl);
     this.renderMaintenanceSection(containerEl);
+    this.renderAdvancedSection(containerEl);
+  }
+
+  private renderAdvancedSection(containerEl: HTMLElement): void {
+    const mount = containerEl.createDiv({ cls: 'knowlery-settings-advanced-mount' });
+    this.advancedRoot = createRoot(mount);
+    this.advancedRoot.render(
+      <StrictMode>
+        <PluginContext.Provider value={this.plugin}>
+          <SettingsAdvanced />
+        </PluginContext.Provider>
+      </StrictMode>,
+    );
   }
 
   private renderGeneralSection(containerEl: HTMLElement): void {
