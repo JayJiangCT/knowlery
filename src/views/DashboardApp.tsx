@@ -6,7 +6,6 @@ import { TodayTab } from './TodayTab';
 import { ThisNoteTab } from './ThisNoteTab';
 import { BakeTab } from './BakeTab';
 import { SkillsTab } from './SkillsTab';
-import { SystemTab } from './SystemTab';
 import { IconX } from './Icons';
 import { isVaultInitialized } from '../core/setup-executor';
 import { SetupWizardModal } from '../modals/setup-wizard';
@@ -25,7 +24,6 @@ const TABS: { id: DashboardTab; label: string; icon: string }[] = [
   { id: 'note', label: 'This note', icon: 'file-text' },
   { id: 'bake', label: 'Weekly Review', icon: 'book-open' },
   { id: 'recipes', label: 'Review Menu', icon: 'list-checks' },
-  { id: 'system', label: 'System', icon: 'settings' },
 ];
 
 const BRAND_SUBTITLE = 'Personal knowledge review space';
@@ -57,7 +55,6 @@ export function DashboardApp() {
     note: null,
     bake: null,
     recipes: null,
-    system: null,
   });
 
   useEffect(() => {
@@ -162,9 +159,7 @@ export function DashboardApp() {
       ? ThisNoteTab
       : activeTab === 'bake'
         ? BakeTab
-        : activeTab === 'recipes'
-          ? SkillsTab
-          : SystemTab;
+        : SkillsTab;
 
   return (
     <div className="knowlery-dashboard">

@@ -247,7 +247,7 @@ export interface CounterSummary {
   };
 }
 
-export type DashboardTab = 'today' | 'note' | 'bake' | 'recipes' | 'system';
+export type DashboardTab = 'today' | 'note' | 'bake' | 'recipes';
 
 export interface DashboardRefreshPayload {
   tab: DashboardTab;

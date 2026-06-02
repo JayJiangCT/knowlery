@@ -84,10 +84,9 @@ export function TodayTab() {
   };
 
   const scanVaultHealth = () => {
-    plugin.events.trigger('dashboard-open-tab', 'system');
-    window.setTimeout(() => {
-      plugin.events.trigger('dashboard-run-health-diagnosis');
-    }, 0);
+    const appWithSettings = plugin.app as typeof plugin.app & { setting?: { open?: () => void; openTabById?: (id: string) => void } };
+    appWithSettings.setting?.open?.();
+    appWithSettings.setting?.openTabById?.(plugin.manifest.id);
   };
 
   if (!model) return <div className="knowlery-today" />;
