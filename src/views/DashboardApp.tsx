@@ -1,17 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { setIcon } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
-import type { DashboardRefreshPayload } from '../types';
-
-// Local tab type — replaced by DashboardScreen in Task 2.2
-type TabId = 'today' | 'note' | 'bake' | 'recipes';
-import { TodayTab } from './TodayTab';
-import { ThisNoteTab } from './ThisNoteTab';
-import { BakeTab } from './BakeTab';
-import { SkillsTab } from './SkillsTab';
+import type { DashboardRefreshPayload, DashboardScreen } from '../types';
 import { IconX } from './Icons';
 import { isVaultInitialized } from '../core/setup-executor';
 import { SetupWizardModal } from '../modals/setup-wizard';
+import { DashboardHome } from './DashboardHome';
+import { DashboardScreens } from './DashboardScreens';
 
 function formatRelativeTime(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -21,13 +16,6 @@ function formatRelativeTime(date: Date): string {
   if (minutes < 60) return `${minutes} min ago`;
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'today', label: 'Today', icon: 'chef-hat' },
-  { id: 'note', label: 'This note', icon: 'file-text' },
-  { id: 'bake', label: 'Weekly Review', icon: 'book-open' },
-  { id: 'recipes', label: 'Review Menu', icon: 'list-checks' },
-];
 
 const BRAND_SUBTITLE = 'Personal knowledge review space';
 
@@ -49,11 +37,17 @@ function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: num
 export function DashboardApp() {
   const plugin = usePlugin();
   const [settings, updateSettings] = useSettings();
-  const [activeTab, setActiveTab] = useState<TabId>('today');
+  const [screen, setScreen] = useState<DashboardScreen>('home');
+  const [screenPayload, setScreenPayload] = useState<unknown>(null);
   const [initialized, setInitialized] = useState<boolean | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+
+  const navigate = useCallback((next: DashboardScreen, payload?: unknown) => {
+    setScreenPayload(payload ?? null);
+    setScreen(next);
+  }, []);
 
   useEffect(() => {
     isVaultInitialized(plugin.app).then(setInitialized);
@@ -80,13 +74,6 @@ export function DashboardApp() {
     const ref = plugin.events.on('dashboard-refresh-complete', (_payload: DashboardRefreshPayload) => {
       setLastRefreshed(new Date());
       setRefreshing(false);
-    });
-    return () => plugin.events.offref(ref);
-  }, [plugin]);
-
-  useEffect(() => {
-    const ref = plugin.events.on('dashboard-open-tab', (tab: TabId) => {
-      setActiveTab(tab);
     });
     return () => plugin.events.offref(ref);
   }, [plugin]);
@@ -149,14 +136,6 @@ export function DashboardApp() {
     );
   }
 
-  const ActiveTabComponent = activeTab === 'today'
-    ? TodayTab
-    : activeTab === 'note'
-      ? ThisNoteTab
-      : activeTab === 'bake'
-        ? BakeTab
-        : SkillsTab;
-
   return (
     <div className="knowlery-dashboard">
       <div className="knowlery-brand-header">
@@ -188,21 +167,6 @@ export function DashboardApp() {
         </div>
       </div>
 
-      <nav className="knowlery-tab-nav" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`knowlery-tab-btn${activeTab === tab.id ? ' is-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <ObsidianIcon icon={tab.icon} size={16} className="knowlery-tab-btn__icon" />
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
       <div className="knowlery-tab-content" role="tabpanel">
         {!settings.onboardingDismissed && (
           <div className="knowlery-banner">
@@ -219,7 +183,10 @@ export function DashboardApp() {
             </button>
           </div>
         )}
-        <ActiveTabComponent />
+        {screen === 'home' && <DashboardHome navigate={navigate} />}
+        {screen !== 'home' && (
+          <DashboardScreens screen={screen} payload={screenPayload} navigate={navigate} />
+        )}
       </div>
     </div>
   );
