@@ -76,6 +76,35 @@ export function DashboardApp() {
     return () => plugin.events.offref(ref);
   }, [plugin]);
 
+  const autoReqId = useRef(0);
+  const autoDebounceTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const triggerQuietRefresh = () => {
+      if (autoDebounceTimer.current !== null) {
+        window.clearTimeout(autoDebounceTimer.current);
+      }
+      autoDebounceTimer.current = window.setTimeout(() => {
+        autoDebounceTimer.current = null;
+        autoReqId.current += 1;
+        plugin.events.trigger('dashboard-refresh', {
+          requestId: autoReqId.current,
+        } satisfies DashboardRefreshPayload);
+      }, 500);
+    };
+
+    window.addEventListener('focus', triggerQuietRefresh);
+    const leafRef = plugin.app.workspace.on('active-leaf-change', triggerQuietRefresh);
+
+    return () => {
+      if (autoDebounceTimer.current !== null) {
+        window.clearTimeout(autoDebounceTimer.current);
+      }
+      window.removeEventListener('focus', triggerQuietRefresh);
+      plugin.app.workspace.offref(leafRef);
+    };
+  }, [plugin]);
+
   const dismissBanner = useCallback(async () => {
     await updateSettings({ onboardingDismissed: true });
   }, [updateSettings]);
