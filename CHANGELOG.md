@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0] — 2026-06-02
+
+### Improvements
+
+- **Redesigned dashboard — one action-first column instead of five tabs.** Replaced the Today / This note / Weekly Review / Review Menu / System tabs with a single calm, scrolling layout focused on the moves you actually make: Today's move, Suggested moves, This note, Recent activity, and a weekly summary. Growing lists are capped to the top few with a "View all" drill-in, so the home stays about one screen no matter how large the vault gets.
+- **Configuration moved into Obsidian Settings.** Diagnostics (vault health + content stats), Agent Rules, schema-file shortcuts, and the Skills library now live in the Knowlery settings tab instead of crowding the dashboard.
+- **Plain-language naming.** Review moves renamed for clarity — Process new material, Connect related notes, Challenge an idea, Fix note metadata, Draft an output — and the weekly report is now "Weekly summary."
+- **Auto-refresh on return.** The dashboard quietly re-reads the vault when Obsidian regains focus or you switch panes, so it reflects an agent's latest work without a manual refresh.
+- Theme-adaptive styling throughout (Obsidian CSS variables only), visible focus states, and accessible labels on icon-only controls.
+
+### Bug Fixes
+
+- Vaults set up by older versions are no longer wrongly prompted to re-initialize — initialization is now detected from `KNOWLEDGE.md` in addition to the internal manifest.
+- Fixed the Refresh button hanging when used on a drill-in sub-screen.
+- Settings-mounted views now show focus rings; removed dead tab CSS and a stale `tabpanel` ARIA role.
+
+### Infrastructure
+
+- Removed the legacy per-tab view components after recomposing the dashboard; extracted a shared request-actions helper and the move catalog (`src/core/moves.ts`).
+- Added tests for `isVaultInitialized`; aligned today-model and weekly-bake tests with the new copy.
+
 ## [v0.3.5] — 2026-05-11
 
 ### Improvements
