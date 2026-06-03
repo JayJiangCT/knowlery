@@ -53,10 +53,11 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'run-vault-diagnosis',
-      name: 'Run vault diagnosis',
-      callback: async () => {
-        await this.activateDashboard();
-        this.events.trigger('dashboard-refresh');
+      name: 'Open diagnostics (settings)',
+      callback: () => {
+        const appWithSettings = this.app as typeof this.app & SettingApp;
+        appWithSettings.setting.open();
+        appWithSettings.setting.openTabById(this.manifest.id);
       },
     });
 

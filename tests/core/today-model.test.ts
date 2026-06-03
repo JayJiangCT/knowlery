@@ -86,7 +86,7 @@ describe('buildTodayModel', () => {
 
     expect(model.stage).toBe('first-maintenance');
     expect(model.title).toContain('already has material');
-    expect(model.primaryAction.label).toBe('Prepare first cook');
+    expect(model.primaryAction.label).toBe('Prepare first pass');
     expect(model.primaryAction.request).toContain('Activity Ledger');
     expect(model.primaryAction.request).not.toContain('JSON object');
     expect(model.primaryAction.request).not.toContain('.jsonl');

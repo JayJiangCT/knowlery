@@ -1,6 +1,10 @@
 import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { StrictMode } from 'react';
+import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from './main';
 import type { Platform } from './types';
+import { PluginContext } from './context';
+import { SettingsAdvanced } from './views/SettingsAdvanced';
 import { generatePlatformConfig, migratePlatform } from './core/platform-adapter';
 import { detectNode } from './core/node-detect';
 import { generateKnowledgeMd } from './assets/templates';
@@ -47,16 +51,29 @@ class ConfirmModal extends Modal {
 export class KnowlerySettingTab extends PluginSettingTab {
   private nodeDetectMessage: string | null = null;
   private nodeDetecting = false;
+  private advancedRoot: Root | null = null;
+  private tabOpen = false;
 
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
 
+  hide(): void {
+    this.tabOpen = false;
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
+  }
+
   async display(): Promise<void> {
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
+    this.tabOpen = true;
     const { containerEl } = this;
     containerEl.empty();
 
     const initialized = await isVaultInitialized(this.plugin.app);
+
+    if (!this.tabOpen) return;
 
     if (!initialized) {
       this.renderUninitializedState(containerEl);
@@ -78,7 +95,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     bannerBtn.addEventListener('click', () => {
       new SetupWizardModal(this.plugin.app, this.plugin, () => {
         this.plugin.onSetupComplete();
-        void this.display();
+        if (this.tabOpen) void this.display();
       }).open();
     });
 
@@ -90,6 +107,19 @@ export class KnowlerySettingTab extends PluginSettingTab {
     this.renderPlatformSection(containerEl);
     this.renderActivitySection(containerEl);
     this.renderMaintenanceSection(containerEl);
+    this.renderAdvancedSection(containerEl);
+  }
+
+  private renderAdvancedSection(containerEl: HTMLElement): void {
+    const mount = containerEl.createDiv({ cls: 'knowlery-settings-advanced-mount' });
+    this.advancedRoot = createRoot(mount);
+    this.advancedRoot.render(
+      <StrictMode>
+        <PluginContext.Provider value={this.plugin}>
+          <SettingsAdvanced />
+        </PluginContext.Provider>
+      </StrictMode>,
+    );
   }
 
   private renderGeneralSection(containerEl: HTMLElement): void {
@@ -144,7 +174,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
               this.plugin.settings.platform = otherPlatform;
               await this.plugin.saveSettings();
               new Notice(`Switched to ${otherLabel}`);
-              this.display();
+              if (this.tabOpen) this.display();
             },
           ).open();
         }),
@@ -188,7 +218,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
               new Notice(this.nodeDetectMessage);
             } finally {
               this.nodeDetecting = false;
-              await this.display();
+              if (this.tabOpen) await this.display();
             }
           }),
       );

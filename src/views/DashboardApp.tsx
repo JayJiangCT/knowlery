@@ -1,15 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { setIcon } from 'obsidian';
 import { usePlugin, useSettings } from '../context';
-import type { DashboardTab, DashboardRefreshPayload } from '../types';
-import { TodayTab } from './TodayTab';
-import { ThisNoteTab } from './ThisNoteTab';
-import { BakeTab } from './BakeTab';
-import { SkillsTab } from './SkillsTab';
-import { SystemTab } from './SystemTab';
+import type { DashboardRefreshPayload, DashboardScreen } from '../types';
 import { IconX } from './Icons';
 import { isVaultInitialized } from '../core/setup-executor';
 import { SetupWizardModal } from '../modals/setup-wizard';
+import { DashboardHome } from './DashboardHome';
+import { DashboardScreens } from './DashboardScreens';
 
 function formatRelativeTime(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -19,14 +16,6 @@ function formatRelativeTime(date: Date): string {
   if (minutes < 60) return `${minutes} min ago`;
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-const TABS: { id: DashboardTab; label: string; icon: string }[] = [
-  { id: 'today', label: 'Today', icon: 'chef-hat' },
-  { id: 'note', label: 'This note', icon: 'file-text' },
-  { id: 'bake', label: 'Weekly Review', icon: 'book-open' },
-  { id: 'recipes', label: 'Review Menu', icon: 'list-checks' },
-  { id: 'system', label: 'System', icon: 'settings' },
-];
 
 const BRAND_SUBTITLE = 'Personal knowledge review space';
 
@@ -48,54 +37,72 @@ function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: num
 export function DashboardApp() {
   const plugin = usePlugin();
   const [settings, updateSettings] = useSettings();
-  const [activeTab, setActiveTab] = useState<DashboardTab>('today');
+  const [screen, setScreen] = useState<DashboardScreen>('home');
+  const [screenPayload, setScreenPayload] = useState<unknown>(null);
   const [initialized, setInitialized] = useState<boolean | null>(null);
-  const [refreshingTab, setRefreshingTab] = useState<DashboardTab | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [refreshRequestId, setRefreshRequestId] = useState(0);
-  const [lastRefreshed, setLastRefreshed] = useState<Record<DashboardTab, Date | null>>({
-    today: null,
-    note: null,
-    bake: null,
-    recipes: null,
-    system: null,
-  });
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+
+  const navigate = useCallback((next: DashboardScreen, payload?: unknown) => {
+    setScreenPayload(payload ?? null);
+    setScreen(next);
+  }, []);
 
   useEffect(() => {
     isVaultInitialized(plugin.app).then(setInitialized);
     const recheck = () => {
       isVaultInitialized(plugin.app).then(setInitialized);
     };
-    plugin.events.on('setup-complete', recheck);
-    return () => {
-      plugin.events.off('setup-complete', recheck);
-    };
+    const ref = plugin.events.on('setup-complete', recheck);
+    return () => plugin.events.offref(ref);
   }, [plugin]);
 
   const handleRefresh = useCallback(() => {
-    if (refreshingTab) return;
+    if (refreshing) return;
     const nextRequestId = refreshRequestId + 1;
     setRefreshRequestId(nextRequestId);
-    setRefreshingTab(activeTab);
+    setRefreshing(true);
     plugin.events.trigger('dashboard-refresh', {
-      tab: activeTab,
       requestId: nextRequestId,
     } satisfies DashboardRefreshPayload);
-  }, [plugin, activeTab, refreshRequestId, refreshingTab]);
+  }, [plugin, refreshRequestId, refreshing]);
 
   useEffect(() => {
-    const ref = plugin.events.on('dashboard-refresh-complete', (payload: DashboardRefreshPayload) => {
-      if (payload.tab !== refreshingTab) return;
-      setLastRefreshed((prev) => ({ ...prev, [payload.tab]: new Date() }));
-      setRefreshingTab(null);
+    const ref = plugin.events.on('dashboard-refresh-complete', (_payload: DashboardRefreshPayload) => {
+      setLastRefreshed(new Date());
+      setRefreshing(false);
     });
     return () => plugin.events.offref(ref);
-  }, [plugin, refreshingTab]);
+  }, [plugin]);
+
+  const autoReqId = useRef(0);
+  const autoDebounceTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    const ref = plugin.events.on('dashboard-open-tab', (tab: DashboardTab) => {
-      setActiveTab(tab);
-    });
-    return () => plugin.events.offref(ref);
+    const triggerQuietRefresh = () => {
+      if (autoDebounceTimer.current !== null) {
+        window.clearTimeout(autoDebounceTimer.current);
+      }
+      autoDebounceTimer.current = window.setTimeout(() => {
+        autoDebounceTimer.current = null;
+        autoReqId.current += 1;
+        plugin.events.trigger('dashboard-refresh', {
+          requestId: autoReqId.current,
+        } satisfies DashboardRefreshPayload);
+      }, 500);
+    };
+
+    window.addEventListener('focus', triggerQuietRefresh);
+    const leafRef = plugin.app.workspace.on('active-leaf-change', triggerQuietRefresh);
+
+    return () => {
+      if (autoDebounceTimer.current !== null) {
+        window.clearTimeout(autoDebounceTimer.current);
+      }
+      window.removeEventListener('focus', triggerQuietRefresh);
+      plugin.app.workspace.offref(leafRef);
+    };
   }, [plugin]);
 
   const dismissBanner = useCallback(async () => {
@@ -156,16 +163,6 @@ export function DashboardApp() {
     );
   }
 
-  const ActiveTabComponent = activeTab === 'today'
-    ? TodayTab
-    : activeTab === 'note'
-      ? ThisNoteTab
-      : activeTab === 'bake'
-        ? BakeTab
-        : activeTab === 'recipes'
-          ? SkillsTab
-          : SystemTab;
-
   return (
     <div className="knowlery-dashboard">
       <div className="knowlery-brand-header">
@@ -176,43 +173,30 @@ export function DashboardApp() {
           <span className="knowlery-brand-header__title">Knowlery</span>
           <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
         </div>
-        <div className="knowlery-brand-header__actions">
-          {lastRefreshed[activeTab] && (
-            <span className="knowlery-brand-header__timestamp">
-              Checked {formatRelativeTime(lastRefreshed[activeTab])}
-            </span>
-          )}
-          <button
-            className="knowlery-header-action"
-            onClick={handleRefresh}
-            disabled={refreshingTab !== null}
-          >
-            <ObsidianIcon
-              icon="refresh-cw"
-              size={14}
-              className={refreshingTab === activeTab ? 'knowlery-spin' : undefined}
-            />
-            {refreshingTab === activeTab ? 'Refreshing…' : 'Refresh'}
-          </button>
-        </div>
+        {screen === 'home' && (
+          <div className="knowlery-brand-header__actions">
+            {lastRefreshed && (
+              <span className="knowlery-brand-header__timestamp">
+                Checked {formatRelativeTime(lastRefreshed)}
+              </span>
+            )}
+            <button
+              className="knowlery-header-action"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <ObsidianIcon
+                icon="refresh-cw"
+                size={14}
+                className={refreshing ? 'knowlery-spin' : undefined}
+              />
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
+        )}
       </div>
 
-      <nav className="knowlery-tab-nav" role="tablist">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            className={`knowlery-tab-btn${activeTab === tab.id ? ' is-active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <ObsidianIcon icon={tab.icon} size={16} className="knowlery-tab-btn__icon" />
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
-      <div className="knowlery-tab-content" role="tabpanel">
+      <div className="knowlery-tab-content">
         {!settings.onboardingDismissed && (
           <div className="knowlery-banner">
             <div className="knowlery-banner__text">
@@ -228,7 +212,10 @@ export function DashboardApp() {
             </button>
           </div>
         )}
-        <ActiveTabComponent />
+        {screen === 'home' && <DashboardHome navigate={navigate} />}
+        {screen !== 'home' && (
+          <DashboardScreens screen={screen} payload={screenPayload} navigate={navigate} />
+        )}
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ describe('Weekly Bake report', () => {
     expect(model.nextMoves[0].title).toContain('Connect');
     expect(model.hexagon).toHaveLength(6);
     expect(model.timeline[0].title).toBe('Knowlery');
-    expect(html).toContain('Knowledge Review Atlas');
+    expect(html).toContain('Weekly Knowledge Summary');
     expect(html).toContain('Knowledge Hexagon');
     expect(html).toContain('Knowledge Timeline');
     expect(html).toContain('Knowledge Extensions');
