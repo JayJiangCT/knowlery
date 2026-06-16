@@ -50,7 +50,7 @@ English is the default locale at `/`.
 
 Simplified Chinese lives at `/zh/`.
 
-When adding a new public page, add both language versions and update sidebars in `docs-site/.vitepress/config.ts`.
+When adding a new public page, add both language versions and update sidebars in `docs-site/.vitepress/config.mts`.
 
 ## GitHub Pages
 

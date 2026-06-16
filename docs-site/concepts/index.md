@@ -1,20 +1,23 @@
 # Core Concepts
 
-Knowlery is easiest to understand as a review layer on top of your vault. Your notes are the source material. Skills are reusable prompts. Rules are the guardrails. The dashboard turns recent activity into a small set of actions instead of a pile of options.
+Knowlery is easiest to understand as a review layer on top of your vault. Your notes are the source material. Skills are reusable prompts. Rules are the guardrails. The dashboard turns recent activity into a small set of actions, while Obsidian settings holds the deeper maintenance tools.
 
 ## Review Space
 
 Knowlery is not trying to replace your notes. It keeps a boundary between human-authored markdown and agent-maintained review material.
 
-The dashboard centers on five surfaces:
+The dashboard is one action-first home:
 
-| Surface | Use |
+| Section | Use |
 | --- | --- |
-| Today | Start from the current activity context and choose a next move |
+| Today's move | Start from the current activity context and choose a next move |
+| Suggested moves | Pick a reusable review prompt without browsing raw skill files |
+| Knowledge health | See pending Freshness Review suggestions |
 | This note | Review the active Markdown note in context |
-| Weekly Review | Generate a local Knowledge Atlas and optional polish request |
-| Review Menu | Browse source skills and reusable review recipes |
-| System | Run diagnostics and maintain configuration |
+| Recent activity | Scan recent private activity receipts |
+| This week | Generate and review a weekly summary |
+
+Diagnostics, rules, schema shortcuts, platform switching, and the Skills library live under **Settings -> Knowlery**.
 
 ## Compiled Knowledge Layer
 
@@ -71,11 +74,11 @@ Health diagnostics still use a smaller minimum check for knowledge pages:
 
 It groups and sorts knowledge pages, exposes useful properties, and gives agents a stable map before they start reading individual files.
 
-## Skills and Review Menu
+## Skills and Suggested Moves
 
 Skills are markdown prompt packages installed in `.agents/skills/<name>/SKILL.md`.
 
-The Review Menu exposes the source skills behind the scenes:
+The dashboard exposes natural-language moves first, and the settings tab exposes the source skills behind the scenes:
 
 | Skill | Purpose |
 | --- | --- |
@@ -93,9 +96,9 @@ The Review Menu exposes the source skills behind the scenes:
 | `defuddle` | Extract clean markdown from web pages |
 | `vault-conventions` | Document and enforce vault naming conventions |
 
-The skill browser can install registry skills, and skill detail views can copy example prompts, open the source file, or run a skill through the configured agent CLI.
+The Skills library can install registry skills, and skill detail views can copy example prompts, open the source file, or run a skill through the configured agent CLI.
 
-## Activity Ledger and Weekly Atlas
+## Activity Ledger and Weekly Summary
 
 Knowlery records lightweight private activity receipts in `.knowlery/activity/` when logging is enabled.
 
@@ -103,8 +106,14 @@ Those receipts feed:
 
 - Today thread summaries and next moves.
 - This note suggestions.
-- Weekly Review atlases in `.knowlery/reports/latest.html` and `.knowlery/reports/weekly/<week-label>.html`.
+- Weekly summary reports in `.knowlery/reports/latest.html` and `.knowlery/reports/weekly/<week-label>.html`.
 - Optional daily review requests and results in `.knowlery/requests/` and `.knowlery/reviews/`.
+
+## Freshness Review
+
+Freshness Review is local and approval-gated. Knowlery can collect candidate pages from `entities/`, `concepts/`, `comparisons/`, and `queries/`, prepare a request JSON file, and copy a prompt for an agent you run separately.
+
+When you import the result JSON, Knowlery turns valid findings into suggestions. Applying a suggestion only patches scalar frontmatter fields such as `retrieval_priority`, `freshness_status`, `freshness_reviewed`, `superseded_by`, and `freshness_sidecar`. Evidence and previous frontmatter snapshots live in `.knowlery/freshness/notes/` sidecars so applied suggestions can be restored.
 
 ## Platform Adapters
 
@@ -128,7 +137,7 @@ That keeps review prompts inside the vault instead of pushing them into a separa
 
 ## Vault Health
 
-The System tab checks two things:
+The diagnostics section in settings checks two things:
 
 - **Content structure:** note counts, wikilink counts, knowledge page counts, orphan notes, broken wikilinks, missing frontmatter.
 - **Configuration integrity:** expected files, directories, rules, built-in skills, agent CLI detection, and platform config.

@@ -4,9 +4,9 @@
 [![Docs](https://img.shields.io/badge/docs-official-blue?style=flat-square)](https://jayjiangct.github.io/knowlery/)
 [![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square)](LICENSE)
 
-Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, review the current note, generate weekly atlases, and run vault health diagnostics.
+Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, choose small next moves from one action-first dashboard, review the current note, generate weekly summaries, and maintain vault health from Obsidian settings.
 
-In v0.3.5, bundled skills auto-sync on plugin load when the version changes, and `SCHEMA.md` is migrated in place so existing vaults pick up the newer knowledge conventions without a re-initialization.
+In v0.4.0, Knowlery moved from a five-tab dashboard to a single calm review surface. Diagnostics, rules, schema shortcuts, and the Skills library now live in the Knowlery settings tab, while the dashboard focuses on today's move, suggested moves, the current note, recent activity, and the weekly summary.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
@@ -86,8 +86,9 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `opencode.json`, when OpenCode is selected
 - `skills-lock.json`
 - `.knowlery/activity/`, when activity logging is enabled
-- `.knowlery/reports/`, when Weekly Review generates an atlas
+- `.knowlery/reports/`, when Weekly summary generates an HTML report
 - `.knowlery/requests/` and `.knowlery/reviews/`, when daily review polish is used
+- `.knowlery/freshness/`, when Freshness Review prepares request, result, log, queue, and sidecar files
 
 Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI.
 
@@ -100,6 +101,8 @@ Knowlery reads and writes files inside your vault to create and maintain the kno
 Network access is opt-in and feature-specific. The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. The setup wizard can download the latest Claudian release from GitHub when you choose to install that optional companion plugin.
 
 Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`, and `skills` when you explicitly use CLI-related features. These commands run on your computer with your user permissions. Knowlery does not send vault contents to those tools by itself; agent requests are created only from the actions you trigger.
+
+Freshness Review is a local, approval-gated workflow. Knowlery prepares request JSON files, imports result JSON files written by an agent you run separately, and applies scalar freshness metadata only after you approve a suggestion. Knowlery does not include a Freshness runner and does not call a model API for this workflow.
 
 Some companion tools or services used with Knowlery, including Claude Code, OpenCode, registry skills, or model providers configured outside Knowlery, may require separate accounts or paid usage. Knowlery itself is free and does not process payments.
 

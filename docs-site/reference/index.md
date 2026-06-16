@@ -12,15 +12,17 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Main bundle | `main.js` |
 | Stylesheet | `styles.css` |
 
-## Dashboard Surfaces
+## Dashboard and Settings Surfaces
 
 | Surface | Purpose |
 | --- | --- |
-| Today | Current activity summary and next move |
-| This note | Active note review and prompt preparation |
-| Weekly Review | Atlas generation and daily review polish |
-| Review Menu | Suggested moves and source skills |
-| System | Diagnostics and configuration maintenance |
+| Dashboard home | Today's move, suggested moves, Knowledge health, This note, Recent activity, and This week |
+| Move drill-ins | Full suggested-move list and individual move prompts |
+| Activity drill-in | Full recent activity list |
+| Freshness Review | Request preparation, result import, suggestion decisions, apply, and undo |
+| Settings: Diagnostics | Vault health, content stats, configuration integrity, and diagnosis |
+| Settings: Rules & schema | Agent rules, schema shortcuts, and config maintenance |
+| Settings: Skills | Built-in, registry, custom, and disabled skill management |
 
 ## Created Files and Folders
 
@@ -42,9 +44,10 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `opencode.json` | OpenCode | OpenCode config |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |
-| `.knowlery/reports/` | Weekly Review | Local Knowledge Atlas output |
+| `.knowlery/reports/` | Weekly summary | Local HTML report output |
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
+| `.knowlery/freshness/` | Freshness Review | Request, result, log, queue, and sidecar files |
 
 ## Built-In Skills
 
@@ -101,9 +104,9 @@ Activity receipts live in `.knowlery/activity/YYYY-MM-DD.jsonl`.
 
 They are private summaries, not normal knowledge pages. The activity toggle in settings can disable logging by writing `.knowlery/activity-disabled`.
 
-## Weekly Atlas and Daily Review
+## Weekly Summary and Daily Review
 
-Weekly Review writes HTML output to:
+The weekly summary writes HTML output to:
 
 - `.knowlery/reports/latest.html`
 - `.knowlery/reports/weekly/<week-label>.html`
@@ -113,11 +116,23 @@ Daily review polish uses:
 - `.knowlery/requests/daily-review-YYYY-MM-DD.json`
 - `.knowlery/reviews/daily-review-YYYY-MM-DD.json`
 
+## Freshness Review Files
+
+Freshness Review uses:
+
+- `.knowlery/freshness/requests/freshness-review-<timestamp>.json`
+- `.knowlery/freshness/results/freshness-review-<timestamp>.json`
+- `.knowlery/freshness/logs/freshness-review-<timestamp>.jsonl`
+- `.knowlery/freshness/queue.json`
+- `.knowlery/freshness/notes/*.json`
+
+Candidate pages are collected from `entities/`, `concepts/`, `comparisons/`, and `queries/`, capped by the current candidate limit. Suggestions can only patch scalar freshness frontmatter on those knowledge pages.
+
 ## Network Use
 
 Knowlery does not collect telemetry.
 
-Network access can happen when you explicitly use skill registry features through `npx skills ...`. That command may contact services used by the external skills tooling.
+Network access can happen when you explicitly use skill registry features through `npx skills ...`. That command may contact services used by the external skills tooling. Freshness Review does not call a model API; it prepares local request files and imports result files written by an agent you run separately.
 
 ## Local Command Use
 
@@ -136,6 +151,8 @@ These commands run on your computer with your user permissions.
 ## Upgrade Behavior
 
 When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, and migrates `SCHEMA.md` by inserting any missing anchor sections.
+
+In v0.4.0, dashboard maintenance moved into Obsidian settings: diagnostics, rules and schema shortcuts, and the Skills library are no longer separate dashboard tabs.
 
 Custom and forked skills are preserved. Disabled built-in skills keep their disabled state, even though the on-disk bundled copy is refreshed.
 

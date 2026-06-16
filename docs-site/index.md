@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Knowlery
   text: Turn your vault into a personal knowledge review space.
-  tagline: "Knowlery gives Obsidian a five-part review surface for Claude Code and OpenCode workflows: Today, This note, Weekly Review, Review Menu, and System."
+  tagline: "Knowlery gives Obsidian an action-first review surface for Claude Code and OpenCode workflows, with setup, diagnostics, rules, and skills maintained from settings."
   image:
     src: /knowlery-pot.svg
     alt: Knowlery Knowledge Pot logo
@@ -17,16 +17,16 @@ hero:
       link: /concepts/
 
 features:
-  - title: Today
-    details: Start with one note, one reflection, or one active thread and get a small next move.
-  - title: This note
-    details: Review the current Markdown note in context and prepare a focused prompt or next step.
-  - title: Weekly Review
-    details: Generate a local Knowledge Atlas from recent activity, then polish it with an agent when needed.
-  - title: Review Menu
-    details: Keep source skills hidden behind natural-language moves, prompts, and skill details.
-  - title: System
-    details: Check vault health, open the underlying config files, and maintain the agent setup.
+  - title: Action-first dashboard
+    details: Start from today's move, suggested moves, the active note, recent activity, and the weekly summary without switching tabs.
+  - title: Current-note review
+    details: Open a Markdown note and prepare a focused prompt for connecting it to older notes, comparisons, and reusable structures.
+  - title: Freshness Review
+    details: Prepare local request JSON, import agent-written results, and approve scalar freshness metadata before anything is applied.
+  - title: Weekly summary
+    details: Generate a local HTML report from recent activity, then send a polish request when a companion agent is available.
+  - title: Settings maintenance
+    details: Run diagnostics, manage rules and schema shortcuts, switch platforms, and inspect the Skills library from Obsidian settings.
 ---
 
 <section class="knowlery-panel">
@@ -35,14 +35,14 @@ features:
 
 Knowlery is an Obsidian plugin for people who want a review-oriented layer on top of their vault.
 
-Your free-form notes remain yours. Knowlery gives agents a structured place to work: `entities/`, `concepts/`, `comparisons/`, `queries/`, `KNOWLEDGE.md`, `SCHEMA.md`, `INDEX.base`, skills, rules, activity receipts, and platform configuration.
+Your free-form notes remain yours. Knowlery gives agents a structured place to work: `entities/`, `concepts/`, `comparisons/`, `queries/`, `KNOWLEDGE.md`, `SCHEMA.md`, `INDEX.base`, skills, rules, activity receipts, review requests, and platform configuration.
 
 </section>
 
 <section class="knowlery-grid">
   <div class="knowlery-card">
     <h3>For Obsidian users</h3>
-    <p>Initialize a vault, keep structure visible, and use the dashboard to review notes, threads, and atlas output without leaving Obsidian.</p>
+    <p>Initialize a vault, keep structure visible, and use the dashboard to review notes, active threads, freshness suggestions, and weekly output without leaving Obsidian.</p>
   </div>
   <div class="knowlery-card">
     <h3>For agent workflows</h3>

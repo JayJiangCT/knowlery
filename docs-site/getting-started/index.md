@@ -51,7 +51,7 @@ The setup wizard asks you to choose a platform:
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
 | OpenCode | `opencode.json` plus `.agents/rules/` |
 
-If you are upgrading from an older release, v0.3.5 auto-syncs bundled skills and migrates `SCHEMA.md` the first time the plugin loads. Custom and forked skills are preserved.
+If you are upgrading from an older release, v0.4.0 keeps the dashboard focused on one action-first home and moves diagnostics, rules, schema shortcuts, and the Skills library into the Knowlery settings tab. Bundled skills still auto-sync on version changes, and `SCHEMA.md` is migrated in place when missing anchor sections are found. Custom and forked skills are preserved.
 
 If Knowlery detects an older BYOAO vault, the setup wizard can switch into migration mode and preserve the existing BYOAO/OpenCode files while configuring Knowlery for Claude Code.
 
@@ -77,6 +77,8 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `opencode.json` | OpenCode configuration |
 | `skills-lock.json` | Skill source, version, and disabled-state metadata |
 
+Normal use can also create private activity receipts, weekly summary reports, daily review request/result files, and Freshness Review request/result/sidecar files under `.knowlery/`.
+
 ## Optional Tool Preparation
 
 The setup wizard can detect Claude Code, OpenCode, Node.js, Claudian, and skills tooling.
@@ -85,20 +87,23 @@ Missing optional tools are shown as selectable install or preparation steps. Alr
 
 ## Open the Dashboard
 
-After setup, open the Knowlery dashboard. It has five main tabs:
+After setup, open the Knowlery dashboard. It is a single scrolling review surface:
 
-| Tab | Use it for |
+| Section | Use it for |
 | --- | --- |
-| Today | Start from the current activity context and choose the next small move |
+| Today's move | Start from the current activity context and choose the next small move |
+| Suggested moves | Use reusable review prompts such as Process new material or Challenge an idea |
+| Knowledge health | Review pending Freshness Review suggestions when they exist |
 | This note | Review the active Markdown note and prepare a focused prompt |
-| Weekly Review | Generate a Knowledge Atlas and optionally send a polish request |
-| Review Menu | Browse source skills, suggested next moves, and reusable review recipes |
-| System | Run health checks and open the underlying configuration files |
+| Recent activity | Scan private activity receipts and open the full activity list |
+| This week | Generate a weekly summary, open the last report, or send it for review |
+
+Open **Settings -> Knowlery** for diagnostics, rules and schema shortcuts, the Skills library, platform switching, activity logging, and maintenance actions.
 
 ## Recommended First Session
 
 1. Initialize a clean test vault first.
 2. Read the generated `KNOWLEDGE.md` and `SCHEMA.md`.
-3. Open Today, This note, and Review Menu to see how Knowlery frames work.
+3. Open the dashboard and read Today's move, Suggested moves, and This note.
 4. Add one or two real notes to the vault.
-5. Generate a Weekly Atlas, then open System and run a diagnosis.
+5. Generate a weekly summary, then open **Settings -> Knowlery** and run diagnostics.

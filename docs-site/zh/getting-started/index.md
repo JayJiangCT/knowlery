@@ -51,7 +51,7 @@ Setup wizard 会要求你选择一个平台：
 | Claude Code | `.claude/CLAUDE.md` 和 `.claude/rules/` |
 | OpenCode | `opencode.json` 和 `.agents/rules/` |
 
-如果你是从旧版本升级，v0.3.5 会在插件第一次加载时自动同步 bundled skills，并就地迁移 `SCHEMA.md`。custom 和 forked skills 不会被覆盖。
+如果你是从旧版本升级，v0.4.0 会把 dashboard 收敛成一个行动优先的首页，并把 diagnostics、rules、schema shortcuts 和 Skills library 移到 Knowlery settings tab。Bundled skills 仍会在版本变化时自动同步，`SCHEMA.md` 缺少 anchor sections 时也会就地迁移。custom 和 forked skills 不会被覆盖。
 
 如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
 
@@ -77,6 +77,8 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `opencode.json` | OpenCode 配置 |
 | `skills-lock.json` | skill 来源、版本、禁用状态 |
 
+正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports、daily review request/result 文件，以及 Freshness Review 的 request/result/sidecar 文件。
+
 ## 可选工具准备
 
 Setup wizard 可以检测 Claude Code、OpenCode、Node.js、Claudian 和 skills tooling。
@@ -85,20 +87,23 @@ Setup wizard 可以检测 Claude Code、OpenCode、Node.js、Claudian 和 skills
 
 ## 打开 Dashboard
 
-Setup 完成后，打开 Knowlery dashboard。它有五个主要 tab：
+Setup 完成后，打开 Knowlery dashboard。它是一个单页滚动的 review surface：
 
-| Tab | 用途 |
+| 区块 | 用途 |
 | --- | --- |
-| Today | 从当前活动上下文开始，选择一个小的下一步 |
+| Today's move | 从当前活动上下文开始，选择一个小的下一步 |
+| Suggested moves | 使用 Process new material 或 Challenge an idea 等可复用 review prompts |
+| Knowledge health | 有 Freshness Review suggestions 时进行 review |
 | This note | review 当前 Markdown 笔记并准备专注的 prompt |
-| Weekly Review | 生成 Knowledge Atlas，并在需要时发送 polish request |
-| Review Menu | 浏览 source skills、建议的下一步和可复用的 review recipes |
-| System | 运行 health checks，并打开底层配置文件 |
+| Recent activity | 查看私有 activity receipts，并打开完整 activity 列表 |
+| This week | 生成 weekly summary、打开上次报告，或发送给 agent review |
+
+打开 **Settings -> Knowlery** 可以进行 diagnostics、rules/schema shortcuts、Skills library、平台切换、activity logging 和 maintenance actions。
 
 ## 推荐的第一次使用方式
 
 1. 先在一个干净 test vault 中初始化。
 2. 阅读生成的 `KNOWLEDGE.md` 和 `SCHEMA.md`。
-3. 打开 Today、This note 和 Review Menu，理解 Knowlery 的 review 方式。
+3. 打开 dashboard，查看 Today's move、Suggested moves 和 This note。
 4. 往 vault 中加入一两篇真实笔记。
-5. 生成一次 Weekly Atlas，然后打开 System 运行诊断。
+5. 生成一次 weekly summary，然后打开 **Settings -> Knowlery** 运行诊断。

@@ -12,15 +12,17 @@
 | Main bundle | `main.js` |
 | Stylesheet | `styles.css` |
 
-## Dashboard Surfaces
+## Dashboard 和 Settings Surfaces
 
 | Surface | 用途 |
 | --- | --- |
-| Today | 当前活动摘要和下一步 |
-| This note | 当前笔记 review 和 prompt 准备 |
-| Weekly Review | Atlas 生成和 daily review polish |
-| Review Menu | 推荐动作和 source skills |
-| System | 诊断和配置维护 |
+| Dashboard home | Today's move、Suggested moves、Knowledge health、This note、Recent activity 和 This week |
+| Move drill-ins | 完整 suggested-move 列表和单个 move prompt |
+| Activity drill-in | 完整 recent activity 列表 |
+| Freshness Review | request 准备、result 导入、suggestion decisions、apply 和 undo |
+| Settings: Diagnostics | Vault health、content stats、configuration integrity 和 diagnosis |
+| Settings: Rules & schema | Agent rules、schema shortcuts 和 config maintenance |
+| Settings: Skills | Built-in、registry、custom 和 disabled skill 管理 |
 
 ## 创建的文件和文件夹
 
@@ -42,9 +44,10 @@
 | `opencode.json` | OpenCode path | OpenCode config |
 | `skills-lock.json` | 是 | Skill lock state |
 | `.knowlery/activity/` | Activity logging | 私有 activity receipts |
-| `.knowlery/reports/` | Weekly Review | 本地 Knowledge Atlas 输出 |
+| `.knowlery/reports/` | Weekly summary | 本地 HTML report 输出 |
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
+| `.knowlery/freshness/` | Freshness Review | Request、result、log、queue 和 sidecar 文件 |
 
 ## Built-In Skills
 
@@ -95,9 +98,9 @@ Activity receipts 存在于 `.knowlery/activity/YYYY-MM-DD.jsonl`。
 
 它们是私有摘要，不是普通 knowledge pages。settings 中的 activity toggle 可以通过写入 `.knowlery/activity-disabled` 来关闭记录。
 
-## Weekly Atlas and Daily Review
+## Weekly Summary and Daily Review
 
-Weekly Review 会把 HTML 输出写到：
+Weekly summary 会把 HTML 输出写到：
 
 - `.knowlery/reports/latest.html`
 - `.knowlery/reports/weekly/<week-label>.html`
@@ -107,11 +110,23 @@ Daily review polish 使用：
 - `.knowlery/requests/daily-review-YYYY-MM-DD.json`
 - `.knowlery/reviews/daily-review-YYYY-MM-DD.json`
 
+## Freshness Review Files
+
+Freshness Review 使用：
+
+- `.knowlery/freshness/requests/freshness-review-<timestamp>.json`
+- `.knowlery/freshness/results/freshness-review-<timestamp>.json`
+- `.knowlery/freshness/logs/freshness-review-<timestamp>.jsonl`
+- `.knowlery/freshness/queue.json`
+- `.knowlery/freshness/notes/*.json`
+
+Candidate pages 会从 `entities/`、`concepts/`、`comparisons/` 和 `queries/` 收集，并受当前 candidate limit 限制。Suggestions 只能 patch 这些知识页面上的 scalar freshness frontmatter。
+
 ## Network Use
 
 Knowlery 不收集 telemetry。
 
-当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。
+当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。Freshness Review 不会调用 model API；它只准备本地 request files，并导入你单独运行的 agent 写出的 result files。
 
 ## Local Command Use
 
@@ -130,6 +145,8 @@ Knowlery 不收集 telemetry。
 ## 升级行为
 
 当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，并通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`。
+
+在 v0.4.0 中，dashboard maintenance 已移到 Obsidian settings：diagnostics、rules/schema shortcuts 和 Skills library 不再是单独的 dashboard tabs。
 
 custom 和 forked skills 会被保留。被禁用的 built-in skills 会继续保持禁用状态，即使磁盘上的 bundled copy 已刷新。
 

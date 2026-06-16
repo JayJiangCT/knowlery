@@ -4,12 +4,12 @@
 
 ## Dashboard 显示 Vault 尚未设置
 
-Knowlery 会检查 `.knowlery/manifest.json`。
+Knowlery 会检查 `.knowlery/manifest.json` 或 `KNOWLEDGE.md`。
 
 如果这个 vault 理论上已经初始化：
 
-1. 确认 `.knowlery/manifest.json` 存在。
-2. 确认它是合法 JSON。
+1. 确认 `.knowlery/manifest.json` 或 `KNOWLEDGE.md` 存在。
+2. 如果 manifest 存在，确认它是合法 JSON。
 3. 重新打开 dashboard。
 4. 如果文件缺失或损坏，重新运行 setup，或在 settings 中使用 maintenance actions。
 
@@ -42,14 +42,14 @@ Skill browser 依赖 Node.js、npm，以及通过 `npx skills` 调用的外部 s
 
 ## Built-In Skills 缺失
 
-打开 System，然后在 Health 里检查 **Skills installed**。
+打开 **Settings -> Knowlery**，然后在 Diagnostics 里检查 **Skills installed**。
 
 Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 如果有缺失：
 
 1. 在 test vault 中重新运行 setup，对比预期输出。
-2. 如果 skill 是被禁用的，尝试从 Review Menu 重新启用。
+2. 如果 skill 是被禁用的，尝试从 settings 的 Skills 区块重新启用。
 3. 如果安装不完整，可以使用 maintenance actions 重新初始化或修复 vault。
 
 ## Claude Code Config 缺失

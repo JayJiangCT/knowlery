@@ -50,7 +50,7 @@ npm run docs:build
 
 简体中文位于 `/zh/`。
 
-新增 public page 时，请同时添加两个语言版本，并更新 `docs-site/.vitepress/config.ts` 中的 sidebars。
+新增 public page 时，请同时添加两个语言版本，并更新 `docs-site/.vitepress/config.mts` 中的 sidebars。
 
 ## GitHub Pages
 

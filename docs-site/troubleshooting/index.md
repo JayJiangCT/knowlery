@@ -4,12 +4,12 @@ Use this page when setup, skills, platform config, or vault health does not look
 
 ## The Dashboard Says the Vault Is Not Set Up
 
-Knowlery checks for `.knowlery/manifest.json`.
+Knowlery checks for `.knowlery/manifest.json` or `KNOWLEDGE.md`.
 
 If the vault should already be initialized:
 
-1. Confirm `.knowlery/manifest.json` exists.
-2. Confirm it contains valid JSON.
+1. Confirm `.knowlery/manifest.json` or `KNOWLEDGE.md` exists.
+2. If the manifest exists, confirm it contains valid JSON.
 3. Reopen the dashboard.
 4. If it is missing or corrupted, run setup again or use maintenance actions from settings.
 
@@ -42,14 +42,14 @@ If the registry cannot be used, built-in and custom skills still work.
 
 ## Built-In Skills Are Missing
 
-Open System, then check **Skills installed** in Health.
+Open **Settings -> Knowlery**, then check **Skills installed** in Diagnostics.
 
 Built-in skills are expected at `.agents/skills/<name>/SKILL.md`.
 
 If some are missing:
 
 1. Re-run setup in a test vault to compare expected output.
-2. Use the Review Menu to re-enable disabled skills when possible.
+2. Use the Skills section in settings to re-enable disabled skills when possible.
 3. Use maintenance actions to re-initialize or repair the vault if the installation is incomplete.
 
 ## Claude Code Config Is Missing
