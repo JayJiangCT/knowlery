@@ -294,6 +294,25 @@ export const ExportScopeFileSchema = z.object({
 });
 export type ExportScopeFile = z.infer<typeof ExportScopeFileSchema>;
 
+export const InstalledBundleEntrySchema = z.object({
+  version: z.string().min(1),
+  title: z.string().min(1),
+  source: z.string(),
+  installedAt: z.string(),
+  libraryPath: z.string().min(1),
+  manifestContentHash: z.string(),
+  installedContentHash: z.string(),
+  conformance: z.enum(['passed', 'failed', 'skipped']),
+  conformanceErrorCount: z.number().int().nonnegative(),
+});
+export type InstalledBundleEntry = z.infer<typeof InstalledBundleEntrySchema>;
+
+export const InstalledBundlesFileSchema = z.object({
+  schemaVersion: z.literal(1),
+  bundles: z.record(InstalledBundleEntrySchema),
+});
+export type InstalledBundlesFile = z.infer<typeof InstalledBundlesFileSchema>;
+
 export const RiskHintSchema = z.object({
   itemId: z.string(),
   kind: z.enum(['email', 'sensitive-url', 'person-page', 'meeting-like-path']),
