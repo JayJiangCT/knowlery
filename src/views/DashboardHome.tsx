@@ -14,6 +14,9 @@ import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { RECIPE_BOOK } from '../core/moves';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
+import { ExportBundleModal } from '../modals/export-bundle';
+import { summarizeBundleScope } from '../core/okf/export-scope';
+import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
 import { IconBookOpen, IconChevronRight, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
@@ -47,6 +50,12 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     requestExists: boolean;
     result: DailyReviewParseResult | null;
   } | null>(null);
+  const [bundleSummary, setBundleSummary] = useState<{
+    approved: number;
+    unreviewed: number;
+    flagged: number;
+    seeds: number;
+  } | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
@@ -60,6 +69,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       requestExists: await plugin.app.vault.adapter.exists(normalizePath(request.requestPath)),
       result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
     });
+    setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -87,6 +97,10 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const addReflection = () => {
     new ReflectionCaptureModal(plugin.app, plugin, () => refresh()).open();
+  };
+
+  const openShareModal = (seed?: string) => {
+    new ExportBundleModal(plugin.app, plugin, seed).open();
   };
 
   const copyRequest = async (request?: string) => {
@@ -168,6 +182,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     return `Review the current note "${file.basename}": find related older notes and comparisons, then identify which connections, questions, or structures are worth writing back to the knowledge base.`;
   }, [file]);
 
+  const currentConceptId = file && isKnowledgePath(file.path) ? conceptIdFromPath(file.path) : null;
+
   if (!model) return <div className="knowlery-home" />;
 
   return (
@@ -218,6 +234,16 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
                 <IconClipboard size={14} />
                 <span>Copy prompt</span>
               </button>
+              {currentConceptId && (
+                <button
+                  type="button"
+                  className="knowlery-btn knowlery-btn--outline"
+                  onClick={() => openShareModal(currentConceptId)}
+                >
+                  <IconExternalLink size={14} />
+                  <span>Share this topic…</span>
+                </button>
+              )}
             </div>
           </article>
         ) : (
@@ -267,6 +293,28 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             </button>
           </div>
           <WeeklyReviewStatus dailyReview={dailyReview} onCheckResult={() => refresh()} />
+        </article>
+      </section>
+
+      <section className="knowlery-home__bundle">
+        <div className="knowlery-section-label">Bundles</div>
+        <article className="knowlery-home__bundle-card">
+          <div className="knowlery-home__bundle-copy">
+            <h3>{bundleSummary && bundleSummary.seeds > 0 ? 'Knowledge bundle review' : 'Pick a topic to share'}</h3>
+            <span>
+              {bundleSummary && bundleSummary.seeds > 0
+                ? `${bundleSummary.approved} approved · ${bundleSummary.unreviewed} need review`
+                : 'Create a reviewed bundle from selected knowledge pages.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--primary"
+            onClick={() => openShareModal()}
+          >
+            <IconExternalLink size={14} />
+            <span>{bundleSummary && bundleSummary.seeds > 0 ? 'Continue review' : 'Share knowledge…'}</span>
+          </button>
         </article>
       </section>
 

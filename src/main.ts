@@ -1,14 +1,16 @@
-import { Events, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
+import { Events, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { ReleaseNotesModal } from './modals/release-notes-modal';
+import { ExportBundleModal } from './modals/export-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 import { getReleaseNote } from './assets/release-notes';
+import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
 
 interface SettingApp {
   setting: {
@@ -74,6 +76,14 @@ export default class KnowleryPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: 'share-knowledge-bundle',
+      name: 'Share knowledge bundle...',
+      callback: () => {
+        new ExportBundleModal(this.app, this).open();
+      },
+    });
+
+    this.addCommand({
       id: 'switch-platform',
       name: 'Switch platform',
       callback: () => {
@@ -84,6 +94,18 @@ export default class KnowleryPlugin extends Plugin {
     });
 
     this.addSettingTab(new KnowlerySettingTab(this.app, this));
+
+    this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+      if (!(file instanceof TFile) || file.extension !== 'md' || !isKnowledgePath(file.path)) return;
+      menu.addItem((item) => {
+        item
+          .setTitle('Share this topic...')
+          .setIcon('share-2')
+          .onClick(() => {
+            new ExportBundleModal(this.app, this, conceptIdFromPath(file.path)).open();
+          });
+      });
+    }));
 
     this.app.workspace.onLayoutReady(async () => {
       if (!(await isVaultInitialized(this.app))) {

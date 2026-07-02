@@ -101,6 +101,9 @@ export interface KnowlerySettings {
   activityLoggingEnabled: boolean;
   lastSyncedVersion: string;
   lastSeenReleaseVersion: string;
+  bundleCreatorName: string;
+  bundleCreatorUrl: string;
+  bundleDefaultLicense: string;
 }
 
 export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
@@ -158,6 +161,9 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   activityLoggingEnabled: true,
   lastSyncedVersion: '',
   lastSeenReleaseVersion: '',
+  bundleCreatorName: '',
+  bundleCreatorUrl: '',
+  bundleDefaultLicense: 'personal',
 };
 
 export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
@@ -167,6 +173,165 @@ export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
 };
 
 export const KNOWLEDGE_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
+export type KnowledgeDir = typeof KNOWLEDGE_DIRS[number];
+
+export const OkfFrontmatterSchema = z.object({
+  type: z.string().min(1),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  timestamp: z.string().optional(),
+}).passthrough();
+export type OkfFrontmatter = z.infer<typeof OkfFrontmatterSchema>;
+
+export const BundleManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  okfVersion: z.string(),
+  id: z.string().min(1),
+  title: z.string().min(1),
+  version: z.string().min(1),
+  creator: z.object({
+    name: z.string(),
+    url: z.string(),
+  }),
+  releasedAt: z.string(),
+  entrypoint: z.string(),
+  contentHash: z.string(),
+  license: z.string(),
+  knowleryVersion: z.string(),
+  conceptCount: z.number().int().nonnegative(),
+});
+export type BundleManifest = z.infer<typeof BundleManifestSchema>;
+
+export const UnresolvedLinkSchema = z.object({
+  from: z.string(),
+  raw: z.string(),
+});
+export type UnresolvedLink = z.infer<typeof UnresolvedLinkSchema>;
+
+export const AgentIndexConceptSchema = z.object({
+  id: z.string(),
+  path: z.string(),
+  type: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  domain: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  status: z.string().optional(),
+  timestamp: z.string().optional(),
+  daysSinceUpdate: z.number().nullable(),
+  backlinks: z.array(z.string()),
+  outlinks: z.array(z.string()),
+  sources: z.array(z.string()).optional(),
+  contradictions: z.array(z.string()).optional(),
+});
+export type AgentIndexConcept = z.infer<typeof AgentIndexConceptSchema>;
+
+export const AgentIndexSchema = z.object({
+  schemaVersion: z.literal(1),
+  okfVersion: z.string(),
+  generatedAt: z.string(),
+  title: z.string(),
+  entrypoint: z.string(),
+  concepts: z.array(AgentIndexConceptSchema),
+  groups: z.object({
+    byType: z.record(z.array(z.string())),
+    byDomain: z.record(z.array(z.string())),
+  }),
+  stale: z.array(z.string()),
+  unresolvedLinks: z.array(UnresolvedLinkSchema),
+  rawSources: z.array(z.object({
+    path: z.string(),
+    title: z.string(),
+    citedBy: z.array(z.string()),
+  })),
+});
+export type AgentIndex = z.infer<typeof AgentIndexSchema>;
+
+export const ConformanceIssueSchema = z.object({
+  path: z.string(),
+  message: z.string(),
+  code: z.string(),
+});
+export type ConformanceIssue = z.infer<typeof ConformanceIssueSchema>;
+
+export const FieldQualitySummarySchema = z.object({
+  missingDescription: z.object({ count: z.number(), pages: z.array(z.string()) }),
+  missingTimestamp: z.object({
+    count: z.number(),
+    pages: z.array(z.object({
+      path: z.string(),
+      nearMissKey: z.string().optional(),
+    })),
+  }),
+  missingDomain: z.object({ count: z.number(), pages: z.array(z.string()) }),
+  typeMismatch: z.object({ count: z.number(), pages: z.array(z.string()) }),
+});
+export type FieldQualitySummary = z.infer<typeof FieldQualitySummarySchema>;
+
+export const ConformanceReportSchema = z.object({
+  conformant: z.boolean(),
+  errors: z.array(ConformanceIssueSchema),
+  warnings: z.array(ConformanceIssueSchema),
+  fieldQuality: FieldQualitySummarySchema,
+});
+export type ConformanceReport = z.infer<typeof ConformanceReportSchema>;
+
+export const ReviewStatusSchema = z.enum(['unreviewed', 'approved', 'flagged']);
+export type ReviewStatus = z.infer<typeof ReviewStatusSchema>;
+
+export const ExportScopeFileSchema = z.object({
+  schemaVersion: z.literal(1),
+  bundles: z.record(z.object({
+    title: z.string().optional(),
+    seeds: z.array(z.string()),
+    maxCompiledHops: z.number().int().min(0).default(1),
+    items: z.record(z.object({
+      status: ReviewStatusSchema,
+      contentHashAtReview: z.string().nullable(),
+    })),
+  })),
+});
+export type ExportScopeFile = z.infer<typeof ExportScopeFileSchema>;
+
+export const RiskHintSchema = z.object({
+  itemId: z.string(),
+  kind: z.enum(['email', 'sensitive-url', 'person-page', 'meeting-like-path']),
+  evidence: z.string(),
+});
+export type RiskHint = z.infer<typeof RiskHintSchema>;
+
+export const CompileOptionsSchema = z.object({
+  targetDir: z.string().min(1),
+  bundleId: z.string().min(1),
+  title: z.string().min(1),
+  version: z.string().min(1),
+  license: z.string().min(1),
+  creator: z.object({
+    name: z.string(),
+    url: z.string(),
+  }),
+  staleThresholdDays: z.number().int().positive().optional(),
+  includeSchema: z.boolean().default(true),
+  includeFullLog: z.boolean().default(false),
+  includeSources: z.boolean().default(false),
+  approvedConceptIds: z.array(z.string()).default([]),
+  approvedRawPaths: z.array(z.string()).default([]),
+  overwrite: z.boolean().default(false),
+});
+export type CompileOptions = z.infer<typeof CompileOptionsSchema>;
+
+export const CompileResultSchema = z.object({
+  manifest: BundleManifestSchema,
+  conformance: ConformanceReportSchema,
+  conceptCount: z.number().int().nonnegative(),
+  rawSourceCount: z.number().int().nonnegative(),
+  wikilinksConverted: z.number().int().nonnegative(),
+  unresolvedLinks: z.array(UnresolvedLinkSchema),
+  staleCount: z.number().int().nonnegative(),
+  targetDir: z.string(),
+});
+export type CompileResult = z.infer<typeof CompileResultSchema>;
 
 export const BUILTIN_SKILL_NAMES = [
   'cook', 'ask', 'explore', 'challenge', 'ideas', 'audit', 'organize',

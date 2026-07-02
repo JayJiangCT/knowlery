@@ -3567,6 +3567,1123 @@
   color: var(--text-faint);
 }
 
+/* Bundle sharing */
+.knowlery-home__bundle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-xs);
+}
+
+.knowlery-home__bundle-card {
+  padding: var(--knowlery-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-home__bundle-copy {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+}
+
+.knowlery-home__bundle-copy h3 {
+  margin: 0;
+  font-size: var(--knowlery-body-size);
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.knowlery-home__bundle-copy span {
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export-modal {
+  inline-size: min(960px, 94vw);
+}
+
+.knowlery-export {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-md);
+  max-block-size: 80vh;
+}
+
+.knowlery-export input,
+.knowlery-export select {
+  color: var(--text-normal);
+}
+
+/* Phase indicator */
+.knowlery-export__phases {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-faint);
+}
+
+.knowlery-export__phases .is-active {
+  color: var(--interactive-accent);
+  font-weight: 600;
+}
+
+/* Seed bar */
+.knowlery-export__seedbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+}
+
+.knowlery-export__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-2xs);
+  block-size: 28px;
+  padding-inline: var(--knowlery-space-sm) var(--knowlery-space-xs);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-lg);
+  background: var(--knowlery-accent-tint);
+  color: var(--text-normal);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__chip-dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 999px;
+  background: var(--interactive-accent);
+}
+
+.knowlery-dashboard button,
+.knowlery-modal button {
+  font-family: inherit;
+}
+
+.knowlery-export__chip button {
+  display: inline-flex;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  padding: 0;
+  cursor: pointer;
+}
+
+.knowlery-export__chip button:hover {
+  color: var(--knowlery-error);
+}
+
+/* Composite input fields: ONE border on the container; the inner <input>
+   must carry none of Obsidian's default field chrome, or it double-boxes. */
+.knowlery-export__seed-search,
+.knowlery-export__search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-2xs);
+  block-size: 28px;
+  padding-inline: var(--knowlery-space-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-lg);
+  background: var(--background-modifier-form-field);
+  color: var(--text-faint);
+}
+
+.knowlery-export__seed-search {
+  position: relative;
+}
+
+/* Focus indication lives on the CONTAINER: the repo's global
+   `.knowlery-modal :focus-visible` outline on the inner input would draw a
+   rectangle inside the pill (double-box). Suppress it there and show an
+   accessible ring on the field itself instead. */
+.knowlery-export__seed-search:focus-within,
+.knowlery-export__search:focus-within {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.knowlery-modal .knowlery-export__seed-search input:focus-visible,
+.knowlery-modal .knowlery-export__search input:focus-visible {
+  outline: none !important;
+}
+
+.knowlery-modal .knowlery-export__seed-search input,
+.knowlery-modal .knowlery-export__search input {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 100% !important;
+  min-block-size: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-modal .knowlery-export__seed-search input:focus,
+.knowlery-modal .knowlery-export__search input:focus {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.knowlery-export__seed-search input {
+  min-inline-size: 200px;
+}
+
+.knowlery-export__seed-dropdown {
+  position: absolute;
+  inset-block-start: calc(100% + 4px);
+  inset-inline-start: 0;
+  inline-size: 260px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.knowlery-modal button.knowlery-export__seed-dropdown-item,
+.knowlery-export__seed-dropdown button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  inline-size: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-normal);
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  cursor: pointer;
+  text-align: start;
+  box-shadow: none;
+}
+
+.knowlery-export__seed-dropdown button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-export__seed-dropdown button span {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowlery-export__seed-dropdown small {
+  flex: none;
+  margin-inline-start: var(--knowlery-space-sm);
+  color: var(--text-faint);
+}
+
+.knowlery-export__hops {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+  margin-inline-start: auto;
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-modal .knowlery-export__hops select {
+  block-size: 28px !important;
+  min-block-size: 28px !important;
+  padding-block: 0 !important;
+  font-size: var(--knowlery-meta-size);
+}
+
+/* Incremental callout */
+.knowlery-export__callout {
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  border: 1px solid color-mix(in srgb, var(--text-warning) 45%, transparent);
+  border-radius: var(--knowlery-radius-sm);
+  background: color-mix(in srgb, var(--text-warning) 8%, transparent);
+  color: var(--text-normal);
+  font-size: var(--knowlery-meta-size);
+}
+
+/* Status line + progress */
+.knowlery-export__statusline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--knowlery-space-sm);
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__statusline b {
+  color: var(--text-normal);
+}
+
+.knowlery-export__progress {
+  block-size: 4px;
+  border-radius: 999px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.knowlery-export__progress > div {
+  block-size: 100%;
+  background: var(--knowlery-success);
+  transition: inline-size 0.15s ease;
+}
+
+.knowlery-export__switch {
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  overflow: hidden;
+}
+
+.knowlery-modal .knowlery-export__switch button {
+  block-size: 28px !important;
+  min-block-size: 28px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--text-muted);
+  padding: 0 var(--knowlery-space-sm) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.knowlery-modal .knowlery-export__switch button.is-active {
+  background: var(--interactive-accent) !important;
+  color: var(--text-on-accent);
+}
+
+/* Workspace: list/graph + detail panel.
+   The container needs a DEFINITE height (not max-*): grid tracks size to
+   content otherwise, so the children never overflow themselves and their
+   scrollbars never appear. */
+.knowlery-export__workspace {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.15fr) minmax(280px, 1fr);
+  grid-template-rows: 100%;
+  gap: var(--knowlery-space-md);
+  block-size: clamp(340px, 48vh, 560px);
+  overflow: hidden;
+}
+
+.knowlery-export__main,
+.knowlery-export__detail {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-md);
+  background: var(--background-secondary);
+  overflow: auto;
+  min-block-size: 0;
+}
+
+.knowlery-export__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.knowlery-export__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+  padding: var(--knowlery-space-sm);
+  border-block-end: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--background-secondary);
+  z-index: 2;
+}
+
+.knowlery-export__search {
+  flex: 1;
+  min-inline-size: 140px;
+}
+
+.knowlery-modal button.knowlery-export__filter-chip {
+  block-size: 28px !important;
+  min-block-size: 28px !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: var(--knowlery-radius-lg) !important;
+  background: transparent !important;
+  color: var(--text-muted);
+  padding: 0 var(--knowlery-space-sm) !important;
+  font-size: var(--knowlery-meta-size);
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.knowlery-modal button.knowlery-export__filter-chip:hover {
+  background: var(--background-modifier-hover) !important;
+}
+
+.knowlery-modal button.knowlery-export__filter-chip.is-active {
+  background: var(--interactive-accent) !important;
+  border-color: var(--interactive-accent) !important;
+  color: var(--text-on-accent);
+}
+
+.knowlery-export__section-label {
+  padding: var(--knowlery-space-sm) var(--knowlery-space-sm) var(--knowlery-space-2xs);
+  font-size: var(--knowlery-meta-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.knowlery-export__row {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  border-block-end: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+}
+
+.knowlery-export__row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-export__row.is-selected {
+  background: var(--knowlery-accent-tint);
+}
+
+.knowlery-export__row-icon {
+  inline-size: 20px;
+  block-size: 20px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+}
+
+/* Raw notes: dashed outline — the same visual language as the graph's
+   dashed circles — plus a rounder shape and fainter letter. */
+.knowlery-export__row-icon.is-raw {
+  border-style: dashed;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-faint);
+}
+
+.knowlery-export__row-body {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.knowlery-export__row-title {
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowlery-export__row-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.knowlery-export__tag {
+  display: inline-block;
+  margin-inline-start: var(--knowlery-space-xs);
+  padding: 0 var(--knowlery-space-xs);
+  border-radius: var(--knowlery-radius-lg);
+  font-size: var(--knowlery-meta-size);
+  font-style: normal;
+  vertical-align: 1px;
+}
+
+.knowlery-export__tag.is-changed {
+  background: color-mix(in srgb, var(--text-warning) 20%, transparent);
+  color: var(--text-warning);
+}
+
+.knowlery-export__tag.is-new {
+  background: var(--knowlery-accent-tint-strong);
+  color: var(--interactive-accent);
+}
+
+.knowlery-export__tag.is-seed {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.knowlery-export__tag.is-raw {
+  border: 1px dashed var(--text-faint);
+  color: var(--text-muted);
+}
+
+.knowlery-export__risk {
+  color: var(--text-warning);
+  font-style: normal;
+  font-size: var(--knowlery-meta-size);
+  white-space: nowrap;
+}
+
+.knowlery-export__badge {
+  flex: none;
+  padding: 0 var(--knowlery-space-xs);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-lg);
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+  white-space: nowrap;
+}
+
+.knowlery-export__badge.is-approved {
+  color: var(--knowlery-success);
+  border-color: color-mix(in srgb, var(--knowlery-success) 40%, transparent);
+}
+
+.knowlery-export__badge.is-flagged {
+  color: var(--knowlery-error);
+  border-color: color-mix(in srgb, var(--knowlery-error) 40%, transparent);
+}
+
+.knowlery-export__badge.is-unreviewed {
+  color: var(--text-warning);
+  border-color: color-mix(in srgb, var(--text-warning) 40%, transparent);
+}
+
+.knowlery-export__dot {
+  flex: none;
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 999px;
+  border: 2px solid var(--text-faint);
+  background: transparent;
+}
+
+.knowlery-export__dot.is-unreviewed {
+  border-color: var(--text-warning);
+}
+
+.knowlery-export__dot.is-approved {
+  border-color: var(--knowlery-success);
+  background: var(--knowlery-success);
+}
+
+.knowlery-export__dot.is-flagged {
+  border-color: var(--knowlery-error);
+  background: var(--knowlery-error);
+}
+
+.knowlery-export__row-actions {
+  flex: none;
+  display: inline-flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  overflow: hidden;
+}
+
+/* In list rows, actions reveal on hover/selection so titles keep the room
+   (the status dot is always visible). Detail-panel actions stay visible. */
+.knowlery-export__row .knowlery-export__row-actions {
+  visibility: hidden;
+}
+
+.knowlery-export__row:hover .knowlery-export__row-actions,
+.knowlery-export__row.is-selected .knowlery-export__row-actions,
+.knowlery-export__row .knowlery-export__row-actions:has(button.is-active) {
+  visibility: visible;
+}
+
+.knowlery-modal .knowlery-export__row-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-2xs);
+  border: none;
+  border-radius: 0;
+  border-inline-start: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  padding: var(--knowlery-space-2xs) var(--knowlery-space-xs);
+  font-size: var(--knowlery-meta-size);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.knowlery-modal .knowlery-export__row-actions button:first-child {
+  border-inline-start: none;
+}
+
+.knowlery-modal .knowlery-export__row-actions button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-modal .knowlery-export__row-actions button.is-approve.is-active {
+  background: var(--knowlery-success);
+  color: var(--text-on-accent);
+}
+
+.knowlery-modal .knowlery-export__row-actions button.is-flag.is-active {
+  background: var(--knowlery-error);
+  color: var(--text-on-accent);
+}
+
+/* Graph view — fills the panel; wheel zooms, drag pans (no scrolling). */
+.knowlery-export__graph {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.knowlery-export__graph-hint {
+  flex: none;
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  border-block-end: 1px solid var(--background-modifier-border);
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+  line-height: 1.45;
+}
+
+.knowlery-export__graph-svg {
+  inline-size: 100%;
+  flex: 1;
+  min-block-size: 0;
+  display: block;
+  background: var(--background-primary);
+  cursor: grab;
+  touch-action: none;
+}
+
+.knowlery-export__graph-svg:active {
+  cursor: grabbing;
+}
+
+.knowlery-export__graph-svg line {
+  stroke: var(--background-modifier-border);
+  stroke-width: 1;
+  transition: opacity 0.12s ease;
+}
+
+.knowlery-export__graph-svg line.is-dim {
+  opacity: 0.15;
+}
+
+.knowlery-export__node circle {
+  fill: var(--background-secondary);
+  stroke-width: 2.5;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.knowlery-export__node text {
+  fill: var(--text-muted);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.knowlery-export__node.is-dim {
+  opacity: 0.2;
+}
+
+.knowlery-export__node.is-selected circle {
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 3px var(--interactive-accent));
+}
+
+.knowlery-export__node.is-unreviewed circle {
+  stroke: var(--text-warning);
+}
+
+.knowlery-export__node.is-approved circle {
+  stroke: var(--knowlery-success);
+}
+
+.knowlery-export__node.is-flagged circle {
+  stroke: var(--knowlery-error);
+}
+
+.knowlery-export__node circle.knowlery-export__seed-ring {
+  fill: none;
+  stroke: var(--interactive-accent) !important;
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+  opacity: 0.9;
+}
+
+.knowlery-export__node.is-seed text {
+  fill: var(--text-normal);
+  font-weight: 600;
+}
+
+.knowlery-export__legend {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--knowlery-space-sm);
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  border-block-start: 1px solid var(--background-modifier-border);
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--knowlery-space-2xs);
+}
+
+.knowlery-export__legend i {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 999px;
+  border: 2px solid var(--text-faint);
+  background: var(--background-primary);
+}
+
+.knowlery-export__legend i.is-seed { border-color: var(--interactive-accent); }
+.knowlery-export__legend i.is-unreviewed { border-color: var(--text-warning); }
+.knowlery-export__legend i.is-approved { border-color: var(--knowlery-success); }
+.knowlery-export__legend i.is-flagged { border-color: var(--knowlery-error); }
+.knowlery-export__legend i.is-raw { border-style: dashed; }
+
+/* Detail panel */
+.knowlery-export__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-xs);
+  padding: var(--knowlery-space-md);
+}
+
+.knowlery-export__detail-title {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.knowlery-export__detail-meta {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__invalidated {
+  padding: var(--knowlery-space-xs) var(--knowlery-space-sm);
+  border: 1px solid color-mix(in srgb, var(--text-warning) 45%, transparent);
+  border-radius: var(--knowlery-radius-sm);
+  color: var(--text-warning);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--knowlery-space-sm);
+  margin-block: var(--knowlery-space-2xs);
+}
+
+.knowlery-export__detail-risks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+}
+
+.knowlery-export__detail-label {
+  margin-block-start: var(--knowlery-space-xs);
+  font-size: var(--knowlery-meta-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.knowlery-export__preview {
+  flex: 1;
+  min-block-size: 160px;
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-primary);
+  overflow: auto;
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-export__preview > :first-child {
+  margin-block-start: 0;
+}
+
+/* Footer */
+.knowlery-export__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-export__footer-note {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+/* Confirm phase */
+.knowlery-export__confirm,
+.knowlery-export__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-md);
+  overflow: auto;
+}
+
+.knowlery-export__confirm-cols {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--knowlery-space-xl);
+}
+
+.knowlery-export__confirm-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-sm);
+  min-inline-size: 0;
+}
+
+.knowlery-export__col-label {
+  font-size: var(--knowlery-meta-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.knowlery-export__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+/* Matches the rule-editor/skill-editor text-input treatment — Obsidian's
+   bare <input> default (thick browser focus ring, no set border) reads as
+   broken once you actually focus it. */
+.knowlery-export__field input {
+  inline-size: 100%;
+  block-size: 36px;
+  padding: 0 var(--knowlery-space-md);
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  color: var(--text-normal);
+  font-size: var(--knowlery-meta-size);
+  margin: 0;
+  box-shadow: none;
+}
+
+.modal .knowlery-modal .knowlery-export__field input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.knowlery-export__field-row {
+  display: flex;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-export__field-row .knowlery-export__field {
+  flex: 1;
+}
+
+.knowlery-export__path-field {
+  display: flex;
+  gap: var(--knowlery-space-xs);
+}
+
+.knowlery-export__path-field input {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.knowlery-export__toggle {
+  display: flex;
+  gap: var(--knowlery-space-xs);
+  cursor: pointer;
+  color: var(--text-normal);
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-export__toggle input {
+  margin-block-start: 3px;
+}
+
+.knowlery-export__toggle em {
+  display: block;
+  font-style: normal;
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+  line-height: 1.45;
+}
+
+.knowlery-export__safety {
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-inline-start: 3px solid var(--knowlery-success);
+  border-radius: var(--knowlery-radius-sm);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  line-height: 1.6;
+}
+
+.knowlery-export__safety-label {
+  font-size: var(--knowlery-meta-size);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+/* Result report */
+.knowlery-export__report-safety {
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md);
+  border: 1px solid color-mix(in srgb, var(--knowlery-success) 50%, transparent);
+  border-radius: var(--knowlery-radius-md);
+}
+
+.knowlery-export__report-title {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+  font-weight: 600;
+  color: var(--knowlery-success);
+  margin-block-end: var(--knowlery-space-xs);
+}
+
+.knowlery-export__report-safety ul {
+  margin: 0;
+  padding-inline-start: var(--knowlery-space-lg);
+  line-height: 1.7;
+  color: var(--text-normal);
+}
+
+.knowlery-export__report-safety li.is-warn {
+  color: var(--text-warning);
+}
+
+.knowlery-export__counts {
+  display: flex;
+  gap: var(--knowlery-space-sm);
+  flex-wrap: wrap;
+}
+
+.knowlery-export__counts > div {
+  flex: 1;
+  min-inline-size: 100px;
+  padding: var(--knowlery-space-sm);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  text-align: center;
+}
+
+.knowlery-export__counts b {
+  display: block;
+  font-size: var(--knowlery-md-size);
+  color: var(--text-normal);
+}
+
+.knowlery-export__counts span {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__worklist {
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+}
+
+.knowlery-export__worklist-row {
+  padding-block: var(--knowlery-space-2xs);
+  color: var(--text-muted);
+  font-size: var(--knowlery-body-size);
+}
+
+.knowlery-export__worklist-hint {
+  margin-block-start: var(--knowlery-space-2xs);
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-export__tech {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+  line-height: 1.5;
+}
+
+.knowlery-export__empty {
+  padding: var(--knowlery-space-md);
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.knowlery-export__empty small {
+  display: block;
+  margin-block-start: var(--knowlery-space-xs);
+  line-height: 1.5;
+}
+
+.knowlery-export__empty--tall {
+  padding-block: var(--knowlery-space-2xl);
+  max-inline-size: 380px;
+  margin-inline: auto;
+  line-height: 1.6;
+}
+
+.knowlery-export__pick-intro {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.knowlery-export__pick-new {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
+}
+
+.knowlery-export__pick-new input {
+  flex: 1;
+  block-size: 36px;
+  padding: 0 var(--knowlery-space-md);
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  color: var(--text-normal);
+  font-size: var(--knowlery-meta-size);
+  margin: 0;
+  box-shadow: none;
+}
+
+.modal .knowlery-modal .knowlery-export__pick-new input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.knowlery-export__pick-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-md);
+  overflow: hidden;
+}
+
+/*
+ * Obsidian's base modal styles treat any bare <button> as a full-width,
+ * centered, bold call-to-action. Every custom button in this plugin has to
+ * explicitly reset that (see .knowlery-wizard__platform-card) or it renders
+ * as an oversized pill instead of a list row.
+ */
+.modal .knowlery-modal button.knowlery-export__pick-item {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
+  inline-size: 100%;
+  block-size: auto !important;
+  text-align: start !important;
+  font-weight: 400 !important;
+  line-height: 1.4;
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md) !important;
+  background: transparent !important;
+  border: none !important;
+  border-block-end: 1px solid var(--background-modifier-border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.modal .knowlery-modal button.knowlery-export__pick-item:last-child {
+  border-block-end: none !important;
+}
+
+.modal .knowlery-modal button.knowlery-export__pick-item:hover,
+.modal .knowlery-modal button.knowlery-export__pick-item:focus {
+  background: var(--background-modifier-hover) !important;
+  box-shadow: none !important;
+}
+
+.modal .knowlery-modal button.knowlery-export__pick-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.knowlery-export__pick-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.knowlery-export__pick-title {
+  color: var(--text-normal);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.knowlery-export__pick-meta {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.knowlery-export__pick-chevron {
+  color: var(--text-faint);
+  font-size: var(--font-ui-medium);
+  flex: none;
+}
+
+.knowlery-export__pick-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+@media (max-width: 720px) {
+  .knowlery-export-modal {
+    inline-size: 94vw;
+  }
+
+  .knowlery-export__workspace,
+  .knowlery-export__confirm-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .knowlery-export__workspace {
+    max-block-size: none;
+  }
+
+  .knowlery-home__bundle-card,
+  .knowlery-export__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 /* Stats strip */
 .knowlery-home__stats {
   display: flex;
