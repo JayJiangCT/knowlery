@@ -44,6 +44,8 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 ### Writing Conventions
 
 - Use wikilinks (\`[[Page Name]]\`) to connect related pages
+- **Read \`SCHEMA.md\` before creating or re-tagging knowledge pages** — it holds the
+  tag and domain taxonomy and is not injected into your context automatically
 - Every knowledge page has YAML frontmatter matching SCHEMA.md
 - Keep pages focused on a single topic
 - Place new pages in the correct directory by \`type\`
@@ -297,10 +299,10 @@ export function generateClaudeMd(ruleImportPaths: string[] = []): string {
     .sort((a, b) => a.localeCompare(b))
     .map((path) => `@rules/${path}`);
 
+  // Fixed context is the operating card plus rules only (spec f4): SCHEMA.md is an
+  // on-demand read (it grows forever) and INDEX.base is Base view YAML, useless inline.
   return [
     '@../KNOWLEDGE.md',
-    '@../SCHEMA.md',
-    '@../INDEX.base',
     ...ruleImports,
     '',
   ].join('\n');
@@ -309,6 +311,6 @@ export function generateClaudeMd(ruleImportPaths: string[] = []): string {
 export function generateOpenCodeJson(kbName: string): string {
   return JSON.stringify({
     name: kbName,
-    instructions: ['KNOWLEDGE.md', 'SCHEMA.md', 'INDEX.base', '.agents/rules/*.md'],
+    instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
   }, null, 2);
 }

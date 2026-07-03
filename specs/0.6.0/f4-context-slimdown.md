@@ -1,6 +1,6 @@
 # F4 — Fixed-Context Slim-Down
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 (with §4.2 wording amendment; R3 accepted, no opt-out) — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.6.0 (final feature)
 - **Branch:** `cursor/f4-context-slimdown-92eb` (stacked on F3)
 - **Depends on:** F2/F5 (retrieval no longer needs INDEX.base or SCHEMA.md in fixed context)
@@ -68,10 +68,12 @@ in `main.ts` (next to `migrateSchemaMd`):
   `@../SCHEMA.md` or `@../INDEX.base` (trimmed match), touch nothing else. Idempotent;
   user content and the managed rule-imports block are untouched. Write only when
   changed.
-- **`opencode.json`** (if it exists and parses): filter `instructions` entries equal to
-  `SCHEMA.md` or `INDEX.base`; keep all other keys byte-for-byte via parse/stringify of
-  only this field's change. On parse failure, leave the file alone (user-owned config;
-  never risk corrupting it). Write only when changed.
+- **`opencode.json`** (if it exists and parses): filter only the `instructions` array
+  (entries equal to `SCHEMA.md` or `INDEX.base`), preserve all unrelated keys
+  semantically, and write only when changed; on parse failure, leave the file untouched
+  (user-owned config; never risk corrupting it). *(Wording amended at spec acceptance:
+  parse/stringify cannot guarantee byte-for-byte formatting, so preservation is
+  semantic, not byte-level.)*
 
 ### 4.3 What agents still get, and where
 

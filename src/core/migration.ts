@@ -218,3 +218,48 @@ function headingLevel(line: string): number {
   const match = /^(#{1,6})\s/.exec(line);
   return match ? match[1].length : 0;
 }
+
+const STALE_CLAUDE_IMPORTS = new Set(['@../SCHEMA.md', '@../INDEX.base']);
+const STALE_OPENCODE_INSTRUCTIONS = new Set(['SCHEMA.md', 'INDEX.base']);
+
+/**
+ * Fixed-context slim-down migration (spec f4, §4.2). Removes exactly the two stale
+ * import lines / instruction entries, preserves everything else, writes only on
+ * change (idempotent), and leaves malformed opencode.json untouched. Runs from the
+ * once-per-version sync block, so a user who deliberately re-adds the imports after
+ * upgrading keeps them (spec f4, R3).
+ */
+export async function migrateFixedContextImports(app: App): Promise<void> {
+  const adapter = app.vault.adapter;
+
+  const claudePath = '.claude/CLAUDE.md';
+  if (await adapter.exists(claudePath)) {
+    const content = await adapter.read(claudePath);
+    const filtered = content
+      .split(/\r?\n/)
+      .filter((line) => !STALE_CLAUDE_IMPORTS.has(line.trim()))
+      .join('\n');
+    if (filtered !== content) {
+      await writeFile(app, claudePath, filtered);
+    }
+  }
+
+  const openCodePath = 'opencode.json';
+  if (await adapter.exists(openCodePath)) {
+    const raw = await adapter.read(openCodePath);
+    let config: Record<string, unknown>;
+    try {
+      config = JSON.parse(raw);
+    } catch {
+      return; // user-owned config — never risk corrupting it
+    }
+    if (!config || typeof config !== 'object' || !Array.isArray(config.instructions)) return;
+    const filtered = config.instructions.filter(
+      (entry) => typeof entry !== 'string' || !STALE_OPENCODE_INSTRUCTIONS.has(entry),
+    );
+    if (filtered.length !== config.instructions.length) {
+      config.instructions = filtered;
+      await writeFile(app, openCodePath, JSON.stringify(config, null, 2));
+    }
+  }
+}
