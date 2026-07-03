@@ -8,6 +8,7 @@ import type {
 import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
 import { getRulesDir } from './platform-adapter';
 import { detectAgentCli } from './cli-detect';
+import { QUERY_SCRIPT_PATH } from './query-script';
 
 interface ObsidianElectronBridge {
   ipcRenderer?: {
@@ -181,6 +182,7 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
     knowledgeMdExists: app.vault.getFileByPath(normalizePath('KNOWLEDGE.md')) !== null,
     schemaMdExists: app.vault.getFileByPath(normalizePath('SCHEMA.md')) !== null,
     indexBaseExists: app.vault.getFileByPath(normalizePath('INDEX.base')) !== null,
+    queryScriptExists: await adapter.exists(normalizePath(QUERY_SCRIPT_PATH)),
     knowledgeDirsComplete: {
       exists: existingDirs,
       missing: missingDirs,

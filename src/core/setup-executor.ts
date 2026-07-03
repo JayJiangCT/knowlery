@@ -12,6 +12,7 @@ import { generatePlatformConfig } from './platform-adapter';
 import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from './skill-manager';
 import { installDefaultRules } from './rule-manager';
 import { runOptionalInstalls } from './environment-install';
+import { syncQueryScript } from './query-script';
 import { ensureDir, writeFile } from './vault-io';
 
 const KNOWLERY_DIR = '.knowlery';
@@ -77,6 +78,7 @@ export async function executeSetup(
   onProgress('lock-files');
   const lock = buildInitialSkillsLock();
   await saveSkillsLock(app, lock);
+  await syncQueryScript(app);
   await writeManifest(app, platform, kbName);
 
   let optionalInstallRuns: InstallExecutionState[] = [];

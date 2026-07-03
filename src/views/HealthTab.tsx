@@ -193,6 +193,11 @@ export function HealthTab() {
             onClick={integrity.indexBaseExists ? undefined : openSettings}
           />
           <IntegrityRow
+            state={integrity.queryScriptExists ? 'ok' : 'fail'}
+            label="Retrieval script (.knowlery/bin/query.mjs)"
+            detail={integrity.queryScriptExists ? undefined : 'Missing — reload the plugin to install it'}
+          />
+          <IntegrityRow
             state={integrity.knowledgeDirsComplete.missing.length === 0 ? 'ok' : 'fail'}
             label="Knowledge directories"
             detail={

@@ -10,6 +10,7 @@ export default defineConfig([
       'docs-site/.vitepress/dist/**',
       'main.js',
       'node_modules/**',
+      'src/assets/query-script.generated.ts',
     ],
   },
   ...obsidianmd.configs.recommended,

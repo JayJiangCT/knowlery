@@ -10,6 +10,7 @@ import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
+import { syncQueryScript } from './core/query-script';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
 import { refreshInstalledBundlesBlock } from './core/okf/knowledge-md-bundles';
@@ -161,6 +162,7 @@ export default class KnowleryPlugin extends Plugin {
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           await syncBuiltinSkills(this.app);
+          await syncQueryScript(this.app);
           await migrateSchemaMd(this.app);
           await refreshInstalledBundlesBlock(this.app);
           this.settings.lastSyncedVersion = pluginVersion;

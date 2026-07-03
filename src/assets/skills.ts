@@ -199,9 +199,9 @@ No \`owner\` frontmatter field needed.
     content: `---
 name: ask
 description: >
-  Open-ended Q&A against the knowledge base. Uses INDEX.base as the vault Bases wiki index,
-  Obsidian CLI (properties, search, tags, backlinks) to traverse the same graph the Base
-  shows in Obsidian, SCHEMA.md for taxonomy, then reads and synthesizes with citations.
+  Open-ended Q&A against the knowledge base. Locates candidate pages with one call to the
+  deterministic retrieval script (.knowlery/bin/query.mjs), then reads the promising ones
+  with Obsidian CLI and synthesizes an evidence-based answer with citations.
   Use when the user asks questions about vault content like "what is X", "why did we decide Y",
   "explain Z", "what do my notes say about", "summarize what I know about", or any question
   that should be answered from accumulated knowledge rather than general training data.
@@ -224,76 +224,31 @@ Identify the key concepts, entities, and intent in the user's question.
 
 ### Step 2: Locate Relevant Pages
 
-**Do not delegate this workflow to a generic exploration subagent.** Run the Obsidian CLI steps yourself so searches merge and nothing is skipped.
-
-Sub-steps 2a–2e are independent lookups with no data dependencies between them — run them in parallel or batched where your tools allow. Only the broad fallback in 2f depends on their combined results.
-
-#### 2a — Wiki index: \`INDEX.base\` (Bases)
-
-If \`INDEX.base\` exists, read it first:
+Run the deterministic retrieval script **once** with the user's question:
 
 \`\`\`bash
-obsidian read file="INDEX.base"
+node .knowlery/bin/query.mjs "<question>"
 \`\`\`
 
-**What this is:** The vault's **Obsidian Bases wiki index**. In the app, this file drives a **live, query-backed table** of notes with rich metadata (paths, tags, dates, backlinks, and any columns you add). The bytes on disk are the Base definition (views, filters, formulas); Obsidian **evaluates** that definition into the dynamic index you see in the UI.
+The script scans the whole vault live (compiled pages, user notes, and installed
+knowledge bundles), ranks candidates by field-weighted relevance, and prints one line
+per candidate: rank, path, type, score, and a one-line description. Lines starting with
+\`evidence via source:\` mean the page was boosted because a raw note it cites matched
+the question — read those source notes too.
 
-**How to use it as an agent:** Parse the definition to learn **which paths and property filters** define "compiled knowledge" in this vault. Then run CLI commands that query the **same scope** — do not treat the YAML as meaningless "config" or assume the vault has no index when you do not see note titles in the read output.
+- Treat the ranked list as your candidate set. Do not re-run per-keyword searches to
+  second-guess it; your judgment belongs in choosing what to read and how to synthesize.
+- If it prints \`No confident matches in this vault for: ...\`, tell the user the vault
+  does not cover this question and suggest running \`/cook\` on relevant material.
+  Do not answer from general knowledge.
+- Add \`--k 20\` for broad or exploratory questions, \`--json\` if you need structured
+  output.
 
-#### 2b — List agent-maintained pages (same scope the Base should cover)
-
-Enumerate compiled pages by v2 frontmatter \`type\` (high-speed retrieval, same notes the Base is meant to index):
-
-\`\`\`bash
-obsidian properties type=entity
-obsidian properties type=concept
-obsidian properties type=comparison
-obsidian properties type=query
-\`\`\`
-
-Use paths and titles from this output as candidates. When helpful, add **\`obsidian tags\`**, **\`obsidian backlinks file="..."\`**, or other list commands from \`obsidian help\` to exploit metadata associations the Base surfaces as columns.
-
-#### 2c — Taxonomy and conventions
-
-Read \`SCHEMA.md\` when you need the tag taxonomy, domain rules, or agent directory conventions:
-
-\`\`\`bash
-obsidian read file="SCHEMA.md"
-\`\`\`
-
-If the question or \`SCHEMA.md\` points at specific tags, run targeted searches for those tags in addition to plain terms.
-
-#### 2d — Search by key concepts
-
-For each key concept in the question:
-
-\`\`\`bash
-obsidian search "<key concept>"
-\`\`\`
-
-Combine and deduplicate results across queries.
-
-#### 2e — Installed knowledge bundles
-
-If \`.knowlery/bundles.json\` does not exist, skip this step.
-
-Otherwise, read the registry:
-
-\`\`\`bash
-obsidian read file=".knowlery/bundles.json"
-\`\`\`
-
-Each entry is an installed knowledge bundle under \`Library/<id>/\`. Use the entry's \`title\` (and id) to judge which bundles could relate to the question — do not read every bundle blindly. For each relevant bundle, read its structured index:
-
-\`\`\`bash
-obsidian read file="Library/<id>/agent-index.json"
-\`\`\`
-
-The agent index lists every concept with path, type, domain, description, and links (\`index.md\` in the same directory is the human-readable equivalent). Add matching pages to your candidate list alongside the vault's own compiled pages.
-
-#### 2f — User and source notes outside agent directories
-
-Answers may live in raw notes (e.g. reports, dailies, \`Projects/\`) that are **not** under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`. After the passes above, run broader searches (filename keywords, dates, or tags) until you have checked plausible locations or confirmed the vault has no matching note.
+**Fallback (degraded mode).** Only if the script is missing or \`node\` is unavailable:
+enumerate compiled pages with \`obsidian properties type=entity\` (and \`concept\`,
+\`comparison\`, \`query\`), run \`obsidian search "<key concept>"\` per key concept, merge
+and deduplicate the results — and say in your answer that retrieval ran in degraded
+mode without the retrieval script.
 
 ### Step 3: Read Relevant Pages
 
@@ -305,9 +260,8 @@ obsidian read file="entities/some-page.md"
 
 Prioritize:
 
-- Agent pages in \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`
-- Installed bundle pages under \`Library/\` whose index entry matches the question
-- Pages with matching tags or domain
+- The top-ranked candidates from Step 2 (the score already accounts for field relevance)
+- Source notes flagged with \`evidence via source:\` — they carry the original context
 - Pages with \`status: reviewed\` (over \`draft\`)
 - Recent pages (higher \`updated\` date)
 
@@ -378,7 +332,9 @@ Use \`obsidian create\` to save. Ask the user where they'd like it saved.
 - **Acknowledge gaps**: If the vault doesn't have enough information, say so.
 - **Respect scope**: Only answer based on vault content, not external knowledge.
 - **Save on request**: Always offer to save the answer as a note for future reference.
-- **Bases + CLI:** The wiki index is **\`INDEX.base\`** in Obsidian; discovery via CLI is **\`obsidian properties\`** (by \`type\` and other fields), **\`obsidian search\`**, and related commands — not a duplicate markdown index file.
+- **One retrieval call:** Candidate location is the retrieval script's job
+  (\`node .knowlery/bin/query.mjs "<question>"\`); reading and synthesis are yours.
+  Fall back to \`obsidian properties\` / \`obsidian search\` only when the script cannot run.
 `,
   },
   {
