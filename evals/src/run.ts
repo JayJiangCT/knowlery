@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { loadFixtureVault } from './vault';
 import { baselineRetriever } from './baseline-retriever';
+import { knowleryQueryRetriever } from './retrievers/knowlery-query';
 import { mean, recallAtK, reciprocalRank } from './metrics';
 import type {
   BaselineFile,
@@ -18,6 +19,19 @@ import { GOLDEN_CATEGORIES } from './types';
 const K = 10;
 const DEFAULT_TOLERANCE = 0.01;
 
+/**
+ * F2 acceptance thresholds (spec f2, §7 criterion 2). The engine retriever must clear
+ * every one of these, and additionally must not fall below the frozen baseline on any
+ * category's recall@10 or MRR.
+ */
+const F2_THRESHOLDS = {
+  aggregateRecallAt10: 0.85,
+  aggregateMrr: 0.53,
+  aliasRecallAt10: 0.625,
+  bilingualRecallAt10: 0.5,
+  bundleRecallAt5: 0.667,
+};
+
 const EVALS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GOLDEN_PATH = join(EVALS_ROOT, 'golden', 'questions.yaml');
 const FIXTURE_ROOT = join(EVALS_ROOT, 'fixtures', 'vault');
@@ -26,17 +40,23 @@ const BASELINE_PATH = join(REPORTS_DIR, 'baseline.json');
 
 function main(): void {
   const args = new Set(process.argv.slice(2));
-  const retriever = baselineRetriever;
 
   const cases = loadGoldenSet();
   const vault = loadFixtureVault(FIXTURE_ROOT);
-  const report = runEval(retriever, cases, vault);
 
-  printReport(report);
-  writeRunReport(report);
+  const baselineReport = runEval(baselineRetriever, cases, vault);
+  const engineReport = runEval(knowleryQueryRetriever, cases, vault);
 
-  if (args.has('--freeze')) freezeBaseline(report);
-  if (args.has('--assert-baseline')) assertBaseline(report);
+  printReport(baselineReport);
+  printReport(engineReport);
+  writeRunReport(baselineReport);
+  writeRunReport(engineReport);
+
+  if (args.has('--freeze')) freezeBaseline(baselineReport);
+  if (args.has('--assert-baseline')) {
+    assertBaseline(baselineReport);
+    assertF2Thresholds(engineReport);
+  }
 }
 
 function loadGoldenSet(): GoldenCase[] {
@@ -228,6 +248,46 @@ function checkMetric(
   if (current === null || current < frozen - tolerance) {
     failures.push(`  ${label}: ${formatScore(current)} < baseline ${formatScore(frozen)} - tolerance ${tolerance}`);
   }
+}
+
+/** Spec f2, §7 criterion 2 — enforced in CI alongside the frozen-baseline check. */
+function assertF2Thresholds(engineReport: EvalReport): void {
+  if (!existsSync(BASELINE_PATH)) {
+    console.error('No committed baseline found; F2 thresholds need it for the no-regression check.');
+    process.exit(1);
+  }
+  const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as BaselineFile;
+  const failures: string[] = [];
+
+  const checkFloor = (label: string, current: number | null, floor: number) => {
+    if (current === null || current < floor) {
+      failures.push(`  ${label}: ${formatScore(current)} < required ${floor}`);
+    }
+  };
+
+  checkFloor('aggregate recall@10', engineReport.aggregate.recallAt10, F2_THRESHOLDS.aggregateRecallAt10);
+  checkFloor('aggregate MRR', engineReport.aggregate.mrr, F2_THRESHOLDS.aggregateMrr);
+  checkFloor('alias recall@10', engineReport.perCategory.alias?.recallAt10 ?? null, F2_THRESHOLDS.aliasRecallAt10);
+  checkFloor('bilingual recall@10', engineReport.perCategory.bilingual?.recallAt10 ?? null, F2_THRESHOLDS.bilingualRecallAt10);
+  checkFloor('bundle recall@5', engineReport.perCategory.bundle?.recallAt5 ?? null, F2_THRESHOLDS.bundleRecallAt5);
+  checkFloor(
+    'unanswerable accuracy',
+    engineReport.aggregate.unanswerableAccuracy,
+    baseline.aggregate.unanswerableAccuracy ?? 0,
+  );
+
+  for (const [category, frozen] of Object.entries(baseline.perCategory)) {
+    if (category === 'unanswerable') continue;
+    const current = engineReport.perCategory[category];
+    checkFloor(`${category} recall@10 (no regression)`, current?.recallAt10 ?? null, frozen.recallAt10 ?? 0);
+    checkFloor(`${category} MRR (no regression)`, current?.mrr ?? null, frozen.mrr ?? 0);
+  }
+
+  if (failures.length > 0) {
+    console.error(`F2 thresholds not met by ${engineReport.retriever}:\n${failures.join('\n')}`);
+    process.exit(1);
+  }
+  console.log(`F2 thresholds passed for ${engineReport.retriever}.`);
 }
 
 main();

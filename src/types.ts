@@ -83,6 +83,7 @@ export interface ConfigIntegrity {
   knowledgeMdExists: boolean;
   schemaMdExists: boolean;
   indexBaseExists: boolean;
+  queryScriptExists: boolean;
   knowledgeDirsComplete: { exists: string[]; missing: string[] };
   agentConfigExists: boolean;
   rulesConfigured: boolean;

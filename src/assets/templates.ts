@@ -54,13 +54,15 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 
 When answering questions from this vault (not general knowledge):
 
-1. Read \`INDEX.base\` first (compiled knowledge map)
-2. Run \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` to enumerate compiled pages
-3. Read \`SCHEMA.md\` for tag taxonomy and domain rules
-4. Run \`obsidian search query="..."\` with key concepts; merge results
-5. Use \`obsidian property:read\` and \`obsidian read\` on promising paths — prefer agent pages, \`status: reviewed\` over \`draft\`, recent \`updated\`
-6. If the Base query cannot give usable paths, fall back to \`rg --files entities concepts comparisons queries\`
-7. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
+1. Run \`node .knowlery/bin/query.mjs "<question>"\` once — it scans compiled pages,
+   user notes, and installed bundles, and prints a ranked candidate list
+2. Read promising candidates with \`obsidian read\` — prefer \`status: reviewed\` over
+   \`draft\`, recent \`updated\`, and any \`evidence via source:\` notes it flags
+3. If it prints \`No confident matches\`, say the vault does not cover the question and
+   suggest \`/cook\` — do not answer from general knowledge
+4. Only if the script or Node is unavailable: fall back to \`obsidian properties type=...\`
+   and \`obsidian search query="..."\`, and say retrieval ran in degraded mode
+5. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
 
 Every claim must be backed by vault notes. See \`/ask\` for the full specification.
 

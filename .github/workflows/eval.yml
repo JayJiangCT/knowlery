@@ -14,3 +14,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run eval -- --assert-baseline
+
+  generated-script-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Fail if the committed query-script bundle is stale
+        run: git diff --exit-code src/assets/query-script.generated.ts

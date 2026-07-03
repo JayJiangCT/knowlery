@@ -1,6 +1,6 @@
 # F2 — Deterministic Retrieval: the `knowlery query` Script and the `/ask` Slim-Down
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 — implemented, awaiting maintainer acceptance testing (§8)
 - **Target release:** 0.6.0
 - **Branch:** `cursor/f2-knowlery-query-92eb` (stacked on F1)
 - **Depends on:** F1 (retrieval eval harness, frozen baseline)
