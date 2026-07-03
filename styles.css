@@ -4963,6 +4963,14 @@
   font-size: var(--knowlery-meta-size);
 }
 
+.knowlery-install__ack {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-xs);
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-normal);
+}
+
 .knowlery-install__actions {
   display: flex;
   justify-content: space-between;

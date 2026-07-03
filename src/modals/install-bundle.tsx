@@ -63,6 +63,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
   const [stage, setStage] = useState<Stage>({ kind: 'pick' });
   const [error, setError] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [acknowledgeConformanceIssues, setAcknowledgeConformanceIssues] = useState(false);
 
   const pickSource = async () => {
     const dialog = getElectronDialog();
@@ -77,6 +78,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
 
   const loadPreview = async (path: string) => {
     setError(null);
+    setAcknowledgeConformanceIssues(false);
     try {
       const entries = await readBundleEntries(path);
       const { manifest, conformance } = previewInstall(entries);
@@ -148,6 +150,16 @@ function InstallBundleContent(props: { onClose: () => void }) {
             This bundle has {stage.conformance.errors.length} conformance error(s).
           </div>
         )}
+        {!stage.conformance.conformant && (
+          <label className="knowlery-install__ack">
+            <input
+              type="checkbox"
+              checked={acknowledgeConformanceIssues}
+              onChange={(event) => setAcknowledgeConformanceIssues(event.currentTarget.checked)}
+            />
+            <span>Install anyway despite these conformance errors</span>
+          </label>
+        )}
         {stage.blockedInstalledVersion && (
           <div className="knowlery-install__warning">
             v{stage.blockedInstalledVersion} is already installed. Installing v{stage.manifestVersion} will replace it.
@@ -162,9 +174,9 @@ function InstallBundleContent(props: { onClose: () => void }) {
           <button
             type="button"
             className="knowlery-btn knowlery-btn--primary"
-            disabled={installing}
+            disabled={installing || (!stage.conformance.conformant && !acknowledgeConformanceIssues)}
             onClick={() =>
-              confirmInstall(stage.blockedInstalledVersion !== null, !stage.conformance.conformant)
+              confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues)
             }
           >
             {installing ? 'Installing…' : 'Install'}
