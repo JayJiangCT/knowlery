@@ -9,7 +9,7 @@ import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
-import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
+import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports } from './core/migration';
 import { syncQueryScript } from './core/query-script';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
 import {
@@ -179,6 +179,7 @@ export default class KnowleryPlugin extends Plugin {
           await syncBuiltinSkills(this.app);
           await syncQueryScript(this.app);
           await migrateSchemaMd(this.app);
+          await migrateFixedContextImports(this.app);
           await refreshInstalledBundlesBlock(this.app);
           this.settings.lastSyncedVersion = pluginVersion;
           await this.saveSettings();

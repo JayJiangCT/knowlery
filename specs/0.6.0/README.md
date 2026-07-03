@@ -12,7 +12,7 @@
 | F1 | Retrieval evaluation harness | [f1-retrieval-eval-harness.md](./f1-retrieval-eval-harness.md) | — |
 | F2 | `knowlery query` deterministic retrieval script + `/ask` slim-down | [f2-knowlery-query.md](./f2-knowlery-query.md) | F1 |
 | F3 | Mechanical staleness dirty-flags (replaces `log.md` timestamp; first tier of freshness) | [f3-staleness-dirty-flags.md](./f3-staleness-dirty-flags.md) | F2, F5 |
-| F4 | Fixed-context slim-down (`CLAUDE.md` / `opencode.json` imports) | (spec pending) | — |
+| F4 | Fixed-context slim-down (`CLAUDE.md` / `opencode.json` imports) | [f4-context-slimdown.md](./f4-context-slimdown.md) | F2, F5 |
 | F5 | CLI dual transport: `obsidian knowlery:query` via `registerCliHandler` | [f5-cli-dual-transport.md](./f5-cli-dual-transport.md) | F2 |
 
 Execution order: F1 → F2 → F5 → F3 → F4 (F5 stacks directly on F2's engine).
