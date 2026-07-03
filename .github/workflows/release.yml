@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -41,10 +43,38 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const version = JSON.parse(fs.readFileSync('manifest.json', 'utf8')).version;
+          const changelog = fs.readFileSync('CHANGELOG.md', 'utf8');
+          const lines = changelog.split('\n');
+          const start = lines.findIndex((line) => line.startsWith(`## [${version}]`));
+          let body = `Release ${version}. See CHANGELOG.md for details.`;
+          if (start !== -1) {
+            let end = lines.length;
+            for (let i = start + 1; i < lines.length; i++) {
+              if (lines[i].startsWith('## [')) { end = i; break; }
+            }
+            body = lines.slice(start + 1, end).join('\n').trim();
+          }
+          fs.writeFileSync('RELEASE_NOTES.md', body + '\n');
+          NODE
+
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: RELEASE_NOTES.md
           files: |
             main.js
             manifest.json

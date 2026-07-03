@@ -55,8 +55,11 @@ stay on `query.mjs`, which live-scans.
 
 - No removal or demotion of `query.mjs` — it remains the only headless path and the
   reference implementation the eval harness measures.
-- No `minAppVersion` bump: on Obsidian < 1.12.2 the plugin simply does not register the
-  CLI command (feature-detected), everything else works as today.
+- ~~No `minAppVersion` bump: on Obsidian < 1.12.2 the plugin simply does not register the
+  CLI command (feature-detected), everything else works as today.~~
+  *(Amended during 0.6.0 release: the community plugin scanner hard-forbids disabling
+  `obsidianmd/no-unsupported-api`, so `minAppVersion` was bumped to 1.12.2. The
+  feature-detection guard remains as defense in depth.)*
 - No persistence of the snapshot to disk, ever.
 - No other Knowlery CLI commands in this feature (e.g. a staleness command belongs to
   F3's spec if F3 wants it).

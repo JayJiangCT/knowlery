@@ -224,17 +224,16 @@ export default class KnowleryPlugin extends Plugin {
    * plugin load.
    */
   private registerQueryCliHandler(): void {
-    // eslint-disable-next-line obsidianmd/no-unsupported-api -- feature-detected below; on hosts older than 1.12.2 we skip registration (spec f5, §4).
+    // Belt-and-suspenders: minAppVersion is 1.12.2 (the registerCliHandler API's
+    // version), but a missing or failing CLI host must never break plugin load.
     if (typeof this.registerCliHandler !== 'function') return;
     try {
-      // eslint-disable-next-line obsidianmd/no-unsupported-api -- guarded by the feature detection above.
       this.registerCliHandler(
         QUERY_CLI_COMMAND,
         QUERY_CLI_DESCRIPTION,
         QUERY_CLI_FLAGS,
         (params) => handleQueryCli(params, this.liveSnapshot?.snapshot() ?? null),
       );
-      // eslint-disable-next-line obsidianmd/no-unsupported-api -- guarded by the feature detection above.
       this.registerCliHandler(
         STALE_CLI_COMMAND,
         STALE_CLI_DESCRIPTION,

@@ -9,7 +9,7 @@ import {
 } from '../../src/core/query/scan';
 import { runQuery } from '../../src/core/query/engine';
 import { formatQueryResult } from '../../src/core/query/format';
-import { LiveQuerySnapshot } from '../../src/core/query/live-snapshot';
+import { LiveQuerySnapshot, type SnapshotTimers } from '../../src/core/query/live-snapshot';
 import {
   QUERY_CLI_USAGE,
   QUERY_CLI_WARMING,
@@ -58,6 +58,16 @@ function stubApp(
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Node timers for tests — the plugin default uses window timers, absent under vitest. */
+const nodeTimers: SnapshotTimers = {
+  set: (callback, ms) => setTimeout(callback, ms),
+  clear: (id) => clearTimeout(id as NodeJS.Timeout),
+};
+
+function makeLive(app: App, debounceMs: number): LiveQuerySnapshot {
+  return new LiveQuerySnapshot(app, debounceMs, nodeTimers);
 }
 
 describe('transport parity (spec f5, §5.1/§5.2)', () => {
@@ -110,7 +120,7 @@ describe('handleQueryCli (spec f5, §5.3)', () => {
 
 describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
   it('is null before build and serves pages after', async () => {
-    const live = new LiveQuerySnapshot(stubApp({ 'concepts/widget.md': PAGE_A }), 1);
+    const live = makeLive(stubApp({ 'concepts/widget.md': PAGE_A }), 1);
     expect(live.snapshot()).toBeNull();
     await live.build();
     const snapshot = live.snapshot();
@@ -120,7 +130,7 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
   });
 
   it('excludes system files (instruction docs and the cook log)', async () => {
-    const live = new LiveQuerySnapshot(
+    const live = makeLive(
       stubApp({
         'KNOWLEDGE.md': '# guide',
         'SCHEMA.md': '# schema',
@@ -135,7 +145,7 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
 
   it('applies debounced incremental updates on change', async () => {
     const files: Record<string, string> = { 'concepts/widget.md': PAGE_A };
-    const live = new LiveQuerySnapshot(stubApp(files), 1);
+    const live = makeLive(stubApp(files), 1);
     await live.build();
 
     files['concepts/widget.md'] = PAGE_A.replace('Widget Design', 'Gadget Design');
@@ -151,7 +161,7 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
       'concepts/widget.md': PAGE_A,
       'Daily/note.md': PAGE_B,
     };
-    const live = new LiveQuerySnapshot(stubApp(files), 1);
+    const live = makeLive(stubApp(files), 1);
     await live.build();
 
     live.handleDelete('Daily/note.md');
@@ -165,7 +175,7 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
   });
 
   it('loads bundle entries from the hidden registry via the adapter', async () => {
-    const live = new LiveQuerySnapshot(
+    const live = makeLive(
       stubApp(
         { 'Daily/note.md': PAGE_B },
         {

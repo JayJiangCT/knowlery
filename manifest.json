@@ -2,7 +2,7 @@
   "id": "knowlery",
   "name": "Knowlery",
   "version": "0.6.0",
-  "minAppVersion": "1.7.2",
+  "minAppVersion": "1.12.2",
   "description": "A warm personal knowledge review space for your vault.",
   "author": "Jay Jiang",
   "authorUrl": "https://github.com/JayJiangCT",

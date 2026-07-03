@@ -1,7 +1,3 @@
-/* eslint-disable obsidianmd/prefer-window-timers --
- * These timers debounce a data-cache refresh; they are not UI-window-bound, so popout
- * window compatibility does not apply. Bare timers keep this class runnable in node
- * unit tests. */
 import type { App } from 'obsidian';
 import {
   SYSTEM_FILES,
@@ -31,16 +27,33 @@ import {
  * Page construction goes through the same buildPageFromContent as the fs scanner, so
  * parity between the two transports is structural.
  */
+/**
+ * Timer indirection: the plugin uses window timers (per Obsidian guidelines), while
+ * unit tests inject plain node timers, since these debounce a data cache rather than
+ * anything window-bound.
+ */
+export interface SnapshotTimers {
+  set: (callback: () => void, ms: number) => unknown;
+  clear: (id: unknown) => void;
+}
+
 export class LiveQuerySnapshot {
   private pages = new Map<string, ScannedPage>();
   private bundleEntries: ScannedBundleEntry[] = [];
   private isReady = false;
-  private pendingRefresh = new Map<string, ReturnType<typeof setTimeout>>();
+  private pendingRefresh = new Map<string, unknown>();
+  private timers: SnapshotTimers;
 
   constructor(
     private app: App,
     private debounceMs = 300,
-  ) {}
+    timers?: SnapshotTimers,
+  ) {
+    this.timers = timers ?? {
+      set: (callback, ms) => window.setTimeout(callback, ms),
+      clear: (id) => window.clearTimeout(id as number),
+    };
+  }
 
   get ready(): boolean {
     return this.isReady;
@@ -68,10 +81,10 @@ export class LiveQuerySnapshot {
   scheduleRefresh(path: string): void {
     if (!path.endsWith('.md')) return;
     const existing = this.pendingRefresh.get(path);
-    if (existing) clearTimeout(existing);
+    if (existing !== undefined) this.timers.clear(existing);
     this.pendingRefresh.set(
       path,
-      setTimeout(() => {
+      this.timers.set(() => {
         this.pendingRefresh.delete(path);
         void this.refreshFile(path);
       }, this.debounceMs),
@@ -80,8 +93,8 @@ export class LiveQuerySnapshot {
 
   handleDelete(path: string): void {
     const pending = this.pendingRefresh.get(path);
-    if (pending) {
-      clearTimeout(pending);
+    if (pending !== undefined) {
+      this.timers.clear(pending);
       this.pendingRefresh.delete(path);
     }
     this.pages.delete(path);
