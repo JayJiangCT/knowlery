@@ -26,6 +26,7 @@ Knowlery now centers on one action-first dashboard:
 | This note | Review the active Markdown note and ask for related connections |
 | Recent activity | Inspect recent private activity receipts |
 | This week | Generate a weekly summary or send a polish request |
+| Bundles | Share a reviewed knowledge bundle or install one from someone else |
 
 Use the refresh button when recent activity or vault changes need to be reflected. Use **View all** links for longer move and activity lists.
 
@@ -84,6 +85,32 @@ Open a move to copy its prompt or send it to your configured agent chat. Open **
 | Generate synthesis ideas | `ideas` |
 | Check for structural problems | `audit` |
 | Clean up organization | `organize` |
+
+## Share a Knowledge Bundle
+
+Use **Share knowledge bundle** (command palette or the Bundles section on the dashboard) when you want to give someone else a reviewed slice of your knowledge.
+
+1. Pick a seed topic. Knowlery collects the graph-closure of connected knowledge pages and cited raw sources.
+2. Review every item in scope. Each page and source is unreviewed, approved, or flagged — nothing ships until you approve it.
+3. Check the automated risk scan. It highlights emails, sensitive URLs, person pages, and meeting-like notes before export.
+4. Confirm the bundle metadata (id, title, version, creator, license) and options.
+5. Export. The bundle is written under `.knowlery/exports/` and can be saved as a `.zip` for sharing.
+
+The exported bundle contains the approved pages, an `index.md` and `agent-index.json` for navigation, approved raw sources under `_sources/`, an update log, and a README for the recipient. If "Include SCHEMA.md" is on, the shipped schema is scoped to the tags and domains the exported pages actually use — never your vault-wide taxonomy.
+
+Each topic keeps its own saved review scope, so working on one bundle never disturbs another.
+
+## Install a Knowledge Bundle
+
+Use **Install knowledge bundle** (command palette or the dashboard card) to add a bundle someone shared with you.
+
+1. Choose the bundle `.zip` or folder.
+2. Review the manifest and conformance preview before anything is written.
+3. Install. The bundle lands in `Library/<bundle-id>/` and is registered in `.knowlery/bundles.json`.
+
+Installed bundles are listed on the dashboard, where they can also be uninstalled. Installing adds a retrieval pointer to `KNOWLEDGE.md`, and the `/ask` skill checks installed bundles explicitly when answering questions. Updates require a newer bundle version; installing past a conformance failure requires explicit acknowledgement.
+
+When you want to make an installed bundle page your own, use **Fork to my knowledge** from the file menu on a bundle concept page — it copies the page into your own knowledge directories.
 
 ## Add or Edit Rules
 

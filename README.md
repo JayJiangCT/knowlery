@@ -4,9 +4,9 @@
 [![Docs](https://img.shields.io/badge/docs-official-blue?style=flat-square)](https://jayjiangct.github.io/knowlery/)
 [![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square)](LICENSE)
 
-Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, choose small next moves from one action-first dashboard, review the current note, generate weekly summaries, and maintain vault health from Obsidian settings.
+Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, choose small next moves from one action-first dashboard, review the current note, generate weekly summaries, share and install knowledge bundles, and maintain vault health from Obsidian settings.
 
-In v0.4.0, Knowlery moved from a five-tab dashboard to a single calm review surface. Diagnostics, rules, schema shortcuts, and the Skills library now live in the Knowlery settings tab, while the dashboard focuses on today's move, suggested moves, the current note, recent activity, and the weekly summary.
+In v0.5.0, knowledge stops being vault-bound. **Share knowledge bundle** compiles a reviewed selection of your knowledge pages into a portable bundle — every page and source passes an approve/flag review gate with an automated risk scan before anything ships. **Install knowledge bundle** brings someone else's bundle into `Library/` with a conformance preview, lists it on the dashboard, and teaches the `/ask` skill to retrieve it. **Fork to my knowledge** copies a bundle page into your own directories when you want to evolve it.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
@@ -89,8 +89,10 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `.knowlery/reports/`, when Weekly summary generates an HTML report
 - `.knowlery/requests/` and `.knowlery/reviews/`, when daily review polish is used
 - `.knowlery/freshness/`, when Freshness Review prepares request, result, log, queue, and sidecar files
+- `.knowlery/exports/`, when Share knowledge bundle compiles a bundle (plus an optional `.zip` next to it)
+- `Library/<bundle-id>/` and `.knowlery/bundles.json`, when Install knowledge bundle installs a shared bundle
 
-Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI.
+Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI, and may delete an installed bundle's `Library/<bundle-id>/` folder when you uninstall that bundle from the dashboard.
 
 ## Permissions and Disclosures
 

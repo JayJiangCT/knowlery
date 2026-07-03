@@ -51,7 +51,7 @@ The setup wizard asks you to choose a platform:
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
 | OpenCode | `opencode.json` plus `.agents/rules/` |
 
-If you are upgrading from an older release, v0.4.0 keeps the dashboard focused on one action-first home and moves diagnostics, rules, schema shortcuts, and the Skills library into the Knowlery settings tab. Bundled skills still auto-sync on version changes, and `SCHEMA.md` is migrated in place when missing anchor sections are found. Custom and forked skills are preserved.
+If you are upgrading from an older release, v0.5.0 adds knowledge bundle sharing and installing: a Bundles section on the dashboard, the **Share knowledge bundle** and **Install knowledge bundle** commands, the `Library/` folder for installed bundles, and a bundle-aware `/ask` skill. v0.4.0 kept the dashboard focused on one action-first home and moved diagnostics, rules, schema shortcuts, and the Skills library into the Knowlery settings tab. Bundled skills still auto-sync on version changes, and `SCHEMA.md` is migrated in place when missing anchor sections are found. Custom and forked skills are preserved.
 
 If Knowlery detects an older BYOAO vault, the setup wizard can switch into migration mode and preserve the existing BYOAO/OpenCode files while configuring Knowlery for Claude Code.
 
@@ -97,6 +97,7 @@ After setup, open the Knowlery dashboard. It is a single scrolling review surfac
 | This note | Review the active Markdown note and prepare a focused prompt |
 | Recent activity | Scan private activity receipts and open the full activity list |
 | This week | Generate a weekly summary, open the last report, or send it for review |
+| Bundles | Share a reviewed knowledge bundle or install one shared with you |
 
 Open **Settings -> Knowlery** for diagnostics, rules and schema shortcuts, the Skills library, platform switching, activity logging, and maintenance actions.
 

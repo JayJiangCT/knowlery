@@ -107,6 +107,30 @@ Optional installs 会在你的机器上运行本地命令。
 3. 安装外部工具后重启 Obsidian。
 4. 重新打开 setup 或 settings，再次运行 detection。
 
+## Knowledge Bundle 无法安装
+
+安装前会先校验 bundle，任何校验失败都不会写入内容。
+
+常见原因：
+
+- `.zip` 或文件夹的根目录下没有 `knowlery-bundle.json` manifest。
+- Bundle id 不是路径安全的，或某个条目路径试图逃出 `Library/<bundle-id>/`。
+- 相同 bundle 已经以相同或更新的版本安装——更新要求更高的 bundle 版本号。
+- Bundle 存在 conformance 错误——需要在安装预览中显式确认才能继续。
+
+如果 manifest 或路径有问题，请让分享者用当前版本的 Knowlery 重新导出。
+
+## 已安装 Bundle 的知识没有出现在回答里
+
+`/ask` skill 会读取 `.knowlery/bundles.json`，以及 `Library/<bundle-id>/` 下每个相关 bundle 的 `agent-index.json`。
+
+依次检查：
+
+1. Bundle 出现在 dashboard 的 Bundles 区块中。
+2. `.knowlery/bundles.json` 里登记了这个 bundle。
+3. `KNOWLEDGE.md` 中存在 installed-bundles 指引块。
+4. Vault 里的 `/ask` skill 是最新的——插件版本变化时 bundled skills 会自动刷新。
+
 ## 什么时候提交 Issue
 
 当你能在 clean test vault 中稳定复现问题时，可以提交 GitHub issue，并附上：

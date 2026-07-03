@@ -16,7 +16,9 @@
 
 | Surface | 用途 |
 | --- | --- |
-| Dashboard home | Today's move、Suggested moves、Knowledge health、This note、Recent activity 和 This week |
+| Dashboard home | Today's move、Suggested moves、Knowledge health、This note、Recent activity、This week 和 Bundles |
+| Share knowledge bundle | Seed 选择、graph-closure review、risk scan 和 bundle 导出 |
+| Install knowledge bundle | Manifest 和 conformance 预览、安装和已安装 bundle 列表 |
 | Move drill-ins | 完整 suggested-move 列表和单个 move prompt |
 | Activity drill-in | 完整 recent activity 列表 |
 | Freshness Review | request 准备、result 导入、suggestion decisions、apply 和 undo |
@@ -48,6 +50,10 @@
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
 | `.knowlery/freshness/` | Freshness Review | Request、result、log、queue 和 sidecar 文件 |
+| `.knowlery/exports/` | Share knowledge bundle | 编译后的 bundle 输出（可选打成 zip） |
+| `.knowlery/export-scope.json` | Share knowledge bundle | 按主题保存的 review scope |
+| `Library/<bundle-id>/` | Install knowledge bundle | 已安装 bundle 的内容 |
+| `.knowlery/bundles.json` | Install knowledge bundle | 已安装 bundle 的注册表 |
 
 ## Built-In Skills
 
@@ -88,7 +94,7 @@ Knowlery 包含这些默认 rule templates：
 
 ## Obsidian 中注册的命令
 
-Knowlery 会注册 command palette actions，用于打开 dashboard、初始化 vault、运行诊断、添加 reflection 和切换平台。
+Knowlery 会注册 command palette actions，用于打开 dashboard、初始化 vault、运行诊断、添加 reflection、分享 knowledge bundle、安装 knowledge bundle 和切换平台。
 
 具体 label 可能随 UI 演进，但命令面主要围绕 review、setup、diagnosis 和 platform migration。
 
@@ -144,9 +150,9 @@ Knowlery 不收集 telemetry。
 
 ## 升级行为
 
-当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，并通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`。
+当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`，并在有已安装 bundles 时刷新 `KNOWLEDGE.md` 中的 installed-bundles 指引块。
 
-在 v0.4.0 中，dashboard maintenance 已移到 Obsidian settings：diagnostics、rules/schema shortcuts 和 Skills library 不再是单独的 dashboard tabs。
+在 v0.5.0 中，knowledge bundle 的分享与安装上线：dashboard 的 Bundles 区块、`Library/` 文件夹和 `.knowlery/bundles.json` 是新增的表面。在 v0.4.0 中，dashboard maintenance 已移到 Obsidian settings：diagnostics、rules/schema shortcuts 和 Skills library 不再是单独的 dashboard tabs。
 
 custom 和 forked skills 会被保留。被禁用的 built-in skills 会继续保持禁用状态，即使磁盘上的 bundled copy 已刷新。
 

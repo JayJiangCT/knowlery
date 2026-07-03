@@ -16,7 +16,9 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 
 | Surface | Purpose |
 | --- | --- |
-| Dashboard home | Today's move, suggested moves, Knowledge health, This note, Recent activity, and This week |
+| Dashboard home | Today's move, suggested moves, Knowledge health, This note, Recent activity, This week, and Bundles |
+| Share knowledge bundle | Seed picking, graph-closure review, risk scan, and bundle export |
+| Install knowledge bundle | Manifest and conformance preview, install, and installed-bundle list |
 | Move drill-ins | Full suggested-move list and individual move prompts |
 | Activity drill-in | Full recent activity list |
 | Freshness Review | Request preparation, result import, suggestion decisions, apply, and undo |
@@ -48,6 +50,10 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
 | `.knowlery/freshness/` | Freshness Review | Request, result, log, queue, and sidecar files |
+| `.knowlery/exports/` | Share knowledge bundle | Compiled bundle output (optionally zipped) |
+| `.knowlery/export-scope.json` | Share knowledge bundle | Saved per-topic review scope |
+| `Library/<bundle-id>/` | Install knowledge bundle | Installed bundle contents |
+| `.knowlery/bundles.json` | Install knowledge bundle | Installed bundle registry |
 
 ## Built-In Skills
 
@@ -94,6 +100,8 @@ Knowlery registers command palette actions for:
 - Initializing the vault.
 - Running vault diagnosis.
 - Adding a reflection.
+- Sharing a knowledge bundle.
+- Installing a knowledge bundle.
 - Switching platforms.
 
 The exact labels may evolve with the plugin UI, but the command surface is centered on review, setup, diagnosis, and platform migration.
@@ -150,9 +158,9 @@ These commands run on your computer with your user permissions.
 
 ## Upgrade Behavior
 
-When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, and migrates `SCHEMA.md` by inserting any missing anchor sections.
+When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, migrates `SCHEMA.md` by inserting any missing anchor sections, and refreshes the installed-bundles pointer block in `KNOWLEDGE.md` when bundles are installed.
 
-In v0.4.0, dashboard maintenance moved into Obsidian settings: diagnostics, rules and schema shortcuts, and the Skills library are no longer separate dashboard tabs.
+In v0.5.0, knowledge bundle sharing and installing arrived: the Bundles section on the dashboard, the `Library/` folder, and `.knowlery/bundles.json` are new surfaces. In v0.4.0, dashboard maintenance moved into Obsidian settings: diagnostics, rules and schema shortcuts, and the Skills library are no longer separate dashboard tabs.
 
 Custom and forked skills are preserved. Disabled built-in skills keep their disabled state, even though the on-disk bundled copy is refreshed.
 

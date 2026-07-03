@@ -107,6 +107,30 @@ If an install fails:
 3. Restart Obsidian after installing external tools.
 4. Reopen setup or settings and re-run detection.
 
+## A Knowledge Bundle Will Not Install
+
+Install validates the bundle before writing anything.
+
+Common causes:
+
+- The `.zip` or folder does not contain a `knowlery-bundle.json` manifest at its root.
+- The bundle id is path-unsafe, or an entry path tries to escape `Library/<bundle-id>/`.
+- The same bundle is already installed at the same or a newer version — updates require a newer bundle version.
+- The bundle has conformance errors — installing past them requires explicit acknowledgement in the install preview.
+
+Ask the sender to re-export with a current Knowlery version if the manifest or paths look wrong.
+
+## Installed Bundle Knowledge Does Not Show Up in Answers
+
+The `/ask` skill reads `.knowlery/bundles.json` and each relevant bundle's `agent-index.json` under `Library/<bundle-id>/`.
+
+Check:
+
+1. The bundle appears in the Bundles section on the dashboard.
+2. `.knowlery/bundles.json` lists the bundle.
+3. `KNOWLEDGE.md` contains the installed-bundles pointer block.
+4. The vault's `/ask` skill is current — bundled skills refresh automatically when the plugin version changes.
+
 ## When to File an Issue
 
 Open a GitHub issue when you can reproduce the problem in a clean test vault and can include:

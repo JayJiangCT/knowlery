@@ -16,6 +16,7 @@ The dashboard is one action-first home:
 | This note | Review the active Markdown note in context |
 | Recent activity | Scan recent private activity receipts |
 | This week | Generate and review a weekly summary |
+| Bundles | Share reviewed knowledge bundles and manage installed ones |
 
 Diagnostics, rules, schema shortcuts, platform switching, and the Skills library live under **Settings -> Knowlery**.
 
@@ -114,6 +115,14 @@ Those receipts feed:
 Freshness Review is local and approval-gated. Knowlery can collect candidate pages from `entities/`, `concepts/`, `comparisons/`, and `queries/`, prepare a request JSON file, and copy a prompt for an agent you run separately.
 
 When you import the result JSON, Knowlery turns valid findings into suggestions. Applying a suggestion only patches scalar frontmatter fields such as `retrieval_priority`, `freshness_status`, `freshness_reviewed`, `superseded_by`, and `freshness_sidecar`. Evidence and previous frontmatter snapshots live in `.knowlery/freshness/notes/` sidecars so applied suggestions can be restored.
+
+## Knowledge Bundles
+
+A knowledge bundle is a portable, reviewed slice of a vault's compiled knowledge, packaged in the OKF format.
+
+On the sharing side, export scope is chosen from a seed topic plus its graph-closure, every item passes an approve/flag review gate with an automated risk scan, and the shipped `SCHEMA.md` is scoped to the taxonomy the bundle actually uses. On the receiving side, bundles install under `Library/<bundle-id>/`, are tracked in `.knowlery/bundles.json`, and stay read-only reference material until you fork a page into your own knowledge directories.
+
+Installed bundles are part of retrieval: `KNOWLEDGE.md` gains a pointer block while bundles are installed, and the `/ask` skill reads each relevant bundle's `agent-index.json` alongside the vault's own compiled pages.
 
 ## Platform Adapters
 
