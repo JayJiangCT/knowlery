@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, Modal, Notice, normalizePath, setTooltip } from 'obsidian';
+import { App, Component, MarkdownRenderer, Modal, Notice, normalizePath, setTooltip } from 'obsidian';
 import { StrictMode, useEffect, useMemo, useRef, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
@@ -10,7 +10,7 @@ import { compileBundle } from '../core/okf/compile';
 import { zipBundleDirectory } from '../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
 import { computeGraphLayout } from './export-graph';
-import { IconCheck, IconDownload, IconRefresh, IconSearch, IconX } from '../views/Icons';
+import { IconCheck, IconDownload, IconSearch, IconX } from '../views/Icons';
 
 const GRAPH_WIDTH = 460;
 const GRAPH_LABEL_LIMIT = 50;
@@ -118,7 +118,6 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
       return sanitizeBundleId(plugin.settings.bundleCreatorName, slug);
     }
     return sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plugin.settings, props.seedConceptId]);
 
   const [phase, setPhase] = useState<'pick' | 'scope' | 'confirm' | 'result'>(props.seedConceptId ? 'scope' : 'pick');
@@ -171,7 +170,6 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
       setRestored(true);
     });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plugin.app, bundleId]);
 
   useEffect(() => {
@@ -223,13 +221,11 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
     return () => {
       if (persistTimer.current !== null) window.clearTimeout(persistTimer.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plugin, bundleId, seeds, maxCompiledHops, items, closure]);
 
   // Flush any pending (debounced) write when the modal unmounts.
   useEffect(() => () => {
     if (latestScope.current) void persistScope(latestScope.current).catch(() => { /* modal is gone */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const risksByItem = useMemo(() => {
@@ -695,7 +691,7 @@ function Row(props: {
   const { item } = props;
   const typeLetter = item.kind === 'raw'
     ? 'R'
-    : TYPE_LETTER[String(item.frontmatter.type ?? '').toLowerCase()] ?? 'C';
+    : TYPE_LETTER[frontmatterText(item.frontmatter.type, '').toLowerCase()] ?? 'C';
 
   return (
     <div
@@ -709,7 +705,7 @@ function Row(props: {
     >
       <span
         className={`knowlery-export__row-icon${item.kind === 'raw' ? ' is-raw' : ''}`}
-        title={item.kind === 'raw' ? 'raw note (uncurated source)' : String(item.frontmatter.type ?? 'knowledge page')}
+        title={item.kind === 'raw' ? 'raw note (uncurated source)' : frontmatterText(item.frontmatter.type, 'knowledge page')}
       >
         {typeLetter}
       </span>
@@ -721,7 +717,7 @@ function Row(props: {
           {item.reviewNote === 'new' && <em className="knowlery-export__tag is-new">new</em>}
         </TruncatableText>
         <span className="knowlery-export__row-meta">
-          {item.kind === 'raw' ? item.path : String(item.frontmatter.domain ?? item.path)}
+          {item.kind === 'raw' ? item.path : frontmatterText(item.frontmatter.domain, item.path)}
           {props.risks?.map((risk) => (
             <em key={`${risk.kind}-${risk.evidence}`} className="knowlery-export__risk" title={risk.evidence}>
               ⚠ {RISK_LABEL[risk.kind]}
@@ -778,7 +774,6 @@ function GraphView(props: {
       height,
       iterations: props.items.length > 60 ? 320 : 220,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [itemKey],
   );
 
@@ -858,7 +853,6 @@ function GraphView(props: {
       x: position.x - current.w / 2,
       y: position.y - current.h / 2,
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.selectedId, itemKey]);
 
   const neighborIds = useMemo(() => {
@@ -1022,6 +1016,10 @@ function sanitizeForPreview(markdown: string): string {
   return text;
 }
 
+function frontmatterText(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim() ? value : fallback;
+}
+
 function MarkdownPreview(props: { markdown: string; sourcePath: string }) {
   const plugin = usePlugin();
   const ref = useRef<HTMLDivElement>(null);
@@ -1031,7 +1029,9 @@ function MarkdownPreview(props: { markdown: string; sourcePath: string }) {
     if (!el) return;
     el.empty();
     let cancelled = false;
-    MarkdownRenderer.render(plugin.app, sanitizeForPreview(props.markdown), el, props.sourcePath, plugin)
+    const component = new Component();
+    component.load();
+    MarkdownRenderer.render(plugin.app, sanitizeForPreview(props.markdown), el, props.sourcePath, component)
       .catch(() => {
         // Rendering must never take the review flow down — fall back to text.
         if (cancelled) return;
@@ -1040,6 +1040,7 @@ function MarkdownPreview(props: { markdown: string; sourcePath: string }) {
       });
     return () => {
       cancelled = true;
+      component.unload();
       el.empty();
     };
   }, [plugin, props.markdown, props.sourcePath]);

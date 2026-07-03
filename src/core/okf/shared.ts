@@ -11,7 +11,7 @@ import type { ActivityRecord, ConformanceIssue, KnowledgeDir, OkfFrontmatter } f
 export function safeMatter(content: string): { data: Record<string, unknown>; content: string } {
   try {
     const parsed = matter(content);
-    return { data: parsed.data as Record<string, unknown>, content: parsed.content };
+    return { data: parsed.data, content: parsed.content };
   } catch {
     return { data: {}, content };
   }

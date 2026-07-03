@@ -5,6 +5,7 @@
 export interface MockOkfApp {
   writes: Record<string, string>;
   vault: {
+    configDir: string;
     getMarkdownFiles: () => Array<{ path: string; basename: string; extension: string }>;
     getFileByPath: (path: string) => { path: string; basename: string; extension: string } | null;
     read: (file: { path: string }) => Promise<string>;
@@ -42,6 +43,7 @@ export function createOkfMockApp(
   return {
     writes,
     vault: {
+      configDir: '.obsidian',
       getMarkdownFiles: () => Object.keys(files).filter((path) => path.endsWith('.md')).map(fileEntry),
       getFileByPath: (path: string) => (files[path] !== undefined ? fileEntry(path) : null),
       read: async (file: { path: string }) => writes[file.path] ?? files[file.path],

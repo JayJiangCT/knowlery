@@ -70,11 +70,12 @@ export async function readSchemaMd(app: App): Promise<string | null> {
   return file ? app.vault.read(file) : null;
 }
 
-const WALK_SKIP_DIRS = new Set(['.obsidian', '.git', '.trash', 'node_modules']);
+const WALK_SKIP_DIRS = new Set(['.git', '.trash', 'node_modules']);
 
 export async function findBundleRoots(app: App): Promise<Set<string>> {
   const roots = new Set<string>();
   const adapter = app.vault.adapter;
+  const configDir = toPosixPath(app.vault.configDir).replace(/\/$/, '');
 
   async function walk(dir: string): Promise<void> {
     let listing: { files: string[]; folders: string[] };
@@ -94,6 +95,7 @@ export async function findBundleRoots(app: App): Promise<Set<string>> {
       const normalized = toPosixPath(folder);
       const name = normalized.split('/').pop() ?? '';
       if (WALK_SKIP_DIRS.has(name)) continue;
+      if (normalized === configDir || normalized.startsWith(`${configDir}/`)) continue;
       // A bundle root never nests another bundle; stop descending once marked.
       if (roots.has(normalized)) continue;
       await walk(normalized);
