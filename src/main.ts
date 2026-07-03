@@ -5,6 +5,7 @@ import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { ReleaseNotesModal } from './modals/release-notes-modal';
 import { ExportBundleModal } from './modals/export-bundle';
+import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
@@ -80,6 +81,14 @@ export default class KnowleryPlugin extends Plugin {
       name: 'Share knowledge bundle...',
       callback: () => {
         new ExportBundleModal(this.app, this).open();
+      },
+    });
+
+    this.addCommand({
+      id: 'install-knowledge-bundle',
+      name: 'Install knowledge bundle...',
+      callback: () => {
+        new InstallBundleModal(this.app, this).open();
       },
     });
 
