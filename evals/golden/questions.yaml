@@ -1,0 +1,205 @@
+# Golden retrieval cases for the Knowlery eval harness (spec f1, §5.1).
+# Paths are vault-relative to evals/fixtures/vault/.
+# Scoring uses `must` only; `nice` is annotation for auditability.
+# Editing this file requires regenerating evals/reports/baseline.json in the same PR.
+
+- id: q-001
+  question: "Who owns the ingest pipeline?"
+  expected:
+    must: [entities/ingest-pipeline.md]
+    nice: [entities/alice-chen.md, queries/who-owns-what.md]
+  category: entity-lookup
+  notes: Ownership is stated on the system page; the person page corroborates.
+
+- id: q-002
+  question: "What is Pulseboard?"
+  expected:
+    must: [entities/pulseboard.md]
+  category: entity-lookup
+
+- id: q-003
+  question: "What does the collector daemon do?"
+  expected:
+    must: [entities/collector-daemon.md]
+  category: entity-lookup
+
+- id: q-004
+  question: "Why did we pick TimescaleDB over ClickHouse?"
+  expected:
+    must: [comparisons/timescaledb-vs-clickhouse.md, entities/timescaledb.md]
+  category: entity-lookup
+
+- id: q-005
+  question: "What did we decide about response time metrics?"
+  expected:
+    must: [concepts/response-time-metrics.md]
+    nice: [Daily/2026-04-05.md]
+  category: concept-lookup
+
+- id: q-006
+  question: "How do we handle backpressure in the ingest path?"
+  expected:
+    must: [concepts/backpressure.md]
+  category: concept-lookup
+
+- id: q-007
+  question: "What is alert fatigue and what causes it on our team?"
+  expected:
+    must: [concepts/alert-fatigue.md]
+  category: concept-lookup
+
+- id: q-008
+  question: "What is our data retention policy?"
+  expected:
+    must: [concepts/retention-policy.md]
+    nice: [queries/retention-policy.md]
+  category: concept-lookup
+  notes: Near-duplicate basename trap — a query page shares the name retention-policy.md.
+
+- id: q-009
+  question: "Where does data locality matter in our architecture?"
+  expected:
+    must: [concepts/data-locality.md]
+  category: concept-lookup
+  notes: Target is the orphan page (no inbound wikilinks).
+
+- id: q-010
+  question: "Why did the median replace the average in our latency reporting?"
+  expected:
+    must: [concepts/response-time-metrics.md, comparisons/median-vs-average-latency.md]
+    nice: [Daily/2026-04-05.md, Daily/2026-04-12.md]
+  category: synthesis
+
+- id: q-011
+  question: "What tradeoffs did we weigh between push and pull metrics, and what did we choose?"
+  expected:
+    must: [comparisons/push-vs-pull-metrics.md, queries/why-pull-model.md]
+  category: synthesis
+
+- id: q-012
+  question: "How does backpressure protect the ingest pipeline and the collector daemon?"
+  expected:
+    must: [concepts/backpressure.md, entities/ingest-pipeline.md]
+    nice: [entities/collector-daemon.md, Daily/2026-04-20.md]
+  category: synthesis
+
+- id: q-013
+  question: "Which systems does Alice Chen own and how are they connected?"
+  expected:
+    must: [entities/alice-chen.md, entities/ingest-pipeline.md]
+    nice: [entities/collector-daemon.md, queries/who-owns-what.md]
+  category: synthesis
+
+- id: q-014
+  question: "What are our SLOs for the metrics API?"
+  expected:
+    must: [concepts/service-level-objectives.md]
+  category: alias
+  notes: Recorded alias — SLO/SLOs live in the page's aliases frontmatter.
+
+- id: q-015
+  question: "How do rollups reduce our storage cost?"
+  expected:
+    must: [concepts/incremental-rollup.md]
+  category: alias
+  notes: Recorded alias — rollup/rollups live in the page's aliases frontmatter.
+
+- id: q-016
+  question: "Why does label blowup keep breaking our queries?"
+  expected:
+    must: [concepts/cardinality-explosion.md]
+  category: alias
+  notes: Unrecorded synonym — Prometheus lingo; the page says "tags", never "label".
+
+- id: q-017
+  question: "Who maintains colld?"
+  expected:
+    must: [entities/collector-daemon.md]
+  category: alias
+  notes: Unrecorded team nickname for the collector daemon.
+
+- id: q-018
+  question: "我们的采样策略是什么？"
+  expected:
+    must: [concepts/sampling-strategy.md]
+    nice: [Projects/性能优化调研.md]
+  category: bilingual
+  notes: Chinese question; the compiled page is English, only the raw source is Chinese.
+
+- id: q-019
+  question: "告警疲劳的根本原因是什么？"
+  expected:
+    must: [concepts/alert-fatigue.md]
+    nice: [Projects/告警疲劳复盘.md]
+  category: bilingual
+
+- id: q-020
+  question: "What did the on-call retrospective written in Chinese conclude?"
+  expected:
+    must: [Projects/告警疲劳复盘.md]
+  category: bilingual
+  notes: English question; the target note is entirely Chinese.
+
+- id: q-021
+  question: "性能优化调研里推荐了哪种采样方法？"
+  expected:
+    must: [Projects/性能优化调研.md]
+  category: bilingual
+  notes: Chinese question naming a Chinese note directly — the one bilingual case lexical match can win.
+
+- id: q-022
+  question: "What are the four golden signals of observability?"
+  expected:
+    must: [Library/observability-starter/concepts/four-golden-signals.md]
+  category: bundle
+
+- id: q-023
+  question: "Which observability conventions should span names follow?"
+  expected:
+    must: [Library/observability-starter/concepts/opentelemetry-semantic-conventions.md]
+  category: bundle
+
+- id: q-024
+  question: "What is the RED method for service dashboards?"
+  expected:
+    must: [Library/observability-starter/concepts/red-method.md]
+  category: bundle
+  notes: Bundle title contains none of the query terms — reachable only via fallback search.
+
+- id: q-025
+  question: "What is our rollback strategy for the storage schema migration?"
+  expected:
+    must: [Projects/pulseboard-rollback-draft.md]
+  category: user-note
+  notes: Never-cooked draft — exists only outside the agent directories.
+
+- id: q-026
+  question: "How much capacity is planned for Q3?"
+  expected:
+    must: [Projects/q3-capacity-planning.md]
+  category: user-note
+
+- id: q-027
+  question: "Where is the runbook for restarting the batch writers?"
+  expected:
+    must: [Projects/ingest-pipeline-runbook.md]
+  category: user-note
+
+- id: q-028
+  question: "Which vendor did we shortlist for GPU procurement?"
+  expected:
+    must: []
+  category: unanswerable
+
+- id: q-029
+  question: "Are we sponsoring any conference booths this quarter?"
+  expected:
+    must: []
+  category: unanswerable
+
+- id: q-030
+  question: "What is our mobile app roadmap?"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Deliberate near-collision — "roadmap" appears on the PM page; documents the baseline's lack of an abstention signal.
