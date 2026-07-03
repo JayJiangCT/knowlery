@@ -77,6 +77,17 @@ describe('installBundle', () => {
     expect(Object.keys(app.writes)).not.toContain('SCHEMA.md');
   });
 
+  it('refuses to install a bundle whose manifest id is a path-traversal payload', async () => {
+    const app = createOkfMockApp({});
+    const evilEntries = goodEntries().map((entry) =>
+      entry.path === 'knowlery-bundle.json'
+        ? { path: entry.path, content: JSON.stringify(manifest({ id: '..' })) }
+        : entry,
+    );
+    await expect(installBundle(app as never, evilEntries, { source: '/tmp/evil.zip' })).rejects.toThrow(/unsafe/i);
+    expect(Object.keys(app.writes).some((path) => path.startsWith('Library/'))).toBe(false);
+  });
+
   it('blocks a same-version reinstall unless forced', async () => {
     const app = createOkfMockApp({});
     await installBundle(app as never, goodEntries(), { source: '/tmp/bundle.zip' });

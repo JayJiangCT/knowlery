@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  assertSafeBundleId,
   assertSafeInstallPath,
   inferBundleFileKind,
   previewInstall,
@@ -31,6 +32,32 @@ describe('assertSafeInstallPath', () => {
 
   it('rejects a backslash parent-directory escape', () => {
     expect(() => assertSafeInstallPath(root, '..\\..\\SCHEMA.md')).toThrow(/unsafe/i);
+  });
+});
+
+describe('assertSafeBundleId', () => {
+  it('accepts a normal dotted id', () => {
+    expect(() => assertSafeBundleId('jay.drone-delivery')).not.toThrow();
+  });
+
+  it('rejects an id that is exactly ".."', () => {
+    expect(() => assertSafeBundleId('..')).toThrow(/unsafe/i);
+  });
+
+  it('rejects an id containing a slash', () => {
+    expect(() => assertSafeBundleId('../../.obsidian/plugins/knowlery')).toThrow(/unsafe/i);
+  });
+
+  it('rejects an id containing a backslash', () => {
+    expect(() => assertSafeBundleId('..\\..\\evil')).toThrow(/unsafe/i);
+  });
+
+  it('rejects an id with an empty dot-segment (hidden traversal without a slash)', () => {
+    expect(() => assertSafeBundleId('foo..bar')).toThrow(/unsafe/i);
+  });
+
+  it('rejects an empty string', () => {
+    expect(() => assertSafeBundleId('')).toThrow(/unsafe/i);
   });
 });
 

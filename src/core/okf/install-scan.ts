@@ -38,6 +38,15 @@ export function assertSafeInstallPath(libraryPath: string, entryPath: string): s
   return fullPath;
 }
 
+export function assertSafeBundleId(id: string): void {
+  if (!id || /[\\/]/.test(id)) {
+    throw new Error(`Unsafe bundle id: ${id}`);
+  }
+  if (id.split('.').some((segment) => segment.length === 0)) {
+    throw new Error(`Unsafe bundle id: ${id}`);
+  }
+}
+
 export function inferBundleFileKind(path: string): BundleFile['kind'] {
   if (path === 'index.md' || path.endsWith('/index.md')) return 'index';
   if (path === 'log.md') return 'log';
@@ -53,6 +62,7 @@ export function previewInstall(entries: BundleSourceEntry[]): InstallPreview {
     throw new Error(`Not a knowledge bundle: missing ${BUNDLE_MARKER} at the bundle root.`);
   }
   const manifest = BundleManifestSchema.parse(JSON.parse(manifestEntry.content));
+  assertSafeBundleId(manifest.id);
 
   const bundleFiles: BundleFile[] = entries
     .filter((entry) => entry.path.endsWith('.md'))
