@@ -13,8 +13,12 @@ import matter from 'gray-matter';
 
 export const AGENT_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
 
-/** Files that instruct agents rather than carry knowledge; never lookup targets. */
-export const INSTRUCTION_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md']);
+/**
+ * Vault-root files the system maintains about the vault rather than knowledge in it:
+ * agent instruction docs plus the cook history log. Never lookup targets, never cook
+ * material (spec f3 amendment: log.md must not appear as an uncooked note).
+ */
+export const SYSTEM_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md', 'log.md']);
 
 export type PageTier = 'agent' | 'bundle' | 'user';
 
@@ -66,7 +70,7 @@ export function scanVault(root: string): VaultSnapshot {
   const pages: ScannedPage[] = [];
   for (const file of walkMarkdown(root)) {
     const path = relative(root, file).split('\\').join('/');
-    if (INSTRUCTION_FILES.has(path)) continue;
+    if (SYSTEM_FILES.has(path)) continue;
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }

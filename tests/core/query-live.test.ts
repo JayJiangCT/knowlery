@@ -119,9 +119,14 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
     expect(snapshot!.pages[0].tier).toBe('agent');
   });
 
-  it('excludes instruction files', async () => {
+  it('excludes system files (instruction docs and the cook log)', async () => {
     const live = new LiveQuerySnapshot(
-      stubApp({ 'KNOWLEDGE.md': '# guide', 'Daily/note.md': PAGE_B }),
+      stubApp({
+        'KNOWLEDGE.md': '# guide',
+        'SCHEMA.md': '# schema',
+        'log.md': '# Cook Log\n\n| Date | Mode |',
+        'Daily/note.md': PAGE_B,
+      }),
       1,
     );
     await live.build();

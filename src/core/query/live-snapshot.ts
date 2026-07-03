@@ -4,7 +4,7 @@
  * unit tests. */
 import type { App } from 'obsidian';
 import {
-  INSTRUCTION_FILES,
+  SYSTEM_FILES,
   buildPageFromContent,
   bundleEntriesFromIndex,
   type BundleRegistryEntry,
@@ -93,7 +93,7 @@ export class LiveQuerySnapshot {
   }
 
   async refreshFile(path: string): Promise<void> {
-    if (INSTRUCTION_FILES.has(path)) return;
+    if (SYSTEM_FILES.has(path)) return;
     const file = this.app.vault.getFileByPath(path);
     if (!file) {
       this.pages.delete(path);

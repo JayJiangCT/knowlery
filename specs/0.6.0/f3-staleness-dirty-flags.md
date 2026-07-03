@@ -70,6 +70,10 @@ computeStaleness(snapshot: VaultSnapshot): StalenessReport
 - **Uncooked note:** a `user`-tier page outside `Library/` whose path appears in no
   agent page's `sources`. Sorted by mtime descending. The list is a *candidate* feed —
   plenty of notes are legitimately never cooked; judgment stays with the agent/user.
+- **System files are not knowledge** *(amendment from acceptance testing)*: `log.md`
+  (the cook history log) joins `KNOWLEDGE.md` and `SCHEMA.md` in the scanner's
+  system-file exclusion, so it can never appear as an uncooked note or a retrieval
+  candidate. These are files the system maintains *about* the vault, not knowledge in it.
 - Source entries that resolve to nothing (deleted or renamed notes) are reported
   separately as `danglingSources` — they are a data-quality signal for `/audit`, not
   silently dropped.
