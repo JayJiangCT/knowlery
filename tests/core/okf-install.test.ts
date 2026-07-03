@@ -120,9 +120,12 @@ describe('installBundle', () => {
     await installBundle(app as never, goodEntries(), { source: '/tmp/bundle.zip' });
     const beforeUpdate = { ...app.writes };
 
-    const updateEntries = goodEntries(
-      [{ path: '../../SCHEMA.md', content: '---\ntype: Concept\n---\n\nEvil.' }],
-    ).map((entry) => (entry.path === 'knowlery-bundle.json'
+    // Insert the malicious entry BEFORE the asserted files so that the old code
+    // (which validates-while-writing) would overwrite them before throwing on the unsafe path.
+    // This makes the test genuinely fail on unfixed code and pass only with validate-first.
+    const baseEntries = goodEntries();
+    baseEntries.splice(1, 0, { path: '../../SCHEMA.md', content: '---\ntype: Concept\n---\n\nEvil.' });
+    const updateEntries = baseEntries.map((entry) => (entry.path === 'knowlery-bundle.json'
       ? { path: entry.path, content: JSON.stringify(manifest({ version: '0.2.0' })) }
       : entry));
 
