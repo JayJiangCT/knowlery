@@ -13,6 +13,9 @@
 | F2 | `knowlery query` deterministic retrieval script + `/ask` slim-down | [f2-knowlery-query.md](./f2-knowlery-query.md) | F1 |
 | F3 | Mechanical staleness dirty-flags (replaces `log.md` timestamp; first tier of freshness) | (spec pending) | F1 |
 | F4 | Fixed-context slim-down (`CLAUDE.md` / `opencode.json` imports) | (spec pending) | — |
+| F5 | CLI dual transport: `obsidian knowlery:query` via `registerCliHandler` | [f5-cli-dual-transport.md](./f5-cli-dual-transport.md) | F2 |
+
+Execution order: F1 → F2 → F5 → F3 → F4 (F5 stacks directly on F2's engine).
 
 ## Non-goals for 0.6.0
 
