@@ -4872,3 +4872,48 @@
 .knowlery-skills__source-toolbar .knowlery-section-label {
   margin-block: 0;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Install bundle modal                                               */
+/* ------------------------------------------------------------------ */
+
+.knowlery-install {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-md);
+}
+
+.knowlery-install__summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--knowlery-space-2xs);
+}
+
+.knowlery-install__title {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.knowlery-install__meta {
+  color: var(--text-faint);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-install__warning {
+  padding: var(--knowlery-space-sm) var(--knowlery-space-md);
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--knowlery-radius-sm);
+  color: var(--text-muted);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-install__error {
+  color: var(--text-error);
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-install__actions {
+  display: flex;
+  justify-content: space-between;
+}
