@@ -226,6 +226,8 @@ Identify the key concepts, entities, and intent in the user's question.
 
 **Do not delegate this workflow to a generic exploration subagent.** Run the Obsidian CLI steps yourself so searches merge and nothing is skipped.
 
+Sub-steps 2a–2e are independent lookups with no data dependencies between them — run them in parallel or batched where your tools allow. Only the broad fallback in 2f depends on their combined results.
+
 #### 2a — Wiki index: \`INDEX.base\` (Bases)
 
 If \`INDEX.base\` exists, read it first:
@@ -271,9 +273,27 @@ obsidian search "<key concept>"
 
 Combine and deduplicate results across queries.
 
-#### 2e — User and source notes outside agent directories
+#### 2e — Installed knowledge bundles
 
-Answers may live in raw notes (e.g. reports, dailies, \`Projects/\`) that are **not** under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`. After agent-scope passes, run broader searches (filename keywords, dates, or tags) until you have checked plausible locations or confirmed the vault has no matching note.
+If \`.knowlery/bundles.json\` does not exist, skip this step.
+
+Otherwise, read the registry:
+
+\`\`\`bash
+obsidian read file=".knowlery/bundles.json"
+\`\`\`
+
+Each entry is an installed knowledge bundle under \`Library/<id>/\`. Use the entry's \`title\` (and id) to judge which bundles could relate to the question — do not read every bundle blindly. For each relevant bundle, read its structured index:
+
+\`\`\`bash
+obsidian read file="Library/<id>/agent-index.json"
+\`\`\`
+
+The agent index lists every concept with path, type, domain, description, and links (\`index.md\` in the same directory is the human-readable equivalent). Add matching pages to your candidate list alongside the vault's own compiled pages.
+
+#### 2f — User and source notes outside agent directories
+
+Answers may live in raw notes (e.g. reports, dailies, \`Projects/\`) that are **not** under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`. After the passes above, run broader searches (filename keywords, dates, or tags) until you have checked plausible locations or confirmed the vault has no matching note.
 
 ### Step 3: Read Relevant Pages
 
@@ -286,6 +306,7 @@ obsidian read file="entities/some-page.md"
 Prioritize:
 
 - Agent pages in \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`
+- Installed bundle pages under \`Library/\` whose index entry matches the question
 - Pages with matching tags or domain
 - Pages with \`status: reviewed\` (over \`draft\`)
 - Recent pages (higher \`updated\` date)

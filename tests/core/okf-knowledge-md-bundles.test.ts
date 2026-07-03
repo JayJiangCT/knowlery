@@ -14,6 +14,7 @@ describe('ensureInstalledBundlesBlock', () => {
     expect(updated).toContain(INSTALLED_BUNDLES_BEGIN_MARKER);
     expect(updated).toContain(INSTALLED_BUNDLES_END_MARKER);
     expect(updated).toContain('.knowlery/bundles.json');
+    expect(updated).toContain('Library/<id>/agent-index.json');
     expect(updated.startsWith(BASE_KNOWLEDGE_MD.trimEnd())).toBe(true);
   });
 

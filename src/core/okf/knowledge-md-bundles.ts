@@ -10,7 +10,8 @@ export const INSTALLED_BUNDLES_END_MARKER = '<!-- KNOWLERY:INSTALLED_BUNDLES:END
 const BLOCK_BODY = [
   '9. If the question might be answered by an installed knowledge bundle,',
   "   check `.knowlery/bundles.json` and read the relevant bundle's",
-  '   `Library/<id>/index.md`.',
+  '   `Library/<id>/agent-index.json` (`index.md` in the same directory',
+  '   is the human-readable equivalent).',
 ].join('\n');
 
 export function ensureInstalledBundlesBlock(knowledgeMd: string): string {
