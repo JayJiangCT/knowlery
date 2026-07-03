@@ -12,6 +12,7 @@ import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
+import { refreshInstalledBundlesBlock } from './core/okf/knowledge-md-bundles';
 import { forkPageFromBundle, parseLibraryPath } from './core/okf/fork';
 
 interface SettingApp {
@@ -161,6 +162,7 @@ export default class KnowleryPlugin extends Plugin {
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           await syncBuiltinSkills(this.app);
           await migrateSchemaMd(this.app);
+          await refreshInstalledBundlesBlock(this.app);
           this.settings.lastSyncedVersion = pluginVersion;
           await this.saveSettings();
         }
