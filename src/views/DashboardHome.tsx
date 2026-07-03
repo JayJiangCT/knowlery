@@ -14,7 +14,14 @@ import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { RECIPE_BOOK } from '../core/moves';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
-import { IconBookOpen, IconChevronRight, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
+import { ExportBundleModal } from '../modals/export-bundle';
+import { InstallBundleModal } from '../modals/install-bundle';
+import { summarizeBundleScope } from '../core/okf/export-scope';
+import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
+import type { InstalledBundlesFile } from '../types';
+import { readInstalledBundles } from '../core/okf/registry';
+import { uninstallBundle } from '../core/okf/uninstall';
+import { IconBookOpen, IconChevronRight, IconClipboard, IconDownload, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
@@ -47,6 +54,13 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     requestExists: boolean;
     result: DailyReviewParseResult | null;
   } | null>(null);
+  const [bundleSummary, setBundleSummary] = useState<{
+    approved: number;
+    unreviewed: number;
+    flagged: number;
+    seeds: number;
+  } | null>(null);
+  const [installedBundles, setInstalledBundles] = useState<InstalledBundlesFile | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
@@ -60,6 +74,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       requestExists: await plugin.app.vault.adapter.exists(normalizePath(request.requestPath)),
       result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
     });
+    setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
+    setInstalledBundles(await readInstalledBundles(plugin.app));
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -87,6 +103,19 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const addReflection = () => {
     new ReflectionCaptureModal(plugin.app, plugin, () => refresh()).open();
+  };
+
+  const openShareModal = (seed?: string) => {
+    new ExportBundleModal(plugin.app, plugin, seed).open();
+  };
+
+  const openInstallModal = () => {
+    new InstallBundleModal(plugin.app, plugin).open();
+  };
+
+  const removeBundle = async (bundleId: string) => {
+    await uninstallBundle(plugin.app, bundleId);
+    setInstalledBundles(await readInstalledBundles(plugin.app));
   };
 
   const copyRequest = async (request?: string) => {
@@ -168,6 +197,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     return `Review the current note "${file.basename}": find related older notes and comparisons, then identify which connections, questions, or structures are worth writing back to the knowledge base.`;
   }, [file]);
 
+  const currentConceptId = file && isKnowledgePath(file.path) ? conceptIdFromPath(file.path) : null;
+
   if (!model) return <div className="knowlery-home" />;
 
   return (
@@ -218,6 +249,16 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
                 <IconClipboard size={14} />
                 <span>Copy prompt</span>
               </button>
+              {currentConceptId && (
+                <button
+                  type="button"
+                  className="knowlery-btn knowlery-btn--outline"
+                  onClick={() => openShareModal(currentConceptId)}
+                >
+                  <IconExternalLink size={14} />
+                  <span>Share this topic…</span>
+                </button>
+              )}
             </div>
           </article>
         ) : (
@@ -270,6 +311,44 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         </article>
       </section>
 
+      <section className="knowlery-home__bundle">
+        <div className="knowlery-section-label">Bundles</div>
+        <article className="knowlery-home__bundle-card">
+          <div className="knowlery-home__bundle-copy">
+            <h3>{bundleSummary && bundleSummary.seeds > 0 ? 'Knowledge bundle review' : 'Pick a topic to share'}</h3>
+            <span>
+              {bundleSummary && bundleSummary.seeds > 0
+                ? `${bundleSummary.approved} approved · ${bundleSummary.unreviewed} need review`
+                : 'Create a reviewed bundle from selected knowledge pages.'}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--primary"
+            onClick={() => openShareModal()}
+          >
+            <IconExternalLink size={14} />
+            <span>{bundleSummary && bundleSummary.seeds > 0 ? 'Continue review' : 'Share knowledge…'}</span>
+          </button>
+        </article>
+        <article className="knowlery-home__bundle-card">
+          <div className="knowlery-home__bundle-copy">
+            <h3>Install a knowledge bundle</h3>
+            <span>Add someone else's exported knowledge bundle to this vault.</span>
+          </div>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--outline"
+            onClick={openInstallModal}
+          >
+            <IconDownload size={14} />
+            <span>Install bundle…</span>
+          </button>
+        </article>
+      </section>
+
+      <InstalledBundlesSection registry={installedBundles} onUninstall={removeBundle} />
+
       <section className="knowlery-home__stats" aria-label="Vault stats">
         {model.stats.map((stat) => (
           <div key={stat.label} className="knowlery-home__stat">
@@ -279,6 +358,40 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         ))}
       </section>
     </div>
+  );
+}
+
+function InstalledBundlesSection(props: {
+  registry: InstalledBundlesFile | null;
+  onUninstall: (bundleId: string) => void;
+}) {
+  const { registry } = props;
+  if (!registry) return null;
+  const entries = Object.entries(registry.bundles);
+  if (entries.length === 0) return null;
+
+  return (
+    <section className="knowlery-home__installed">
+      <div className="knowlery-section-label">Installed bundles</div>
+      {entries.map(([id, entry]) => (
+        <div key={id} className="knowlery-home__installed-row">
+          <div className="knowlery-home__installed-body">
+            <span className="knowlery-home__installed-title">{entry.title}</span>
+            <span className="knowlery-home__installed-meta">v{entry.version}</span>
+          </div>
+          <span className={`knowlery-badge knowlery-badge--${entry.conformance === 'passed' ? 'success' : 'warning'}`}>
+            {entry.conformance}
+          </span>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--outline"
+            onClick={() => props.onUninstall(id)}
+          >
+            <span>Uninstall</span>
+          </button>
+        </div>
+      ))}
+    </section>
   );
 }
 

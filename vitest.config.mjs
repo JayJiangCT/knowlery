@@ -7,4 +7,7 @@ export default defineConfig({
       obsidian: fileURLToPath(new URL('./tests/mocks/obsidian.ts', import.meta.url)),
     },
   },
+  test: {
+    exclude: ['**/node_modules/**', '**/dist/**', '.worktrees/**'],
+  },
 });

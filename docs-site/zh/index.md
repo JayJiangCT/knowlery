@@ -25,6 +25,8 @@ features:
     details: 准备本地 request JSON，导入 agent 写出的结果，并在批准后才应用 scalar freshness metadata。
   - title: Weekly Summary
     details: 基于最近活动生成本地 HTML 报告，必要时再交给 companion agent 打磨。
+  - title: Knowledge Bundles
+    details: 把 review 过的知识作为便携 bundle 分享，把别人的 bundle 安装到 Library/，让 /ask 显式检索它们。
   - title: Settings 维护
     details: 在 Obsidian settings 中运行诊断、维护 rules/schema、切换平台并管理 Skills library。
 ---

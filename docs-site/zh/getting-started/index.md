@@ -51,7 +51,7 @@ Setup wizard 会要求你选择一个平台：
 | Claude Code | `.claude/CLAUDE.md` 和 `.claude/rules/` |
 | OpenCode | `opencode.json` 和 `.agents/rules/` |
 
-如果你是从旧版本升级，v0.4.0 会把 dashboard 收敛成一个行动优先的首页，并把 diagnostics、rules、schema shortcuts 和 Skills library 移到 Knowlery settings tab。Bundled skills 仍会在版本变化时自动同步，`SCHEMA.md` 缺少 anchor sections 时也会就地迁移。custom 和 forked skills 不会被覆盖。
+如果你是从旧版本升级，v0.5.0 新增了 knowledge bundle 的分享与安装：dashboard 的 Bundles 区块、**Share knowledge bundle** 和 **Install knowledge bundle** 命令、存放已安装 bundle 的 `Library/` 文件夹，以及能感知 bundle 的 `/ask` skill。v0.4.0 把 dashboard 收敛成一个行动优先的首页，并把 diagnostics、rules、schema shortcuts 和 Skills library 移到 Knowlery settings tab。Bundled skills 仍会在版本变化时自动同步，`SCHEMA.md` 缺少 anchor sections 时也会就地迁移。custom 和 forked skills 不会被覆盖。
 
 如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
 
@@ -97,6 +97,7 @@ Setup 完成后，打开 Knowlery dashboard。它是一个单页滚动的 review
 | This note | review 当前 Markdown 笔记并准备专注的 prompt |
 | Recent activity | 查看私有 activity receipts，并打开完整 activity 列表 |
 | This week | 生成 weekly summary、打开上次报告，或发送给 agent review |
+| Bundles | 分享 review 过的 knowledge bundle，或安装别人分享给你的 bundle |
 
 打开 **Settings -> Knowlery** 可以进行 diagnostics、rules/schema shortcuts、Skills library、平台切换、activity logging 和 maintenance actions。
 

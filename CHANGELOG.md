@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0] — 2026-07-03
+
+### New features
+
+- **Share knowledge bundles.** The new **Share knowledge bundle** command (also on the dashboard) compiles selected knowledge pages into a portable OKF v0.1 bundle: pick a seed topic, review the graph-closure of connected pages and raw sources item by item, and export only what you explicitly approve. The compiler converts wikilinks, projects a static `index.md` plus a structured `agent-index.json`, copies approved raw sources into `_sources/`, writes a recipient README, and can save the result as a `.zip`.
+- **Share-safe review gate.** Nothing ships unreviewed: every page and raw source in scope is unreviewed / approved / flagged, and an automated risk scanner highlights emails, sensitive URLs, person pages, and meeting-like notes before export. Each topic keeps its own saved scope, so unrelated exports from the same vault never clobber each other.
+- **Bundle-scoped SCHEMA.md.** When "Include SCHEMA.md" is on, the bundle ships a schema scoped to the tags and domains the exported pages actually use — never the vault-wide taxonomy.
+- **Install knowledge bundles.** The new **Install knowledge bundle** command (also a dashboard card) installs a bundle from a `.zip` or folder into `Library/<id>/`, with a manifest and conformance preview first. Installed bundles are listed on the dashboard and tracked in `.knowlery/bundles.json`; uninstall removes the bundle and its registry entry.
+- **Fork to my knowledge.** A file-menu action on installed bundle concept pages copies a page from `Library/` into your own knowledge directories so you can evolve it as your own.
+- **Bundle-aware `/ask`.** The `/ask` skill now explicitly checks `.knowlery/bundles.json`, filters installed bundles by relevance, and reads the matching `agent-index.json` — installed knowledge is retrieved deliberately instead of being stumbled on by fallback search. Independent lookup steps are marked parallel-safe.
+
+### Safety
+
+- Install refuses path-unsafe bundle ids and validates every entry path before touching the vault; updates validate the incoming bundle before deleting the existing version.
+- Installing past a conformance failure requires explicit acknowledgement.
+- Only newer bundle versions install over an existing bundle.
+- Exported links are emitted relative so they resolve after install.
+
+### Improvements
+
+- Installing a bundle adds a retrieval pointer block to `KNOWLEDGE.md` (removed again when the last bundle is uninstalled), and that block now refreshes its wording on plugin upgrade.
+- **Fork to my knowledge** is only offered for actual concept pages.
+- Bundle discovery uses the vault's actual config directory (via `app.vault.configDir`) instead of hardcoding `.obsidian`, so vaults with a custom config directory are handled correctly.
+
 ## [0.4.0] — 2026-06-02
 
 ### Improvements

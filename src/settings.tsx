@@ -106,6 +106,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     this.renderGeneralSection(containerEl);
     this.renderPlatformSection(containerEl);
     this.renderActivitySection(containerEl);
+    this.renderBundleDefaultsSection(containerEl);
     this.renderMaintenanceSection(containerEl);
     this.renderAdvancedSection(containerEl);
   }
@@ -258,6 +259,46 @@ export class KnowlerySettingTab extends PluginSettingTab {
             new Notice('Activity ledger rule refreshed.');
           });
       });
+  }
+
+  private renderBundleDefaultsSection(containerEl: HTMLElement): void {
+    new Setting(containerEl).setName('Knowledge bundle defaults').setHeading();
+
+    new Setting(containerEl)
+      .setName('Creator name')
+      .setDesc('Used as the default creator in exported knowledge bundle manifests.')
+      .addText((text) =>
+        text
+          .setValue(this.plugin.settings.bundleCreatorName)
+          .onChange(async (value) => {
+            this.plugin.settings.bundleCreatorName = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('Creator URL')
+      .setDesc('Optional URL included in exported bundle metadata.')
+      .addText((text) =>
+        text
+          .setValue(this.plugin.settings.bundleCreatorUrl)
+          .onChange(async (value) => {
+            this.plugin.settings.bundleCreatorUrl = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('Default license')
+      .setDesc('Prefilled when sharing a knowledge bundle.')
+      .addText((text) =>
+        text
+          .setValue(this.plugin.settings.bundleDefaultLicense)
+          .onChange(async (value) => {
+            this.plugin.settings.bundleDefaultLicense = value || 'personal';
+            await this.plugin.saveSettings();
+          }),
+      );
   }
 
   private renderMaintenanceSection(containerEl: HTMLElement): void {

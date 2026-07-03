@@ -1,14 +1,19 @@
-import { Events, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
-import { DEFAULT_SETTINGS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
+import { Events, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { DEFAULT_SETTINGS, KNOWLEDGE_DIRS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { ReleaseNotesModal } from './modals/release-notes-modal';
+import { ExportBundleModal } from './modals/export-bundle';
+import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 import { getReleaseNote } from './assets/release-notes';
+import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
+import { refreshInstalledBundlesBlock } from './core/okf/knowledge-md-bundles';
+import { forkPageFromBundle, parseLibraryPath } from './core/okf/fork';
 
 interface SettingApp {
   setting: {
@@ -74,6 +79,22 @@ export default class KnowleryPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: 'share-knowledge-bundle',
+      name: 'Share knowledge bundle...',
+      callback: () => {
+        new ExportBundleModal(this.app, this).open();
+      },
+    });
+
+    this.addCommand({
+      id: 'install-knowledge-bundle',
+      name: 'Install knowledge bundle...',
+      callback: () => {
+        new InstallBundleModal(this.app, this).open();
+      },
+    });
+
+    this.addCommand({
       id: 'switch-platform',
       name: 'Switch platform',
       callback: () => {
@@ -84,6 +105,45 @@ export default class KnowleryPlugin extends Plugin {
     });
 
     this.addSettingTab(new KnowlerySettingTab(this.app, this));
+
+    this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+      if (!(file instanceof TFile) || file.extension !== 'md' || !isKnowledgePath(file.path)) return;
+      menu.addItem((item) => {
+        item
+          .setTitle('Share this topic...')
+          .setIcon('share-2')
+          .onClick(() => {
+            new ExportBundleModal(this.app, this, conceptIdFromPath(file.path)).open();
+          });
+      });
+    }));
+
+    this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+      if (!(file instanceof TFile) || file.extension !== 'md') return;
+      const parsed = parseLibraryPath(file.path);
+      if (!parsed) return;
+      const topSegment = parsed.relativePath.split('/')[0];
+      if (!(KNOWLEDGE_DIRS as readonly string[]).includes(topSegment)) return;
+      menu.addItem((item) => {
+        item
+          .setTitle('Fork to my knowledge...')
+          .setIcon('git-fork')
+          .onClick(async () => {
+            try {
+              await forkPageFromBundle(this.app, {
+                libraryPath: `Library/${parsed.bundleId}/`,
+                sourcePath: parsed.relativePath,
+                targetPath: parsed.relativePath,
+                bundleId: parsed.bundleId,
+              });
+              new Notice(`Forked to ${parsed.relativePath}`);
+              this.events.trigger('dashboard-refresh');
+            } catch (error) {
+              new Notice(error instanceof Error ? error.message : String(error));
+            }
+          });
+      });
+    }));
 
     this.app.workspace.onLayoutReady(async () => {
       if (!(await isVaultInitialized(this.app))) {
@@ -102,6 +162,7 @@ export default class KnowleryPlugin extends Plugin {
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           await syncBuiltinSkills(this.app);
           await migrateSchemaMd(this.app);
+          await refreshInstalledBundlesBlock(this.app);
           this.settings.lastSyncedVersion = pluginVersion;
           await this.saveSettings();
         }
