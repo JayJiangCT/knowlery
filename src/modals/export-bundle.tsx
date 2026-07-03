@@ -419,7 +419,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
                 checked={includeSchema}
                 onChange={setIncludeSchema}
                 label="Include SCHEMA.md"
-                hint="Ships the schema conventions as a Reference page."
+                hint="Ships a Reference page with schema conventions, scoped to the tags and domains this bundle's pages use."
               />
               <OptionToggle
                 checked={includeFullLog}

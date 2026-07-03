@@ -159,6 +159,30 @@ describe('OKF bundle compile', () => {
     expect(hostile).toContain('Key insight: parent receipt lists only orders');
   });
 
+  it('ships a bundle-scoped SCHEMA.md, not the vault-wide one', async () => {
+    const app = createOkfMockApp({
+      ...BASE_VAULT,
+      'SCHEMA.md': [
+        '# Knowledge Schema',
+        '',
+        '## Domain Taxonomy',
+        '',
+        '| Domain | Description |',
+        '|--------|-------------|',
+        '| product | Product knowledge |',
+        '| acme-client | Confidential client work |',
+        '',
+      ].join('\n'),
+    });
+    await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
+
+    const schema = app.writes['.knowlery/exports/test-bundle/SCHEMA.md'];
+    // concepts/search.md declares domain: product — only that row survives.
+    expect(schema).toContain('| product | Product knowledge |');
+    expect(schema).not.toContain('acme-client');
+    expect(schema).toContain('type: Reference');
+  });
+
   it('keeps sources verbatim and projects the full log only when opted in', async () => {
     const app = createOkfMockApp(BASE_VAULT);
     await compileBundle(app as unknown as App, {

@@ -14,6 +14,7 @@ import { projectLog } from './log-project';
 import { buildBundleManifest } from './manifest';
 import { checkConformance } from './conformance';
 import { buildReadme, buildSourceCopy } from './bundle-docs';
+import { scopeSchemaToBundle } from './schema-scope';
 import { collectRawBodyUnresolvedLinks, convertWikilinks } from './wikilink';
 
 export async function compileBundle(app: App, rawOptions: CompileOptions, now = new Date()): Promise<CompileResult> {
@@ -28,9 +29,12 @@ export async function compileBundle(app: App, rawOptions: CompileOptions, now = 
   const unresolvedLinks: UnresolvedLink[] = [];
   const releasedAt = now.toISOString();
   let wikilinksConverted = 0;
+  const usedTags = new Map<string, string>();
+  const usedDomains = new Map<string, string>();
 
   for (const page of pages) {
     const mapped = mapFrontmatterToOkf(page, { includeSources: options.includeSources });
+    collectTaxonomyUsage(mapped.frontmatter, usedTags, usedDomains);
     const converted = convertWikilinks(page, approvedConceptIds, approvedRawPaths);
     wikilinksConverted += converted.converted;
     unresolvedLinks.push(...converted.unresolved);
@@ -64,7 +68,10 @@ export async function compileBundle(app: App, rawOptions: CompileOptions, now = 
   if (options.includeSchema) {
     const schema = await readSchemaMd(app);
     if (schema) {
-      const reference = buildReferenceFile('SCHEMA.md', schema, 'SCHEMA');
+      // Never ship the vault-wide SCHEMA.md verbatim — scope it to the
+      // taxonomy the exported pages actually use.
+      const scoped = scopeSchemaToBundle(schema, [...usedTags.values()], [...usedDomains.values()]);
+      const reference = buildReferenceFile('SCHEMA.md', scoped, 'SCHEMA');
       files.push(reference);
       indexEntries.push({
         conceptId: 'SCHEMA',
@@ -224,6 +231,25 @@ function assertSafeWritePath(path: string): void {
   const normalized = toPosixPath(path);
   if (isKnowledgePath(normalized) || normalized === 'SCHEMA.md' || normalized === 'KNOWLEDGE.md' || normalized === 'INDEX.base') {
     throw new Error(`Refusing to write into source knowledge path: ${path}`);
+  }
+}
+
+function collectTaxonomyUsage(
+  frontmatter: Record<string, unknown>,
+  usedTags: Map<string, string>,
+  usedDomains: Map<string, string>,
+): void {
+  const domain = frontmatter.domain;
+  if (typeof domain === 'string' && domain.trim()) {
+    const value = domain.trim();
+    if (!usedDomains.has(value.toLowerCase())) usedDomains.set(value.toLowerCase(), value);
+  }
+  if (Array.isArray(frontmatter.tags)) {
+    for (const tag of frontmatter.tags) {
+      if (typeof tag !== 'string' || !tag.trim()) continue;
+      const value = tag.trim().replace(/^#/, '');
+      if (!usedTags.has(value.toLowerCase())) usedTags.set(value.toLowerCase(), value);
+    }
   }
 }
 
