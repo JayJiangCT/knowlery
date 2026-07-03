@@ -11,6 +11,13 @@ import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 import { syncQueryScript } from './core/query-script';
+import { LiveQuerySnapshot } from './core/query/live-snapshot';
+import {
+  QUERY_CLI_COMMAND,
+  QUERY_CLI_DESCRIPTION,
+  QUERY_CLI_FLAGS,
+  handleQueryCli,
+} from './core/query/cli-handler';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
 import { refreshInstalledBundlesBlock } from './core/okf/knowledge-md-bundles';
@@ -33,9 +40,13 @@ interface CollapsibleWorkspace {
 export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
   events = new Events();
+  liveSnapshot: LiveQuerySnapshot | null = null;
 
   async onload() {
     await this.loadSettings();
+
+    this.liveSnapshot = new LiveQuerySnapshot(this.app);
+    this.registerQueryCliHandler();
 
     this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 
@@ -184,7 +195,43 @@ export default class KnowleryPlugin extends Plugin {
       this.registerEvent(this.app.vault.on('delete', throttledRefresh));
       this.registerEvent(this.app.vault.on('rename', throttledRefresh));
       this.registerEvent(this.app.vault.on('modify', throttledRefresh));
+
+      // Live snapshot for the knowlery:query CLI transport (spec f5, §5.2): full build
+      // in the background, then incremental per-file updates from the event stream.
+      const snapshot = this.liveSnapshot;
+      if (snapshot) {
+        void snapshot.build();
+        this.registerEvent(this.app.vault.on('create', (file) => snapshot.scheduleRefresh(file.path)));
+        this.registerEvent(this.app.vault.on('modify', (file) => snapshot.scheduleRefresh(file.path)));
+        this.registerEvent(this.app.vault.on('delete', (file) => snapshot.handleDelete(file.path)));
+        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => snapshot.handleRename(oldPath, file.path)));
+        // Bundle registry files are hidden, so vault events never fire for them; the
+        // dashboard-refresh event fires after bundle install/uninstall.
+        this.events.on('dashboard-refresh', () => void snapshot.refreshBundles());
+      }
     });
+  }
+
+  /**
+   * Registers `obsidian knowlery:query` (spec f5, §5.3). Feature-detected: on Obsidian
+   * builds without registerCliHandler (< 1.12.2) the plugin loads without the CLI
+   * transport and everything else works unchanged. Registration failures never break
+   * plugin load.
+   */
+  private registerQueryCliHandler(): void {
+    // eslint-disable-next-line obsidianmd/no-unsupported-api -- feature-detected below; on hosts older than 1.12.2 we skip registration (spec f5, §4).
+    if (typeof this.registerCliHandler !== 'function') return;
+    try {
+      // eslint-disable-next-line obsidianmd/no-unsupported-api -- guarded by the feature detection above.
+      this.registerCliHandler(
+        QUERY_CLI_COMMAND,
+        QUERY_CLI_DESCRIPTION,
+        QUERY_CLI_FLAGS,
+        (params) => handleQueryCli(params, this.liveSnapshot?.snapshot() ?? null),
+      );
+    } catch {
+      // Older or changed CLI hosts — the headless query.mjs transport remains available.
+    }
   }
 
   async loadSettings() {

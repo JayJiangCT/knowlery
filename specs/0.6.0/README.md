@@ -17,6 +17,14 @@
 
 Execution order: F1 → F2 → F5 → F3 → F4 (F5 stacks directly on F2's engine).
 
+## Backlog (0.7 candidates)
+
+- **F6 — retrieval-aware `/cook`:** record colloquial synonyms, abbreviations, and
+  cross-language titles into `aliases` frontmatter at compile time; closes the remaining
+  alias (q-016) and bilingual (q-020) eval gaps from the write side.
+- **`/audit` on CLI primitives:** replace the prose instructions for orphan/broken-link
+  detection with `obsidian orphans`, `unresolved`, and `deadends`.
+
 ## Non-goals for 0.6.0
 
 - No embeddings / vector store. Query expansion is handled by `aliases` conventions and

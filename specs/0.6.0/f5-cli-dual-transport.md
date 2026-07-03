@@ -1,6 +1,6 @@
 # F5 — CLI Dual Transport: `obsidian knowlery:query`
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 — implemented, awaiting maintainer acceptance testing (§8)
 - **Target release:** 0.6.0 (promoted from the post-0.6.0 backlog at the maintainer's request)
 - **Branch:** `cursor/f5-cli-dual-transport-92eb` (stacked on F2)
 - **Depends on:** F2 (retrieval engine); independent of F3/F4

@@ -14,7 +14,7 @@ import matter from 'gray-matter';
 export const AGENT_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
 
 /** Files that instruct agents rather than carry knowledge; never lookup targets. */
-const INSTRUCTION_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md']);
+export const INSTRUCTION_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md']);
 
 export type PageTier = 'agent' | 'bundle' | 'user';
 
@@ -72,11 +72,26 @@ export function scanVault(root: string): VaultSnapshot {
 }
 
 function loadPage(file: string, path: string): ScannedPage | null {
+  let raw: string;
+  try {
+    raw = readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+  return buildPageFromContent(path, raw);
+}
+
+/**
+ * Builds a ScannedPage from raw file content. Shared by the fs scanner (query.mjs) and
+ * the plugin's live snapshot (spec f5, §5.2) — both transports parse content through
+ * this one function, so page construction parity is structural.
+ */
+export function buildPageFromContent(path: string, rawContent: string): ScannedPage | null {
   let parsed: ReturnType<typeof matter>;
   try {
-    parsed = matter(readFileSync(file, 'utf8'));
+    parsed = matter(rawContent);
   } catch {
-    return null; // unreadable or malformed frontmatter — skip rather than abort the scan
+    return null; // malformed frontmatter — skip rather than abort the scan
   }
   const fm = parsed.data as Record<string, unknown>;
   const title = typeof fm.title === 'string' && fm.title.trim() ? fm.title : titleFromBasename(path);
@@ -102,12 +117,12 @@ function loadPage(file: string, path: string): ScannedPage | null {
   };
 }
 
-interface BundleRegistryEntry {
+export interface BundleRegistryEntry {
   title?: string;
   libraryPath?: string;
 }
 
-interface AgentIndexConceptEntry {
+export interface AgentIndexConceptEntry {
   path?: string;
   title?: string;
   description?: string;
@@ -140,21 +155,32 @@ function loadBundleEntries(root: string): ScannedBundleEntry[] {
     } catch {
       continue;
     }
-    for (const concept of agentIndex.concepts ?? []) {
-      if (!concept.path || !concept.title) continue;
-      const tags = stringArray(concept.tags);
-      entries.push({
-        path: `${bundle.libraryPath}/${concept.path}`,
-        bundleId,
-        title: concept.title,
-        description: concept.description,
-        type: concept.type,
-        titleAlias: fieldText(concept.title),
-        tagBasename: fieldText([...tags, basename(concept.path, '.md')].join('\n')),
-        descriptionField: fieldText(concept.description ?? ''),
-        prefixTokens: tokenize([concept.title, basename(concept.path, '.md')].join('\n').toLowerCase()),
-      });
-    }
+    entries.push(...bundleEntriesFromIndex(bundleId, bundle.libraryPath, agentIndex));
+  }
+  return entries;
+}
+
+/** Shared by the fs scanner and the plugin's live snapshot (spec f5, §5.2). */
+export function bundleEntriesFromIndex(
+  bundleId: string,
+  libraryPath: string,
+  agentIndex: { concepts?: AgentIndexConceptEntry[] },
+): ScannedBundleEntry[] {
+  const entries: ScannedBundleEntry[] = [];
+  for (const concept of agentIndex.concepts ?? []) {
+    if (!concept.path || !concept.title) continue;
+    const tags = stringArray(concept.tags);
+    entries.push({
+      path: `${libraryPath}/${concept.path}`,
+      bundleId,
+      title: concept.title,
+      description: concept.description,
+      type: concept.type,
+      titleAlias: fieldText(concept.title),
+      tagBasename: fieldText([...tags, basename(concept.path, '.md')].join('\n')),
+      descriptionField: fieldText(concept.description ?? ''),
+      prefixTokens: tokenize([concept.title, basename(concept.path, '.md')].join('\n').toLowerCase()),
+    });
   }
   return entries;
 }
