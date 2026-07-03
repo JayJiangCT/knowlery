@@ -41,10 +41,12 @@ describe('wikilink conversion', () => {
     );
 
     expect(result.converted).toBe(3);
-    // Spaces are URL-encoded so the emitted link is valid (§5.3).
-    expect(result.body).toContain('[Target Page](/concepts/Target%20Page.md)');
-    expect(result.body).toContain('[the alias](/concepts/Target%20Page.md)');
-    expect(result.body).toContain('[Target Page](/concepts/Target%20Page.md#My%20Heading)');
+    // Spaces are URL-encoded so the emitted link is valid (§5.3). The source
+    // page and target are both in concepts/, so the relative link has no
+    // "../" — this is the same-directory case.
+    expect(result.body).toContain('[Target Page](Target%20Page.md)');
+    expect(result.body).toContain('[the alias](Target%20Page.md)');
+    expect(result.body).toContain('[Target Page](Target%20Page.md#My%20Heading)');
   });
 
   it('converts embeds of knowledge pages into links and records unresolved targets without failing', () => {
@@ -57,7 +59,7 @@ describe('wikilink conversion', () => {
       new Set(),
     );
 
-    expect(result.body).toContain('![Target Page](/concepts/Target%20Page.md)');
+    expect(result.body).toContain('![Target Page](Target%20Page.md)');
     expect(result.body).toContain('[[Deleted Note]]'); // left as-is
     expect(result.unresolved).toEqual([{ from: 'concepts/source-page', raw: 'Deleted Note' }]);
   });
@@ -73,7 +75,9 @@ describe('wikilink conversion', () => {
     );
 
     expect(result.converted).toBe(1);
-    expect(result.body).toContain('[approved note](/_sources/Idea/approved%20note.md)');
+    // Source page is in concepts/, _sources/ is at the bundle root, so this
+    // needs exactly one "../" — the cross-directory case.
+    expect(result.body).toContain('[approved note](../_sources/Idea/approved%20note.md)');
     expect(result.body).toContain('[[Idea/rejected note]]');
     expect(result.unresolved).toEqual([{ from: 'concepts/source-page', raw: 'Idea/rejected note' }]);
   });
@@ -90,6 +94,29 @@ describe('wikilink conversion', () => {
     expect(collectRawBodyUnresolvedLinks(raw)).toEqual([
       { from: '_sources/Idea/notes.md', raw: 'Some Page' },
     ]);
+  });
+
+  it('computes a correct relative path across two different knowledge dirs', () => {
+    const entityPage: PageRecord = {
+      conceptId: 'entities/Zipline',
+      sourcePath: 'entities/Zipline.md',
+      dir: 'entities',
+      frontmatter: {},
+      body: 'See [[Drone Delivery Integration Strategy]] for the architecture.',
+      outlinks: [link('Drone Delivery Integration Strategy', 'concepts/Drone Delivery Integration Strategy.md')],
+      backlinks: [],
+      contentHash: 'sha256-z',
+    };
+    const result = convertWikilinks(
+      entityPage,
+      new Set(['concepts/Drone Delivery Integration Strategy']),
+      new Set(),
+    );
+
+    expect(result.converted).toBe(1);
+    expect(result.body).toContain(
+      '[Drone Delivery Integration Strategy](../concepts/Drone%20Delivery%20Integration%20Strategy.md)',
+    );
   });
 
   it('parses target, heading, and alias out of a wikilink', () => {

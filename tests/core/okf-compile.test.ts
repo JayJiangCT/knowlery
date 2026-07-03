@@ -106,10 +106,10 @@ describe('OKF bundle compile', () => {
     expect(agentIndex.rawSources[0].citedBy).toEqual(['concepts/search']);
   });
 
-  it('resolves approved raw links to /_sources/ and reports them converted', async () => {
+  it('resolves approved raw links to ../_sources/ and reports them converted', async () => {
     const app = createOkfMockApp(BASE_VAULT);
     const result = await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
-    expect(app.writes['.knowlery/exports/test-bundle/concepts/search.md']).toContain('](/_sources/Idea/private.md)');
+    expect(app.writes['.knowlery/exports/test-bundle/concepts/search.md']).toContain('](../_sources/Idea/private.md)');
     expect(result.wikilinksConverted).toBe(1);
     expect(result.unresolvedLinks).toEqual([]);
   });

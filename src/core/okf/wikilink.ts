@@ -1,3 +1,4 @@
+import { posix } from 'path';
 import type { UnresolvedLink } from '../../types';
 import type { PageRecord, RawDependency } from './shared';
 import { encodeMarkdownPath, toPosixPath } from './shared';
@@ -16,6 +17,7 @@ export function convertWikilinks(
   let converted = 0;
   const unresolved: UnresolvedLink[] = [];
   const linksByRaw = new Map(page.outlinks.map((link) => [link.raw, link]));
+  const fromDir = posix.dirname(`${page.conceptId}.md`);
 
   const body = page.body.replace(/!?\[\[([^\]]+)\]\]/g, (full, rawInner: string) => {
     const embed = full.startsWith('!');
@@ -30,13 +32,15 @@ export function convertWikilinks(
 
     if (link.targetConceptId && includedConceptIds.has(link.targetConceptId)) {
       converted += 1;
-      return markdownLink(label, `/${encodeMarkdownPath(`${link.targetConceptId}.md`)}${headingFragment(parsed.heading)}`, embed);
+      const href = relativeLinkPath(fromDir, `${link.targetConceptId}.md`);
+      return markdownLink(label, `${href}${headingFragment(parsed.heading)}`, embed);
     }
 
     const rawPath = toPosixPath(link.targetPath);
     if (approvedRawPaths.has(rawPath)) {
       converted += 1;
-      return markdownLink(label, `/${encodeMarkdownPath(`_sources/${rawPath}`)}${headingFragment(parsed.heading)}`, embed);
+      const href = relativeLinkPath(fromDir, `_sources/${rawPath}`);
+      return markdownLink(label, `${href}${headingFragment(parsed.heading)}`, embed);
     }
 
     unresolved.push({ from: page.conceptId, raw: rawInner });
@@ -63,6 +67,15 @@ export function parseWikilink(raw: string): { target: string; heading?: string; 
 
 function markdownLink(label: string, href: string, embed: boolean): string {
   return `${embed ? '!' : ''}[${escapeLabel(label)}](${href})`;
+}
+
+// §5.2 of OKF v0.1 (standard relative markdown links) instead of §5.1's
+// bundle-root-absolute form — a leading "/" is interpreted relative to
+// Obsidian's *vault* root once a bundle is installed under Library/<id>/,
+// not the bundle's own root, so absolute links silently break (or worse,
+// resolve to an unrelated same-named page already in the host vault).
+function relativeLinkPath(fromDir: string, targetPath: string): string {
+  return encodeMarkdownPath(posix.relative(fromDir, targetPath));
 }
 
 function escapeLabel(label: string): string {
