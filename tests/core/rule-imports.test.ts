@@ -18,12 +18,15 @@ function createMockApp(initialFiles: Record<string, string> = {}): App {
 
   for (const path of files.keys()) addParentDirs(path);
 
+  const writeLog: string[] = [];
+
   const adapter = {
     exists: async (path: string) => files.has(path) || dirs.has(path),
     read: async (path: string) => files.get(path) ?? '',
     write: async (path: string, content: string) => {
       addParentDirs(path);
       files.set(path, content);
+      writeLog.push(path);
     },
     mkdir: async (path: string) => {
       dirs.add(path);
@@ -66,17 +69,24 @@ function createMockApp(initialFiles: Record<string, string> = {}): App {
       create: async (path: string, content: string) => {
         addParentDirs(path);
         files.set(path, content);
+        writeLog.push(path);
       },
       modify: async (file: { path: string }, content: string) => {
         files.set(file.path, content);
+        writeLog.push(file.path);
       },
     },
     __files: files,
+    __writeLog: writeLog,
   } as unknown as App;
 }
 
 function getFiles(app: App): Map<string, string> {
   return (app as unknown as { __files: Map<string, string> }).__files;
+}
+
+function getWriteLog(app: App): string[] {
+  return (app as unknown as { __writeLog: string[] }).__writeLog;
 }
 
 describe('Claude rule imports', () => {
@@ -116,6 +126,19 @@ describe('Claude rule imports', () => {
     const claudeMd = getFiles(app).get('.claude/CLAUDE.md');
     expect(claudeMd).not.toContain('@rules/activity-ledger.md');
     expect(claudeMd).toContain('@rules/custom-review.md');
+  });
+
+  it('does not rewrite an already-synced Claude config (no mtime churn on reload)', async () => {
+    const app = createMockApp({
+      '.claude/rules/activity-ledger.md': '# Activity Ledger',
+    });
+    await syncClaudeRuleImports(app);
+    const synced = getFiles(app).get('.claude/CLAUDE.md');
+
+    const writesBefore = getWriteLog(app).length;
+    await syncClaudeRuleImports(app);
+    expect(getWriteLog(app).length).toBe(writesBefore);
+    expect(getFiles(app).get('.claude/CLAUDE.md')).toBe(synced);
   });
 
   it('upgrades an existing Claude config without requiring manual regeneration', async () => {

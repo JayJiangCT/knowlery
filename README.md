@@ -6,7 +6,7 @@
 
 Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, choose small next moves from one action-first dashboard, review the current note, generate weekly summaries, share and install knowledge bundles, and maintain vault health from Obsidian settings.
 
-In v0.5.0, knowledge stops being vault-bound. **Share knowledge bundle** compiles a reviewed selection of your knowledge pages into a portable bundle — every page and source passes an approve/flag review gate with an automated risk scan before anything ships. **Install knowledge bundle** brings someone else's bundle into `Library/` with a conformance preview, lists it on the dashboard, and teaches the `/ask` skill to retrieve it. **Fork to my knowledge** copies a bundle page into your own directories when you want to evolve it.
+In v0.6.0, retrieval becomes deterministic and measurable. Finding knowledge is now **one command with two transports** — `obsidian knowlery:query` while Obsidian is running, or `node .knowlery/bin/query.mjs` with it closed — ranking compiled pages, your own notes, and installed bundles with field-weighted scoring, cross-language source-graph boosts, and an honest "no confident matches" verdict. **Knowledge health** on the dashboard mechanically detects compiled pages whose sources changed and notes never compiled, feeding `/cook`'s incremental scope. Agent sessions got lighter: fixed context now carries only `KNOWLEDGE.md` plus your rules. And every retrieval change is scored by a committed evaluation harness with a frozen baseline, enforced in CI.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
@@ -91,6 +91,7 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `.knowlery/freshness/`, when Freshness Review prepares request, result, log, queue, and sidecar files
 - `.knowlery/exports/`, when Share knowledge bundle compiles a bundle (plus an optional `.zip` next to it)
 - `Library/<bundle-id>/` and `.knowlery/bundles.json`, when Install knowledge bundle installs a shared bundle
+- `.knowlery/bin/query.mjs`, the local retrieval script (written on setup and refreshed on plugin upgrades)
 
 Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI, and may delete an installed bundle's `Library/<bundle-id>/` folder when you uninstall that bundle from the dashboard.
 
@@ -103,6 +104,8 @@ Knowlery reads and writes files inside your vault to create and maintain the kno
 Network access is opt-in and feature-specific. The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. The setup wizard can download the latest Claudian release from GitHub when you choose to install that optional companion plugin.
 
 Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`, and `skills` when you explicitly use CLI-related features. These commands run on your computer with your user permissions. Knowlery does not send vault contents to those tools by itself; agent requests are created only from the actions you trigger.
+
+On Obsidian 1.12.2+ with the command line interface enabled, Knowlery registers two read-only CLI commands, `knowlery:query` and `knowlery:stale`, which search and inspect vault content locally when you (or an agent you run) invoke them. The bundled `.knowlery/bin/query.mjs` script does the same offline with plain Node; neither makes network requests.
 
 Freshness Review is a local, approval-gated workflow. Knowlery prepares request JSON files, imports result JSON files written by an agent you run separately, and applies scalar freshness metadata only after you approve a suggestion. Knowlery does not include a Freshness runner and does not call a model API for this workflow.
 
