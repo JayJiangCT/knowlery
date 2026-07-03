@@ -10,7 +10,7 @@
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | Retrieval evaluation harness | [f1-retrieval-eval-harness.md](./f1-retrieval-eval-harness.md) | — |
-| F2 | Vault-level index projection + `knowlery query` deterministic retrieval + `/ask` slim-down | (spec pending) | F1 |
+| F2 | `knowlery query` deterministic retrieval script + `/ask` slim-down | [f2-knowlery-query.md](./f2-knowlery-query.md) | F1 |
 | F3 | Mechanical staleness dirty-flags (replaces `log.md` timestamp; first tier of freshness) | (spec pending) | F1 |
 | F4 | Fixed-context slim-down (`CLAUDE.md` / `opencode.json` imports) | (spec pending) | — |
 
