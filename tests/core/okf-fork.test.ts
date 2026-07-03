@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createOkfMockApp } from '../mocks/okf-app';
-import { forkPageFromBundle } from '../../src/core/okf/fork';
+import { forkPageFromBundle, parseLibraryPath } from '../../src/core/okf/fork';
 
 describe('forkPageFromBundle', () => {
   it('copies the page into the target path with provenance frontmatter', async () => {
@@ -53,5 +53,22 @@ describe('forkPageFromBundle', () => {
         bundleId: 'jay.drone-delivery',
       }),
     ).rejects.toThrow(/not found/i);
+  });
+});
+
+describe('parseLibraryPath', () => {
+  it('extracts the bundle id and relative path from a Library-rooted path', () => {
+    expect(parseLibraryPath('Library/jay.drone-delivery/concepts/foo.md')).toEqual({
+      bundleId: 'jay.drone-delivery',
+      relativePath: 'concepts/foo.md',
+    });
+  });
+
+  it('returns null for a path outside Library/', () => {
+    expect(parseLibraryPath('concepts/foo.md')).toBeNull();
+  });
+
+  it('returns null for a Library path with no file segment', () => {
+    expect(parseLibraryPath('Library/jay.drone-delivery')).toBeNull();
   });
 });

@@ -12,6 +12,7 @@ import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd } from './core/migration';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
+import { forkPageFromBundle, parseLibraryPath } from './core/okf/fork';
 
 interface SettingApp {
   setting: {
@@ -112,6 +113,31 @@ export default class KnowleryPlugin extends Plugin {
           .setIcon('share-2')
           .onClick(() => {
             new ExportBundleModal(this.app, this, conceptIdFromPath(file.path)).open();
+          });
+      });
+    }));
+
+    this.registerEvent(this.app.workspace.on('file-menu', (menu, file) => {
+      if (!(file instanceof TFile) || file.extension !== 'md') return;
+      const parsed = parseLibraryPath(file.path);
+      if (!parsed) return;
+      menu.addItem((item) => {
+        item
+          .setTitle('Fork to my knowledge...')
+          .setIcon('git-fork')
+          .onClick(async () => {
+            try {
+              await forkPageFromBundle(this.app, {
+                libraryPath: `Library/${parsed.bundleId}/`,
+                sourcePath: parsed.relativePath,
+                targetPath: parsed.relativePath,
+                bundleId: parsed.bundleId,
+              });
+              new Notice(`Forked to ${parsed.relativePath}`);
+              this.events.trigger('dashboard-refresh');
+            } catch (error) {
+              new Notice(error instanceof Error ? error.message : String(error));
+            }
           });
       });
     }));

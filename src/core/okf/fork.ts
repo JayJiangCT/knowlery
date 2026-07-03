@@ -1,13 +1,25 @@
 import type { App } from 'obsidian';
 import { normalizePath } from 'obsidian';
 import matter from 'gray-matter';
-import { safeMatter } from './shared';
+import { safeMatter, toPosixPath } from './shared';
 
 export interface ForkOptions {
   libraryPath: string;
   sourcePath: string;
   targetPath: string;
   bundleId: string;
+}
+
+export function parseLibraryPath(path: string): { bundleId: string; relativePath: string } | null {
+  const normalized = toPosixPath(path);
+  if (!normalized.startsWith('Library/')) return null;
+  const withoutPrefix = normalized.slice('Library/'.length);
+  const slashIndex = withoutPrefix.indexOf('/');
+  if (slashIndex === -1) return null;
+  return {
+    bundleId: withoutPrefix.slice(0, slashIndex),
+    relativePath: withoutPrefix.slice(slashIndex + 1),
+  };
 }
 
 export async function forkPageFromBundle(app: App, options: ForkOptions, now: Date = new Date()): Promise<void> {
