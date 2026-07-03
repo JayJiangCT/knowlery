@@ -16,7 +16,11 @@ import {
   QUERY_CLI_COMMAND,
   QUERY_CLI_DESCRIPTION,
   QUERY_CLI_FLAGS,
+  STALE_CLI_COMMAND,
+  STALE_CLI_DESCRIPTION,
+  STALE_CLI_FLAGS,
   handleQueryCli,
+  handleStaleCli,
 } from './core/query/cli-handler';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
@@ -228,6 +232,13 @@ export default class KnowleryPlugin extends Plugin {
         QUERY_CLI_DESCRIPTION,
         QUERY_CLI_FLAGS,
         (params) => handleQueryCli(params, this.liveSnapshot?.snapshot() ?? null),
+      );
+      // eslint-disable-next-line obsidianmd/no-unsupported-api -- guarded by the feature detection above.
+      this.registerCliHandler(
+        STALE_CLI_COMMAND,
+        STALE_CLI_DESCRIPTION,
+        STALE_CLI_FLAGS,
+        (params) => handleStaleCli(params, this.liveSnapshot?.snapshot() ?? null),
       );
     } catch {
       // Older or changed CLI hosts — the headless query.mjs transport remains available.

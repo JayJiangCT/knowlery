@@ -1,6 +1,7 @@
 import type { CliData, CliFlags } from 'obsidian';
 import { runQuery } from './engine';
-import { formatQueryResult } from './format';
+import { formatQueryResult, formatStalenessReport } from './format';
+import { computeStaleness } from './staleness';
 import type { VaultSnapshot } from './scan';
 
 /**
@@ -28,6 +29,24 @@ export const QUERY_CLI_USAGE =
 
 export const QUERY_CLI_WARMING =
   'Snapshot warming up — retry in a moment, or run: node .knowlery/bin/query.mjs "<question>"';
+
+export const STALE_CLI_COMMAND = 'knowlery:stale';
+export const STALE_CLI_DESCRIPTION =
+  'Report compiled pages whose sources changed, and notes never compiled';
+
+export const STALE_CLI_FLAGS: CliFlags = {
+  json: { description: 'Structured JSON output' },
+};
+
+export const STALE_CLI_WARMING =
+  'Snapshot warming up — retry in a moment, or run: node .knowlery/bin/query.mjs --stale';
+
+/** Synchronous for the same microtask reason as handleQueryCli (spec f3, §4.3). */
+export function handleStaleCli(params: CliData, snapshot: VaultSnapshot | null): string {
+  if (!snapshot) return STALE_CLI_WARMING;
+  const report = computeStaleness(snapshot);
+  return formatStalenessReport(report, { json: params.json === 'true' }).trimEnd();
+}
 
 export function handleQueryCli(params: CliData, snapshot: VaultSnapshot | null): string {
   const question = typeof params.question === 'string' && params.question !== 'true'

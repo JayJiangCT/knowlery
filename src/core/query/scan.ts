@@ -13,8 +13,12 @@ import matter from 'gray-matter';
 
 export const AGENT_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
 
-/** Files that instruct agents rather than carry knowledge; never lookup targets. */
-export const INSTRUCTION_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md']);
+/**
+ * Vault-root files the system maintains about the vault rather than knowledge in it:
+ * agent instruction docs plus the cook history log. Never lookup targets, never cook
+ * material (spec f3 amendment: log.md must not appear as an uncooked note).
+ */
+export const SYSTEM_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md', 'log.md']);
 
 export type PageTier = 'agent' | 'bundle' | 'user';
 
@@ -32,6 +36,8 @@ export interface ScannedPage {
   updated?: string;
   description?: string;
   sources: string[];
+  /** File modification time in ms; drives the mechanical staleness tier (spec f3, §4.1). */
+  mtimeMs: number;
   tier: Exclude<PageTier, 'bundle'>;
   /** Field groups by spec weight: title+aliases (x4), tags+basename (x3), description (x2), body (x1). */
   titleAlias: FieldText;
@@ -64,7 +70,7 @@ export function scanVault(root: string): VaultSnapshot {
   const pages: ScannedPage[] = [];
   for (const file of walkMarkdown(root)) {
     const path = relative(root, file).split('\\').join('/');
-    if (INSTRUCTION_FILES.has(path)) continue;
+    if (SYSTEM_FILES.has(path)) continue;
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }
@@ -73,12 +79,14 @@ export function scanVault(root: string): VaultSnapshot {
 
 function loadPage(file: string, path: string): ScannedPage | null {
   let raw: string;
+  let mtimeMs: number;
   try {
     raw = readFileSync(file, 'utf8');
+    mtimeMs = statSync(file).mtimeMs;
   } catch {
     return null;
   }
-  return buildPageFromContent(path, raw);
+  return buildPageFromContent(path, raw, mtimeMs);
 }
 
 /**
@@ -86,7 +94,7 @@ function loadPage(file: string, path: string): ScannedPage | null {
  * the plugin's live snapshot (spec f5, §5.2) — both transports parse content through
  * this one function, so page construction parity is structural.
  */
-export function buildPageFromContent(path: string, rawContent: string): ScannedPage | null {
+export function buildPageFromContent(path: string, rawContent: string, mtimeMs: number): ScannedPage | null {
   let parsed: ReturnType<typeof matter>;
   try {
     parsed = matter(rawContent);
@@ -108,6 +116,7 @@ export function buildPageFromContent(path: string, rawContent: string): ScannedP
     updated: scalarDate(fm.updated),
     description,
     sources: stringArray(fm.sources),
+    mtimeMs,
     tier: (AGENT_DIRS as readonly string[]).includes(path.split('/')[0]) ? 'agent' : 'user',
     titleAlias,
     tagBasename,

@@ -4,7 +4,7 @@
  * unit tests. */
 import type { App } from 'obsidian';
 import {
-  INSTRUCTION_FILES,
+  SYSTEM_FILES,
   buildPageFromContent,
   bundleEntriesFromIndex,
   type BundleRegistryEntry,
@@ -93,7 +93,7 @@ export class LiveQuerySnapshot {
   }
 
   async refreshFile(path: string): Promise<void> {
-    if (INSTRUCTION_FILES.has(path)) return;
+    if (SYSTEM_FILES.has(path)) return;
     const file = this.app.vault.getFileByPath(path);
     if (!file) {
       this.pages.delete(path);
@@ -101,7 +101,7 @@ export class LiveQuerySnapshot {
     }
     try {
       const content = await this.app.vault.cachedRead(file);
-      const page = buildPageFromContent(path, content);
+      const page = buildPageFromContent(path, content, file.stat.mtime);
       if (page) this.pages.set(path, page);
     } catch {
       // Unreadable file — keep the previous snapshot entry rather than dropping it.
