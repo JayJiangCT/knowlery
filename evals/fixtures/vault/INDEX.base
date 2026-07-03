@@ -1,0 +1,26 @@
+filters:
+  or:
+    - file.inFolder("entities")
+    - file.inFolder("concepts")
+    - file.inFolder("comparisons")
+    - file.inFolder("queries")
+properties:
+  title:
+    displayName: Title
+  type:
+    displayName: Type
+  domain:
+    displayName: Domain
+views:
+  - type: table
+    name: All Pages
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - file.name
+      - title
+      - domain
+      - tags
+      - status
+      - updated

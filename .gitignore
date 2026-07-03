@@ -17,6 +17,13 @@ AGENTS.md
 skills-lock.json
 plan.md
 
+# Eval harness: timestamped run reports stay local, only the frozen baseline is tracked.
+evals/reports/*
+!evals/reports/baseline.json
+# The fixture vault's .knowlery/ must be tracked despite the global .knowlery/ ignore.
+!evals/fixtures/vault/.knowlery/
+!evals/fixtures/vault/.knowlery/**
+
 # Build artifacts
 node_modules/
 main.js

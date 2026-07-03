@@ -1,6 +1,6 @@
 # F1 — Retrieval Evaluation Harness
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.6.0
 - **Branch:** `cursor/f1-retrieval-eval-harness-92eb`
 - **Depends on:** nothing (this feature is the prerequisite for F2 and F3)

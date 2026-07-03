@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "okfVersion": "0.1",
+  "generatedAt": "2026-06-15T00:00:00.000Z",
+  "title": "Observability Starter Pack",
+  "entrypoint": "index.md",
+  "concepts": [
+    {
+      "id": "four-golden-signals",
+      "path": "concepts/four-golden-signals.md",
+      "type": "Concept",
+      "title": "Four Golden Signals",
+      "description": "Latency, traffic, errors, and saturation — the four golden signals of observability from the Google SRE book.",
+      "domain": "observability",
+      "tags": ["observability", "sre"],
+      "timestamp": "2026-06-01T00:00:00.000Z",
+      "daysSinceUpdate": 14,
+      "backlinks": [],
+      "outlinks": ["red-method"]
+    },
+    {
+      "id": "opentelemetry-semantic-conventions",
+      "path": "concepts/opentelemetry-semantic-conventions.md",
+      "type": "Concept",
+      "title": "OpenTelemetry Semantic Conventions",
+      "description": "Naming conventions for spans, attributes, and instrumentation so telemetry stays comparable across services.",
+      "domain": "observability",
+      "tags": ["observability", "standards"],
+      "timestamp": "2026-06-01T00:00:00.000Z",
+      "daysSinceUpdate": 14,
+      "backlinks": [],
+      "outlinks": []
+    },
+    {
+      "id": "red-method",
+      "path": "concepts/red-method.md",
+      "type": "Concept",
+      "title": "RED Method",
+      "description": "Rate, errors, duration — a request-oriented subset of the golden signals for service dashboards.",
+      "domain": "observability",
+      "tags": ["observability", "sre"],
+      "timestamp": "2026-06-01T00:00:00.000Z",
+      "daysSinceUpdate": 14,
+      "backlinks": ["four-golden-signals"],
+      "outlinks": []
+    }
+  ],
+  "groups": {
+    "byType": {
+      "Concept": ["four-golden-signals", "opentelemetry-semantic-conventions", "red-method"]
+    },
+    "byDomain": {
+      "observability": ["four-golden-signals", "opentelemetry-semantic-conventions", "red-method"]
+    }
+  },
+  "stale": [],
+  "unresolvedLinks": [],
+  "rawSources": []
+}

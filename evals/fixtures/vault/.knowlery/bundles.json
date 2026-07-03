@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "bundles": {
+    "observability-starter": {
+      "version": "1.0.0",
+      "title": "Observability Starter Pack",
+      "source": "observability-starter-1.0.0.zip",
+      "installedAt": "2026-06-20T10:00:00.000Z",
+      "libraryPath": "Library/observability-starter",
+      "manifestContentHash": "sha256:fixture-manifest-hash",
+      "installedContentHash": "sha256:fixture-manifest-hash",
+      "conformance": "passed",
+      "conformanceErrorCount": 0
+    }
+  }
+}

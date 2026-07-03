@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "okfVersion": "0.1",
+  "id": "observability-starter",
+  "title": "Observability Starter Pack",
+  "version": "1.0.0",
+  "creator": {
+    "name": "Fixture Author",
+    "url": "https://example.com/fixture-author"
+  },
+  "releasedAt": "2026-06-15T00:00:00.000Z",
+  "entrypoint": "index.md",
+  "contentHash": "sha256:fixture-manifest-hash",
+  "license": "CC-BY-4.0",
+  "knowleryVersion": "0.5.0",
+  "conceptCount": 3
+}
