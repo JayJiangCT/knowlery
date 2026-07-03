@@ -44,8 +44,8 @@ export function createOkfMockApp(
     vault: {
       getMarkdownFiles: () => Object.keys(files).filter((path) => path.endsWith('.md')).map(fileEntry),
       getFileByPath: (path: string) => (files[path] !== undefined ? fileEntry(path) : null),
-      read: async (file: { path: string }) => files[file.path],
-      cachedRead: async (file: { path: string }) => files[file.path],
+      read: async (file: { path: string }) => writes[file.path] ?? files[file.path],
+      cachedRead: async (file: { path: string }) => writes[file.path] ?? files[file.path],
       adapter: {
         exists: async (path: string) =>
           allPaths().some((entry) => entry === path || entry.startsWith(`${path}/`)),
