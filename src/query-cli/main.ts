@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { scanVault } from '../core/query/scan';
-import { runQuery, type QueryResult } from '../core/query/engine';
+import { runQuery } from '../core/query/engine';
+import { formatQueryResult } from '../core/query/format';
 
 /**
  * Entry point for the deterministic retrieval script shipped into vaults at
@@ -24,7 +25,7 @@ function main(): void {
 
   const root = resolveVaultRoot();
   const result = runQuery(question, scanVault(root), k);
-  process.stdout.write(json ? `${JSON.stringify(result, null, 2)}\n` : formatText(result));
+  process.stdout.write(formatQueryResult(result, { json }));
 }
 
 /** The script lives at <vault>/.knowlery/bin/query.mjs, so the vault root is two levels up. */
@@ -53,22 +54,6 @@ function parseArgs(argv: string[]): { question: string; k: number; json: boolean
     }
   }
   return { question, k, json };
-}
-
-function formatText(result: QueryResult): string {
-  if (result.verdict === 'no-confident-match') {
-    return `No confident matches in this vault for: ${result.terms.join(', ')}\n`;
-  }
-  const lines: string[] = [];
-  result.candidates.forEach((candidate, index) => {
-    const type = candidate.type ? ` [${candidate.type}]` : '';
-    const detail = candidate.description ? ` — ${candidate.description}` : '';
-    lines.push(`${index + 1}. ${candidate.path}${type} (score ${candidate.score})${detail}`);
-    if (candidate.evidence.length > 0) {
-      lines.push(`   evidence via source: ${candidate.evidence.join(', ')}`);
-    }
-  });
-  return `${lines.join('\n')}\n`;
 }
 
 main();

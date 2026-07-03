@@ -54,13 +54,15 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 
 When answering questions from this vault (not general knowledge):
 
-1. Run \`node .knowlery/bin/query.mjs "<question>"\` once — it scans compiled pages,
-   user notes, and installed bundles, and prints a ranked candidate list
+1. Run the retrieval engine once — \`obsidian knowlery:query question="<question>"\`
+   when Obsidian is running, else \`node .knowlery/bin/query.mjs "<question>"\`; both
+   scan compiled pages, user notes, and installed bundles, and print the same ranked
+   candidate list
 2. Read promising candidates with \`obsidian read\` — prefer \`status: reviewed\` over
    \`draft\`, recent \`updated\`, and any \`evidence via source:\` notes it flags
 3. If it prints \`No confident matches\`, say the vault does not cover the question and
    suggest \`/cook\` — do not answer from general knowledge
-4. Only if the script or Node is unavailable: fall back to \`obsidian properties type=...\`
+4. Only if neither transport is available: fall back to \`obsidian properties type=...\`
    and \`obsidian search query="..."\`, and say retrieval ran in degraded mode
 5. Synthesize a direct answer with \`[[wikilink]]\` citations and explicit gaps
 

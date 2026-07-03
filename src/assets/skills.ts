@@ -224,15 +224,23 @@ Identify the key concepts, entities, and intent in the user's question.
 
 ### Step 2: Locate Relevant Pages
 
-Run the deterministic retrieval script **once** with the user's question:
+Run the deterministic retrieval command **once**, using the first transport available:
+
+**Transport 1 — Obsidian running (the normal case):**
+
+\`\`\`bash
+obsidian knowlery:query question="<question>"
+\`\`\`
+
+**Transport 2 — Obsidian closed or the command missing:**
 
 \`\`\`bash
 node .knowlery/bin/query.mjs "<question>"
 \`\`\`
 
-The script scans the whole vault live (compiled pages, user notes, and installed
-knowledge bundles), ranks candidates by field-weighted relevance, and prints one line
-per candidate: rank, path, type, score, and a one-line description. Lines starting with
+Both run the same engine over the whole vault (compiled pages, user notes, and
+installed knowledge bundles) and print identical output: one line per candidate with
+rank, path, type, score, and a one-line description. Lines starting with
 \`evidence via source:\` mean the page was boosted because a raw note it cites matched
 the question — read those source notes too.
 
@@ -241,14 +249,16 @@ the question — read those source notes too.
 - If it prints \`No confident matches in this vault for: ...\`, tell the user the vault
   does not cover this question and suggest running \`/cook\` on relevant material.
   Do not answer from general knowledge.
-- Add \`--k 20\` for broad or exploratory questions, \`--json\` if you need structured
-  output.
+- If transport 1 prints \`Snapshot warming up\`, retry once after a moment or use
+  transport 2.
+- Broad or exploratory questions: add \`k=20\` (transport 1) / \`--k 20\` (transport 2).
+  Structured output: \`json\` / \`--json\`.
 
-**Fallback (degraded mode).** Only if the script is missing or \`node\` is unavailable:
-enumerate compiled pages with \`obsidian properties type=entity\` (and \`concept\`,
-\`comparison\`, \`query\`), run \`obsidian search "<key concept>"\` per key concept, merge
-and deduplicate the results — and say in your answer that retrieval ran in degraded
-mode without the retrieval script.
+**Fallback (degraded mode).** Only if neither transport is available: enumerate
+compiled pages with \`obsidian properties type=entity\` (and \`concept\`, \`comparison\`,
+\`query\`), run \`obsidian search "<key concept>"\` per key concept, merge and deduplicate
+the results — and say in your answer that retrieval ran in degraded mode without the
+retrieval engine.
 
 ### Step 3: Read Relevant Pages
 
@@ -332,9 +342,10 @@ Use \`obsidian create\` to save. Ask the user where they'd like it saved.
 - **Acknowledge gaps**: If the vault doesn't have enough information, say so.
 - **Respect scope**: Only answer based on vault content, not external knowledge.
 - **Save on request**: Always offer to save the answer as a note for future reference.
-- **One retrieval call:** Candidate location is the retrieval script's job
-  (\`node .knowlery/bin/query.mjs "<question>"\`); reading and synthesis are yours.
-  Fall back to \`obsidian properties\` / \`obsidian search\` only when the script cannot run.
+- **One retrieval call:** Candidate location belongs to the retrieval engine —
+  \`obsidian knowlery:query question="..."\` when Obsidian is running, otherwise
+  \`node .knowlery/bin/query.mjs "..."\`; reading and synthesis are yours. Fall back to
+  \`obsidian properties\` / \`obsidian search\` only when neither transport can run.
 `,
   },
   {
