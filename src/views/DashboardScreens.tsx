@@ -3,6 +3,7 @@ import { usePlugin } from '../context';
 import type { ActivityRecord, DashboardMove, DashboardScreen } from '../types';
 import { RECIPE_BOOK } from '../core/moves';
 import { readRecentActivityRecords } from '../core/activity-ledger';
+import { buildRecookPrompt, computeStaleness, type StalenessReport } from '../core/query/staleness';
 import { sendPromptToAgent, copyPrompt } from './request-actions';
 import { IconChevronLeft, IconChevronRight, IconClipboard } from './Icons';
 
@@ -122,6 +123,75 @@ function MoveDetailScreen(props: {
   );
 }
 
+function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?: unknown) => void }) {
+  const plugin = usePlugin();
+  const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
+  const report: StalenessReport | null = snapshot ? computeStaleness(snapshot) : null;
+
+  return (
+    <div className="knowlery-screen">
+      <Back navigate={props.navigate} label="Knowledge health" />
+      {!report ? (
+        <p className="knowlery-screen__empty">Vault snapshot is still warming up — try again in a moment.</p>
+      ) : (
+        <>
+          <section className="knowlery-home__activity" aria-label="Stale pages">
+            <div className="knowlery-section-label">Stale pages ({report.stalePages.length})</div>
+            {report.stalePages.length === 0 ? (
+              <p className="knowlery-screen__empty">No compiled page has changed sources.</p>
+            ) : (
+              <>
+                {report.stalePages.map((finding) => (
+                  <div key={finding.path} className="knowlery-home__act">
+                    <span className="knowlery-home__act-summary">
+                      {finding.path}
+                      {finding.changedSources.map((source) => (
+                        <span key={source.path} className="knowlery-home__act-meta"> ← {source.path}</span>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="knowlery-btn knowlery-btn--outline"
+                  onClick={() => { void copyPrompt(buildRecookPrompt(report)); }}
+                >
+                  <IconClipboard size={14} />
+                  <span>Copy re-cook prompt</span>
+                </button>
+              </>
+            )}
+          </section>
+          <section className="knowlery-home__activity" aria-label="Uncooked notes">
+            <div className="knowlery-section-label">Notes never compiled ({report.uncookedNotes.length})</div>
+            {report.uncookedNotes.length === 0 ? (
+              <p className="knowlery-screen__empty">Every user note is cited by a compiled page.</p>
+            ) : (
+              report.uncookedNotes.map((note) => (
+                <div key={note.path} className="knowlery-home__act">
+                  <span className="knowlery-home__act-summary">{note.path}</span>
+                  <span className="knowlery-home__act-meta">{new Date(note.mtimeMs).toISOString().slice(0, 10)}</span>
+                </div>
+              ))
+            )}
+          </section>
+          {report.danglingSources.length > 0 && (
+            <section className="knowlery-home__activity" aria-label="Dangling sources">
+              <div className="knowlery-section-label">Dangling sources ({report.danglingSources.length})</div>
+              {report.danglingSources.map((dangling) => (
+                <div key={`${dangling.page}-${dangling.source}`} className="knowlery-home__act">
+                  <span className="knowlery-home__act-summary">{dangling.page}</span>
+                  <span className="knowlery-home__act-meta">cites missing note: {dangling.source}</span>
+                </div>
+              ))}
+            </section>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function DashboardScreens(props: {
   screen: DashboardScreen;
   payload: unknown;
@@ -135,6 +205,9 @@ export function DashboardScreens(props: {
   }
   if (props.screen === 'move-detail') {
     return <MoveDetailScreen payload={props.payload} navigate={props.navigate} />;
+  }
+  if (props.screen === 'knowledge-health') {
+    return <KnowledgeHealthScreen navigate={props.navigate} />;
   }
   return null;
 }

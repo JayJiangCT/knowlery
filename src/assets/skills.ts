@@ -44,10 +44,32 @@ and distill it into structured, cross-referenced knowledge pages.
 
 ### Incremental Mode (default)
 
-When user runs \`/cook\` with no arguments:
-1. Read \`log.md\` for last cook timestamp
-2. Scan for \`.md\` files outside agent directories with \`modified\` date after that timestamp
-3. Include any unprocessed files
+When user runs \`/cook\` with no arguments, get the scope from the deterministic
+staleness report (first transport available):
+
+\`\`\`bash
+obsidian knowlery:stale
+# or, with Obsidian closed:
+node .knowlery/bin/query.mjs --stale
+\`\`\`
+
+The report has three parts:
+
+1. **Stale pages** — compiled pages whose cited sources changed after the page was
+   last written. Re-read only the listed changed sources and fold what changed into
+   those pages.
+2. **Uncooked notes** — user notes cited by no compiled page, most recent first. These
+   are candidate new material; use judgment (or ask) about which are worth compiling —
+   many notes are legitimately never compiled.
+3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
+   report; fixing them is /audit territory.
+
+Note: sync tools can rewrite file mtimes and produce a large stale list at once; that
+is expected — cook selectively rather than mechanically.
+
+**Fallback (degraded mode).** Only if neither transport is available: scan for \`.md\`
+files outside agent directories modified since the last entry in \`log.md\`, and say
+scope detection ran in degraded mode.
 
 ### Full Mode
 
@@ -107,7 +129,7 @@ After Step 3–4, reconcile agent pages touched this cycle with \`SCHEMA.md\`:
 
 ### Step 6: Update Navigation
 - \`INDEX.base\` stays current in Obsidian via its Base query — suggest **\`/wiki\`** if views, filters, or columns need tuning after large cooks
-- Append entry to \`log.md\`
+- Append entry to \`log.md\` (human-readable history only — incremental scope comes from the staleness report, never from this file)
 
 ### Step 7: Report
 Present structured summary (see Output Report Format below). Mention \`SCHEMA.md\` when you added tags or domains, or say it was unchanged.

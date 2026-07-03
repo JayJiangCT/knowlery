@@ -13,6 +13,7 @@ function makePage(overrides: Partial<ScannedPage> & { path: string }): ScannedPa
     tags: [],
     aliases: [],
     sources: [],
+    mtimeMs: 0,
     tier: 'user',
     titleAlias: fieldText(''),
     tagBasename: fieldText(''),
@@ -152,7 +153,7 @@ describe('scanVault', () => {
 
 describe('engine purity (spec f2, §7 criterion 1)', () => {
   it('query modules never import the obsidian module', () => {
-    for (const file of ['engine.ts', 'scan.ts', 'tokenize.ts']) {
+    for (const file of ['engine.ts', 'scan.ts', 'tokenize.ts', 'format.ts', 'staleness.ts']) {
       const source = readFileSync(join(__dirname, '..', '..', 'src', 'core', 'query', file), 'utf8');
       expect(source).not.toMatch(/from ['"]obsidian['"]/);
     }

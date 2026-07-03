@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { App } from 'obsidian';
 import {
@@ -42,10 +42,11 @@ function stubApp(
   files: Record<string, string>,
   hidden: Record<string, string> = {},
 ): App {
+  const asFile = (path: string) => ({ path, stat: { mtime: 1000 } });
   return {
     vault: {
-      getMarkdownFiles: () => Object.keys(files).map((path) => ({ path })),
-      getFileByPath: (path: string) => (path in files ? { path } : null),
+      getMarkdownFiles: () => Object.keys(files).map(asFile),
+      getFileByPath: (path: string) => (path in files ? asFile(path) : null),
       cachedRead: async (file: { path: string }) => files[file.path],
       adapter: {
         exists: async (path: string) => path in hidden,
@@ -64,7 +65,11 @@ describe('transport parity (spec f5, §5.1/§5.2)', () => {
     const snapshot = scanVault(FIXTURE_VAULT);
     const path = 'concepts/response-time-metrics.md';
     const fsPage = snapshot.pages.find((page) => page.path === path);
-    const livePage = buildPageFromContent(path, readFileSync(join(FIXTURE_VAULT, path), 'utf8'));
+    const livePage = buildPageFromContent(
+      path,
+      readFileSync(join(FIXTURE_VAULT, path), 'utf8'),
+      statSync(join(FIXTURE_VAULT, path)).mtimeMs,
+    );
     expect(livePage).toEqual(fsPage);
   });
 

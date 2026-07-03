@@ -1,6 +1,6 @@
 # F3 — Mechanical Staleness Dirty-Flags
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.6.0
 - **Branch:** `cursor/f3-staleness-dirty-flags-92eb` (stacked on F5)
 - **Depends on:** F2 (scanner/snapshot data structures), F5 (dual-transport pattern)

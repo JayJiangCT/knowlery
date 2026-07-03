@@ -432,7 +432,7 @@ export interface CounterSummary {
   };
 }
 
-export type DashboardScreen = 'home' | 'all-moves' | 'all-activity' | 'move-detail';
+export type DashboardScreen = 'home' | 'all-moves' | 'all-activity' | 'move-detail' | 'knowledge-health';
 
 export interface DashboardMove {
   id: string;

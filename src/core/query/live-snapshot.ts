@@ -101,7 +101,7 @@ export class LiveQuerySnapshot {
     }
     try {
       const content = await this.app.vault.cachedRead(file);
-      const page = buildPageFromContent(path, content);
+      const page = buildPageFromContent(path, content, file.stat.mtime);
       if (page) this.pages.set(path, page);
     } catch {
       // Unreadable file — keep the previous snapshot entry rather than dropping it.

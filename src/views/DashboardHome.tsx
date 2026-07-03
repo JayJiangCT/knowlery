@@ -13,6 +13,7 @@ import type { DailyReviewParseResult, DailyReviewRequest } from '../core/agent-r
 import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest } from '../core/agent-review';
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
 import { RECIPE_BOOK } from '../core/moves';
+import { buildRecookPrompt, computeStaleness, type StalenessReport } from '../core/query/staleness';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
 import { InstallBundleModal } from '../modals/install-bundle';
@@ -61,6 +62,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     seeds: number;
   } | null>(null);
   const [installedBundles, setInstalledBundles] = useState<InstalledBundlesFile | null>(null);
+  const [staleness, setStaleness] = useState<StalenessReport | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
@@ -76,6 +78,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     });
     setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
     setInstalledBundles(await readInstalledBundles(plugin.app));
+    const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
+    setStaleness(snapshot ? computeStaleness(snapshot) : null);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -265,6 +269,11 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
           <p className="knowlery-home__note-empty">Open a Markdown note and Knowlery will suggest one small maintenance move for it.</p>
         )}
       </section>
+
+      <KnowledgeHealthSection
+        report={staleness}
+        onViewAll={() => props.navigate('knowledge-health')}
+      />
 
       <RecentActivitySection
         records={records}
@@ -540,6 +549,66 @@ function SuggestedMovesSection(props: {
 }
 
 const ACTIVITY_CAP = 3;
+
+const STALE_CAP = 3;
+
+function KnowledgeHealthSection(props: {
+  report: StalenessReport | null;
+  onViewAll: () => void;
+}) {
+  const { report } = props;
+  if (!report) return null; // live snapshot still warming up — the section appears on the next refresh
+
+  const stale = report.stalePages;
+  const uncooked = report.uncookedNotes;
+  const shown = stale.slice(0, STALE_CAP);
+  const summary = [
+    stale.length > 0 ? `${stale.length} ${stale.length === 1 ? 'page has' : 'pages have'} changed sources` : null,
+    uncooked.length > 0 ? `${uncooked.length} ${uncooked.length === 1 ? 'note' : 'notes'} never compiled` : null,
+  ].filter(Boolean).join(' · ');
+
+  return (
+    <section className="knowlery-home__activity" aria-label="Knowledge health">
+      <div className="knowlery-section-label">Knowledge health</div>
+      {stale.length === 0 && uncooked.length === 0 ? (
+        <p className="knowlery-home__note-empty">Compiled pages are up to date with their sources.</p>
+      ) : (
+        <>
+          <div className="knowlery-home__act">
+            <span className="knowlery-home__act-summary">{summary}</span>
+          </div>
+          {shown.map((finding) => (
+            <div key={finding.path} className="knowlery-home__act">
+              <span className="knowlery-home__act-summary">{finding.path}</span>
+              <span className="knowlery-home__act-meta">
+                {finding.changedSources.length} {finding.changedSources.length === 1 ? 'source' : 'sources'} changed
+              </span>
+            </div>
+          ))}
+          <div className="knowlery-home__note-actions">
+            {stale.length > 0 && (
+              <button
+                type="button"
+                className="knowlery-btn knowlery-btn--outline"
+                onClick={() => { void copyPrompt(buildRecookPrompt(report)); }}
+              >
+                <IconClipboard size={14} />
+                <span>Copy re-cook prompt</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="knowlery-home__viewall"
+              onClick={props.onViewAll}
+            >
+              View all →
+            </button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
 
 function RecentActivitySection(props: {
   records: ActivityRecord[];
