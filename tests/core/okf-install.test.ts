@@ -114,4 +114,25 @@ describe('installBundle', () => {
     expect(registry.bundles['jay.drone-delivery'].conformance).toBe('skipped');
     expect(registry.bundles['jay.drone-delivery'].conformanceErrorCount).toBeGreaterThan(0);
   });
+
+  it('does not delete the existing bundle if a later entry has an unsafe path', async () => {
+    const app = createOkfMockApp({});
+    await installBundle(app as never, goodEntries(), { source: '/tmp/bundle.zip' });
+    const beforeUpdate = { ...app.writes };
+
+    const updateEntries = goodEntries(
+      [{ path: '../../SCHEMA.md', content: '---\ntype: Concept\n---\n\nEvil.' }],
+    ).map((entry) => (entry.path === 'knowlery-bundle.json'
+      ? { path: entry.path, content: JSON.stringify(manifest({ version: '0.2.0' })) }
+      : entry));
+
+    await expect(installBundle(app as never, updateEntries, { source: '/tmp/bundle.zip', force: true })).rejects.toThrow(
+      /unsafe/i,
+    );
+
+    expect(app.writes['Library/jay.drone-delivery/index.md']).toBe(beforeUpdate['Library/jay.drone-delivery/index.md']);
+    expect(app.writes['Library/jay.drone-delivery/concepts/foo.md']).toBe(
+      beforeUpdate['Library/jay.drone-delivery/concepts/foo.md'],
+    );
+  });
 });

@@ -60,12 +60,16 @@ export async function installBundle(
   }
 
   const libraryDir = `Library/${manifest.id}`;
+  const safeWrites = entries.map((entry) => ({
+    fullPath: assertSafeInstallPath(libraryDir, entry.path),
+    content: entry.content,
+  }));
+
   if (existing) await removeLibraryDir(app, libraryDir);
 
-  for (const entry of entries) {
-    const fullPath = assertSafeInstallPath(libraryDir, entry.path);
+  for (const { fullPath, content } of safeWrites) {
     await ensureVaultDir(app, dirname(fullPath));
-    await app.vault.adapter.write(normalizePath(fullPath), entry.content);
+    await app.vault.adapter.write(normalizePath(fullPath), content);
   }
 
   const installedContentHash = sha256(
