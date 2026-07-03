@@ -16,6 +16,7 @@ Dashboard 是一个行动优先的首页：
 | This note | review 当前 Markdown 笔记 |
 | Recent activity | 查看最近的私有 activity receipts |
 | This week | 生成和 review weekly summary |
+| Bundles | 分享 review 过的 knowledge bundles，并管理已安装的 bundles |
 
 Diagnostics、rules、schema shortcuts、平台切换和 Skills library 位于 **Settings -> Knowlery**。
 
@@ -115,6 +116,14 @@ Dashboard 会优先展示自然语言 moves；Settings tab 中的 Skills library
 Freshness Review 是本地、approval-gated 的流程。Knowlery 可以从 `entities/`、`concepts/`、`comparisons/` 和 `queries/` 收集候选页面，准备 request JSON，并复制 prompt 给你单独运行的 agent。
 
 导入 result JSON 后，Knowlery 会把合法 findings 转成 suggestions。应用 suggestion 只会 patch scalar frontmatter 字段，例如 `retrieval_priority`、`freshness_status`、`freshness_reviewed`、`superseded_by` 和 `freshness_sidecar`。证据和之前的 frontmatter snapshot 会保存在 `.knowlery/freshness/notes/` sidecars 中，因此已应用的 suggestion 可以恢复。
+
+## Knowledge Bundles
+
+Knowledge bundle 是一个便携的、review 过的知识切片，用 OKF 格式打包，来自某个 vault 的 compiled knowledge。
+
+在分享侧，导出范围从一个 seed 主题及其 graph-closure 选出，每一项都要经过 approve/flag review gate 和自动 risk scan，随包的 `SCHEMA.md` 只包含这个 bundle 实际用到的 taxonomy。在接收侧，bundle 安装到 `Library/<bundle-id>/`，登记在 `.knowlery/bundles.json` 中，作为只读参考材料存在——直到你用 Fork to my knowledge 把某个页面复制进自己的知识目录。
+
+已安装的 bundles 会参与检索：bundles 存在期间 `KNOWLEDGE.md` 会带一个指引块，`/ask` skill 会把每个相关 bundle 的 `agent-index.json` 和 vault 自己的 compiled pages 一起纳入检索。
 
 ## Platform Adapters
 

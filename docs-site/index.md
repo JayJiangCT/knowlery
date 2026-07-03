@@ -25,6 +25,8 @@ features:
     details: Prepare local request JSON, import agent-written results, and approve scalar freshness metadata before anything is applied.
   - title: Weekly summary
     details: Generate a local HTML report from recent activity, then send a polish request when a companion agent is available.
+  - title: Knowledge bundles
+    details: Share reviewed knowledge as portable bundles, install bundles from others into Library/, and let /ask retrieve them deliberately.
   - title: Settings maintenance
     details: Run diagnostics, manage rules and schema shortcuts, switch platforms, and inspect the Skills library from Obsidian settings.
 ---

@@ -26,6 +26,7 @@ Knowlery 现在围绕一个行动优先的 dashboard 组织：
 | This note | review 当前 Markdown 笔记并寻找关联上下文 |
 | Recent activity | 查看最近的私有 activity receipts |
 | This week | 生成 weekly summary，或发送 polish request |
+| Bundles | 分享一个 review 过的 knowledge bundle，或安装别人分享的 bundle |
 
 最近活动或 vault 变化后，可以点刷新按钮。较长的 moves 和 activity 列表可以通过 **View all** 打开。
 
@@ -84,6 +85,32 @@ Move catalog 包括：
 | 生成综合想法 | `ideas` |
 | 检查结构问题 | `audit` |
 | 清理组织结构 | `organize` |
+
+## 分享 Knowledge Bundle
+
+当你想把一部分 review 过的知识分享给别人时，使用 **Share knowledge bundle**（command palette 或 dashboard 的 Bundles 区块）。
+
+1. 选择一个 seed 主题。Knowlery 会收集与它相连的知识页面和被引用的原始笔记（graph-closure）。
+2. 逐条 review 范围内的每一项。每个页面和原始笔记都处于 unreviewed / approved / flagged 三种状态之一——没有被 approve 的内容不会被导出。
+3. 查看自动 risk scan。它会在导出前高亮 emails、敏感 URLs、person pages 和会议类笔记。
+4. 确认 bundle 元数据（id、title、version、creator、license）和选项。
+5. 导出。Bundle 会写入 `.knowlery/exports/`，并可以保存为 `.zip` 用于分享。
+
+导出的 bundle 包含 approve 过的页面、用于导航的 `index.md` 和 `agent-index.json`、`_sources/` 下 approve 过的原始笔记、update log，以及给接收者的 README。如果开启了 "Include SCHEMA.md"，随包的 schema 只包含导出页面实际用到的 tags 和 domains——绝不会是整个 vault 的 taxonomy。
+
+每个主题都有自己独立保存的 review scope，处理一个 bundle 不会影响另一个。
+
+## 安装 Knowledge Bundle
+
+使用 **Install knowledge bundle**（command palette 或 dashboard 卡片）安装别人分享给你的 bundle。
+
+1. 选择 bundle 的 `.zip` 或文件夹。
+2. 在写入任何内容之前，先 review manifest 和 conformance 预览。
+3. 安装。Bundle 会落到 `Library/<bundle-id>/`，并登记到 `.knowlery/bundles.json`。
+
+已安装的 bundles 会显示在 dashboard 上，也可以从那里卸载。安装会在 `KNOWLEDGE.md` 中加入检索指引，`/ask` skill 在回答问题时会显式检查已安装的 bundles。更新要求更高的 bundle 版本号；带 conformance 错误的 bundle 需要显式确认才能安装。
+
+想把某个 bundle 页面变成自己的知识时，在 bundle concept 页面的 file menu 中使用 **Fork to my knowledge**——它会把页面复制到你自己的知识目录中。
 
 ## 添加或编辑 Rules
 
