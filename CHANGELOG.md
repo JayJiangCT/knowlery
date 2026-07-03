@@ -51,9 +51,11 @@ spec-first; the accepted specs live in `specs/0.6.0/`.
 
 ### Compatibility notes
 
-- The `knowlery:query` / `knowlery:stale` CLI commands require Obsidian 1.12.2+ with
-  the CLI enabled; on older versions the plugin loads unchanged and the headless script
-  remains available. `minAppVersion` is unchanged.
+- **`minAppVersion` is now 1.12.2** (the version that introduced the CLI handler API
+  the `knowlery:query` / `knowlery:stale` commands are built on). Obsidian older than
+  1.12.2 will not offer this update. Using the CLI commands additionally requires the
+  command line interface to be enabled in Obsidian's settings; the headless
+  `query.mjs` script works regardless.
 - Custom or forked `/ask` and `/cook` skills are not overwritten by the auto-sync, so
   they keep the old waterfall until you update them manually.
 

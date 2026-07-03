@@ -30,7 +30,7 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ## Requirements
 
-- Obsidian desktop.
+- Obsidian desktop, version 1.12.2 or newer.
 - Community plugins enabled.
 - Claude Code or OpenCode, if you want to run installed skills from the dashboard.
 - Node.js and npm, if you want to browse or install skills from the external skills registry.
