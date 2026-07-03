@@ -17,6 +17,9 @@ import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
 import { summarizeBundleScope } from '../core/okf/export-scope';
 import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
+import type { InstalledBundlesFile } from '../types';
+import { readInstalledBundles } from '../core/okf/registry';
+import { uninstallBundle } from '../core/okf/uninstall';
 import { IconBookOpen, IconChevronRight, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
@@ -56,6 +59,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     flagged: number;
     seeds: number;
   } | null>(null);
+  const [installedBundles, setInstalledBundles] = useState<InstalledBundlesFile | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.app, 14);
@@ -70,6 +74,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
     });
     setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
+    setInstalledBundles(await readInstalledBundles(plugin.app));
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -101,6 +106,11 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const openShareModal = (seed?: string) => {
     new ExportBundleModal(plugin.app, plugin, seed).open();
+  };
+
+  const removeBundle = async (bundleId: string) => {
+    await uninstallBundle(plugin.app, bundleId);
+    setInstalledBundles(await readInstalledBundles(plugin.app));
   };
 
   const copyRequest = async (request?: string) => {
@@ -318,6 +328,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         </article>
       </section>
 
+      <InstalledBundlesSection registry={installedBundles} onUninstall={removeBundle} />
+
       <section className="knowlery-home__stats" aria-label="Vault stats">
         {model.stats.map((stat) => (
           <div key={stat.label} className="knowlery-home__stat">
@@ -327,6 +339,40 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         ))}
       </section>
     </div>
+  );
+}
+
+function InstalledBundlesSection(props: {
+  registry: InstalledBundlesFile | null;
+  onUninstall: (bundleId: string) => void;
+}) {
+  const { registry } = props;
+  if (!registry) return null;
+  const entries = Object.entries(registry.bundles);
+  if (entries.length === 0) return null;
+
+  return (
+    <section className="knowlery-home__installed">
+      <div className="knowlery-section-label">Installed bundles</div>
+      {entries.map(([id, entry]) => (
+        <div key={id} className="knowlery-home__installed-row">
+          <div className="knowlery-home__installed-body">
+            <span className="knowlery-home__installed-title">{entry.title}</span>
+            <span className="knowlery-home__installed-meta">v{entry.version}</span>
+          </div>
+          <span className={`knowlery-badge knowlery-badge--${entry.conformance === 'passed' ? 'success' : 'warning'}`}>
+            {entry.conformance}
+          </span>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--outline"
+            onClick={() => props.onUninstall(id)}
+          >
+            <span>Uninstall</span>
+          </button>
+        </div>
+      ))}
+    </section>
   );
 }
 
