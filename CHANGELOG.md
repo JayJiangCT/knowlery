@@ -22,6 +22,7 @@
 
 - Installing a bundle adds a retrieval pointer block to `KNOWLEDGE.md` (removed again when the last bundle is uninstalled), and that block now refreshes its wording on plugin upgrade.
 - **Fork to my knowledge** is only offered for actual concept pages.
+- Bundle discovery uses the vault's actual config directory (via `app.vault.configDir`) instead of hardcoding `.obsidian`, so vaults with a custom config directory are handled correctly.
 
 ## [0.4.0] — 2026-06-02
 
