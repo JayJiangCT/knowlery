@@ -15,12 +15,13 @@ import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core
 import { RECIPE_BOOK } from '../core/moves';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
+import { InstallBundleModal } from '../modals/install-bundle';
 import { summarizeBundleScope } from '../core/okf/export-scope';
 import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
 import type { InstalledBundlesFile } from '../types';
 import { readInstalledBundles } from '../core/okf/registry';
 import { uninstallBundle } from '../core/okf/uninstall';
-import { IconBookOpen, IconChevronRight, IconClipboard, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
+import { IconBookOpen, IconChevronRight, IconClipboard, IconDownload, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
@@ -106,6 +107,10 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const openShareModal = (seed?: string) => {
     new ExportBundleModal(plugin.app, plugin, seed).open();
+  };
+
+  const openInstallModal = () => {
+    new InstallBundleModal(plugin.app, plugin).open();
   };
 
   const removeBundle = async (bundleId: string) => {
@@ -324,6 +329,20 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
           >
             <IconExternalLink size={14} />
             <span>{bundleSummary && bundleSummary.seeds > 0 ? 'Continue review' : 'Share knowledge…'}</span>
+          </button>
+        </article>
+        <article className="knowlery-home__bundle-card">
+          <div className="knowlery-home__bundle-copy">
+            <h3>Install a knowledge bundle</h3>
+            <span>Add someone else's exported knowledge bundle to this vault.</span>
+          </div>
+          <button
+            type="button"
+            className="knowlery-btn knowlery-btn--outline"
+            onClick={openInstallModal}
+          >
+            <IconDownload size={14} />
+            <span>Install bundle…</span>
           </button>
         </article>
       </section>
