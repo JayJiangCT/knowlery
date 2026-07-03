@@ -1,5 +1,5 @@
 import { Events, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
-import { DEFAULT_SETTINGS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
+import { DEFAULT_SETTINGS, KNOWLEDGE_DIRS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
@@ -121,6 +121,8 @@ export default class KnowleryPlugin extends Plugin {
       if (!(file instanceof TFile) || file.extension !== 'md') return;
       const parsed = parseLibraryPath(file.path);
       if (!parsed) return;
+      const topSegment = parsed.relativePath.split('/')[0];
+      if (!(KNOWLEDGE_DIRS as readonly string[]).includes(topSegment)) return;
       menu.addItem((item) => {
         item
           .setTitle('Fork to my knowledge...')

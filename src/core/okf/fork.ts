@@ -2,6 +2,7 @@ import type { App } from 'obsidian';
 import { normalizePath } from 'obsidian';
 import matter from 'gray-matter';
 import { safeMatter, toPosixPath } from './shared';
+import { KNOWLEDGE_DIRS } from '../../types';
 
 export interface ForkOptions {
   libraryPath: string;
@@ -23,6 +24,11 @@ export function parseLibraryPath(path: string): { bundleId: string; relativePath
 }
 
 export async function forkPageFromBundle(app: App, options: ForkOptions, now: Date = new Date()): Promise<void> {
+  const topSegment = options.sourcePath.split('/')[0];
+  if (!(KNOWLEDGE_DIRS as readonly string[]).includes(topSegment)) {
+    throw new Error(`Cannot fork ${options.sourcePath}: only entities/concepts/comparisons/queries pages can be forked.`);
+  }
+
   const sourcePath = normalizePath(`${options.libraryPath}${options.sourcePath}`);
   const sourceFile = app.vault.getFileByPath(sourcePath);
   if (!sourceFile) throw new Error(`Bundle page not found: ${options.sourcePath}`);

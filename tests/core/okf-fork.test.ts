@@ -54,6 +54,20 @@ describe('forkPageFromBundle', () => {
       }),
     ).rejects.toThrow(/not found/i);
   });
+
+  it('refuses to fork a reserved/structural bundle file', async () => {
+    const app = createOkfMockApp({
+      'Library/jay.drone-delivery/SCHEMA.md': '---\ntype: Reference\n---\n\nSchema.',
+    });
+    await expect(
+      forkPageFromBundle(app as never, {
+        libraryPath: 'Library/jay.drone-delivery/',
+        sourcePath: 'SCHEMA.md',
+        targetPath: 'SCHEMA.md',
+        bundleId: 'jay.drone-delivery',
+      }),
+    ).rejects.toThrow(/cannot fork/i);
+  });
 });
 
 describe('parseLibraryPath', () => {
