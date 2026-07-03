@@ -12,7 +12,7 @@ The dashboard is one action-first home:
 | --- | --- |
 | Today's move | Start from the current activity context and choose a next move |
 | Suggested moves | Pick a reusable review prompt without browsing raw skill files |
-| Knowledge health | See pending Freshness Review suggestions |
+| Knowledge health | See compiled pages whose sources changed and notes never compiled, with a re-cook prompt |
 | This note | Review the active Markdown note in context |
 | Recent activity | Scan recent private activity receipts |
 | This week | Generate and review a weekly summary |
@@ -73,7 +73,25 @@ Health diagnostics still use a smaller minimum check for knowledge pages:
 
 `INDEX.base` is an Obsidian Bases index over the compiled knowledge layer.
 
-It groups and sorts knowledge pages, exposes useful properties, and gives agents a stable map before they start reading individual files.
+It groups and sorts knowledge pages and exposes useful properties for humans browsing in Obsidian. Agents can still query it on demand with `obsidian base:query`, but candidate location for questions goes through the deterministic retrieval engine below.
+
+## Deterministic Retrieval
+
+Since 0.6.0, finding candidate pages for a question is one deterministic command with two transports running the same engine:
+
+| Transport | When | Command |
+| --- | --- | --- |
+| In-app CLI | Obsidian running (1.12.2+, CLI enabled) | `obsidian knowlery:query question="..." [k=<n>] [json]` |
+| Headless script | Obsidian closed, plain Node | `node .knowlery/bin/query.mjs "..." [--k <n>] [--json]` |
+
+The engine scans compiled pages, user notes, and installed bundles; scores with field weights (title/aliases over tags, description, then body); matches light word variants and Chinese phrases; credits a compiled page when a raw note it cites matches the question (so cross-language questions reach the compiled answer); and returns an explicit `No confident matches` verdict instead of noise.
+
+The same machinery reports mechanical staleness:
+
+- `obsidian knowlery:stale` or `node .knowlery/bin/query.mjs --stale` lists compiled pages whose cited sources changed after the page was last written, user notes cited by no compiled page, and dangling `sources` references.
+- The dashboard's Knowledge health section shows the same report, and `/cook`'s incremental mode uses it as its scope (`log.md` remains as append-only history).
+
+Retrieval quality is measured: the repository ships an evaluation harness (`evals/`) with a golden question set, a frozen baseline of the old retrieval flow, and CI checks that hold every change to at least the current scores.
 
 ## Skills and Suggested Moves
 

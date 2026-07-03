@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.6.0] — 2026-07-03
+
+Theme: deterministic retrieval, measurable quality — the core retrieval loop moves from
+"described in prompts" to "guaranteed by code and proven by evals". Developed
+spec-first; the accepted specs live in `specs/0.6.0/`.
+
+### New features
+
+- **Deterministic retrieval engine.** Candidate location for `/ask` is now one
+  deterministic command instead of a six-step prompt-driven waterfall. The engine
+  live-scans the vault (compiled pages, user notes, and installed bundles), scores with
+  field weights (title/aliases > tags/basename > description > body), matches light
+  morphological variants and CJK phrases, credits compiled pages when the raw notes
+  they cite match (**source-graph boost**), tolerates close abbreviations against
+  titles, and returns an explicit `No confident matches` verdict instead of noise.
+- **Two transports, one engine.** `obsidian knowlery:query question="..." [k=<n>] [json]`
+  runs in-app over a live in-memory snapshot (registered through Obsidian 1.12's CLI
+  handler API, feature-detected). `node .knowlery/bin/query.mjs "..."` is the headless
+  path that works with Obsidian closed — the script ships inside the plugin and is
+  written to the vault on setup and on version upgrades. Both print identical output.
+- **Mechanical staleness dirty-flags.** `obsidian knowlery:stale` /
+  `query.mjs --stale` deterministically report compiled pages whose cited sources
+  changed after the page was last written, user notes cited by no compiled page
+  (candidate new material), and dangling `sources` references — no model, no persisted
+  state. The dashboard gains a **Knowledge health** section with a drill-in and a
+  "Copy re-cook prompt" action. `/cook`'s incremental scope now comes from this report;
+  `log.md` is append-only history.
+- **Retrieval evaluation harness.** `evals/` holds a 30-case golden set over a fixture
+  vault, a frozen baseline of the old `/ask` waterfall, and `npm run eval` reporting
+  recall@5/10 and MRR per category. The new engine scores recall@10 0.926 / MRR 0.846
+  against the baseline's 0.778 / 0.428, with no category regression — and CI enforces
+  both the frozen baseline and the engine thresholds on every pull request.
+
+### Improvements
+
+- **Slimmer fixed context.** `.claude/CLAUDE.md` and `opencode.json` now inject only
+  `KNOWLEDGE.md` plus rules. `SCHEMA.md` (whose taxonomy tables grow with every cook)
+  becomes an on-demand read with an explicit read-before-writing instruction, and
+  `INDEX.base` stays available as an on-demand `base:query` tool. Existing vaults are
+  migrated non-destructively: exactly the two stale import lines/entries are removed,
+  once per version — if you re-add them afterwards, they stay.
+- `/ask` Step 2 collapsed to one retrieval call with a degraded-mode fallback; `/cook`
+  reads its incremental scope from the staleness report.
+- `log.md`, `KNOWLEDGE.md`, and `SCHEMA.md` are treated as system files: never
+  retrieval candidates, never "uncooked" material.
+- `.claude/CLAUDE.md` is no longer rewritten on every plugin load when its content is
+  already in sync.
+- Vault health checks the retrieval script's presence.
+
+### Compatibility notes
+
+- The `knowlery:query` / `knowlery:stale` CLI commands require Obsidian 1.12.2+ with
+  the CLI enabled; on older versions the plugin loads unchanged and the headless script
+  remains available. `minAppVersion` is unchanged.
+- Custom or forked `/ask` and `/cook` skills are not overwritten by the auto-sync, so
+  they keep the old waterfall until you update them manually.
+
 ## [0.5.0] — 2026-07-03
 
 ### New features

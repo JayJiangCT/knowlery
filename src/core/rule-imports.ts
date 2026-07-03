@@ -71,10 +71,16 @@ export function mergeClaudeRuleImports(content: string, ruleImportPaths: string[
 export async function syncClaudeRuleImports(app: App): Promise<void> {
   const claudeMdPath = '.claude/CLAUDE.md';
   const ruleImports = await collectRuleImportPaths(app, '.claude/rules');
-  const existing = await app.vault.adapter.exists(claudeMdPath)
+  const fileExists = await app.vault.adapter.exists(claudeMdPath);
+  const existing = fileExists
     ? await app.vault.adapter.read(claudeMdPath)
     : generateClaudeMd(ruleImports);
-  await writeFile(app, claudeMdPath, mergeClaudeRuleImports(existing, ruleImports));
+  const merged = mergeClaudeRuleImports(existing, ruleImports);
+  // Write only on change: an unconditional write churned the file's mtime on every
+  // plugin load (surfaced during F4 acceptance testing).
+  if (!fileExists || merged !== existing) {
+    await writeFile(app, claudeMdPath, merged);
+  }
 }
 
 function escapeRegExp(value: string): string {

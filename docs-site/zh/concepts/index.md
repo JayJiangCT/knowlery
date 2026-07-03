@@ -12,7 +12,7 @@ Dashboard 是一个行动优先的首页：
 | --- | --- |
 | Today's move | 从当前活动上下文开始，选择下一步 |
 | Suggested moves | 不必浏览原始 skill 文件，也能选择可复用 review prompt |
-| Knowledge health | 查看等待处理的 Freshness Review suggestions |
+| Knowledge health | 查看来源已变更的编译页面和从未编译的笔记，可一键复制 re-cook prompt |
 | This note | review 当前 Markdown 笔记 |
 | Recent activity | 查看最近的私有 activity receipts |
 | This week | 生成和 review weekly summary |
@@ -74,7 +74,25 @@ Health diagnostics 仍然只检查知识页面的最小必需字段：
 
 `INDEX.base` 是覆盖 compiled knowledge layer 的 Obsidian Bases 索引。
 
-它会对知识页面进行分组和排序，展示有用属性，并在 agent 读取单个文件前提供一个稳定地图。
+它面向在 Obsidian 中浏览的人，对知识页面进行分组、排序并展示有用属性。Agent 仍可按需通过 `obsidian base:query` 查询它，但为问题定位候选页面的工作由下面的确定性检索引擎完成。
+
+## 确定性检索
+
+从 0.6.0 起，为问题定位候选页面是一条确定性命令，两个通道运行同一个引擎：
+
+| 通道 | 场景 | 命令 |
+| --- | --- | --- |
+| 应用内 CLI | Obsidian 运行中（1.12.2+，已启用 CLI） | `obsidian knowlery:query question="..." [k=<n>] [json]` |
+| 无头脚本 | Obsidian 关闭，仅需 Node | `node .knowlery/bin/query.mjs "..." [--k <n>] [--json]` |
+
+引擎会扫描编译页面、用户笔记和已安装的 bundles；按字段权重评分（标题/别名 > 标签 > 描述 > 正文）；匹配轻量词形变体和中文短语；当页面引用的原始笔记命中问题时，把分数传导给编译页面（跨语言提问也能找到编译后的答案）；没有可信匹配时返回明确的 `No confident matches`，而不是一堆噪音。
+
+同一套机制还负责机械性的过期检测：
+
+- `obsidian knowlery:stale` 或 `node .knowlery/bin/query.mjs --stale` 会列出引用来源在页面写入后发生变更的编译页面、未被任何编译页面引用的用户笔记，以及指向已不存在笔记的 `sources` 引用。
+- Dashboard 的 Knowledge health 区块展示同一份报告，`/cook` 的增量模式以它为范围（`log.md` 仅保留为追加式历史）。
+
+检索质量是可度量的：仓库内置评测基建（`evals/`），包含 golden 问题集、旧检索流程的冻结基线，CI 会在每个 pull request 上校验分数不回退。
 
 ## Skills 和 Suggested Moves
 
