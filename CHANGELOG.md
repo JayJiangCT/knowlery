@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.1] — 2026-07-04
+
+Community plugin review compliance release. Functionally identical to 0.6.0.
+
+### Fixes
+
+- Removed the dynamic-code patterns the plugin scanner flagged in bundled dependency
+  internals: legacy-browser polyfills in jszip's dependency chain (`<script>`-element
+  fallbacks), js-yaml's `!!js/function` type, and gray-matter's eval-based JS
+  frontmatter engine are replaced at build time with inert shims — none of that code
+  was ever executed by Knowlery.
+- Removed every `eslint-disable` directive from the source: the live snapshot now uses
+  window timers through an injectable indirection, and the generated retrieval-script
+  module lints clean without a blanket disable.
+- **`minAppVersion` raised to 1.12.2** (the Obsidian version that introduced the CLI
+  handler API behind `knowlery:query` / `knowlery:stale`), replacing rule suppressions
+  with an accurate requirement.
+- Releases now ship with build provenance attestations and a changelog-derived
+  description.
+
 ## [0.6.0] — 2026-07-03
 
 Theme: deterministic retrieval, measurable quality — the core retrieval loop moves from

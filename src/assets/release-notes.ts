@@ -10,6 +10,30 @@ export interface ReleaseNote {
 }
 
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  '0.6.1': {
+    version: '0.6.1',
+    date: 'Jul 4',
+    title: 'Retrieval you can measure',
+    summary: 'Finding knowledge is now one deterministic command with two transports, staleness is detected mechanically, and every retrieval improvement is proven by a scored evaluation.',
+    highlights: [
+      {
+        title: 'One retrieval command',
+        description: 'Run `obsidian knowlery:query` with Obsidian open, or `node .knowlery/bin/query.mjs` with it closed — same engine, same ranked results, with an honest "no confident matches" answer when your vault does not cover a question.',
+      },
+      {
+        title: 'Knowledge health',
+        description: 'The dashboard now shows which compiled pages have changed sources and which notes were never compiled, with a one-click re-cook prompt. /cook starts from this report instead of a log timestamp.',
+      },
+      {
+        title: 'Smarter cross-language answers',
+        description: 'Evidence found in a raw note now credits the compiled page that cites it — so a question asked in Chinese finds the English page compiled from your Chinese notes, and vice versa.',
+      },
+      {
+        title: 'Lighter every conversation',
+        description: 'Agent sessions now load only the operating card and your rules. The growing taxonomy file and the Base index moved to on-demand reads, migrated in place without touching your own edits.',
+      },
+    ],
+  },
   '0.6.0': {
     version: '0.6.0',
     date: 'Jul 3',
