@@ -11,7 +11,14 @@ import { join } from 'node:path';
 
 const INVERTED_MODULES = [
   'core/vault-fs.ts',
+  'core/vault-sync.ts',
+  'core/vault-config-health.ts',
   'core/setup-executor.ts',
+  'cli/main.ts',
+  'cli/commands/shared.ts',
+  'cli/commands/init.ts',
+  'cli/commands/sync.ts',
+  'cli/commands/health.ts',
   'core/skill-manager.ts',
   'core/rule-manager.ts',
   'core/rule-imports.ts',

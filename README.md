@@ -46,6 +46,23 @@ Knowlery focuses on **vault layout, skills, rules, and health** for agent workfl
 - **[Claudian](https://github.com/YishenTu/claudian)** — embeds Claude Code, Codex, and related flows in the vault; file read/write and bash from a chat UI.
 - **[obsidian-agent-client](https://github.com/RAIT-09/obsidian-agent-client)** — brings agents in via Agent Client Protocol (ACP) (e.g. Claude Code, Codex, Gemini CLI) with multi-session and MCP support.
 
+## Knowlery CLI
+
+The same knowledge-base lifecycle is available as a standalone CLI — one core, two
+shells. A folder initialized by the CLI opens in Obsidian with zero migration, and the
+plugin adds the review UI on top.
+
+```bash
+npm i -g knowlery
+
+knowlery init     # scaffold a workspace (interactive, or --platform/--name flags)
+knowlery sync     # bring skills, rules, and the retrieval script up to date
+knowlery health   # config integrity + knowledge-page counts; exit code for CI
+```
+
+Retrieval works headlessly too: `node .knowlery/bin/query.mjs "<question>"` (written by
+`init`/`sync`) searches the workspace with Obsidian closed.
+
 ## Install from Community plugins
 
 Knowlery is available from Obsidian's community plugin directory.

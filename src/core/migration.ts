@@ -20,7 +20,11 @@ export async function syncBuiltinSkills(fs: VaultFs): Promise<void> {
     }
 
     await fs.mkdir(`${SKILLS_DIR}/${skill.name}`);
-    await fs.write(`${SKILLS_DIR}/${skill.name}/SKILL.md`, skill.content);
+    const skillPath = `${SKILLS_DIR}/${skill.name}/SKILL.md`;
+    // Write-on-change: repeated syncs must not churn mtimes (spec 0.7 f2, §6.2).
+    if (!(await fs.exists(skillPath)) || (await fs.read(skillPath)) !== skill.content) {
+      await fs.write(skillPath, skill.content);
+    }
 
     if (!entry || (entry.source === 'builtin' && !entry.disabled)) {
       await copySkillToClaudeDir(fs, skill.name);

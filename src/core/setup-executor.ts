@@ -1,17 +1,10 @@
-import type { App } from 'obsidian';
-import type {
-  InstallExecutionState,
-  Manifest,
-  OptionalInstallSelection,
-  Platform,
-} from '../types';
+import type { Manifest, Platform } from '../types';
 import { KNOWLEDGE_DIRS } from '../types';
 import { BUNDLED_SKILLS } from '../assets/skills';
 import { generateIndexBase, generateKnowledgeMd, generateSchemaMd } from '../assets/templates';
 import { generatePlatformConfig } from './platform-adapter';
 import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from './skill-manager';
 import { installDefaultRules } from './rule-manager';
-import { runOptionalInstalls } from './environment-install';
 import { syncQueryScript } from './query-script';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
@@ -32,18 +25,6 @@ export interface SetupProgress {
   done: boolean;
 }
 
-export interface ExecuteSetupOptions {
-  optionalInstalls?: OptionalInstallSelection;
-  nodePath?: string;
-  onOptionalInstallUpdate?: (state: InstallExecutionState) => void;
-  /** Required only when optionalInstalls is set — tool installs are an Obsidian-shell feature. */
-  app?: App;
-}
-
-export interface ExecuteSetupResult {
-  optionalInstallRuns: InstallExecutionState[];
-}
-
 export function getSetupSteps(): SetupProgress[] {
   return [
     { step: 'directories', label: 'Creating knowledge directories', done: false },
@@ -54,13 +35,17 @@ export function getSetupSteps(): SetupProgress[] {
   ];
 }
 
+/**
+ * Vault initialization, shared by both shells (plugin wizard and `knowlery init`).
+ * Optional tool installs are an Obsidian-shell feature and live in the setup wizard,
+ * keeping this module (and the CLI bundle) free of Obsidian imports.
+ */
 export async function executeSetup(
   fs: VaultFs,
   platform: Platform,
   kbName: string,
   onProgress: (step: SetupStep) => void,
-  options: ExecuteSetupOptions = {},
-): Promise<ExecuteSetupResult> {
+): Promise<void> {
   onProgress('directories');
   for (const dir of KNOWLEDGE_DIRS) {
     await fs.mkdir(dir);
@@ -83,19 +68,6 @@ export async function executeSetup(
   await saveSkillsLock(fs, lock);
   await syncQueryScript(fs);
   await writeManifest(fs, platform, kbName);
-
-  let optionalInstallRuns: InstallExecutionState[] = [];
-  if (hasOptionalInstalls(options.optionalInstalls) && options.app) {
-    optionalInstallRuns = await runOptionalInstalls({
-      app: options.app,
-      platform,
-      selection: options.optionalInstalls,
-      nodePath: options.nodePath,
-      onUpdate: options.onOptionalInstallUpdate,
-    });
-  }
-
-  return { optionalInstallRuns };
 }
 
 async function writeManifest(fs: VaultFs, platform: Platform, kbName: string): Promise<void> {
@@ -140,6 +112,3 @@ export async function writeManifestUpdate(
   await fs.write(normalizeVaultPath(MANIFEST_PATH), JSON.stringify(manifest, null, 2));
 }
 
-function hasOptionalInstalls(selection?: OptionalInstallSelection): selection is OptionalInstallSelection {
-  return Boolean(selection?.platformCli || selection?.claudian || selection?.skillsTooling);
-}
