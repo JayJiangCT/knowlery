@@ -1,5 +1,60 @@
 # Changelog
 
+## [0.7.0] — 2026-07-04
+
+Theme: one core, two shells — Knowlery's knowledge-base lifecycle is now available as
+a standalone CLI, while the Obsidian plugin remains the premium shell over the same
+core and the same workspace format. Developed spec-first; the accepted specs live in
+`specs/0.7.0/`.
+
+### New features
+
+- **The `knowlery` CLI** (`npm i -g knowlery`). The full workspace lifecycle without
+  Obsidian:
+  - `knowlery init` scaffolds a workspace — byte-for-byte the same file tree the
+    plugin's setup wizard produces, verified by test. A folder initialized by the CLI
+    opens in Obsidian with zero migration, and vice versa.
+  - `knowlery sync` applies the same skill/rule/migration updates the plugin runs on
+    upgrade (one shared implementation, so the shells cannot drift), reporting exactly
+    which files changed; running it twice is a true no-op.
+  - `knowlery health` checks config integrity plus knowledge-page counts, with CI-ready
+    exit codes and `--json`.
+  - `knowlery query` / `knowlery stale` expose the deterministic retrieval and
+    staleness engines — output byte-identical to the in-app commands and the
+    vault-embedded script.
+  - `knowlery bundle install|list|uninstall` brings the receiving side of knowledge
+    bundles to the CLI, with every 0.5.0 safety property intact (path-safety, version
+    gate, conformance gate).
+- **Environment-adaptive skills.** `/ask` and `/cook` teach a three-transport retrieval
+  ladder (in-app command → global CLI → embedded script); `/cook`, `/organize`, and
+  `vault-conventions` keep preferring Obsidian CLI but gain a headless write path with
+  the same conventions; `/audit` now uses `obsidian orphans`/`unresolved`/`deadends`
+  and the staleness report's dangling-sources category instead of manual traversal.
+- **Retrieval-aware compiling.** `/cook` records nicknames, abbreviations, and
+  cross-language titles into `aliases` frontmatter — names that are written down can be
+  found, closing the alias and cross-language retrieval gaps the 0.6.0 evaluation
+  quantified.
+- **Sync downgrade guard.** The workspace records which Knowlery version last synced
+  it; an older plugin or CLI refuses to sync rather than silently downgrade skill
+  content a newer one already upgraded.
+
+### Improvements
+
+- Lifecycle logic (init, skill/rule sync, migrations, health, bundle install) is
+  inverted onto a platform-neutral file interface with an Obsidian implementation and
+  a node implementation — a pure refactor with zero behavior change, guarded by a
+  purity test over the whole inverted set.
+- Optional tool installs (Claudian, agent CLIs) moved from the shared setup logic into
+  the Obsidian setup wizard where they belong.
+
+### Compatibility notes
+
+- The npm package ships only the CLI; the Obsidian plugin continues to install from
+  the community directory or GitHub releases. Plugin and CLI share one version number
+  and always release together.
+- The `aliases` compiling convention and the updated skills reach existing vaults
+  through the normal builtin-skill auto-sync; custom or forked skills are untouched.
+
 ## [0.6.1] — 2026-07-04
 
 Community plugin review compliance release. Functionally identical to 0.6.0.

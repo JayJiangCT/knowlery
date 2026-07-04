@@ -79,11 +79,12 @@ Execution order: F1 → F2 → F3 → F4 → F5.
   0.6-era warning cleanup (unsafe assignments, `require()` imports, promise-in-void
   attributes, `display` → `getSettingDefinitions`).
 
-## Open item for the maintainer
+## BYOAO consolidation (decided 2026-07-04)
 
-- **BYOAO consolidation:** 0.7.0 effectively supersedes BYOAO's "global CLI install"
-  role. Recommend archiving BYOAO and pointing its README at Knowlery once F2 ships,
-  to avoid split effort. Decision pending.
+The maintainer approved archiving BYOAO and pointing it at Knowlery: 0.7.0's CLI
+supersedes its "global CLI install" role. Knowlery-side wording updated in the README;
+the BYOAO-side steps (deprecation banner, repo archive, npm deprecate) are manual
+maintainer actions since the agent has no write access to that repository.
 
 ## Process (SDD)
 
