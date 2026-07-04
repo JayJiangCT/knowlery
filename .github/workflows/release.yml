@@ -79,3 +79,18 @@ jobs:
             main.js
             manifest.json
             styles.css
+
+      - name: Publish CLI to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::warning::NPM_TOKEN secret is not set — skipping npm publish of the knowlery CLI."
+            exit 0
+          fi
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            npm publish --tag beta
+          else
+            npm publish
+          fi

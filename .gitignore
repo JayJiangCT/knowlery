@@ -27,6 +27,7 @@ evals/reports/*
 # Build artifacts
 node_modules/
 main.js
+knowlery-cli.mjs
 docs-site/.vitepress/cache/
 docs-site/.vitepress/dist/
 .venv*/

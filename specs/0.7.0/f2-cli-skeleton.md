@@ -1,6 +1,6 @@
 # F2 (0.7.0) — The `knowlery` CLI: `init` / `sync` / `health` + npm Packaging
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-04 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.7.0
 - **Branch:** `cursor/07-f2-cli-skeleton-92eb` (stacked on 0.7 F1)
 - **Depends on:** F1 (VaultFs inversion — the CLI is a thin shell over the inverted core)

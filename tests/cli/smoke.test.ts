@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import esbuild from 'esbuild';
+
+const run = promisify(execFile);
+
+/**
+ * Spec 0.7 f2, §6.5: the built artifact (not just the handlers) runs the full
+ * init -> health -> sync round trip. The bundle is built here with the same entry the
+ * release build uses, into a temp file, then spawned with plain node.
+ */
+describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
+  it('round-trips init, health, sync in a temp workspace', async () => {
+    const workDir = await mkdtemp(join(tmpdir(), 'knowlery-smoke-'));
+    const cliPath = join(workDir, 'knowlery-cli.mjs');
+    const vaultDir = join(workDir, 'kb');
+
+    try {
+      await esbuild.build({
+        entryPoints: [join(__dirname, '..', '..', 'src', 'cli', 'main.ts')],
+        bundle: true,
+        platform: 'node',
+        format: 'esm',
+        target: 'node18',
+        outfile: cliPath,
+        logLevel: 'silent',
+        define: { KNOWLERY_VERSION: JSON.stringify('0.0.0-test') },
+        banner: {
+          js: "import { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);",
+        },
+      });
+
+      const version = await run('node', [cliPath, '--version']);
+      expect(version.stdout.trim()).toBe('0.0.0-test');
+
+      const init = await run('node', [cliPath, 'init', '--dir', vaultDir, '--platform', 'claude-code', '--name', 'Smoke KB']);
+      expect(init.stdout).toContain('Initialized Knowlery workspace "Smoke KB"');
+      await stat(join(vaultDir, 'KNOWLEDGE.md'));
+      await stat(join(vaultDir, '.knowlery', 'bin', 'query.mjs'));
+
+      const health = await run('node', [cliPath, 'health', '--dir', vaultDir]);
+      expect(health.stdout).toContain('Built-in skills — 13 installed');
+
+      const sync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
+      const secondSync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
+      expect(`${sync.stdout}${secondSync.stdout}`).toContain('No changes');
+
+      // Non-TTY init without flags must fail deterministically.
+      const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
+        (error: { code: number; stderr: string }) => error,
+      );
+      expect(badInit.code).toBe(1);
+      expect(badInit.stderr).toContain('--platform');
+    } finally {
+      await rm(workDir, { recursive: true, force: true });
+    }
+  }, 30000);
+});

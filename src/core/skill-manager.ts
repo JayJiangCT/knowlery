@@ -90,9 +90,15 @@ export async function installAllBuiltinSkills(fs: VaultFs): Promise<void> {
   }
 }
 
+/** Write-on-change: repeated syncs must not churn mtimes (spec 0.7 f2, §6.2). */
+async function writeIfChanged(fs: VaultFs, path: string, content: string): Promise<void> {
+  if ((await fs.exists(path)) && (await fs.read(path)) === content) return;
+  await fs.write(path, content);
+}
+
 async function writeSkillFile(fs: VaultFs, name: string, content: string): Promise<void> {
   await fs.mkdir(`${SKILLS_DIR}/${name}`);
-  await fs.write(`${SKILLS_DIR}/${name}/SKILL.md`, content);
+  await writeIfChanged(fs, `${SKILLS_DIR}/${name}/SKILL.md`, content);
 }
 
 export async function copySkillToClaudeDir(fs: VaultFs, name: string): Promise<void> {
@@ -104,7 +110,7 @@ export async function copySkillToClaudeDir(fs: VaultFs, name: string): Promise<v
   }
   const content = await fs.read(sourcePath);
 
-  await fs.write(`${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
+  await writeIfChanged(fs, `${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
 }
 
 export async function loadSkillsLock(fs: VaultFs): Promise<SkillsLock> {

@@ -102,6 +102,29 @@ async function buildQueryScript() {
 
 await buildQueryScript();
 
+// The npm-distributed CLI shell (spec 0.7 f2, §4.2). Not embedded in main.js —
+// it ships via npm only ("bin" in package.json).
+async function buildCli() {
+  const { default: pkg } = await import('./package.json', { with: { type: 'json' } });
+  await esbuild.build({
+    entryPoints: ['src/cli/main.ts'],
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    target: 'node18',
+    minify: false,
+    outfile: 'knowlery-cli.mjs',
+    logLevel: 'silent',
+    define: { KNOWLERY_VERSION: JSON.stringify(pkg.version) },
+    banner: {
+      js: "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);",
+    },
+    plugins: [scannerHygieneShims],
+  });
+}
+
+await buildCli();
+
 const context = await esbuild.context({
   banner: { js: banner },
   entryPoints: ['src/main.ts'],

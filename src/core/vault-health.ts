@@ -5,12 +5,10 @@ import type {
   Platform,
   VaultStats,
 } from '../types';
-import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
-import { getRulesDir } from './platform-adapter';
+import { KNOWLEDGE_DIRS } from '../types';
 import { detectAgentCli } from './cli-detect';
-import { QUERY_SCRIPT_PATH } from './query-script';
+import { checkVaultConfigFiles } from './vault-config-health';
 import type { VaultFs } from './vault-fs';
-import { normalizeVaultPath } from './vault-fs';
 
 interface ObsidianElectronBridge {
   ipcRenderer?: {
@@ -129,65 +127,6 @@ function dirToType(dir: string): string {
 
 function isSystemFile(path: string): boolean {
   return path.startsWith('.') || path === 'KNOWLEDGE.md' || path === 'SCHEMA.md';
-}
-
-/**
- * Platform-neutral config-file checks (spec 0.7 f1, §4.2) — the part of config
- * integrity a headless shell can compute. The plugin's checkConfigIntegrity composes
- * this with Obsidian-shell facts (Obsidian CLI bridge, agent CLI detection).
- */
-export async function checkVaultConfigFiles(
-  fs: VaultFs,
-  platform: Platform,
-): Promise<Omit<ConfigIntegrity, 'obsidianCli' | 'claudeCodeCli' | 'opencodeCli'>> {
-  const existingDirs: string[] = [];
-  const missingDirs: string[] = [];
-  for (const d of KNOWLEDGE_DIRS) {
-    if (await fs.exists(normalizeVaultPath(d))) {
-      existingDirs.push(d);
-    } else {
-      missingDirs.push(d);
-    }
-  }
-
-  const rulesDir = getRulesDir(platform);
-  const rulesDirPath = normalizeVaultPath(rulesDir);
-  let rulesConfigured = false;
-  if (await fs.exists(rulesDirPath)) {
-    const listing = await fs.list(rulesDirPath);
-    rulesConfigured = listing.files.length > 0;
-  }
-
-  const presentSkills: string[] = [];
-  const missingSkills: string[] = [];
-  for (const name of BUILTIN_SKILL_NAMES) {
-    const path = normalizeVaultPath(`.agents/skills/${name}/SKILL.md`);
-    if (await fs.exists(path)) {
-      presentSkills.push(name);
-    } else {
-      missingSkills.push(name);
-    }
-  }
-
-  const agentConfigPath = platform === 'claude-code'
-    ? normalizeVaultPath('.claude/CLAUDE.md')
-    : normalizeVaultPath('opencode.json');
-  const agentConfigExists = await fs.exists(agentConfigPath);
-
-  return {
-    knowledgeMdExists: await fs.exists('KNOWLEDGE.md'),
-    schemaMdExists: await fs.exists('SCHEMA.md'),
-    indexBaseExists: await fs.exists('INDEX.base'),
-    queryScriptExists: await fs.exists(normalizeVaultPath(QUERY_SCRIPT_PATH)),
-    knowledgeDirsComplete: {
-      exists: existingDirs,
-      missing: missingDirs,
-    },
-    agentConfigExists,
-    rulesConfigured,
-    skillsComplete: { present: presentSkills, missing: missingSkills },
-    platform,
-  };
 }
 
 export async function checkConfigIntegrity(
