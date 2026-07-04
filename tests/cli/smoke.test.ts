@@ -49,6 +49,32 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       const secondSync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
       expect(`${sync.stdout}${secondSync.stdout}`).toContain('No changes');
 
+      // query/stale (spec 0.7 f3, §5.4): global CLI vs the vault-embedded script,
+      // against the same workspace state, must print identical output.
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        join(vaultDir, 'concepts', 'widget-design.md'),
+        '---\ntitle: Widget Design\ntype: concept\ncreated: 2026-01-01\ntags: [design]\n---\n\nWidgets are designed with care.\n',
+      );
+      const cliQuery = await run('node', [cliPath, 'query', '--dir', vaultDir, 'widget design']);
+      const embeddedQuery = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), 'widget design']);
+      expect(cliQuery.stdout.trim()).toBe(embeddedQuery.stdout.trim());
+      expect(cliQuery.stdout).toContain('concepts/widget-design.md');
+
+      const cliStale = await run('node', [cliPath, 'stale', '--dir', vaultDir]);
+      const embeddedStale = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), '--stale']);
+      expect(cliStale.stdout.trim()).toBe(embeddedStale.stdout.trim());
+
+      // Abstention is a result, not an error: exit 0.
+      const abstain = await run('node', [cliPath, 'query', '--dir', vaultDir, 'zebra quantum lighthouse']);
+      expect(abstain.stdout).toContain('No confident matches');
+
+      // Missing question: usage error, exit 2.
+      const noQuestion = await run('node', [cliPath, 'query', '--dir', vaultDir]).catch(
+        (error: { code: number; stderr: string }) => error,
+      );
+      expect(noQuestion.code).toBe(2);
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,

@@ -1,6 +1,6 @@
 # F3 (0.7.0) — `knowlery query` / `knowlery stale`
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-04 — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.7.0
 - **Branch:** `cursor/07-f3-query-commands-92eb` (stacked on 0.7 F2)
 - **Depends on:** F2 (CLI shell), 0.6.0 F2/F3 (engine, staleness)

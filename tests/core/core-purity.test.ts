@@ -19,6 +19,8 @@ const INVERTED_MODULES = [
   'cli/commands/init.ts',
   'cli/commands/sync.ts',
   'cli/commands/health.ts',
+  'cli/commands/query.ts',
+  'cli/commands/stale.ts',
   'core/skill-manager.ts',
   'core/rule-manager.ts',
   'core/rule-imports.ts',
