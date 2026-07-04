@@ -77,7 +77,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
     });
     setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
-    setInstalledBundles(await readInstalledBundles(plugin.app));
+    setInstalledBundles(await readInstalledBundles(plugin.fs));
     const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
     setStaleness(snapshot ? computeStaleness(snapshot) : null);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
@@ -118,8 +118,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   };
 
   const removeBundle = async (bundleId: string) => {
-    await uninstallBundle(plugin.app, bundleId);
-    setInstalledBundles(await readInstalledBundles(plugin.app));
+    await uninstallBundle(plugin.fs, bundleId);
+    setInstalledBundles(await readInstalledBundles(plugin.fs));
   };
 
   const copyRequest = async (request?: string) => {

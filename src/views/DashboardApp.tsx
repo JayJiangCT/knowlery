@@ -50,9 +50,9 @@ export function DashboardApp() {
   }, []);
 
   useEffect(() => {
-    isVaultInitialized(plugin.app).then(setInitialized);
+    isVaultInitialized(plugin.fs).then(setInitialized);
     const recheck = () => {
-      isVaultInitialized(plugin.app).then(setInitialized);
+      isVaultInitialized(plugin.fs).then(setInitialized);
     };
     const ref = plugin.events.on('setup-complete', recheck);
     return () => plugin.events.offref(ref);

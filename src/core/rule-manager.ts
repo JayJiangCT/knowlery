@@ -1,26 +1,25 @@
-import { App, normalizePath } from 'obsidian';
 import type { Platform, RuleInfo } from '../types';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 import { RULE_TEMPLATES, type RuleTemplate } from '../assets/rules';
 import { getRulesDir } from './platform-adapter';
 import { syncClaudeRuleImports as syncClaudeRuleImportBlock } from './rule-imports';
-import { ensureDir, writeFile } from './vault-io';
 
 export function getRuleTemplates(): RuleTemplate[] {
   return RULE_TEMPLATES;
 }
 
-export async function listRules(app: App, platform: Platform): Promise<RuleInfo[]> {
+export async function listRules(fs: VaultFs, platform: Platform): Promise<RuleInfo[]> {
   const rulesDir = getRulesDir(platform);
-  const adapter = app.vault.adapter;
-  const dirPath = normalizePath(rulesDir);
-  if (!(await adapter.exists(dirPath))) return [];
+  const dirPath = normalizeVaultPath(rulesDir);
+  if (!(await fs.exists(dirPath))) return [];
 
-  const listing = await adapter.list(dirPath);
+  const listing = await fs.list(dirPath);
   const rules: RuleInfo[] = [];
   for (const filePath of listing.files) {
     if (!filePath.endsWith('.md')) continue;
     const filename = filePath.split('/').pop()!;
-    const content = await adapter.read(normalizePath(filePath));
+    const content = await fs.read(normalizeVaultPath(filePath));
     rules.push({
       name: filename.replace(/\.md$/, ''),
       filename,
@@ -32,60 +31,60 @@ export async function listRules(app: App, platform: Platform): Promise<RuleInfo[
 }
 
 export async function readRule(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
   filename: string,
 ): Promise<string | null> {
   const rulesDir = getRulesDir(platform);
-  const path = normalizePath(`${rulesDir}/${filename}`);
-  if (!(await app.vault.adapter.exists(path))) return null;
-  return app.vault.adapter.read(path);
+  const path = normalizeVaultPath(`${rulesDir}/${filename}`);
+  if (!(await fs.exists(path))) return null;
+  return fs.read(path);
 }
 
 export async function writeRule(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
   filename: string,
   content: string,
 ): Promise<void> {
   const rulesDir = getRulesDir(platform);
-  await ensureDir(app, rulesDir);
-  await writeFile(app, `${rulesDir}/${filename}`, content);
-  await syncClaudeRuleImports(app, platform);
+  await fs.mkdir(rulesDir);
+  await fs.write(`${rulesDir}/${filename}`, content);
+  await syncClaudeRuleImports(fs, platform);
 }
 
 export async function deleteRule(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
   filename: string,
 ): Promise<void> {
   const rulesDir = getRulesDir(platform);
-  const path = normalizePath(`${rulesDir}/${filename}`);
-  if (await app.vault.adapter.exists(path)) {
-    await app.vault.adapter.remove(path);
+  const path = normalizeVaultPath(`${rulesDir}/${filename}`);
+  if (await fs.exists(path)) {
+    await fs.remove(path);
   }
-  await syncClaudeRuleImports(app, platform);
+  await syncClaudeRuleImports(fs, platform);
 }
 
 export async function installDefaultRules(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
 ): Promise<void> {
   for (const template of RULE_TEMPLATES) {
-    await writeRule(app, platform, template.filename, template.content);
+    await writeRule(fs, platform, template.filename, template.content);
   }
 }
 
 export async function installActivityLedgerRule(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
 ): Promise<void> {
   const template = RULE_TEMPLATES.find((rule) => rule.filename === 'activity-ledger.md');
   if (!template) return;
-  await writeRule(app, platform, template.filename, template.content);
+  await writeRule(fs, platform, template.filename, template.content);
 }
 
-async function syncClaudeRuleImports(app: App, platform: Platform): Promise<void> {
+async function syncClaudeRuleImports(fs: VaultFs, platform: Platform): Promise<void> {
   if (platform !== 'claude-code') return;
-  await syncClaudeRuleImportBlock(app);
+  await syncClaudeRuleImportBlock(fs);
 }

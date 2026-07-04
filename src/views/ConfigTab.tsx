@@ -113,7 +113,7 @@ export function ConfigTab() {
   const [rules, setRules] = useState<RuleInfo[]>([]);
 
   const refreshRules = useCallback(async (payload?: DashboardRefreshPayload) => {
-    const result = await listRules(plugin.app, settings.platform);
+    const result = await listRules(plugin.fs, settings.platform);
     setRules(result);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin, settings.platform]);
@@ -144,7 +144,7 @@ export function ConfigTab() {
   };
 
   const handleDelete = async (rule: RuleInfo) => {
-    await deleteRule(plugin.app, settings.platform, rule.filename);
+    await deleteRule(plugin.fs, settings.platform, rule.filename);
     new Notice(`Deleted rule "${rule.name}"`);
     refreshRules();
   };

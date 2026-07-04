@@ -249,7 +249,7 @@ function SkillBrowserContent(props: { onClose: () => void; onChange?: () => void
     setInstalling(id);
     try {
       await runSkillsCommand(['add', safeId, '--copy', '--yes'], vaultPath, 60000);
-      await markSkillInstalledFromRegistry(plugin.app, skill.name, skill.identifier);
+      await markSkillInstalledFromRegistry(plugin.fs, skill.name, skill.identifier);
       setInstalled((prev) => new Set(prev).add(id));
       new Notice(`Installed skill: ${skill.name}`);
       props.onChange?.();

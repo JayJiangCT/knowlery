@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createOkfMockApp } from '../mocks/okf-app';
+import { createOkfMockApp, okfVaultFs } from '../mocks/okf-app';
 import {
   readInstalledBundles,
   writeInstalledBundles,
@@ -10,13 +10,13 @@ import type { InstalledBundleEntry } from '../../src/types';
 describe('readInstalledBundles', () => {
   it('returns an empty registry when no file exists', async () => {
     const app = createOkfMockApp({});
-    const registry = await readInstalledBundles(app as never);
+    const registry = await readInstalledBundles(okfVaultFs(app));
     expect(registry).toEqual({ schemaVersion: 1, bundles: {} });
   });
 
   it('falls back to empty on malformed JSON', async () => {
     const app = createOkfMockApp({ '.knowlery/bundles.json': 'not json' });
-    const registry = await readInstalledBundles(app as never);
+    const registry = await readInstalledBundles(okfVaultFs(app));
     expect(registry).toEqual({ schemaVersion: 1, bundles: {} });
   });
 });
@@ -24,7 +24,7 @@ describe('readInstalledBundles', () => {
 describe('writeInstalledBundles', () => {
   it('round-trips through the adapter', async () => {
     const app = createOkfMockApp({});
-    await writeInstalledBundles(app as never, {
+    await writeInstalledBundles(okfVaultFs(app), {
       schemaVersion: 1,
       bundles: {
         'jay.drone-delivery': {
@@ -40,7 +40,7 @@ describe('writeInstalledBundles', () => {
         },
       },
     });
-    const reread = await readInstalledBundles(app as never);
+    const reread = await readInstalledBundles(okfVaultFs(app));
     expect(reread.bundles['jay.drone-delivery'].title).toBe('Drone Delivery');
   });
 });

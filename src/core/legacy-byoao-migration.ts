@@ -9,6 +9,7 @@ import {
   generateSchemaMd,
 } from '../assets/templates';
 import { collectRuleImportPaths } from './rule-imports';
+import { obsidianVaultFs } from '../platform/obsidian-fs';
 import { ensureDir, writeFile } from './vault-io';
 
 const KNOWLERY_DIR = '.knowlery';
@@ -320,7 +321,7 @@ async function installMissingDefaultRules(app: App): Promise<void> {
 
 async function writeClaudeMdForMigration(app: App): Promise<void> {
   if (!(await shouldWriteClaudeMd(app))) return;
-  const ruleImports = await collectRuleImportPaths(app, '.claude/rules');
+  const ruleImports = await collectRuleImportPaths(obsidianVaultFs(app), '.claude/rules');
   await writeMigrationFile(app, '.claude/CLAUDE.md', generateClaudeMd(ruleImports));
 }
 

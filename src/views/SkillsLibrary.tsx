@@ -142,7 +142,7 @@ export function SkillsLibrary() {
 
   const refresh = useCallback(async () => {
     try {
-      setSkills(await listSkills(plugin.app));
+      setSkills(await listSkills(plugin.fs));
     } catch {
       new Notice('Failed to load skills.');
     }

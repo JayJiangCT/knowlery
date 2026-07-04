@@ -9,6 +9,8 @@ import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
 import { getRulesDir } from './platform-adapter';
 import { detectAgentCli } from './cli-detect';
 import { QUERY_SCRIPT_PATH } from './query-script';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 
 interface ObsidianElectronBridge {
   ipcRenderer?: {
@@ -129,13 +131,19 @@ function isSystemFile(path: string): boolean {
   return path.startsWith('.') || path === 'KNOWLEDGE.md' || path === 'SCHEMA.md';
 }
 
-export async function checkConfigIntegrity(app: App, platform: Platform): Promise<ConfigIntegrity> {
-  const adapter = app.vault.adapter;
-
+/**
+ * Platform-neutral config-file checks (spec 0.7 f1, §4.2) — the part of config
+ * integrity a headless shell can compute. The plugin's checkConfigIntegrity composes
+ * this with Obsidian-shell facts (Obsidian CLI bridge, agent CLI detection).
+ */
+export async function checkVaultConfigFiles(
+  fs: VaultFs,
+  platform: Platform,
+): Promise<Omit<ConfigIntegrity, 'obsidianCli' | 'claudeCodeCli' | 'opencodeCli'>> {
   const existingDirs: string[] = [];
   const missingDirs: string[] = [];
   for (const d of KNOWLEDGE_DIRS) {
-    if (app.vault.getFolderByPath(normalizePath(d))) {
+    if (await fs.exists(normalizeVaultPath(d))) {
       existingDirs.push(d);
     } else {
       missingDirs.push(d);
@@ -143,18 +151,18 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
   }
 
   const rulesDir = getRulesDir(platform);
-  const rulesDirPath = normalizePath(rulesDir);
+  const rulesDirPath = normalizeVaultPath(rulesDir);
   let rulesConfigured = false;
-  if (await adapter.exists(rulesDirPath)) {
-    const listing = await adapter.list(rulesDirPath);
+  if (await fs.exists(rulesDirPath)) {
+    const listing = await fs.list(rulesDirPath);
     rulesConfigured = listing.files.length > 0;
   }
 
   const presentSkills: string[] = [];
   const missingSkills: string[] = [];
   for (const name of BUILTIN_SKILL_NAMES) {
-    const path = normalizePath(`.agents/skills/${name}/SKILL.md`);
-    if (await adapter.exists(path)) {
+    const path = normalizeVaultPath(`.agents/skills/${name}/SKILL.md`);
+    if (await fs.exists(path)) {
       presentSkills.push(name);
     } else {
       missingSkills.push(name);
@@ -162,9 +170,32 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
   }
 
   const agentConfigPath = platform === 'claude-code'
-    ? normalizePath('.claude/CLAUDE.md')
-    : normalizePath('opencode.json');
-  const agentConfigExists = await adapter.exists(agentConfigPath);
+    ? normalizeVaultPath('.claude/CLAUDE.md')
+    : normalizeVaultPath('opencode.json');
+  const agentConfigExists = await fs.exists(agentConfigPath);
+
+  return {
+    knowledgeMdExists: await fs.exists('KNOWLEDGE.md'),
+    schemaMdExists: await fs.exists('SCHEMA.md'),
+    indexBaseExists: await fs.exists('INDEX.base'),
+    queryScriptExists: await fs.exists(normalizeVaultPath(QUERY_SCRIPT_PATH)),
+    knowledgeDirsComplete: {
+      exists: existingDirs,
+      missing: missingDirs,
+    },
+    agentConfigExists,
+    rulesConfigured,
+    skillsComplete: { present: presentSkills, missing: missingSkills },
+    platform,
+  };
+}
+
+export async function checkConfigIntegrity(
+  app: App,
+  fs: VaultFs,
+  platform: Platform,
+): Promise<ConfigIntegrity> {
+  const fileChecks = await checkVaultConfigFiles(fs, platform);
 
   let obsidianCli = false;
   try {
@@ -179,21 +210,10 @@ export async function checkConfigIntegrity(app: App, platform: Platform): Promis
   const cliDetection = await detectAgentCli();
 
   return {
-    knowledgeMdExists: app.vault.getFileByPath(normalizePath('KNOWLEDGE.md')) !== null,
-    schemaMdExists: app.vault.getFileByPath(normalizePath('SCHEMA.md')) !== null,
-    indexBaseExists: app.vault.getFileByPath(normalizePath('INDEX.base')) !== null,
-    queryScriptExists: await adapter.exists(normalizePath(QUERY_SCRIPT_PATH)),
-    knowledgeDirsComplete: {
-      exists: existingDirs,
-      missing: missingDirs,
-    },
-    agentConfigExists,
-    rulesConfigured,
-    skillsComplete: { present: presentSkills, missing: missingSkills },
+    ...fileChecks,
     obsidianCli,
     claudeCodeCli: cliDetection.claudeCode.installed,
     opencodeCli: cliDetection.opencode.installed,
-    platform,
   };
 }
 

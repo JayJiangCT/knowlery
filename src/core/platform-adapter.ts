@@ -1,31 +1,31 @@
-import { App, normalizePath } from 'obsidian';
 import type { Platform } from '../types';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 import { generateClaudeMd, generateOpenCodeJson } from '../assets/templates';
-import { ensureDir, writeFile } from './vault-io';
 import { collectRuleImportPaths } from './rule-imports';
 
 export async function generatePlatformConfig(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
   kbName: string,
 ): Promise<void> {
   if (platform === 'claude-code') {
-    await generateClaudeCodeConfig(app);
+    await generateClaudeCodeConfig(fs);
   } else {
-    await generateOpenCodeConfig(app, kbName);
+    await generateOpenCodeConfig(fs, kbName);
   }
 }
 
-async function generateClaudeCodeConfig(app: App): Promise<void> {
-  await ensureDir(app, '.claude');
-  await ensureDir(app, '.claude/rules');
-  const ruleImports = await collectRuleImportPaths(app, '.claude/rules');
-  await writeFile(app, '.claude/CLAUDE.md', generateClaudeMd(ruleImports));
+async function generateClaudeCodeConfig(fs: VaultFs): Promise<void> {
+  await fs.mkdir('.claude');
+  await fs.mkdir('.claude/rules');
+  const ruleImports = await collectRuleImportPaths(fs, '.claude/rules');
+  await fs.write('.claude/CLAUDE.md', generateClaudeMd(ruleImports));
 }
 
-async function generateOpenCodeConfig(app: App, kbName: string): Promise<void> {
-  await ensureDir(app, '.agents/rules');
-  await writeFile(app, 'opencode.json', generateOpenCodeJson(kbName));
+async function generateOpenCodeConfig(fs: VaultFs, kbName: string): Promise<void> {
+  await fs.mkdir('.agents/rules');
+  await fs.write('opencode.json', generateOpenCodeJson(kbName));
 }
 
 export function getRulesDir(platform: Platform): string {
@@ -33,7 +33,7 @@ export function getRulesDir(platform: Platform): string {
 }
 
 export async function migratePlatform(
-  app: App,
+  fs: VaultFs,
   from: Platform,
   to: Platform,
   kbName: string,
@@ -42,34 +42,32 @@ export async function migratePlatform(
   const fromRulesDir = getRulesDir(from);
   const toRulesDir = getRulesDir(to);
 
-  await ensureDir(app, normalizePath(toRulesDir));
+  await fs.mkdir(normalizeVaultPath(toRulesDir));
 
-  const adapter = app.vault.adapter;
-  const fromDirPath = normalizePath(fromRulesDir);
-  if (await adapter.exists(fromDirPath)) {
-    const listing = await adapter.list(fromDirPath);
+  const fromDirPath = normalizeVaultPath(fromRulesDir);
+  if (await fs.exists(fromDirPath)) {
+    const listing = await fs.list(fromDirPath);
     for (const filePath of listing.files) {
       if (!filePath.endsWith('.md')) continue;
       const filename = filePath.split('/').pop()!;
-      const content = await adapter.read(normalizePath(filePath));
-      await writeFile(app, `${toRulesDir}/${filename}`, content);
+      const content = await fs.read(normalizeVaultPath(filePath));
+      await fs.write(`${toRulesDir}/${filename}`, content);
     }
   }
 
-  await generatePlatformConfig(app, to, kbName);
+  await generatePlatformConfig(fs, to, kbName);
 
   if (!keepOldConfig) {
-    await cleanupPlatformConfig(app, from);
+    await cleanupPlatformConfig(fs, from);
   }
 }
 
-async function cleanupPlatformConfig(app: App, platform: Platform): Promise<void> {
-  const adapter = app.vault.adapter;
+async function cleanupPlatformConfig(fs: VaultFs, platform: Platform): Promise<void> {
   if (platform === 'claude-code') {
-    const path = normalizePath('.claude/CLAUDE.md');
-    if (await adapter.exists(path)) await adapter.remove(path);
+    const path = normalizeVaultPath('.claude/CLAUDE.md');
+    if (await fs.exists(path)) await fs.remove(path);
   } else {
-    const path = normalizePath('opencode.json');
-    if (await adapter.exists(path)) await adapter.remove(path);
+    const path = normalizeVaultPath('opencode.json');
+    if (await fs.exists(path)) await fs.remove(path);
   }
 }

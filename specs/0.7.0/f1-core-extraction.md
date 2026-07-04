@@ -1,6 +1,6 @@
 # F1 (0.7.0) — Core Extraction: `VaultFs` Inversion of the Lifecycle Modules
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-03 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.7.0
 - **Branch:** `cursor/07-f1-core-extraction-92eb` (off `main` @ 0.6.1)
 - **Depends on:** nothing (prerequisite for every other 0.7.0 feature)

@@ -25,6 +25,33 @@ export interface MockOkfApp {
   };
 }
 
+import type { VaultFs } from '../../src/core/vault-fs';
+
+/**
+ * Adapts the OKF mock app into a VaultFs for the inverted install-side modules
+ * (spec 0.7 f1). Reads are writes-first, matching the vault.read semantics the
+ * pre-inversion code used for KNOWLEDGE.md, so existing assertions carry over.
+ */
+export function okfVaultFs(app: MockOkfApp): VaultFs {
+  const adapter = app.vault.adapter;
+  return {
+    exists: (path) => adapter.exists(path),
+    read: async (path) => app.writes[path] ?? (await adapter.read(path)),
+    readBinary: async (path) => {
+      const content = app.writes[path] ?? (await adapter.read(path));
+      return new TextEncoder().encode(content).buffer as ArrayBuffer;
+    },
+    write: (path, content) => adapter.write(path, content),
+    writeBinary: async (path, data) => adapter.write(path, new TextDecoder().decode(data)),
+    mkdir: (path) => adapter.mkdir(path),
+    remove: async (path) => {
+      delete app.writes[path];
+    },
+    rmdir: (path, recursive) => adapter.rmdir(path, recursive),
+    list: (path) => adapter.list(path),
+  };
+}
+
 export function createOkfMockApp(
   initialFiles: Record<string, string>,
   options: { resolvedLinks?: Record<string, Record<string, number>> } = {},

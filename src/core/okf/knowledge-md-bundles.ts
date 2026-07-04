@@ -4,7 +4,7 @@
 // the delimited region below, so installing or removing bundles cannot
 // clobber the rest of the document.
 
-import type { App } from 'obsidian';
+import type { VaultFs } from '../vault-fs';
 import { readInstalledBundles } from './registry';
 
 export const INSTALLED_BUNDLES_BEGIN_MARKER = '<!-- KNOWLERY:INSTALLED_BUNDLES:BEGIN -->';
@@ -32,16 +32,15 @@ export function ensureInstalledBundlesBlock(knowledgeMd: string): string {
 
 // Called on plugin-version change so existing vaults pick up wording
 // updates without waiting for the next bundle install.
-export async function refreshInstalledBundlesBlock(app: App): Promise<void> {
-  const registry = await readInstalledBundles(app);
+export async function refreshInstalledBundlesBlock(fs: VaultFs): Promise<void> {
+  const registry = await readInstalledBundles(fs);
   if (Object.keys(registry.bundles).length === 0) return;
 
-  const knowledgeMdFile = app.vault.getFileByPath('KNOWLEDGE.md');
-  if (!knowledgeMdFile) return;
+  if (!(await fs.exists('KNOWLEDGE.md'))) return;
 
-  const current = await app.vault.read(knowledgeMdFile);
+  const current = await fs.read('KNOWLEDGE.md');
   const updated = ensureInstalledBundlesBlock(current);
-  if (updated !== current) await app.vault.adapter.write('KNOWLEDGE.md', updated);
+  if (updated !== current) await fs.write('KNOWLEDGE.md', updated);
 }
 
 export function removeInstalledBundlesBlock(knowledgeMd: string): string {

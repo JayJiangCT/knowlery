@@ -555,7 +555,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
 
     async function loadVaultState() {
       try {
-        const manifest = await readManifest(plugin.app);
+        const manifest = await readManifest(plugin.fs);
         if (cancelled) return;
 
         if (manifest) {
@@ -631,7 +631,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
 
     try {
       const result = await executeSetup(
-        plugin.app,
+        plugin.fs,
         platform,
         plugin.settings.kbName,
         (step) => {
@@ -640,6 +640,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
         {
           optionalInstalls,
           nodePath,
+          app: plugin.app,
           onOptionalInstallUpdate: (state) => {
             setOptionalInstallRuns((prev) => {
               const next = prev.filter((run) => run.id !== state.id);
