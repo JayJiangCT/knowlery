@@ -10,6 +10,30 @@ export interface ReleaseNote {
 }
 
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  '0.7.0': {
+    version: '0.7.0',
+    date: 'Jul 4',
+    title: 'One core, two shells',
+    summary: 'Knowlery now works wherever your markdown lives: the same knowledge-base lifecycle is available as a standalone CLI, and this plugin stays the richest way to use it.',
+    highlights: [
+      {
+        title: 'The knowlery CLI',
+        description: 'npm i -g knowlery — init, sync, health, query, stale, and bundle install from any terminal. A workspace initialized by the CLI opens here with zero migration, and this vault works with the CLI as-is.',
+      },
+      {
+        title: 'Skills that adapt to where they run',
+        description: 'Retrieval now has three transports (in-app command, global CLI, embedded script), and the writing skills gained a headless path — same conventions, whether Obsidian is open or not.',
+      },
+      {
+        title: 'Names you can find',
+        description: '/cook now records nicknames, abbreviations, and cross-language titles as aliases while compiling — so asking with the words you actually use finds the page.',
+      },
+      {
+        title: 'Safe to mix versions',
+        description: 'The workspace remembers which Knowlery last synced it; an older plugin or CLI will refuse to sync rather than quietly downgrade what a newer one upgraded.',
+      },
+    ],
+  },
   '0.6.1': {
     version: '0.6.1',
     date: 'Jul 4',
