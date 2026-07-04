@@ -78,6 +78,12 @@ Execution order: F1 → F2 → F3 → F4 → F5.
   (no token at all — no leakage or rotation concerns) and the token is deleted.
   0.8 release-hygiene item. Also fix the cosmetic `bin` path warning
   (`./knowlery-cli.mjs` -> `knowlery-cli.mjs`) flagged by `npm publish`.
+- **Idempotent npm publish step**: skip (with a notice) when the version already
+  exists on the registry, so re-running a Release workflow after a manual publish
+  does not fail on "cannot publish over previously published versions".
+- **CLI EPIPE handling**: piping CLI output into `head` and closing the pipe early
+  crashes with an unhandled EPIPE stack trace; handle SIGPIPE/EPIPE gracefully like
+  standard CLI tools.
 
 ## Backlog (repo hygiene, schedulable any time)
 
