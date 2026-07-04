@@ -45,6 +45,15 @@ Execution order: F1 → F2 → F3 → F4 → F5.
 - `INDEX.base` keeps being generated on init (harmless for CLI users, valuable the day
   they open the vault in Obsidian).
 
+## Backlog (repo hygiene, schedulable any time)
+
+- **Unscoped eslint run crashes** (pre-existing, confirmed on 0.6.1 base): `npx eslint .`
+  fails on untracked `.venv*/` dirs (gitignored but not eslint-ignored) and on `tests/`
+  (typed-lint rules lack `parserOptions.project` coverage for test files). The project
+  script `npm run lint` scopes to `src/` and is unaffected. Fix together with the
+  0.6-era warning cleanup (unsafe assignments, `require()` imports, promise-in-void
+  attributes, `display` → `getSettingDefinitions`).
+
 ## Open item for the maintainer
 
 - **BYOAO consolidation:** 0.7.0 effectively supersedes BYOAO's "global CLI install"
