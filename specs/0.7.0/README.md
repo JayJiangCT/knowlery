@@ -45,6 +45,23 @@ Execution order: F1 → F2 → F3 → F4 → F5.
 - `INDEX.base` keeps being generated on init (harmless for CLI users, valuable the day
   they open the vault in Obsidian).
 
+## Versioning policy (decided with the maintainer, 2026-07-04)
+
+- **Lockstep:** one version, one tag, one changelog; the plugin (GitHub release assets)
+  and the CLI (npm) always release together at the same version. The version describes
+  the shared core — most changes (skills content, engine, migrations) affect both
+  shells anyway. npm publishes every release even when CLI behavior is unchanged.
+- **Semver:** minor = features (either shell), patch = fixes; **major is reserved for
+  breaking changes to the workspace format.**
+- **Workspace format version** is the separately-versioned contract:
+  `.knowlery/manifest.json`'s `version` field. Bumped only on format changes; newer
+  shells always migrate older formats (via the shared `runVaultSync`), older shells
+  encountering a newer format must warn.
+- **Backlog — sync downgrade guard:** record the last-synced core version in the vault;
+  `sync` (both shells) refuses to write when the running tool is older than that,
+  preventing an out-of-date CLI from downgrading skill content a newer plugin already
+  upgraded. Small; schedule in F5 or release prep.
+
 ## Backlog (repo hygiene, schedulable any time)
 
 - **Unscoped eslint run crashes** (pre-existing, confirmed on 0.6.1 base): `npx eslint .`
