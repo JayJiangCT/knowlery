@@ -50,6 +50,8 @@ staleness report (first transport available):
 \`\`\`bash
 obsidian knowlery:stale
 # or, with Obsidian closed:
+knowlery stale
+# or, with only Node available:
 node .knowlery/bin/query.mjs --stale
 \`\`\`
 
@@ -110,9 +112,23 @@ When user provides a URL:
 - **Updates:** Add new information, bump \`updated\` date
 - **Contradictions:** Follow Update Policy
 
+**Record aliases (retrieval-aware compiling).** Lexical retrieval can only match what
+is written down. On every page you create or update, record into \`aliases\` frontmatter:
+
+- colloquial or team nicknames ("colld" for the collector daemon)
+- abbreviations and acronyms (SLO, p95)
+- the **cross-language title** whenever the sources are in a different language than
+  the page (a page compiled from Chinese notes gets its Chinese name as an alias, and
+  vice versa)
+
 **Create page thresholds:**
 - Appears in 2+ notes, OR is central subject of one note
 - Do NOT create for: passing mentions, minor details, out-of-domain topics
+
+**Writing tool:** prefer \`obsidian create\` when Obsidian is running (it keeps the
+wikilink graph consistent). In headless environments, write the files directly with
+identical frontmatter and naming conventions, and run \`knowlery health\` (or
+\`node .knowlery/bin/query.mjs --stale\`) after bulk changes to verify the result.
 
 ### Step 4: Cross-Reference
 - Ensure every new/updated page has at least 2 outbound wikilinks
@@ -207,6 +223,7 @@ No \`owner\` frontmatter field needed.
 
 - **Evidence-based**: Every knowledge page cites its sources
 - **Never modify user notes**: User notes are read-only during /cook
+- **Aliases are retrieval**: Record nicknames, abbreviations, and cross-language titles in \`aliases\` — a name that is not written down cannot be found
 - **SCHEMA.md stays accurate**: New tags or domains on agent pages are reflected in \`SCHEMA.md\` in the same cook cycle when possible
 - **Thresholds matter**: 2+ mentions or central subject to create a page
 - **Split at 200 lines**: Break large pages into sub-topics
@@ -254,13 +271,19 @@ Run the deterministic retrieval command **once**, using the first transport avai
 obsidian knowlery:query question="<question>"
 \`\`\`
 
-**Transport 2 — Obsidian closed or the command missing:**
+**Transport 2 — the globally installed Knowlery CLI:**
+
+\`\`\`bash
+knowlery query "<question>"
+\`\`\`
+
+**Transport 3 — always present in the vault, needs only Node:**
 
 \`\`\`bash
 node .knowlery/bin/query.mjs "<question>"
 \`\`\`
 
-Both run the same engine over the whole vault (compiled pages, user notes, and
+All three run the same engine over the whole vault (compiled pages, user notes, and
 installed knowledge bundles) and print identical output: one line per candidate with
 rank, path, type, score, and a one-line description. Lines starting with
 \`evidence via source:\` mean the page was boosted because a raw note it cites matched
@@ -272,11 +295,11 @@ the question — read those source notes too.
   does not cover this question and suggest running \`/cook\` on relevant material.
   Do not answer from general knowledge.
 - If transport 1 prints \`Snapshot warming up\`, retry once after a moment or use
-  transport 2.
-- Broad or exploratory questions: add \`k=20\` (transport 1) / \`--k 20\` (transport 2).
+  the next transport.
+- Broad or exploratory questions: add \`k=20\` (transport 1) / \`--k 20\` (transports 2-3).
   Structured output: \`json\` / \`--json\`.
 
-**Fallback (degraded mode).** Only if neither transport is available: enumerate
+**Fallback (degraded mode).** Only if no transport is available: enumerate
 compiled pages with \`obsidian properties type=entity\` (and \`concept\`, \`comparison\`,
 \`query\`), run \`obsidian search "<key concept>"\` per key concept, merge and deduplicate
 the results — and say in your answer that retrieval ran in degraded mode without the
@@ -365,9 +388,10 @@ Use \`obsidian create\` to save. Ask the user where they'd like it saved.
 - **Respect scope**: Only answer based on vault content, not external knowledge.
 - **Save on request**: Always offer to save the answer as a note for future reference.
 - **One retrieval call:** Candidate location belongs to the retrieval engine —
-  \`obsidian knowlery:query question="..."\` when Obsidian is running, otherwise
-  \`node .knowlery/bin/query.mjs "..."\`; reading and synthesis are yours. Fall back to
-  \`obsidian properties\` / \`obsidian search\` only when neither transport can run.
+  \`obsidian knowlery:query question="..."\` when Obsidian is running, else
+  \`knowlery query "..."\` (global CLI), else \`node .knowlery/bin/query.mjs "..."\`;
+  reading and synthesis are yours. Fall back to \`obsidian properties\` /
+  \`obsidian search\` only when no transport can run.
 `,
   },
   {
@@ -757,11 +781,15 @@ Move: Projects/random-notes.md → Projects/feature-a/
 
 ### Step 6: Apply Moves (If Confirmed)
 
-Use Obsidian CLI to rename/move files:
+Prefer Obsidian CLI to rename/move files (it updates wikilinks automatically):
 
 \`\`\`bash
 obsidian rename file="old-path.md" new_name="new-path.md"
 \`\`\`
+
+In headless environments, move the files directly, then check for broken wikilinks
+yourself (moved-page names grepped across the vault) and run \`knowlery health\` after
+bulk changes.
 
 Always show the full plan before applying. Never move files silently.
 
@@ -780,7 +808,7 @@ Obsidian typically handles wikilink updates on rename automatically, but verify 
 - **Suggest first, act second.** Default to dry_run mode. Show the full plan before making any changes.
 - **Agent directories are sacred.** Only agent pages should live in \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`.
 - **User notes are user territory.** Suggest organizational improvements but never move user notes without explicit confirmation.
-- **Obsidian is first workbench.** All note operations go through Obsidian CLI.
+- **Obsidian first, headless second.** Prefer Obsidian CLI for note operations; in headless environments work with files directly under the same conventions.
 `,
   },
   {
@@ -945,18 +973,31 @@ description: >
 Scan the four agent-maintained directories (\`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`)
 for structural issues.
 
+**Use the deterministic tools first** — they compute several categories exactly:
+
+\`\`\`bash
+obsidian orphans          # category 1: files with no incoming links
+obsidian unresolved       # category 2: broken wikilinks, with counts
+obsidian deadends         # bonus signal: files with no outgoing links
+obsidian knowlery:stale   # categories 3 and 7 (or: knowlery stale / node .knowlery/bin/query.mjs --stale)
+\`\`\`
+
+Filter tool output to the four agent directories. Fall back to manual traversal only
+when none of the tools is available.
+
 ## Scan Categories
 
 ### 1. Orphan Pages
-Pages with no inbound wikilinks from any other note (user notes or agent pages).
+Pages with no inbound wikilinks from any other note — from \`obsidian orphans\`.
 - Severity: **warning** for new pages (< 7 days old), **info** for older
 
 ### 2. Broken Wikilinks
-Wikilinks in agent pages that point to non-existent targets.
+Wikilinks in agent pages that point to non-existent targets — from \`obsidian unresolved\`.
 - Severity: **warning**
 
 ### 3. Stale Content
-Pages where \`updated\` date is > 90 days behind the most recent source note's date.
+Compiled pages whose cited sources changed after the page was last written — the
+\`Stale pages\` section of the staleness report.
 - Severity: **info**
 
 ### 4. Frontmatter Violations
@@ -970,6 +1011,11 @@ Tags used in agent pages that are not defined in \`SCHEMA.md\`.
 ### 6. Oversized Pages
 Pages exceeding ~200 lines — candidates for splitting.
 - Severity: **info**
+
+### 7. Dangling Sources
+Agent pages whose \`sources\` cite notes that no longer exist — the \`Dangling sources\`
+section of the staleness report.
+- Severity: **warning**
 
 ## Report Format
 
@@ -1378,17 +1424,22 @@ Before creating any note:
 
 1. Read \`AGENTS.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. \`Projects/\`, \`Daily/\`); **agent knowledge pages** live only under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`
-3. Use \`obsidian create\` to create notes — never use file write tools directly
+3. Prefer \`obsidian create\` when Obsidian is running; in headless environments write the file directly, following every convention below
 
 ## Creating Notes
 
-You MUST use \`obsidian create\` to create notes in the vault:
+Prefer \`obsidian create\` when Obsidian is running (it keeps the wikilink graph
+consistent):
 
 \`\`\`
 obsidian create name="Note Title" content="<frontmatter + content>" silent
 \`\`\`
 
 For multiline content use \`\\n\` for newline and \`\\t\` for tab.
+
+In headless environments (Obsidian closed, CLI-initialized workspaces), write the
+\`.md\` file directly with identical frontmatter and naming conventions, and run
+\`knowlery health\` after bulk changes.
 
 ## Required Frontmatter
 

@@ -1,6 +1,6 @@
 # F5 (0.7.0) — Environment-Adaptive Skills + the Sync Downgrade Guard
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-04 — implemented, awaiting maintainer acceptance testing (§5)
 - **Target release:** 0.7.0 (final feature)
 - **Branch:** `cursor/07-f5-adaptive-skills-92eb` (stacked on 0.7 F4)
 - **Depends on:** F2/F3 (the `knowlery` CLI exists), 0.6 F5/F3 (transport ladder,

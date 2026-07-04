@@ -11,6 +11,8 @@ export const ManifestSchema = z.object({
   kbName: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  /** Core version that last ran vault sync — the downgrade guard's record (spec 0.7 f5). */
+  lastSyncedBy: z.string().optional(),
 });
 export type Manifest = z.infer<typeof ManifestSchema>;
 
