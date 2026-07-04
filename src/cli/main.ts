@@ -134,7 +134,10 @@ async function main(): Promise<void> {
       });
       break;
     case 'sync':
-      await runSync(fs, { log });
+      await runSync(fs, {
+        toolVersion: typeof KNOWLERY_VERSION === 'string' ? KNOWLERY_VERSION : undefined,
+        log,
+      });
       break;
     case 'health':
       await runHealth(fs, { root, json: args.json, log });

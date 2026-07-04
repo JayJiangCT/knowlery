@@ -28,7 +28,7 @@ npm package name `knowlery` verified available (2026-07-03).
 | F2 | `knowlery` CLI skeleton: `init` / `sync` / `health` + npm packaging | [f2-cli-skeleton.md](./f2-cli-skeleton.md) | F1 |
 | F3 | `knowlery query` / `knowlery stale` commands | [f3-query-commands.md](./f3-query-commands.md) | F2 |
 | F4 | `knowlery bundle install` / `list` / `uninstall` | [f4-bundle-commands.md](./f4-bundle-commands.md) | F1, F2 |
-| F5 | Environment-adaptive skills (CLI-mode write path; folds in the 0.6 backlog: retrieval-aware `/cook`, `/audit` on CLI primitives) | (spec pending) | F2 |
+| F5 | Environment-adaptive skills (CLI-mode write path; folds in the 0.6 backlog: retrieval-aware `/cook`, `/audit` on CLI primitives) + sync downgrade guard | [f5-adaptive-skills.md](./f5-adaptive-skills.md) | F2, F3 |
 
 Execution order: F1 → F2 → F3 → F4 → F5.
 

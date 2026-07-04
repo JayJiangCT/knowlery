@@ -19,7 +19,11 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 ### Obsidian CLI Only
 
-**Use Obsidian CLI for note-centric vault operations.** Do not start vault discovery with raw Bash commands such as \`ls\`, \`find\`, \`grep\`, or \`cat\`. Use Bash only when Obsidian CLI is unavailable, a verified Obsidian CLI command fails, or the task is non-note environment diagnostics. State the fallback reason before using Bash.
+**Use Obsidian CLI for note-centric vault operations when Obsidian is running.** Do not start vault discovery with raw Bash commands such as \`ls\`, \`find\`, \`grep\`, or \`cat\`. Use Bash only when Obsidian CLI is unavailable, a verified Obsidian CLI command fails, or the task is non-note environment diagnostics. State the fallback reason before using Bash.
+
+In headless environments (Obsidian closed, CLI-initialized workspaces), work with files
+directly under the same conventions, use the Knowlery retrieval commands below for
+discovery, and run \`knowlery health\` after bulk changes.
 
 | Task | Command |
 |------|---------|
@@ -57,9 +61,9 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 When answering questions from this vault (not general knowledge):
 
 1. Run the retrieval engine once — \`obsidian knowlery:query question="<question>"\`
-   when Obsidian is running, else \`node .knowlery/bin/query.mjs "<question>"\`; both
-   scan compiled pages, user notes, and installed bundles, and print the same ranked
-   candidate list
+   when Obsidian is running, else \`knowlery query "<question>"\` (global CLI), else
+   \`node .knowlery/bin/query.mjs "<question>"\`; all three scan compiled pages, user
+   notes, and installed bundles, and print the same ranked candidate list
 2. Read promising candidates with \`obsidian read\` — prefer \`status: reviewed\` over
    \`draft\`, recent \`updated\`, and any \`evidence via source:\` notes it flags
 3. If it prints \`No confident matches\`, say the vault does not cover the question and
@@ -160,6 +164,7 @@ See the /cook skill specification for the complete frontmatter schema. Key requi
 | \`status\` | text | Page status (active, draft, archived) |
 | \`domain\` | text | Knowledge domain |
 | \`description\` | text | Short description/summary |
+| \`aliases\` | list | Alternative names: nicknames, abbreviations, cross-language titles — these make lexical retrieval find the page |
 | \`references\` | list | Related wikilink references |
 | \`author\` | text | Content author |
 `;

@@ -179,9 +179,16 @@ export default class KnowleryPlugin extends Plugin {
         }
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
-          await runVaultSync(this.fs, this.settings.platform);
-          this.settings.lastSyncedVersion = pluginVersion;
-          await this.saveSettings();
+          const syncResult = await runVaultSync(this.fs, this.settings.platform, pluginVersion);
+          if (syncResult.skipped === 'newer-shell') {
+            new Notice(
+              `Knowlery: this vault was last synced by a newer Knowlery (${syncResult.lastSyncedBy}). Update the plugin before it can sync again.`,
+              10000,
+            );
+          } else {
+            this.settings.lastSyncedVersion = pluginVersion;
+            await this.saveSettings();
+          }
         }
 
         await this.maybeShowReleaseNotes(pluginVersion, previousSyncedVersion !== '');
