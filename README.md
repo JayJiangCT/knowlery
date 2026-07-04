@@ -20,7 +20,7 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ### BYOAO
 
-[BYOAO](https://github.com/JayJiangCT/BYOAO) (*Build Your Own AI OS*) is a separate project: an OpenCode-oriented flow that turns Obsidian into an AI-powered “LLM Wiki” style knowledge base with global CLI install. Working on BYOAO is what made it natural to ask: **what if the same ideas lived as a first-class Obsidian plugin**—settings, setup wizard, skills, and health—without leaving the app? Knowlery is that plugin-shaped experiment: same family of ideas, different packaging (plugin UI + vault-side wiring for Claude Code / OpenCode).
+[BYOAO](https://github.com/JayJiangCT/BYOAO) (*Build Your Own AI OS*) was Knowlery's predecessor: an OpenCode-oriented flow that turned Obsidian into an AI-powered “LLM Wiki” style knowledge base with global CLI install. Working on BYOAO is what made it natural to ask: **what if the same ideas lived as a first-class Obsidian plugin**—and, later, as a proper CLI too. As of Knowlery 0.7.0 both packagings live here (“one core, two shells”: the plugin plus `npm i -g knowlery`), and **BYOAO is archived** — its role is fully superseded.
 
 ## Getting started (video)
 
