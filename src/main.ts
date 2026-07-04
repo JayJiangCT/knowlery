@@ -9,8 +9,7 @@ import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
-import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports } from './core/migration';
-import { syncQueryScript } from './core/query-script';
+import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
@@ -26,7 +25,6 @@ import {
 } from './core/query/cli-handler';
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
-import { refreshInstalledBundlesBlock } from './core/okf/knowledge-md-bundles';
 import { forkPageFromBundle, parseLibraryPath } from './core/okf/fork';
 
 interface SettingApp {
@@ -181,13 +179,16 @@ export default class KnowleryPlugin extends Plugin {
         }
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
-          await syncBuiltinSkills(this.fs);
-          await syncQueryScript(this.fs);
-          await migrateSchemaMd(this.fs);
-          await migrateFixedContextImports(this.fs);
-          await refreshInstalledBundlesBlock(this.fs);
-          this.settings.lastSyncedVersion = pluginVersion;
-          await this.saveSettings();
+          const syncResult = await runVaultSync(this.fs, this.settings.platform, pluginVersion);
+          if (syncResult.skipped === 'newer-shell') {
+            new Notice(
+              `Knowlery: this vault was last synced by a newer Knowlery (${syncResult.lastSyncedBy}). Update the plugin before it can sync again.`,
+              10000,
+            );
+          } else {
+            this.settings.lastSyncedVersion = pluginVersion;
+            await this.saveSettings();
+          }
         }
 
         await this.maybeShowReleaseNotes(pluginVersion, previousSyncedVersion !== '');

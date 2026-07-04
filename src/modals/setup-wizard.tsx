@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { DEFAULT_OPTIONAL_INSTALL_SELECTION, KNOWLEDGE_DIRS } from '../types';
 import { executeSetup, getSetupSteps, readManifest, type SetupStep } from '../core/setup-executor';
+import { runOptionalInstalls } from '../core/environment-install';
 import {
   buildByoaoMigrationPreview,
   executeByoaoMigration,
@@ -622,6 +623,11 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     };
   }, [environmentRefreshKey, loading, phase, platform, plugin.app]);
 
+  const hasOptionalInstalls = (
+    selection?: OptionalInstallSelection,
+  ): selection is OptionalInstallSelection =>
+    Boolean(selection?.platformCli || selection?.claudian || selection?.skillsTooling);
+
   /* ---- setup handler ---- */
   const handleSetup = async () => {
     setError(null);
@@ -630,18 +636,25 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
     setOptionalInstallRuns(selectedInstallStates(optionalInstalls, environment?.items ?? []));
 
     try {
-      const result = await executeSetup(
+      await executeSetup(
         plugin.fs,
         platform,
         plugin.settings.kbName,
         (step) => {
           setCompletedSteps((prev) => new Set(prev).add(step));
         },
-        {
-          optionalInstalls,
-          nodePath,
+      );
+
+      // Optional tool installs are an Obsidian-shell feature and run here in the
+      // wizard, not inside the shared executeSetup (spec 0.7 f2, §4.1).
+      let optionalInstallRuns: InstallExecutionState[] = [];
+      if (hasOptionalInstalls(optionalInstalls)) {
+        optionalInstallRuns = await runOptionalInstalls({
           app: plugin.app,
-          onOptionalInstallUpdate: (state) => {
+          platform,
+          selection: optionalInstalls,
+          nodePath,
+          onUpdate: (state) => {
             setOptionalInstallRuns((prev) => {
               const next = prev.filter((run) => run.id !== state.id);
               next.push(state);
@@ -650,14 +663,14 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
                 .filter((run): run is InstallExecutionState => run !== undefined);
             });
           },
-        },
-      );
+        });
+      }
 
       plugin.settings.platform = platform;
       plugin.settings.nodePath = nodePath;
       await plugin.saveSettings();
 
-      setOptionalInstallRuns(result.optionalInstallRuns);
+      setOptionalInstallRuns(optionalInstallRuns);
       setPhase('done');
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);

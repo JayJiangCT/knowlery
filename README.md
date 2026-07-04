@@ -6,7 +6,7 @@
 
 Knowlery turns an Obsidian vault into a personal knowledge review space for Claude Code and OpenCode workflows. It helps initialize the vault, keep built-in skills and schemas in sync, choose small next moves from one action-first dashboard, review the current note, generate weekly summaries, share and install knowledge bundles, and maintain vault health from Obsidian settings.
 
-In v0.6.0, retrieval becomes deterministic and measurable. Finding knowledge is now **one command with two transports** — `obsidian knowlery:query` while Obsidian is running, or `node .knowlery/bin/query.mjs` with it closed — ranking compiled pages, your own notes, and installed bundles with field-weighted scoring, cross-language source-graph boosts, and an honest "no confident matches" verdict. **Knowledge health** on the dashboard mechanically detects compiled pages whose sources changed and notes never compiled, feeding `/cook`'s incremental scope. Agent sessions got lighter: fixed context now carries only `KNOWLEDGE.md` plus your rules. And every retrieval change is scored by a committed evaluation harness with a frozen baseline, enforced in CI.
+In v0.7.0, Knowlery stops being Obsidian-only: **one core, two shells**. The new [`knowlery` CLI](#knowlery-cli) (`npm i -g knowlery`) carries the full workspace lifecycle — `init`, `sync`, `health`, `query`, `stale`, `bundle install` — over exactly the same workspace format, so a folder initialized in a terminal opens in Obsidian with zero migration and this plugin stays the richest way to work. Skills adapt to where they run (three retrieval transports, a headless write path), `/cook` records nicknames, abbreviations, and cross-language titles as `aliases` so the words you actually use find the page, and a sync downgrade guard keeps mixed plugin/CLI versions from ever downgrading a workspace.
 
 Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
@@ -20,7 +20,7 @@ Knowlery’s take is **aligned with that maintenance story** for your vault: it 
 
 ### BYOAO
 
-[BYOAO](https://github.com/JayJiangCT/BYOAO) (*Build Your Own AI OS*) is a separate project: an OpenCode-oriented flow that turns Obsidian into an AI-powered “LLM Wiki” style knowledge base with global CLI install. Working on BYOAO is what made it natural to ask: **what if the same ideas lived as a first-class Obsidian plugin**—settings, setup wizard, skills, and health—without leaving the app? Knowlery is that plugin-shaped experiment: same family of ideas, different packaging (plugin UI + vault-side wiring for Claude Code / OpenCode).
+[BYOAO](https://github.com/JayJiangCT/BYOAO) (*Build Your Own AI OS*) was Knowlery's predecessor: an OpenCode-oriented flow that turned Obsidian into an AI-powered “LLM Wiki” style knowledge base with global CLI install. Working on BYOAO is what made it natural to ask: **what if the same ideas lived as a first-class Obsidian plugin**—and, later, as a proper CLI too. As of Knowlery 0.7.0 both packagings live here (“one core, two shells”: the plugin plus `npm i -g knowlery`), and **BYOAO is archived** — its role is fully superseded.
 
 ## Getting started (video)
 
@@ -45,6 +45,27 @@ Knowlery focuses on **vault layout, skills, rules, and health** for agent workfl
 
 - **[Claudian](https://github.com/YishenTu/claudian)** — embeds Claude Code, Codex, and related flows in the vault; file read/write and bash from a chat UI.
 - **[obsidian-agent-client](https://github.com/RAIT-09/obsidian-agent-client)** — brings agents in via Agent Client Protocol (ACP) (e.g. Claude Code, Codex, Gemini CLI) with multi-session and MCP support.
+
+## Knowlery CLI
+
+The same knowledge-base lifecycle is available as a standalone CLI — one core, two
+shells. A folder initialized by the CLI opens in Obsidian with zero migration, and the
+plugin adds the review UI on top.
+
+```bash
+npm i -g knowlery
+
+knowlery init     # scaffold a workspace (interactive, or --platform/--name flags)
+knowlery sync     # bring skills, rules, and the retrieval script up to date
+knowlery health   # config integrity + knowledge-page counts; exit code for CI
+knowlery query "<question>"   # deterministic retrieval over the workspace
+knowlery stale    # compiled pages whose sources changed; notes never compiled
+knowlery bundle install <zip-or-folder>   # install a shared knowledge bundle
+knowlery bundle list / uninstall <id>     # manage installed bundles
+```
+
+Retrieval works headlessly too: `node .knowlery/bin/query.mjs "<question>"` (written by
+`init`/`sync`) searches the workspace with Obsidian closed.
 
 ## Install from Community plugins
 

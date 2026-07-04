@@ -2,6 +2,17 @@
 
 理解 Knowlery 最容易的方式，是把它看作 vault 上的一层 review surface。你的笔记是原始材料。Skills 是可复用的 prompt。Rules 是约束。Dashboard 会把最近活动整理成一组小动作，而更深的维护工具放在 Obsidian settings 中。
 
+## 一个核心，两个外壳
+
+从 0.7.0 起，同一套知识库生命周期能力提供两个外壳，共享同一种 workspace 格式：
+
+| 外壳 | 提供 | 安装 |
+| --- | --- | --- |
+| Obsidian 插件 | 全部能力：review space、Knowledge health 界面、应用内实时检索，以及所有生命周期操作 | 社区插件市场 |
+| `knowlery` CLI | `init` / `sync` / `health` / `query` / `stale` / `bundle install\|list\|uninstall`——面向终端、agent 和无头环境 | `npm i -g knowlery` |
+
+CLI 初始化的文件夹用 Obsidian 打开零迁移，任何 Knowlery vault 也可以直接被 CLI 操作。两个外壳共享同一份 sync 与迁移实现，workspace 会记录最后同步它的 Knowlery 版本——旧外壳会拒绝同步，而不是把新外壳升级过的内容降级回去。
+
 ## Review Space
 
 Knowlery 不会取代你的个人笔记。它会在自由笔记和 agent 维护内容之间保留边界。

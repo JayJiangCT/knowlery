@@ -24,3 +24,37 @@ export interface VaultFs {
 export function normalizeVaultPath(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+/g, '/');
 }
+
+/**
+ * Wraps a VaultFs and records every mutated path, so callers (e.g. `knowlery sync`)
+ * can report what actually changed. Write-on-change discipline lives in the callers;
+ * this only observes.
+ */
+export function loggingVaultFs(inner: VaultFs): { fs: VaultFs; writes: string[] } {
+  const writes: string[] = [];
+  const record = (path: string) => {
+    if (!writes.includes(path)) writes.push(path);
+  };
+  return {
+    writes,
+    fs: {
+      ...inner,
+      write: async (path, content) => {
+        await inner.write(path, content);
+        record(path);
+      },
+      writeBinary: async (path, data) => {
+        await inner.writeBinary(path, data);
+        record(path);
+      },
+      remove: async (path) => {
+        await inner.remove(path);
+        record(path);
+      },
+      rmdir: async (path, recursive) => {
+        await inner.rmdir(path, recursive);
+        record(path);
+      },
+    },
+  };
+}

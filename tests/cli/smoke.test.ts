@@ -1,0 +1,111 @@
+import { describe, expect, it } from 'vitest';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import esbuild from 'esbuild';
+
+const run = promisify(execFile);
+
+/**
+ * Spec 0.7 f2, §6.5: the built artifact (not just the handlers) runs the full
+ * init -> health -> sync round trip. The bundle is built here with the same entry the
+ * release build uses, into a temp file, then spawned with plain node.
+ */
+describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
+  it('round-trips init, health, sync in a temp workspace', async () => {
+    const workDir = await mkdtemp(join(tmpdir(), 'knowlery-smoke-'));
+    const cliPath = join(workDir, 'knowlery-cli.mjs');
+    const vaultDir = join(workDir, 'kb');
+
+    try {
+      await esbuild.build({
+        entryPoints: [join(__dirname, '..', '..', 'src', 'cli', 'main.ts')],
+        bundle: true,
+        platform: 'node',
+        format: 'esm',
+        target: 'node18',
+        outfile: cliPath,
+        logLevel: 'silent',
+        define: { KNOWLERY_VERSION: JSON.stringify('0.0.0-test') },
+        banner: {
+          js: "import { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);",
+        },
+      });
+
+      const version = await run('node', [cliPath, '--version']);
+      expect(version.stdout.trim()).toBe('0.0.0-test');
+
+      const init = await run('node', [cliPath, 'init', '--dir', vaultDir, '--platform', 'claude-code', '--name', 'Smoke KB']);
+      expect(init.stdout).toContain('Initialized Knowlery workspace "Smoke KB"');
+      await stat(join(vaultDir, 'KNOWLEDGE.md'));
+      await stat(join(vaultDir, '.knowlery', 'bin', 'query.mjs'));
+
+      const health = await run('node', [cliPath, 'health', '--dir', vaultDir]);
+      expect(health.stdout).toContain('Built-in skills — 13 installed');
+
+      const sync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
+      const secondSync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
+      expect(`${sync.stdout}${secondSync.stdout}`).toContain('No changes');
+
+      // query/stale (spec 0.7 f3, §5.4): global CLI vs the vault-embedded script,
+      // against the same workspace state, must print identical output.
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        join(vaultDir, 'concepts', 'widget-design.md'),
+        '---\ntitle: Widget Design\ntype: concept\ncreated: 2026-01-01\ntags: [design]\n---\n\nWidgets are designed with care.\n',
+      );
+      const cliQuery = await run('node', [cliPath, 'query', '--dir', vaultDir, 'widget design']);
+      const embeddedQuery = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), 'widget design']);
+      expect(cliQuery.stdout.trim()).toBe(embeddedQuery.stdout.trim());
+      expect(cliQuery.stdout).toContain('concepts/widget-design.md');
+
+      const cliStale = await run('node', [cliPath, 'stale', '--dir', vaultDir]);
+      const embeddedStale = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), '--stale']);
+      expect(cliStale.stdout.trim()).toBe(embeddedStale.stdout.trim());
+
+      // Abstention is a result, not an error: exit 0.
+      const abstain = await run('node', [cliPath, 'query', '--dir', vaultDir, 'zebra quantum lighthouse']);
+      expect(abstain.stdout).toContain('No confident matches');
+
+      // Missing question: usage error, exit 2.
+      const noQuestion = await run('node', [cliPath, 'query', '--dir', vaultDir]).catch(
+        (error: { code: number; stderr: string }) => error,
+      );
+      expect(noQuestion.code).toBe(2);
+
+      // bundle install -> list -> uninstall (spec 0.7 f4, §5.5).
+      const bundleDir = join(workDir, 'bundle-src');
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(join(bundleDir, 'concepts'), { recursive: true });
+      await writeFile(join(bundleDir, 'knowlery-bundle.json'), JSON.stringify({
+        schemaVersion: 1, okfVersion: '0.1', id: 'smoke.pack', title: 'Smoke Pack',
+        version: '1.0.0', creator: { name: 'Smoke', url: '' },
+        releasedAt: '2026-07-01T00:00:00.000Z', entrypoint: 'index.md',
+        contentHash: 'sha256-smoke', license: 'personal', knowleryVersion: '0.6.1', conceptCount: 1,
+      }));
+      await writeFile(join(bundleDir, 'index.md'), '---\nokf_version: "0.1"\n---\n\n# Smoke Pack\n');
+      await writeFile(
+        join(bundleDir, 'concepts', 'thing.md'),
+        '---\ntype: Concept\ntitle: Thing\ndescription: A smoke thing\ndomain: smoke\ntimestamp: 2026-07-01T00:00:00.000Z\n---\n\nBody.',
+      );
+
+      const install = await run('node', [cliPath, 'bundle', 'install', bundleDir, '--dir', vaultDir]);
+      expect(install.stdout).toContain('Installed smoke.pack v1.0.0');
+      const list = await run('node', [cliPath, 'bundle', 'list', '--dir', vaultDir]);
+      expect(list.stdout).toContain('smoke.pack v1.0.0');
+      const uninstall = await run('node', [cliPath, 'bundle', 'uninstall', 'smoke.pack', '--dir', vaultDir]);
+      expect(uninstall.stdout).toContain('Uninstalled smoke.pack');
+
+      // Non-TTY init without flags must fail deterministically.
+      const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
+        (error: { code: number; stderr: string }) => error,
+      );
+      expect(badInit.code).toBe(1);
+      expect(badInit.stderr).toContain('--platform');
+    } finally {
+      await rm(workDir, { recursive: true, force: true });
+    }
+  }, 30000);
+});
