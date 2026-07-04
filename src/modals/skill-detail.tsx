@@ -159,14 +159,14 @@ function SkillDetailContent(props: {
   };
 
   const handleDisable = async () => {
-    await disableSkill(plugin.app, skill.name);
+    await disableSkill(plugin.fs, skill.name);
     new Notice(`Disabled skill "${skill.name}"`);
     onChange?.();
     onClose();
   };
 
   const handleEnable = async () => {
-    await enableSkill(plugin.app, skill.name);
+    await enableSkill(plugin.fs, skill.name);
     new Notice(`Enabled skill "${skill.name}"`);
     onChange?.();
     onClose();
@@ -187,7 +187,7 @@ function SkillDetailContent(props: {
       setConfirmDelete(true);
       return;
     }
-    await deleteSkill(plugin.app, skill.name);
+    await deleteSkill(plugin.fs, skill.name);
     new Notice(`Deleted skill "${skill.name}"`);
     onChange?.();
     onClose();

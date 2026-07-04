@@ -1,25 +1,20 @@
-import type { App } from 'obsidian';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 import { generateClaudeMd } from '../assets/templates';
-import { writeFile } from './vault-io';
-
-function normalizePath(path: string): string {
-  return path.replace(/\\/g, '/').replace(/\/+/g, '/');
-}
 
 export const CLAUDE_RULE_IMPORTS_START = '<!-- Knowlery rule imports:start -->';
 export const CLAUDE_RULE_IMPORTS_END = '<!-- Knowlery rule imports:end -->';
 
-export async function collectRuleImportPaths(app: App, rulesDir: string): Promise<string[]> {
-  const normalizedRulesDir = normalizePath(rulesDir);
-  const adapter = app.vault.adapter;
-  if (!(await adapter.exists(normalizedRulesDir))) return [];
+export async function collectRuleImportPaths(fs: VaultFs, rulesDir: string): Promise<string[]> {
+  const normalizedRulesDir = normalizeVaultPath(rulesDir);
+  if (!(await fs.exists(normalizedRulesDir))) return [];
 
   const imports: string[] = [];
 
   async function walk(dir: string): Promise<void> {
-    const listing = await adapter.list(normalizePath(dir));
+    const listing = await fs.list(normalizeVaultPath(dir));
     for (const filePath of listing.files) {
-      const normalizedFile = normalizePath(filePath);
+      const normalizedFile = normalizeVaultPath(filePath);
       if (!normalizedFile.endsWith('.md')) continue;
       if (!normalizedFile.startsWith(`${normalizedRulesDir}/`)) continue;
       imports.push(normalizedFile.slice(normalizedRulesDir.length + 1));
@@ -36,7 +31,7 @@ export async function collectRuleImportPaths(app: App, rulesDir: string): Promis
 
 export function normalizeRuleImportPaths(paths: string[]): string[] {
   return [...new Set(paths)]
-    .map((path) => normalizePath(path).replace(/^\/+/, ''))
+    .map((path) => normalizeVaultPath(path).replace(/^\/+/, ''))
     .filter((path) => path.endsWith('.md'))
     .sort((a, b) => a.localeCompare(b));
 }
@@ -68,18 +63,18 @@ export function mergeClaudeRuleImports(content: string, ruleImportPaths: string[
   return `${withoutLegacyRuleImports}\n${block}\n`;
 }
 
-export async function syncClaudeRuleImports(app: App): Promise<void> {
+export async function syncClaudeRuleImports(fs: VaultFs): Promise<void> {
   const claudeMdPath = '.claude/CLAUDE.md';
-  const ruleImports = await collectRuleImportPaths(app, '.claude/rules');
-  const fileExists = await app.vault.adapter.exists(claudeMdPath);
+  const ruleImports = await collectRuleImportPaths(fs, '.claude/rules');
+  const fileExists = await fs.exists(claudeMdPath);
   const existing = fileExists
-    ? await app.vault.adapter.read(claudeMdPath)
+    ? await fs.read(claudeMdPath)
     : generateClaudeMd(ruleImports);
   const merged = mergeClaudeRuleImports(existing, ruleImports);
   // Write only on change: an unconditional write churned the file's mtime on every
   // plugin load (surfaced during F4 acceptance testing).
   if (!fileExists || merged !== existing) {
-    await writeFile(app, claudeMdPath, merged);
+    await fs.write(claudeMdPath, merged);
   }
 }
 

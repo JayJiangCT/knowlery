@@ -1,17 +1,16 @@
-import type { App } from 'obsidian';
+import type { VaultFs } from './vault-fs';
 import { BUNDLED_SKILLS } from '../assets/skills';
 import { loadSkillsLock, saveSkillsLock, copySkillToClaudeDir } from './skill-manager';
-import { ensureDir, writeFile } from './vault-io';
 
 const SKILLS_DIR = '.agents/skills';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
 
-export async function syncBuiltinSkills(app: App): Promise<void> {
-  const lock = await loadSkillsLock(app);
+export async function syncBuiltinSkills(fs: VaultFs): Promise<void> {
+  const lock = await loadSkillsLock(fs);
   let lockChanged = false;
 
-  await ensureDir(app, SKILLS_DIR);
-  await ensureDir(app, CLAUDE_SKILLS_DIR);
+  await fs.mkdir(SKILLS_DIR);
+  await fs.mkdir(CLAUDE_SKILLS_DIR);
 
   for (const skill of BUNDLED_SKILLS) {
     const entry = lock.skills[skill.name];
@@ -20,11 +19,11 @@ export async function syncBuiltinSkills(app: App): Promise<void> {
       continue;
     }
 
-    await ensureDir(app, `${SKILLS_DIR}/${skill.name}`);
-    await writeFile(app, `${SKILLS_DIR}/${skill.name}/SKILL.md`, skill.content);
+    await fs.mkdir(`${SKILLS_DIR}/${skill.name}`);
+    await fs.write(`${SKILLS_DIR}/${skill.name}/SKILL.md`, skill.content);
 
     if (!entry || (entry.source === 'builtin' && !entry.disabled)) {
-      await copySkillToClaudeDir(app, skill.name);
+      await copySkillToClaudeDir(fs, skill.name);
     }
 
     if (!entry) {
@@ -38,7 +37,7 @@ export async function syncBuiltinSkills(app: App): Promise<void> {
   }
 
   if (lockChanged) {
-    await saveSkillsLock(app, lock);
+    await saveSkillsLock(fs, lock);
   }
 }
 
@@ -152,11 +151,10 @@ const SCHEMA_SECTIONS: SchemaSection[] = [
   },
 ];
 
-export async function migrateSchemaMd(app: App): Promise<void> {
-  const adapter = app.vault.adapter;
-  if (!(await adapter.exists('SCHEMA.md'))) return;
+export async function migrateSchemaMd(fs: VaultFs): Promise<void> {
+  if (!(await fs.exists('SCHEMA.md'))) return;
 
-  let content = await adapter.read('SCHEMA.md');
+  let content = await fs.read('SCHEMA.md');
   let changed = false;
 
   for (const section of SCHEMA_SECTIONS) {
@@ -182,7 +180,7 @@ export async function migrateSchemaMd(app: App): Promise<void> {
   }
 
   if (changed) {
-    await writeFile(app, 'SCHEMA.md', content);
+    await fs.write('SCHEMA.md', content);
   }
 }
 
@@ -229,24 +227,22 @@ const STALE_OPENCODE_INSTRUCTIONS = new Set(['SCHEMA.md', 'INDEX.base']);
  * once-per-version sync block, so a user who deliberately re-adds the imports after
  * upgrading keeps them (spec f4, R3).
  */
-export async function migrateFixedContextImports(app: App): Promise<void> {
-  const adapter = app.vault.adapter;
-
+export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
   const claudePath = '.claude/CLAUDE.md';
-  if (await adapter.exists(claudePath)) {
-    const content = await adapter.read(claudePath);
+  if (await fs.exists(claudePath)) {
+    const content = await fs.read(claudePath);
     const filtered = content
       .split(/\r?\n/)
       .filter((line) => !STALE_CLAUDE_IMPORTS.has(line.trim()))
       .join('\n');
     if (filtered !== content) {
-      await writeFile(app, claudePath, filtered);
+      await fs.write(claudePath, filtered);
     }
   }
 
   const openCodePath = 'opencode.json';
-  if (await adapter.exists(openCodePath)) {
-    const raw = await adapter.read(openCodePath);
+  if (await fs.exists(openCodePath)) {
+    const raw = await fs.read(openCodePath);
     let config: Record<string, unknown>;
     try {
       config = JSON.parse(raw);
@@ -259,7 +255,7 @@ export async function migrateFixedContextImports(app: App): Promise<void> {
     );
     if (filtered.length !== config.instructions.length) {
       config.instructions = filtered;
-      await writeFile(app, openCodePath, JSON.stringify(config, null, 2));
+      await fs.write(openCodePath, JSON.stringify(config, null, 2));
     }
   }
 }

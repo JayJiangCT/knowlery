@@ -82,7 +82,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     try {
       const entries = await readBundleEntries(path);
       const { manifest, conformance } = previewInstall(entries);
-      const registry = await readInstalledBundles(plugin.app);
+      const registry = await readInstalledBundles(plugin.fs);
       const action = resolveInstallAction(registry.bundles[manifest.id], manifest.version);
       setStage({
         kind: 'preview',
@@ -104,7 +104,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     setInstalling(true);
     setError(null);
     try {
-      const result = await installBundle(plugin.app, stage.entries, {
+      const result = await installBundle(plugin.fs, stage.entries, {
         source: stage.path,
         force,
         skipConformanceGate,

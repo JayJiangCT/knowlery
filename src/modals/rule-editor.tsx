@@ -86,7 +86,7 @@ function RuleEditorContent(props: {
 
   const handleSave = async () => {
     const fname = filename.endsWith('.md') ? filename : `${filename}.md`;
-    await writeRule(plugin.app, settings.platform, fname, content);
+    await writeRule(plugin.fs, settings.platform, fname, content);
     props.onSave();
   };
 

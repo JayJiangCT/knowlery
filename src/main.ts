@@ -11,6 +11,8 @@ import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
 import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports } from './core/migration';
 import { syncQueryScript } from './core/query-script';
+import type { VaultFs } from './core/vault-fs';
+import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
 import {
   QUERY_CLI_COMMAND,
@@ -45,10 +47,13 @@ export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
   events = new Events();
   liveSnapshot: LiveQuerySnapshot | null = null;
+  /** Obsidian-shell VaultFs, shared with core lifecycle modules (spec 0.7 f1). */
+  fs: VaultFs = obsidianVaultFs(this.app);
 
   async onload() {
     await this.loadSettings();
 
+    this.fs = obsidianVaultFs(this.app);
     this.liveSnapshot = new LiveQuerySnapshot(this.app);
     this.registerQueryCliHandler();
 
@@ -162,7 +167,7 @@ export default class KnowleryPlugin extends Plugin {
     }));
 
     this.app.workspace.onLayoutReady(async () => {
-      if (!(await isVaultInitialized(this.app))) {
+      if (!(await isVaultInitialized(this.fs))) {
         new Notice(
           'Knowlery: This vault isn\'t set up for AI yet. Use the command palette to initialize.',
           10000,
@@ -172,15 +177,15 @@ export default class KnowleryPlugin extends Plugin {
         const previousSyncedVersion = this.settings.lastSyncedVersion;
 
         if (this.settings.platform === 'claude-code') {
-          await syncClaudeRuleImports(this.app);
+          await syncClaudeRuleImports(this.fs);
         }
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
-          await syncBuiltinSkills(this.app);
-          await syncQueryScript(this.app);
-          await migrateSchemaMd(this.app);
-          await migrateFixedContextImports(this.app);
-          await refreshInstalledBundlesBlock(this.app);
+          await syncBuiltinSkills(this.fs);
+          await syncQueryScript(this.fs);
+          await migrateSchemaMd(this.fs);
+          await migrateFixedContextImports(this.fs);
+          await refreshInstalledBundlesBlock(this.fs);
           this.settings.lastSyncedVersion = pluginVersion;
           await this.saveSettings();
         }

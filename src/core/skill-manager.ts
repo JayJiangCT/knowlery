@@ -1,8 +1,8 @@
-import { App, normalizePath } from 'obsidian';
-import type { SkillInfo, SkillsLock, SkillLockEntry, SkillDetail, SkillKind } from '../types';
-import { BUNDLED_SKILLS } from '../assets/skills';
 import matter from 'gray-matter';
-import { ensureDir, writeFile } from './vault-io';
+import type { SkillInfo, SkillsLock, SkillLockEntry, SkillDetail, SkillKind } from '../types';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
+import { BUNDLED_SKILLS } from '../assets/skills';
 
 const SKILLS_DIR = '.agents/skills';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
@@ -80,50 +80,43 @@ function parseSkillBody(content: string): SkillDetail {
   return detail;
 }
 
-export async function installAllBuiltinSkills(app: App): Promise<void> {
-  await ensureDir(app, normalizePath(SKILLS_DIR));
-  await ensureDir(app, normalizePath(CLAUDE_SKILLS_DIR));
+export async function installAllBuiltinSkills(fs: VaultFs): Promise<void> {
+  await fs.mkdir(normalizeVaultPath(SKILLS_DIR));
+  await fs.mkdir(normalizeVaultPath(CLAUDE_SKILLS_DIR));
 
   for (const skill of BUNDLED_SKILLS) {
-    await writeSkillFile(app, skill.name, skill.content);
-    await copySkillToClaudeDir(app, skill.name);
+    await writeSkillFile(fs, skill.name, skill.content);
+    await copySkillToClaudeDir(fs, skill.name);
   }
 }
 
-async function writeSkillFile(app: App, name: string, content: string): Promise<void> {
-  await ensureDir(app, `${SKILLS_DIR}/${name}`);
-  await writeFile(app, `${SKILLS_DIR}/${name}/SKILL.md`, content);
+async function writeSkillFile(fs: VaultFs, name: string, content: string): Promise<void> {
+  await fs.mkdir(`${SKILLS_DIR}/${name}`);
+  await fs.write(`${SKILLS_DIR}/${name}/SKILL.md`, content);
 }
 
-export async function copySkillToClaudeDir(app: App, name: string): Promise<void> {
-  await ensureDir(app, `${CLAUDE_SKILLS_DIR}/${name}`);
+export async function copySkillToClaudeDir(fs: VaultFs, name: string): Promise<void> {
+  await fs.mkdir(`${CLAUDE_SKILLS_DIR}/${name}`);
 
-  const sourcePath = normalizePath(`${SKILLS_DIR}/${name}/SKILL.md`);
-  const sourceFile = app.vault.getFileByPath(sourcePath);
-
-  let content: string;
-  if (sourceFile) {
-    content = await app.vault.cachedRead(sourceFile);
-  } else if (await app.vault.adapter.exists(sourcePath)) {
-    content = await app.vault.adapter.read(sourcePath);
-  } else {
+  const sourcePath = normalizeVaultPath(`${SKILLS_DIR}/${name}/SKILL.md`);
+  if (!(await fs.exists(sourcePath))) {
     return;
   }
+  const content = await fs.read(sourcePath);
 
-  await writeFile(app, `${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
+  await fs.write(`${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`, content);
 }
 
-export async function loadSkillsLock(app: App): Promise<SkillsLock> {
-  const file = app.vault.getFileByPath(normalizePath(LOCK_FILE));
-  if (!file) {
+export async function loadSkillsLock(fs: VaultFs): Promise<SkillsLock> {
+  if (!(await fs.exists(normalizeVaultPath(LOCK_FILE)))) {
     return { version: '1.0.0', skills: {} };
   }
-  const content = await app.vault.read(file);
+  const content = await fs.read(normalizeVaultPath(LOCK_FILE));
   return JSON.parse(content);
 }
 
-export async function saveSkillsLock(app: App, lock: SkillsLock): Promise<void> {
-  await writeFile(app, LOCK_FILE, JSON.stringify(lock, null, 2));
+export async function saveSkillsLock(fs: VaultFs, lock: SkillsLock): Promise<void> {
+  await fs.write(LOCK_FILE, JSON.stringify(lock, null, 2));
 }
 
 export function buildInitialSkillsLock(): SkillsLock {
@@ -138,21 +131,20 @@ export function buildInitialSkillsLock(): SkillsLock {
   return { version: '1.0.0', skills };
 }
 
-export async function listSkills(app: App): Promise<SkillInfo[]> {
-  const lock = await loadSkillsLock(app);
+export async function listSkills(fs: VaultFs): Promise<SkillInfo[]> {
+  const lock = await loadSkillsLock(fs);
   const skills: SkillInfo[] = [];
-  const adapter = app.vault.adapter;
 
-  const dirPath = normalizePath(SKILLS_DIR);
-  if (!(await adapter.exists(dirPath))) return skills;
+  const dirPath = normalizeVaultPath(SKILLS_DIR);
+  if (!(await fs.exists(dirPath))) return skills;
 
-  const listing = await adapter.list(dirPath);
+  const listing = await fs.list(dirPath);
   for (const folderPath of listing.folders) {
     const name = folderPath.split('/').pop()!;
-    const skillPath = normalizePath(`${folderPath}/SKILL.md`);
-    if (!(await adapter.exists(skillPath))) continue;
+    const skillPath = normalizeVaultPath(`${folderPath}/SKILL.md`);
+    if (!(await fs.exists(skillPath))) continue;
 
-    const content = await adapter.read(skillPath);
+    const content = await fs.read(skillPath);
     const lockEntry = lock.skills[name];
     const bundled = BUNDLED_SKILLS.find(s => s.name === name);
 
@@ -202,113 +194,111 @@ export async function listSkills(app: App): Promise<SkillInfo[]> {
 }
 
 export async function forkSkill(
-  app: App,
+  fs: VaultFs,
   originalName: string,
   newName: string,
   newContent: string,
 ): Promise<void> {
-  await writeSkillFile(app, newName, newContent);
-  await copySkillToClaudeDir(app, newName);
+  await writeSkillFile(fs, newName, newContent);
+  await copySkillToClaudeDir(fs, newName);
 
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   lock.skills[newName] = {
     source: 'custom',
     version: '1.0.0',
     disabled: false,
     forkedFrom: originalName,
   };
-  await saveSkillsLock(app, lock);
+  await saveSkillsLock(fs, lock);
 }
 
 export async function createSkill(
-  app: App,
+  fs: VaultFs,
   name: string,
   content: string,
 ): Promise<void> {
-  await ensureDir(app, normalizePath(SKILLS_DIR));
-  await ensureDir(app, normalizePath(CLAUDE_SKILLS_DIR));
-  await ensureDir(app, `${SKILLS_DIR}/${name}`);
-  await writeFile(app, `${SKILLS_DIR}/${name}/SKILL.md`, content);
-  await copySkillToClaudeDir(app, name);
+  await fs.mkdir(normalizeVaultPath(SKILLS_DIR));
+  await fs.mkdir(normalizeVaultPath(CLAUDE_SKILLS_DIR));
+  await fs.mkdir(`${SKILLS_DIR}/${name}`);
+  await fs.write(`${SKILLS_DIR}/${name}/SKILL.md`, content);
+  await copySkillToClaudeDir(fs, name);
 
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   lock.skills[name] = {
     source: 'custom',
     version: '1.0.0',
     disabled: false,
   };
-  await saveSkillsLock(app, lock);
+  await saveSkillsLock(fs, lock);
 }
 
 export async function markSkillInstalledFromRegistry(
-  app: App,
+  fs: VaultFs,
   name: string,
   registryIdentifier: string,
 ): Promise<void> {
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   lock.skills[name] = {
     source: 'registry',
     version: lock.skills[name]?.version ?? '1.0.0',
     disabled: lock.skills[name]?.disabled ?? false,
     registryIdentifier,
   };
-  await saveSkillsLock(app, lock);
+  await saveSkillsLock(fs, lock);
 }
 
-export async function disableSkill(app: App, name: string): Promise<void> {
-  const adapter = app.vault.adapter;
-  const filePath = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`);
-  if (await adapter.exists(filePath)) {
-    await adapter.remove(filePath);
+export async function disableSkill(fs: VaultFs, name: string): Promise<void> {
+  const filePath = normalizeVaultPath(`${CLAUDE_SKILLS_DIR}/${name}/SKILL.md`);
+  if (await fs.exists(filePath)) {
+    await fs.remove(filePath);
   }
-  const dirPath = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}`);
-  if (await adapter.exists(dirPath)) {
-    const listing = await adapter.list(dirPath);
+  const dirPath = normalizeVaultPath(`${CLAUDE_SKILLS_DIR}/${name}`);
+  if (await fs.exists(dirPath)) {
+    const listing = await fs.list(dirPath);
     if (listing.files.length === 0 && listing.folders.length === 0) {
-      await adapter.rmdir(dirPath, false);
+      await fs.rmdir(dirPath, false);
     }
   }
 
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   if (lock.skills[name]) {
     lock.skills[name].disabled = true;
-    await saveSkillsLock(app, lock);
+    await saveSkillsLock(fs, lock);
   }
 }
 
-export async function enableSkill(app: App, name: string): Promise<void> {
-  await copySkillToClaudeDir(app, name);
+export async function enableSkill(fs: VaultFs, name: string): Promise<void> {
+  await copySkillToClaudeDir(fs, name);
 
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   if (lock.skills[name]) {
     lock.skills[name].disabled = false;
-    await saveSkillsLock(app, lock);
+    await saveSkillsLock(fs, lock);
   }
 }
 
-export async function deleteSkill(app: App, name: string): Promise<void> {
-  const adapter = app.vault.adapter;
-  const symlinkDir = normalizePath(`${CLAUDE_SKILLS_DIR}/${name}`);
-  if (await adapter.exists(symlinkDir)) {
-    await adapter.rmdir(symlinkDir, true);
+export async function deleteSkill(fs: VaultFs, name: string): Promise<void> {
+  const symlinkDir = normalizeVaultPath(`${CLAUDE_SKILLS_DIR}/${name}`);
+  if (await fs.exists(symlinkDir)) {
+    await fs.rmdir(symlinkDir, true);
   }
 
-  const skillDir = normalizePath(`${SKILLS_DIR}/${name}`);
-  if (await adapter.exists(skillDir)) {
-    await adapter.rmdir(skillDir, true);
+  const skillDir = normalizeVaultPath(`${SKILLS_DIR}/${name}`);
+  if (await fs.exists(skillDir)) {
+    await fs.rmdir(skillDir, true);
   }
 
-  const lock = await loadSkillsLock(app);
+  const lock = await loadSkillsLock(fs);
   delete lock.skills[name];
-  await saveSkillsLock(app, lock);
+  await saveSkillsLock(fs, lock);
 }
 
 export async function updateSkillContent(
-  app: App,
+  fs: VaultFs,
   name: string,
   content: string,
 ): Promise<void> {
   skillDetailCache.delete(name);
-  await writeSkillFile(app, name, content);
-  await copySkillToClaudeDir(app, name);
+  await writeSkillFile(fs, name, content);
+  await copySkillToClaudeDir(fs, name);
 }

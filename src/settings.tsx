@@ -71,7 +71,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    const initialized = await isVaultInitialized(this.plugin.app);
+    const initialized = await isVaultInitialized(this.plugin.fs);
 
     if (!this.tabOpen) return;
 
@@ -166,7 +166,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
             `Switch to ${otherLabel}? New config files will be generated. Existing config files are kept as backup.`,
             async () => {
               await migratePlatform(
-                this.plugin.app,
+                this.plugin.fs,
                 this.plugin.settings.platform,
                 otherPlatform,
                 this.plugin.settings.kbName,
@@ -255,7 +255,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
         button
           .setButtonText('Refresh rule')
           .onClick(async () => {
-            await installActivityLedgerRule(this.app, this.plugin.settings.platform);
+            await installActivityLedgerRule(this.plugin.fs, this.plugin.settings.platform);
             new Notice('Activity ledger rule refreshed.');
           });
       });
@@ -314,7 +314,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
       .addButton((btn) =>
         btn.setButtonText('Regenerate').onClick(async () => {
           await generatePlatformConfig(
-            this.plugin.app,
+            this.plugin.fs,
             this.plugin.settings.platform,
             this.plugin.settings.kbName,
           );
@@ -336,7 +336,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
               'This will overwrite all built-in skills and regenerate agent config. Custom skills and your knowledge files are preserved. Continue?',
               async () => {
                 await executeSetup(
-                  this.plugin.app,
+                  this.plugin.fs,
                   this.plugin.settings.platform,
                   this.plugin.settings.kbName,
                   () => {},
@@ -358,12 +358,12 @@ export class KnowlerySettingTab extends PluginSettingTab {
     }
 
     await generatePlatformConfig(
-      this.plugin.app,
+      this.plugin.fs,
       this.plugin.settings.platform,
       this.plugin.settings.kbName,
     );
 
-    await writeManifestUpdate(this.plugin.app, {
+    await writeManifestUpdate(this.plugin.fs, {
       kbName: this.plugin.settings.kbName,
     });
   }

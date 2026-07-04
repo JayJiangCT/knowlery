@@ -1,44 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { App } from 'obsidian';
 import { generateClaudeMd, generateKnowledgeMd, generateOpenCodeJson } from '../../src/assets/templates';
 import { migrateFixedContextImports } from '../../src/core/migration';
 import { CLAUDE_RULE_IMPORTS_START, CLAUDE_RULE_IMPORTS_END } from '../../src/core/rule-imports';
 
-function createMockApp(initialFiles: Record<string, string> = {}): App {
-  const files = new Map(Object.entries(initialFiles));
-  const writes: string[] = [];
-  return {
-    vault: {
-      adapter: {
-        exists: async (path: string) => files.has(path),
-        read: async (path: string) => files.get(path) ?? '',
-        write: async (path: string, content: string) => {
-          files.set(path, content);
-          writes.push(path);
-        },
-      },
-      getFileByPath: () => null,
-      create: async (path: string, content: string) => {
-        files.set(path, content);
-        writes.push(path);
-      },
-      modify: async (file: { path: string }, content: string) => {
-        files.set(file.path, content);
-        writes.push(file.path);
-      },
-    },
-    __files: files,
-    __writes: writes,
-  } as unknown as App;
-}
-
-function getFiles(app: App): Map<string, string> {
-  return (app as unknown as { __files: Map<string, string> }).__files;
-}
-
-function getWrites(app: App): string[] {
-  return (app as unknown as { __writes: string[] }).__writes;
-}
+import { createMemoryFs } from '../mocks/memory-fs';
 
 describe('slimmed templates (spec f4, §4.1)', () => {
   it('CLAUDE.md template imports the operating card and rules only', () => {
@@ -76,10 +41,10 @@ describe('migrateFixedContextImports (spec f4, §4.2)', () => {
   ].join('\n');
 
   it('removes exactly the two stale import lines and preserves everything else', async () => {
-    const app = createMockApp({ '.claude/CLAUDE.md': legacyClaudeMd });
-    await migrateFixedContextImports(app);
+    const fs = createMemoryFs({ '.claude/CLAUDE.md': legacyClaudeMd });
+    await migrateFixedContextImports(fs);
 
-    const migrated = getFiles(app).get('.claude/CLAUDE.md')!;
+    const migrated = fs.files.get('.claude/CLAUDE.md')!;
     expect(migrated).toContain('@../KNOWLEDGE.md');
     expect(migrated).not.toContain('@../SCHEMA.md');
     expect(migrated).not.toContain('@../INDEX.base');
@@ -90,32 +55,32 @@ describe('migrateFixedContextImports (spec f4, §4.2)', () => {
   });
 
   it('is idempotent — the second run writes nothing', async () => {
-    const app = createMockApp({ '.claude/CLAUDE.md': legacyClaudeMd });
-    await migrateFixedContextImports(app);
-    const writesAfterFirst = getWrites(app).length;
-    await migrateFixedContextImports(app);
-    expect(getWrites(app).length).toBe(writesAfterFirst);
+    const fs = createMemoryFs({ '.claude/CLAUDE.md': legacyClaudeMd });
+    await migrateFixedContextImports(fs);
+    const writesAfterFirst = fs.writeLog.length;
+    await migrateFixedContextImports(fs);
+    expect(fs.writeLog.length).toBe(writesAfterFirst);
   });
 
   it('does not touch a CLAUDE.md where the user re-added nothing stale', async () => {
     const content = '@../KNOWLEDGE.md\n\n# Custom section\n';
-    const app = createMockApp({ '.claude/CLAUDE.md': content });
-    await migrateFixedContextImports(app);
-    expect(getWrites(app)).toEqual([]);
-    expect(getFiles(app).get('.claude/CLAUDE.md')).toBe(content);
+    const fs = createMemoryFs({ '.claude/CLAUDE.md': content });
+    await migrateFixedContextImports(fs);
+    expect(fs.writeLog).toEqual([]);
+    expect(fs.files.get('.claude/CLAUDE.md')).toBe(content);
   });
 
   it('filters only the instructions array in opencode.json, preserving other keys', async () => {
-    const app = createMockApp({
+    const fs = createMemoryFs({
       'opencode.json': JSON.stringify({
         name: 'My KB',
         instructions: ['KNOWLEDGE.md', 'SCHEMA.md', 'INDEX.base', '.agents/rules/*.md'],
         customKey: { nested: true },
       }, null, 2),
     });
-    await migrateFixedContextImports(app);
+    await migrateFixedContextImports(fs);
 
-    const parsed = JSON.parse(getFiles(app).get('opencode.json')!);
+    const parsed = JSON.parse(fs.files.get('opencode.json')!);
     expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
     expect(parsed.name).toBe('My KB');
     expect(parsed.customKey).toEqual({ nested: true });
@@ -123,15 +88,15 @@ describe('migrateFixedContextImports (spec f4, §4.2)', () => {
 
   it('leaves malformed opencode.json untouched', async () => {
     const broken = '{ this is not json';
-    const app = createMockApp({ 'opencode.json': broken });
-    await migrateFixedContextImports(app);
-    expect(getWrites(app)).toEqual([]);
-    expect(getFiles(app).get('opencode.json')).toBe(broken);
+    const fs = createMemoryFs({ 'opencode.json': broken });
+    await migrateFixedContextImports(fs);
+    expect(fs.writeLog).toEqual([]);
+    expect(fs.files.get('opencode.json')).toBe(broken);
   });
 
   it('does nothing when neither file exists', async () => {
-    const app = createMockApp();
-    await migrateFixedContextImports(app);
-    expect(getWrites(app)).toEqual([]);
+    const fs = createMemoryFs();
+    await migrateFixedContextImports(fs);
+    expect(fs.writeLog).toEqual([]);
   });
 });

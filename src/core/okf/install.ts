@@ -1,11 +1,11 @@
-import type { App } from 'obsidian';
-import { normalizePath } from 'obsidian';
 import { dirname } from 'path';
 import type { BundleSourceEntry } from './install-scan';
 import { assertSafeInstallPath, previewInstall } from './install-scan';
 import { readInstalledBundles, resolveInstallAction, writeInstalledBundles } from './registry';
 import { ensureInstalledBundlesBlock } from './knowledge-md-bundles';
 import { sha256 } from './hash';
+import type { VaultFs } from '../vault-fs';
+import { normalizeVaultPath } from '../vault-fs';
 
 export interface InstallOptions {
   source: string;
@@ -31,14 +31,14 @@ export class InstallBlockedError extends Error {
 }
 
 export async function installBundle(
-  app: App,
+  fs: VaultFs,
   entries: BundleSourceEntry[],
   options: InstallOptions,
   now: Date = new Date(),
 ): Promise<InstallResult> {
   const { manifest, conformance } = previewInstall(entries);
 
-  const registry = await readInstalledBundles(app);
+  const registry = await readInstalledBundles(fs);
   const existing = registry.bundles[manifest.id];
   const action = resolveInstallAction(existing, manifest.version);
   if (action.kind === 'blocked' && !options.force) {
@@ -65,11 +65,11 @@ export async function installBundle(
     content: entry.content,
   }));
 
-  if (existing) await removeLibraryDir(app, libraryDir);
+  if (existing) await fs.rmdir(normalizeVaultPath(libraryDir), true);
 
   for (const { fullPath, content } of safeWrites) {
-    await ensureVaultDir(app, dirname(fullPath));
-    await app.vault.adapter.write(normalizePath(fullPath), content);
+    await ensureVaultDir(fs, dirname(fullPath));
+    await fs.write(normalizeVaultPath(fullPath), content);
   }
 
   const installedContentHash = sha256(
@@ -91,13 +91,12 @@ export async function installBundle(
     conformance: conformanceOutcome,
     conformanceErrorCount: conformance.errors.length,
   };
-  await writeInstalledBundles(app, registry);
+  await writeInstalledBundles(fs, registry);
 
-  const knowledgeMdFile = app.vault.getFileByPath('KNOWLEDGE.md');
-  if (knowledgeMdFile) {
-    const current = await app.vault.read(knowledgeMdFile);
+  if (await fs.exists('KNOWLEDGE.md')) {
+    const current = await fs.read('KNOWLEDGE.md');
     const updated = ensureInstalledBundlesBlock(current);
-    if (updated !== current) await app.vault.adapter.write('KNOWLEDGE.md', updated);
+    if (updated !== current) await fs.write('KNOWLEDGE.md', updated);
   }
 
   return {
@@ -109,20 +108,12 @@ export async function installBundle(
   };
 }
 
-async function removeLibraryDir(app: App, path: string): Promise<void> {
-  const normalized = normalizePath(path);
-  const adapter = app.vault.adapter as typeof app.vault.adapter & {
-    rmdir?: (path: string, recursive?: boolean) => Promise<void>;
-  };
-  if ((await adapter.exists(normalized)) && adapter.rmdir) await adapter.rmdir(normalized, true);
-}
-
 // Mirrors compile.ts's private ensureVaultDir (§6) — duplicated rather than
 // exported from compile.ts to avoid touching the already-shipped export
 // path for this new, independent feature.
-async function ensureVaultDir(app: App, path: string): Promise<void> {
-  const normalized = normalizePath(path);
-  if (!normalized || normalized === '.' || normalized === '/' || (await app.vault.adapter.exists(normalized))) return;
-  await ensureVaultDir(app, dirname(normalized));
-  await app.vault.adapter.mkdir(normalized);
+async function ensureVaultDir(fs: VaultFs, path: string): Promise<void> {
+  const normalized = normalizeVaultPath(path);
+  if (!normalized || normalized === '.' || normalized === '/' || (await fs.exists(normalized))) return;
+  await ensureVaultDir(fs, dirname(normalized));
+  await fs.mkdir(normalized);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createOkfMockApp } from '../mocks/okf-app';
+import { createOkfMockApp, okfVaultFs } from '../mocks/okf-app';
 import {
   ensureInstalledBundlesBlock,
   removeInstalledBundlesBlock,
@@ -67,7 +67,7 @@ describe('refreshInstalledBundlesBlock', () => {
       'KNOWLEDGE.md': `${BASE_KNOWLEDGE_MD}\n${STALE_BLOCK}\n`,
       '.knowlery/bundles.json': REGISTRY_WITH_BUNDLE,
     });
-    await refreshInstalledBundlesBlock(app as never);
+    await refreshInstalledBundlesBlock(okfVaultFs(app));
     expect(app.writes['KNOWLEDGE.md']).toContain('Library/<id>/agent-index.json');
     expect(app.writes['KNOWLEDGE.md']).not.toContain('Old wording');
   });
@@ -76,7 +76,7 @@ describe('refreshInstalledBundlesBlock', () => {
     const app = createOkfMockApp({
       'KNOWLEDGE.md': `${BASE_KNOWLEDGE_MD}\n${STALE_BLOCK}\n`,
     });
-    await refreshInstalledBundlesBlock(app as never);
+    await refreshInstalledBundlesBlock(okfVaultFs(app));
     expect(app.writes['KNOWLEDGE.md']).toBeUndefined();
   });
 
@@ -85,7 +85,7 @@ describe('refreshInstalledBundlesBlock', () => {
       'KNOWLEDGE.md': ensureInstalledBundlesBlock(BASE_KNOWLEDGE_MD),
       '.knowlery/bundles.json': REGISTRY_WITH_BUNDLE,
     });
-    await refreshInstalledBundlesBlock(app as never);
+    await refreshInstalledBundlesBlock(okfVaultFs(app));
     expect(app.writes['KNOWLEDGE.md']).toBeUndefined();
   });
 });

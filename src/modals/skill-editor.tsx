@@ -118,13 +118,13 @@ function SkillEditorContent(props: {
 
     try {
       if (props.mode === 'create') {
-        await createSkill(plugin.app, trimmedName, content);
+        await createSkill(plugin.fs, trimmedName, content);
         new Notice(`Created skill "${trimmedName}"`);
       } else if (props.mode === 'fork') {
-        await forkSkill(plugin.app, props.skill!.name, trimmedName, content);
+        await forkSkill(plugin.fs, props.skill!.name, trimmedName, content);
         new Notice(`Forked skill "${props.skill!.name}" as "${trimmedName}"`);
       } else {
-        await updateSkillContent(plugin.app, props.skill!.name, content);
+        await updateSkillContent(plugin.fs, props.skill!.name, content);
         new Notice(`Updated skill "${props.skill!.name}"`);
       }
       props.onSave();

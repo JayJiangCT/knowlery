@@ -126,7 +126,7 @@ export function HealthTab() {
   }, [plugin]);
 
   const loadIntegrity = useCallback(async (payload?: DashboardRefreshPayload) => {
-    const result = await checkConfigIntegrity(plugin.app, settings.platform);
+    const result = await checkConfigIntegrity(plugin.app, plugin.fs, settings.platform);
     setIntegrity(result);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin, settings.platform]);

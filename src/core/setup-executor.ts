@@ -1,4 +1,4 @@
-import { App, normalizePath } from 'obsidian';
+import type { App } from 'obsidian';
 import type {
   InstallExecutionState,
   Manifest,
@@ -13,7 +13,8 @@ import { installAllBuiltinSkills, buildInitialSkillsLock, saveSkillsLock } from 
 import { installDefaultRules } from './rule-manager';
 import { runOptionalInstalls } from './environment-install';
 import { syncQueryScript } from './query-script';
-import { ensureDir, writeFile } from './vault-io';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 
 const KNOWLERY_DIR = '.knowlery';
 const MANIFEST_PATH = `${KNOWLERY_DIR}/manifest.json`;
@@ -35,6 +36,8 @@ export interface ExecuteSetupOptions {
   optionalInstalls?: OptionalInstallSelection;
   nodePath?: string;
   onOptionalInstallUpdate?: (state: InstallExecutionState) => void;
+  /** Required only when optionalInstalls is set — tool installs are an Obsidian-shell feature. */
+  app?: App;
 }
 
 export interface ExecuteSetupResult {
@@ -52,7 +55,7 @@ export function getSetupSteps(): SetupProgress[] {
 }
 
 export async function executeSetup(
-  app: App,
+  fs: VaultFs,
   platform: Platform,
   kbName: string,
   onProgress: (step: SetupStep) => void,
@@ -60,31 +63,31 @@ export async function executeSetup(
 ): Promise<ExecuteSetupResult> {
   onProgress('directories');
   for (const dir of KNOWLEDGE_DIRS) {
-    await ensureDir(app, dir);
+    await fs.mkdir(dir);
   }
 
   onProgress('knowledge-files');
-  await writeFile(app, 'KNOWLEDGE.md', generateKnowledgeMd(kbName));
-  await writeFile(app, 'SCHEMA.md', generateSchemaMd());
-  await writeFile(app, 'INDEX.base', generateIndexBase());
+  await fs.write('KNOWLEDGE.md', generateKnowledgeMd(kbName));
+  await fs.write('SCHEMA.md', generateSchemaMd());
+  await fs.write('INDEX.base', generateIndexBase());
 
   onProgress('skills');
-  await installAllBuiltinSkills(app);
+  await installAllBuiltinSkills(fs);
 
   onProgress('platform-config');
-  await installDefaultRules(app, platform);
-  await generatePlatformConfig(app, platform, kbName);
+  await installDefaultRules(fs, platform);
+  await generatePlatformConfig(fs, platform, kbName);
 
   onProgress('lock-files');
   const lock = buildInitialSkillsLock();
-  await saveSkillsLock(app, lock);
-  await syncQueryScript(app);
-  await writeManifest(app, platform, kbName);
+  await saveSkillsLock(fs, lock);
+  await syncQueryScript(fs);
+  await writeManifest(fs, platform, kbName);
 
   let optionalInstallRuns: InstallExecutionState[] = [];
-  if (hasOptionalInstalls(options.optionalInstalls)) {
+  if (hasOptionalInstalls(options.optionalInstalls) && options.app) {
     optionalInstallRuns = await runOptionalInstalls({
-      app,
+      app: options.app,
       platform,
       selection: options.optionalInstalls,
       nodePath: options.nodePath,
@@ -95,8 +98,8 @@ export async function executeSetup(
   return { optionalInstallRuns };
 }
 
-async function writeManifest(app: App, platform: Platform, kbName: string): Promise<void> {
-  const existing = await readManifest(app);
+async function writeManifest(fs: VaultFs, platform: Platform, kbName: string): Promise<void> {
+  const existing = await readManifest(fs);
   const now = new Date().toISOString();
   const manifest: Manifest = {
     version: '0.1.0',
@@ -106,37 +109,35 @@ async function writeManifest(app: App, platform: Platform, kbName: string): Prom
     updatedAt: now,
   };
 
-  await ensureDir(app, KNOWLERY_DIR);
-  const path = normalizePath(MANIFEST_PATH);
-  await app.vault.adapter.write(path, JSON.stringify(manifest, null, 2));
+  await fs.mkdir(KNOWLERY_DIR);
+  await fs.write(normalizeVaultPath(MANIFEST_PATH), JSON.stringify(manifest, null, 2));
 }
 
-export async function readManifest(app: App): Promise<Manifest | null> {
-  const path = normalizePath(MANIFEST_PATH);
-  if (!(await app.vault.adapter.exists(path))) return null;
+export async function readManifest(fs: VaultFs): Promise<Manifest | null> {
+  const path = normalizeVaultPath(MANIFEST_PATH);
+  if (!(await fs.exists(path))) return null;
   try {
-    const content = await app.vault.adapter.read(path);
+    const content = await fs.read(path);
     return JSON.parse(content);
   } catch {
     return null;
   }
 }
 
-export async function isVaultInitialized(app: App): Promise<boolean> {
-  return (await app.vault.adapter.exists(normalizePath(MANIFEST_PATH)))
-    || (await app.vault.adapter.exists(normalizePath('KNOWLEDGE.md')));
+export async function isVaultInitialized(fs: VaultFs): Promise<boolean> {
+  return (await fs.exists(normalizeVaultPath(MANIFEST_PATH)))
+    || (await fs.exists(normalizeVaultPath('KNOWLEDGE.md')));
 }
 
 export async function writeManifestUpdate(
-  app: App,
+  fs: VaultFs,
   updates: Partial<Pick<Manifest, 'kbName' | 'platform'>>,
 ): Promise<void> {
-  const manifest = await readManifest(app);
+  const manifest = await readManifest(fs);
   if (!manifest) return;
   Object.assign(manifest, updates, { updatedAt: new Date().toISOString() });
-  await ensureDir(app, KNOWLERY_DIR);
-  const path = normalizePath(MANIFEST_PATH);
-  await app.vault.adapter.write(path, JSON.stringify(manifest, null, 2));
+  await fs.mkdir(KNOWLERY_DIR);
+  await fs.write(normalizeVaultPath(MANIFEST_PATH), JSON.stringify(manifest, null, 2));
 }
 
 function hasOptionalInstalls(selection?: OptionalInstallSelection): selection is OptionalInstallSelection {

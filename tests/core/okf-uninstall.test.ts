@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createOkfMockApp } from '../mocks/okf-app';
+import { createOkfMockApp, okfVaultFs } from '../mocks/okf-app';
 import { installBundle } from '../../src/core/okf/install';
 import { uninstallBundle } from '../../src/core/okf/uninstall';
 import { readInstalledBundles, writeInstalledBundles } from '../../src/core/okf/registry';
@@ -36,49 +36,49 @@ function entriesFor(id: string): BundleSourceEntry[] {
 describe('uninstallBundle', () => {
   it('removes the library dir and the registry entry', async () => {
     const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
-    await installBundle(app as never, entriesFor('jay.a'), { source: '/tmp/a.zip' });
+    await installBundle(okfVaultFs(app), entriesFor('jay.a'), { source: '/tmp/a.zip' });
 
-    await uninstallBundle(app as never, 'jay.a');
+    await uninstallBundle(okfVaultFs(app), 'jay.a');
 
-    const registry = await readInstalledBundles(app as never);
+    const registry = await readInstalledBundles(okfVaultFs(app));
     expect(registry.bundles['jay.a']).toBeUndefined();
     expect(Object.keys(app.writes).some((path) => path.startsWith('Library/jay.a/'))).toBe(false);
   });
 
   it('removes the KNOWLEDGE.md marker block when the last bundle is removed', async () => {
     const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
-    await installBundle(app as never, entriesFor('jay.a'), { source: '/tmp/a.zip' });
+    await installBundle(okfVaultFs(app), entriesFor('jay.a'), { source: '/tmp/a.zip' });
     expect(app.writes['KNOWLEDGE.md']).toContain('KNOWLERY:INSTALLED_BUNDLES:BEGIN');
 
-    await uninstallBundle(app as never, 'jay.a');
+    await uninstallBundle(okfVaultFs(app), 'jay.a');
     expect(app.writes['KNOWLEDGE.md']).not.toContain('KNOWLERY:INSTALLED_BUNDLES:BEGIN');
   });
 
   it('keeps the marker block while other bundles remain installed', async () => {
     const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
-    await installBundle(app as never, entriesFor('jay.a'), { source: '/tmp/a.zip' });
-    await installBundle(app as never, entriesFor('jay.b'), { source: '/tmp/b.zip' });
+    await installBundle(okfVaultFs(app), entriesFor('jay.a'), { source: '/tmp/a.zip' });
+    await installBundle(okfVaultFs(app), entriesFor('jay.b'), { source: '/tmp/b.zip' });
 
-    await uninstallBundle(app as never, 'jay.a');
+    await uninstallBundle(okfVaultFs(app), 'jay.a');
     expect(app.writes['KNOWLEDGE.md']).toContain('KNOWLERY:INSTALLED_BUNDLES:BEGIN');
-    const registry = await readInstalledBundles(app as never);
+    const registry = await readInstalledBundles(okfVaultFs(app));
     expect(registry.bundles['jay.b']).toBeDefined();
   });
 
   it('is a no-op for an unknown bundle id', async () => {
     const app = createOkfMockApp({});
-    await expect(uninstallBundle(app as never, 'not.installed')).resolves.toBeUndefined();
+    await expect(uninstallBundle(okfVaultFs(app), 'not.installed')).resolves.toBeUndefined();
   });
 
   it('deletes Library/<bundleId>/ even if the registry\'s stored libraryPath field is wrong, and ignores the poisoned value', async () => {
     const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
-    await installBundle(app as never, entriesFor('jay.a'), { source: '/tmp/a.zip' });
+    await installBundle(okfVaultFs(app), entriesFor('jay.a'), { source: '/tmp/a.zip' });
 
-    const registry = await readInstalledBundles(app as never);
+    const registry = await readInstalledBundles(okfVaultFs(app));
     registry.bundles['jay.a'].libraryPath = '.obsidian/plugins/knowlery/';
-    await writeInstalledBundles(app as never, registry);
+    await writeInstalledBundles(okfVaultFs(app), registry);
 
-    await uninstallBundle(app as never, 'jay.a');
+    await uninstallBundle(okfVaultFs(app), 'jay.a');
 
     expect(Object.keys(app.writes).some((path) => path.startsWith('Library/jay.a/'))).toBe(false);
     expect(Object.keys(app.writes).some((path) => path.startsWith('.obsidian/'))).toBe(false);
@@ -91,7 +91,7 @@ describe('uninstallBundle', () => {
       libraryPath: 'Library/../', manifestContentHash: 'sha256-a', installedContentHash: 'sha256-a',
       conformance: 'passed' as const, conformanceErrorCount: 0,
     } } };
-    await writeInstalledBundles(app as never, registry);
-    await expect(uninstallBundle(app as never, '..')).rejects.toThrow(/unsafe/i);
+    await writeInstalledBundles(okfVaultFs(app), registry);
+    await expect(uninstallBundle(okfVaultFs(app), '..')).rejects.toThrow(/unsafe/i);
   });
 });
