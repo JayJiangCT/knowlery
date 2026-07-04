@@ -70,6 +70,15 @@ Execution order: F1 → F2 → F3 → F4 → F5.
   threshold could abstain on low-confidence results — must be tuned against the eval
   harness with realistic unanswerable phrasings added to the golden set. 0.8 candidate.
 
+## Backlog (release engineering)
+
+- **Migrate npm publishing to Trusted Publishing (OIDC)**: npm explicitly recommends it
+  over bypass-2FA tokens for CI. Requires the package to exist first, so: 0.7.0 ships
+  with the granular token, then the release workflow switches to Trusted Publishing
+  (no token at all — no leakage or rotation concerns) and the token is deleted.
+  0.8 release-hygiene item. Also fix the cosmetic `bin` path warning
+  (`./knowlery-cli.mjs` -> `knowlery-cli.mjs`) flagged by `npm publish`.
+
 ## Backlog (repo hygiene, schedulable any time)
 
 - **Unscoped eslint run crashes** (pre-existing, confirmed on 0.6.1 base): `npx eslint .`
