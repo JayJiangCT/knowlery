@@ -1,6 +1,6 @@
 # F4 (0.7.0) — `knowlery bundle install` / `list` / `uninstall`
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-04 — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.7.0
 - **Branch:** `cursor/07-f4-bundle-commands-92eb` (stacked on 0.7 F3)
 - **Depends on:** F1 (okf install-side inverted onto VaultFs), F2 (CLI shell)

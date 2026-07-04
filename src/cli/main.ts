@@ -7,6 +7,7 @@ import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
 import { runQueryCommand } from './commands/query';
 import { runStaleCommand } from './commands/stale';
+import { runBundleCommand } from './commands/bundle';
 
 /**
  * The `knowlery` CLI shell (spec 0.7 f2). Thin argv/prompt/output layer over the
@@ -23,6 +24,9 @@ Usage:
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path>] [--k <n>] [--json]
   knowlery stale  [--dir <path>] [--json]
+  knowlery bundle install <zip-or-folder> [--dir <path>] [--force] [--skip-conformance]
+  knowlery bundle list      [--dir <path>] [--json]
+  knowlery bundle uninstall <bundle-id> [--dir <path>]
   knowlery --version | --help
 
 The same workspace format as the Knowlery Obsidian plugin — a folder initialized here
@@ -30,23 +34,36 @@ opens in Obsidian with zero migration, and the plugin adds the review UI on top.
 
 interface ParsedArgs {
   command: string | undefined;
-  /** Second positional — the question for `query`. */
-  positional?: string;
+  /** Positionals after the command: query's question, or bundle's subcommand + argument. */
+  positionals: string[];
   dir: string;
   platform?: string;
   name?: string;
   k?: number;
   force: boolean;
+  skipConformance: boolean;
   json: boolean;
   version: boolean;
   help: boolean;
 }
 
+/** How many positionals (after the command) each command accepts. */
+const POSITIONAL_LIMITS: Record<string, number> = {
+  init: 0,
+  sync: 0,
+  health: 0,
+  query: 1,
+  stale: 0,
+  bundle: 2,
+};
+
 function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = {
     command: undefined,
+    positionals: [],
     dir: '.',
     force: false,
+    skipConformance: false,
     json: false,
     version: false,
     help: false,
@@ -61,13 +78,13 @@ function parseArgs(argv: string[]): ParsedArgs {
       if (Number.isFinite(value) && value > 0) parsed.k = value;
     }
     else if (arg === '--force') parsed.force = true;
+    else if (arg === '--skip-conformance') parsed.skipConformance = true;
     else if (arg === '--json') parsed.json = true;
     else if (arg === '--version' || arg === '-v') parsed.version = true;
     else if (arg === '--help' || arg === '-h') parsed.help = true;
     else if (arg.startsWith('-')) throw new CliError(`Unknown flag: ${arg}\n\n${USAGE}`, 2);
     else if (!parsed.command) parsed.command = arg;
-    else if (parsed.positional === undefined) parsed.positional = arg;
-    else throw new CliError(`Unexpected argument: ${arg}\n\n${USAGE}`, 2);
+    else parsed.positionals.push(arg);
   }
   return parsed;
 }
@@ -98,8 +115,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (args.positional !== undefined && args.command !== 'query') {
-    throw new CliError(`Unexpected argument: ${args.positional}\n\n${USAGE}`, 2);
+  const limit = POSITIONAL_LIMITS[args.command] ?? 0;
+  if (args.positionals.length > limit) {
+    throw new CliError(`Unexpected argument: ${args.positionals[limit]}\n\n${USAGE}`, 2);
   }
 
   const root = resolve(args.dir);
@@ -122,10 +140,23 @@ async function main(): Promise<void> {
       await runHealth(fs, { root, json: args.json, log });
       break;
     case 'query':
-      runQueryCommand(root, { question: args.positional, k: args.k, json: args.json, log });
+      runQueryCommand(root, { question: args.positionals[0], k: args.k, json: args.json, log });
       break;
     case 'stale':
       runStaleCommand(root, { json: args.json, log });
+      break;
+    case 'bundle':
+      await runBundleCommand(fs, {
+        sub: args.positionals[0],
+        // install's source path resolves against the caller's cwd, not --dir.
+        arg: args.positionals[0] === 'install' && args.positionals[1] !== undefined
+          ? resolve(args.positionals[1])
+          : args.positionals[1],
+        force: args.force,
+        skipConformance: args.skipConformance,
+        json: args.json,
+        log,
+      });
       break;
     default:
       throw new CliError(`Unknown command: ${args.command}\n\n${USAGE}`, 2);

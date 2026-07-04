@@ -75,6 +75,29 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       );
       expect(noQuestion.code).toBe(2);
 
+      // bundle install -> list -> uninstall (spec 0.7 f4, §5.5).
+      const bundleDir = join(workDir, 'bundle-src');
+      const { mkdir } = await import('node:fs/promises');
+      await mkdir(join(bundleDir, 'concepts'), { recursive: true });
+      await writeFile(join(bundleDir, 'knowlery-bundle.json'), JSON.stringify({
+        schemaVersion: 1, okfVersion: '0.1', id: 'smoke.pack', title: 'Smoke Pack',
+        version: '1.0.0', creator: { name: 'Smoke', url: '' },
+        releasedAt: '2026-07-01T00:00:00.000Z', entrypoint: 'index.md',
+        contentHash: 'sha256-smoke', license: 'personal', knowleryVersion: '0.6.1', conceptCount: 1,
+      }));
+      await writeFile(join(bundleDir, 'index.md'), '---\nokf_version: "0.1"\n---\n\n# Smoke Pack\n');
+      await writeFile(
+        join(bundleDir, 'concepts', 'thing.md'),
+        '---\ntype: Concept\ntitle: Thing\ndescription: A smoke thing\ndomain: smoke\ntimestamp: 2026-07-01T00:00:00.000Z\n---\n\nBody.',
+      );
+
+      const install = await run('node', [cliPath, 'bundle', 'install', bundleDir, '--dir', vaultDir]);
+      expect(install.stdout).toContain('Installed smoke.pack v1.0.0');
+      const list = await run('node', [cliPath, 'bundle', 'list', '--dir', vaultDir]);
+      expect(list.stdout).toContain('smoke.pack v1.0.0');
+      const uninstall = await run('node', [cliPath, 'bundle', 'uninstall', 'smoke.pack', '--dir', vaultDir]);
+      expect(uninstall.stdout).toContain('Uninstalled smoke.pack');
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,
