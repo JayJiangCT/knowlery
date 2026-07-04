@@ -26,7 +26,7 @@ npm package name `knowlery` verified available (2026-07-03).
 |---|---------|------|------------|
 | F1 | Core extraction: `VaultFs` inversion of the lifecycle modules | [f1-core-extraction.md](./f1-core-extraction.md) | — |
 | F2 | `knowlery` CLI skeleton: `init` / `sync` / `health` + npm packaging | [f2-cli-skeleton.md](./f2-cli-skeleton.md) | F1 |
-| F3 | `knowlery query` / `knowlery stale` commands | (spec pending) | F2 |
+| F3 | `knowlery query` / `knowlery stale` commands | [f3-query-commands.md](./f3-query-commands.md) | F2 |
 | F4 | `knowlery bundle install` / `list` / `uninstall` | (spec pending) | F1, F2 |
 | F5 | Environment-adaptive skills (CLI-mode write path; folds in the 0.6 backlog: retrieval-aware `/cook`, `/audit` on CLI primitives) | (spec pending) | F2 |
 
