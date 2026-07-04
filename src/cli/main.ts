@@ -5,6 +5,8 @@ import { CliError, type Prompt } from './commands/shared';
 import { runInit } from './commands/init';
 import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
+import { runQueryCommand } from './commands/query';
+import { runStaleCommand } from './commands/stale';
 
 /**
  * The `knowlery` CLI shell (spec 0.7 f2). Thin argv/prompt/output layer over the
@@ -19,6 +21,8 @@ Usage:
   knowlery init   [--dir <path>] [--platform claude-code|opencode] [--name <kb name>] [--force]
   knowlery sync   [--dir <path>]
   knowlery health [--dir <path>] [--json]
+  knowlery query  "<question>" [--dir <path>] [--k <n>] [--json]
+  knowlery stale  [--dir <path>] [--json]
   knowlery --version | --help
 
 The same workspace format as the Knowlery Obsidian plugin — a folder initialized here
@@ -26,9 +30,12 @@ opens in Obsidian with zero migration, and the plugin adds the review UI on top.
 
 interface ParsedArgs {
   command: string | undefined;
+  /** Second positional — the question for `query`. */
+  positional?: string;
   dir: string;
   platform?: string;
   name?: string;
+  k?: number;
   force: boolean;
   json: boolean;
   version: boolean;
@@ -49,12 +56,17 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (arg === '--dir') parsed.dir = argv[++i] ?? '.';
     else if (arg === '--platform') parsed.platform = argv[++i];
     else if (arg === '--name') parsed.name = argv[++i];
+    else if (arg === '--k') {
+      const value = parseInt(argv[++i] ?? '', 10);
+      if (Number.isFinite(value) && value > 0) parsed.k = value;
+    }
     else if (arg === '--force') parsed.force = true;
     else if (arg === '--json') parsed.json = true;
     else if (arg === '--version' || arg === '-v') parsed.version = true;
     else if (arg === '--help' || arg === '-h') parsed.help = true;
     else if (arg.startsWith('-')) throw new CliError(`Unknown flag: ${arg}\n\n${USAGE}`, 2);
     else if (!parsed.command) parsed.command = arg;
+    else if (parsed.positional === undefined) parsed.positional = arg;
     else throw new CliError(`Unexpected argument: ${arg}\n\n${USAGE}`, 2);
   }
   return parsed;
@@ -86,6 +98,10 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (args.positional !== undefined && args.command !== 'query') {
+    throw new CliError(`Unexpected argument: ${args.positional}\n\n${USAGE}`, 2);
+  }
+
   const root = resolve(args.dir);
   const fs = nodeVaultFs(root);
 
@@ -104,6 +120,12 @@ async function main(): Promise<void> {
       break;
     case 'health':
       await runHealth(fs, { root, json: args.json, log });
+      break;
+    case 'query':
+      runQueryCommand(root, { question: args.positional, k: args.k, json: args.json, log });
+      break;
+    case 'stale':
+      runStaleCommand(root, { json: args.json, log });
       break;
     default:
       throw new CliError(`Unknown command: ${args.command}\n\n${USAGE}`, 2);

@@ -58,6 +58,8 @@ npm i -g knowlery
 knowlery init     # scaffold a workspace (interactive, or --platform/--name flags)
 knowlery sync     # bring skills, rules, and the retrieval script up to date
 knowlery health   # config integrity + knowledge-page counts; exit code for CI
+knowlery query "<question>"   # deterministic retrieval over the workspace
+knowlery stale    # compiled pages whose sources changed; notes never compiled
 ```
 
 Retrieval works headlessly too: `node .knowlery/bin/query.mjs "<question>"` (written by
