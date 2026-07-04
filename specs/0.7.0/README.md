@@ -27,7 +27,7 @@ npm package name `knowlery` verified available (2026-07-03).
 | F1 | Core extraction: `VaultFs` inversion of the lifecycle modules | [f1-core-extraction.md](./f1-core-extraction.md) | — |
 | F2 | `knowlery` CLI skeleton: `init` / `sync` / `health` + npm packaging | [f2-cli-skeleton.md](./f2-cli-skeleton.md) | F1 |
 | F3 | `knowlery query` / `knowlery stale` commands | [f3-query-commands.md](./f3-query-commands.md) | F2 |
-| F4 | `knowlery bundle install` / `list` / `uninstall` | (spec pending) | F1, F2 |
+| F4 | `knowlery bundle install` / `list` / `uninstall` | [f4-bundle-commands.md](./f4-bundle-commands.md) | F1, F2 |
 | F5 | Environment-adaptive skills (CLI-mode write path; folds in the 0.6 backlog: retrieval-aware `/cook`, `/audit` on CLI primitives) | (spec pending) | F2 |
 
 Execution order: F1 → F2 → F3 → F4 → F5.
@@ -61,6 +61,14 @@ Execution order: F1 → F2 → F3 → F4 → F5.
   `sync` (both shells) refuses to write when the running tool is older than that,
   preventing an out-of-date CLI from downgrading skill content a newer plugin already
   upgraded. Small; schedule in F5 or release prep.
+
+## Backlog (engine refinements, eval-driven)
+
+- **Score-quality abstention** (F3 acceptance observation): abstention currently fires
+  only on zero structured-field matches, so on larger vaults common words almost always
+  surface weak candidates instead of an honest "no". A calibrated score-quality
+  threshold could abstain on low-confidence results — must be tuned against the eval
+  harness with realistic unanswerable phrasings added to the golden set. 0.8 candidate.
 
 ## Backlog (repo hygiene, schedulable any time)
 
