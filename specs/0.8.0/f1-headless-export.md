@@ -1,6 +1,6 @@
 # F1 (0.8.0) — Headless Bundle Export: `knowlery bundle export` / `review`
 
-- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
+- **Status:** Done — maintainer acceptance testing (§6) passed 2026-07-06
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f1-headless-export-92eb` (off `main` @ 0.7.0)
 - **Depends on:** 0.7 F1 (VaultFs), F2 (CLI shell), F4 (bundle receiving side)
