@@ -1,6 +1,6 @@
 # F4 (0.8.0) — Repo Lint Hygiene
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-06 (with exact-pin amendment) — implementation in progress
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f4-lint-hygiene-92eb` (off `main` @ 0.8 F3)
 - **Depends on:** — (independent; scope from the 0.6.1 scan + 0.7 F1 acceptance side
@@ -43,9 +43,11 @@ Investigation results on current `main` (all reproduced, not assumed):
    present — and `tests/` + `evals/` come under typed lint.
 2. The eight disabled typed rules are re-enabled at `error` severity and all 77
    violations fixed. `npm run lint` stays at zero problems, now meaning something.
-3. Obsidian typings pinned at `^1.13.1`; the settings tab migrates from the
-   deprecated `display()` to declarative `getSettingDefinitions()`, and
-   `minAppVersion` bumps to `1.13.0`.
+3. Obsidian typings pinned exactly at `1.13.1` (maintainer decision at spec
+   review: a `^` range still drifts on future 1.14/1.15 resolutions — the exact
+   pin is what actually removes install-day drift; future bumps become deliberate
+   commits); the settings tab migrates from the deprecated `display()` to
+   declarative `getSettingDefinitions()`, and `minAppVersion` bumps to `1.13.0`.
 4. A `ci.yml` workflow runs lint + tests on every PR and push to `main`, making
    F4's state the enforced floor rather than a snapshot.
 
@@ -132,7 +134,8 @@ per-concern.
 2. All eight previously-disabled rules at `error`; `npm run lint` zero problems
    with `tests/**` and `evals/**` in scope.
 3. `rg "eslint-disable" src tests evals` returns nothing.
-4. Obsidian typings `^1.13.1` in `package.json` (no more `"latest"`);
+4. Obsidian typings pinned exactly at `1.13.1` in `package.json` (no `latest`,
+   no `^` range) with `package-lock.json` resolved to `obsidian@1.13.1`;
    `minAppVersion` 1.13.0; `src/settings.tsx` has no `display()` and lint shows
    zero `no-deprecated` errors.
 5. `ci.yml` present and green on this PR (it self-tests: the PR that introduces
