@@ -1,6 +1,6 @@
 # F2 (0.8.0) — Score-Quality Abstention (Eval-Calibrated)
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f2-abstention-92eb` (off `main` @ 0.8 F1)
 - **Depends on:** 0.6 F1 (eval harness, golden set, frozen baseline), 0.6 F2 (engine)
@@ -195,3 +195,42 @@ conceded and why, and the threshold gates the rest.
    identical output.
 4. `npm test && npm run eval -- --assert-baseline` — green, and the report shows
    unanswerable accuracy at the gated value.
+
+## 7. Calibration addendum (implementation record, §4.1 / §5.6)
+
+Instrument: `evals/src/calibrate.ts` (dev tool, prints per-candidate gate signals for
+every golden question via `runQuery(..., { debug: true })`).
+
+**Design revision found during calibration.** The drafted clause 3 ("source-graph
+evidence is an unconditional anchor") leaked four of the five new unanswerable cases:
+on q-031/033/034/035 the top collision candidate carried evidence boosts from its
+cited sources on top of a one-word match. Clause 3 is therefore narrowed to **pure**
+source-graph reach — it only fires when the candidate's own text matched *zero* terms
+(the bilingual mechanism: q-018/019/021's compiled pages score entirely through their
+cited Chinese sources). Candidates with direct matches must earn confidence through
+clauses 1-2. Clause 2's "no structured hit" precondition was also dropped as
+redundant — high prose coverage is an anchor regardless.
+
+**Final constants** (exported from `src/core/query/engine.ts`, pinned by unit test):
+
+| constant | value | meaning |
+|---|---|---|
+| `ABSTAIN_STRUCT_COVERAGE` | 0.5 | clause 1: min fraction of terms matched when a structured hit anchors |
+| `ABSTAIN_SOFT_COVERAGE` | 2/3 | clause 2: min fraction of terms covered by prose alone |
+| `ABSTAIN_BODY_FLOOR` | 2 | clause 2: min description+body evidence |
+
+**Sweep** (expanded golden set, 37 cases; chosen row in bold):
+
+| variant | unanswerable | answerable damage |
+|---|---|---|
+| **STRUCT=0.5, SOFT=2/3, FLOOR=2** | **8/8** | **none — all categories at pre-gate floor** |
+| STRUCT=0.34 | 6/8 | none, but q-031/q-035 leak (2-of-5-term collisions pass) |
+| STRUCT=0.67 | 8/8 | q-013 (synthesis), q-017 (alias), q-037 (hard negative) over-abstain |
+| SOFT=0.5 | 8/8 | none on this set, but a ½-coverage prose match defeats the scatter shape by construction; 2/3 keeps clause 2 meaningfully stricter than clause 1 |
+| FLOOR=3 | 8/8 | q-018 (bilingual) over-abstains — its source-note match is exactly 2 |
+
+**Result on the expanded set (gate on):** unanswerable **8/8** (from 2/8 pre-gate);
+every answerable category exactly at its pre-gate floor — aggregate recall@10 0.931,
+MRR 0.833; the two pre-existing ranking misses (q-016, q-020) unchanged in number.
+The pre-gate floor is enforced in CI via `ENGINE_ANSWERABLE_FLOOR` in `evals/src/run.ts`
+alongside the new `unanswerableAccuracy: 1` threshold — no §4.4 concession was needed.
