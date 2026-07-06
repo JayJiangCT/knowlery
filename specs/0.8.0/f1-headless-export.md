@@ -107,7 +107,24 @@ Review before export:
   modal does; details finalized against the modal's exact current defaults during
   implementation, never diverging from them.
 
-### 4.3 Safety properties, restated as tests
+### 4.3 The `knowlery-cli` skill (added at spec review)
+
+A new bundled tooling skill, symmetric to `obsidian-cli`, closing the gap that agents
+had no systematic reference for the Knowlery CLI (only `query`/`stale` appeared in the
+retrieval ladders; `bundle`, `health`, `sync` were untaught):
+
+- Full command surface with syntax and when-to-use guidance: `init`, `sync`, `health`
+  (as a post-bulk-change verification step), `query`/`stale` (pointing back to the
+  retrieval ladder), `bundle install|list|uninstall`, and the new `export`/`review`.
+- **Export review conduct** (the trust model, stated where agents will read it): the
+  agent presents the checklist and risk hints to the user, applies only statuses the
+  user explicitly states, and never approves items on its own initiative — the exact
+  headless equivalent of the modal's per-item human review.
+- Ships as a builtin (`kind: 'tooling'`), so both shells deliver it through the normal
+  install/auto-sync; `BUILTIN_SKILL_NAMES` and health's skill check pick it up
+  automatically.
+
+### 4.4 Safety properties, restated as tests
 
 1. Unreviewed item in scope → `export` exits 1, writes nothing under
    `.knowlery/exports/`.
@@ -133,7 +150,10 @@ Review before export:
    edges).
 5. Purity guard covers the inverted export modules; smoke test extends with the
    export → install loop on the built artifact.
-6. `npm test`, lint, build, eval baseline + thresholds green.
+6. The `knowlery-cli` skill ships as builtin #14: installed by init in both shells,
+   covers every CLI command, and contains the export-review conduct rules
+   (content-asserted, like the 0.7 F5 skill tests).
+7. `npm test`, lint, build, eval baseline + thresholds green.
 
 ## 6. Maintainer self-test checklist (acceptance round)
 
