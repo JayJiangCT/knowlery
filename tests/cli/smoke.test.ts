@@ -65,6 +65,26 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       const embeddedStale = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), '--stale']);
       expect(cliStale.stdout.trim()).toBe(embeddedStale.stdout.trim());
 
+      // EPIPE (spec 0.8 f3, §4.4): the agent-pipes-to-head shape. pipefail makes the
+      // pipeline report node's exit status, not head's — without it this assertion
+      // would be falsely green while node dies of EPIPE.
+      const piped = await run('bash', [
+        '-o', 'pipefail', '-c',
+        `node "${cliPath}" query --dir "${vaultDir}" "widget design" | head -1`,
+      ]);
+      expect(piped.stdout.trim()).toBe(cliQuery.stdout.trim().split('\n')[0].trim());
+      expect(piped.stderr).not.toContain('EPIPE');
+
+      // Deterministic EPIPE: destroy the read end before the CLI finishes scanning,
+      // forcing its writes onto a broken pipe. Exit 0 proves the stream handler.
+      const { spawn } = await import('node:child_process');
+      const epipeExit = await new Promise<number | null>((resolvePromise) => {
+        const child = spawn('node', [cliPath, 'query', '--dir', vaultDir, '--json', 'widget design']);
+        child.stdout.destroy();
+        child.on('close', (code) => resolvePromise(code));
+      });
+      expect(epipeExit).toBe(0);
+
       // Abstention is a result, not an error: exit 0.
       const abstain = await run('node', [cliPath, 'query', '--dir', vaultDir, 'zebra quantum lighthouse']);
       expect(abstain.stdout).toContain('No confident matches');

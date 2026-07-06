@@ -80,15 +80,26 @@ jobs:
             manifest.json
             styles.css
 
-      - name: Publish CLI to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # OIDC trusted publishing (spec 0.8 f3, §4.1): no token — npmjs.com trusts this
+      # workflow's identity via the id-token permission above. Requires npm >= 11.5.1
+      # and Node >= 22.14 in this step only (the CLI artifact still targets node 18).
+      # Deliberately no registry-url on setup-node: it writes an _authToken line into
+      # .npmrc that can interfere with the OIDC exchange.
+      - name: Set up Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Publish CLI to npm (OIDC trusted publishing)
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::warning::NPM_TOKEN secret is not set — skipping npm publish of the knowlery CLI."
+          npm install -g npm@latest
+          VERSION=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version")
+          # Idempotent re-run guard (spec 0.8 f3, §4.2): a workflow re-run on an
+          # already-published tag is a green no-op, not a version-conflict failure.
+          if npm view "knowlery@${VERSION}" version >/dev/null 2>&1; then
+            echo "knowlery@${VERSION} already on the registry — skipping publish (idempotent re-run)."
             exit 0
           fi
-          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then
             npm publish --tag beta
           else

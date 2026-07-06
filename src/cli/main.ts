@@ -14,6 +14,17 @@ import { runBundleCommand } from './commands/bundle';
  * F1-inverted core — no lifecycle logic lives here.
  */
 
+// EPIPE handling (spec 0.8 f3, §4.4): agents pipe output into head/grep/pagers and
+// close the pipe early — that is a normal end of conversation, not an error. Stream
+// errors arrive asynchronously, so this one listener (installed before anything
+// writes) is the single correct place; per-write handling would be scattered and racy.
+for (const stream of [process.stdout, process.stderr]) {
+  stream.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EPIPE') process.exit(0);
+    throw error;
+  });
+}
+
 declare const KNOWLERY_VERSION: string; // injected by esbuild at build time
 
 const USAGE = `knowlery — knowledge base lifecycle for agent clients
