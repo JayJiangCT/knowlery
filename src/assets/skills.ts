@@ -1149,6 +1149,84 @@ Run \`obsidian help\` to see additional developer commands including CDP and deb
 `,
   },
   {
+    name: 'knowlery-cli',
+    kind: 'tooling',
+    emoji: '\u{1F6E0}\u{FE0F}',
+    description: 'Manage the knowledge base with the standalone knowlery CLI',
+    content: `---
+name: knowlery-cli
+description: Manage a Knowlery knowledge base from the command line with the standalone knowlery CLI — initialize and sync workspaces, run health checks, query knowledge, detect stale pages, and install, export, and review knowledge bundles. Use when the user asks to operate their knowledge base headlessly (without Obsidian), share knowledge as a bundle, install a bundle someone shared, or verify the workspace after bulk changes.
+---
+
+# Knowlery CLI
+
+The \`knowlery\` CLI operates the same workspace format as the Knowlery Obsidian plugin —
+no running Obsidian needed. Install: \`npm install -g knowlery\`. All commands accept
+\`--dir <path>\` (default: current directory).
+
+## Command reference
+
+| Command | What it does | When to use |
+| --- | --- | --- |
+| \`knowlery init\` | Create a new knowledge workspace (dirs, skills, agent instructions) | Starting a knowledge base outside Obsidian |
+| \`knowlery sync\` | Refresh built-in skills and instruction files to this tool version | After upgrading knowlery |
+| \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
+| \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
+| \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes | Deciding what to re-cook |
+| \`knowlery bundle install <zip-or-folder>\` | Install a shared knowledge bundle into Library/ | User received a bundle |
+| \`knowlery bundle list [--json]\` | Show installed bundles | Checking what knowledge is available |
+| \`knowlery bundle uninstall <bundle-id>\` | Remove an installed bundle | Bundle no longer wanted |
+| \`knowlery bundle export <seed> [--hops n] [--zip] [--json]\` | Compile reviewed knowledge into a shareable bundle | User wants to share a topic |
+| \`knowlery bundle review <seed> [--list] [--json] [--approve <id>...] [--flag <id>...]\` | Record per-item review decisions | Working through the export checklist |
+
+## Exporting a bundle: the review gate
+
+Nothing ships unreviewed. \`bundle export <seed>\` walks links from the seed concept,
+and if any item in scope lacks an explicit review status it prints the checklist and
+exits 1 without writing anything. Approvals are recorded with a content hash — editing
+an approved page automatically re-invalidates it. There is no approve-all flag, by design.
+
+### Review conduct (required)
+
+You are the interface between the checklist and the user. The review decision is
+**always the user's**, never yours:
+
+1. When export hits the review gate, fetch the checklist with
+   \`knowlery bundle review <seed> --list --json\` and present it to the user
+   **completely** — every item, every risk hint (emails, sensitive URLs, person pages,
+   meeting-like notes), verbatim. Never summarize warnings away.
+2. Translate the user's stated decisions into enumerated calls:
+   \`knowlery bundle review <seed> --approve <id> <id>... --flag <id>...\`
+   If the user says "approve all of them", that is acceptable **only after** the full
+   checklist has been presented in the conversation — expand it into explicit ids yourself.
+3. Never approve or flag items on your own initiative. After applying, echo back
+   exactly which statuses were recorded.
+4. When the scope is fully reviewed, run
+   \`knowlery bundle export <seed> --zip\` and report the manifest summary,
+   conformance result, and zip path.
+
+The same review state is shared with the Obsidian plugin's export modal
+(\`.knowlery/export-scope.json\`) — the user can start in one shell and finish in the other.
+
+## Common patterns
+
+\`\`\`bash
+# Verify the workspace after a bulk edit session
+knowlery health --json
+
+# Share the "drone-delivery" topic
+knowlery bundle export drone-delivery            # prints checklist, exits 1 if unreviewed
+knowlery bundle review drone-delivery --list --json   # fetch checklist for the user
+knowlery bundle review drone-delivery --approve concepts/drone-delivery concepts/flight-safety
+knowlery bundle export drone-delivery --zip      # compiles + zips once fully reviewed
+
+# Install what someone shared
+knowlery bundle install ~/Downloads/team.bundle.zip
+knowlery query "what did the team decide about X"
+\`\`\`
+`,
+  },
+  {
     name: 'obsidian-markdown',
     kind: 'tooling',
     emoji: '\u{270D}\u{FE0F}',
