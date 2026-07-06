@@ -31,7 +31,8 @@ knowlery bundle review <seed-concept-id> [--dir <vault>] [--list] [--json]
    collect + hash-invalidation + risk-scan core):
    - if any in-scope item is **unreviewed**, it prints the review checklist — each
      item with id, kind, title, risk-scan hints, and status markers for `new`/`changed`
-     items — and **exits 1** with instructions. Nothing compiles.
+     items — and **exits 1** with instructions. Nothing compiles. `--json` emits the
+     checklist structurally (agents parse it rather than scraping text).
    - if fully reviewed, it compiles **approved** items (flagged items excluded, modal
      semantics) into `.knowlery/exports/<bundle-id>/`, optionally zips, and prints the
      manifest summary + conformance outcome.
@@ -116,10 +117,20 @@ retrieval ladders; `bundle`, `health`, `sync` were untaught):
 - Full command surface with syntax and when-to-use guidance: `init`, `sync`, `health`
   (as a post-bulk-change verification step), `query`/`stale` (pointing back to the
   retrieval ladder), `bundle install|list|uninstall`, and the new `export`/`review`.
-- **Export review conduct** (the trust model, stated where agents will read it): the
-  agent presents the checklist and risk hints to the user, applies only statuses the
-  user explicitly states, and never approves items on its own initiative — the exact
-  headless equivalent of the modal's per-item human review.
+- **Export review conduct — the primary flow, not a fallback** (maintainer decision at
+  spec review: most users will operate the CLI *through their agent*, so the
+  conversational review loop is the main path). The skill states:
+  1. On hitting the review gate, fetch the checklist (`--json`) and present it to the
+     user **completely** — every item, every risk hint, verbatim; never summarize
+     warnings away.
+  2. Translate the user's natural-language decisions into enumerated
+     `review --approve/--flag <id>...` calls. A user saying "approve all of them" is
+     acceptable **only after** the full checklist has been presented in the
+     conversation — the agent expands it into explicit ids.
+  3. Never approve or flag on the agent's own initiative; after applying, echo back
+     exactly which statuses were recorded.
+  This is the headless equivalent of the modal's per-item human review; the absence of
+  an approve-all flag is what forces this loop through the human.
 - Ships as a builtin (`kind: 'tooling'`), so both shells deliver it through the normal
   install/auto-sync; `BUILTIN_SKILL_NAMES` and health's skill check pick it up
   automatically.
