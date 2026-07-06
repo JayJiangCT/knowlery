@@ -24,7 +24,16 @@ const WEIGHT_BODY = 1;
 const PREFIX_MATCH_CREDIT = 0.5; // fraction of the field weight an abbreviation match earns
 const CJK_SPECIFICITY = 2;
 const TIER_FACTOR: Record<PageTier, number> = { agent: 1.15, bundle: 1.1, user: 1 };
-const ABSTAIN_BODY_FLOOR = 2;
+
+/**
+ * Confidence-gate constants (spec 0.8 f2, §4.1) — calibration outputs, fixed by the
+ * sweep recorded in the spec addendum. Exported so tests fail loudly if they drift.
+ */
+export const ABSTAIN_BODY_FLOOR = 2;
+/** Clause 1: with a structured anchor, the top candidate must still cover this fraction of query terms. */
+export const ABSTAIN_STRUCT_COVERAGE = 0.5;
+/** Clause 2: without a structured anchor, prose must cover this fraction of query terms. */
+export const ABSTAIN_SOFT_COVERAGE = 2 / 3;
 
 export interface QueryCandidate {
   path: string;
@@ -42,9 +51,22 @@ export interface QueryResult {
   verdict: 'ok' | 'no-confident-match';
   terms: string[];
   candidates: QueryCandidate[];
+  /** Confidence-gate internals for the calibration tool; present only with options.debug. */
+  debugCandidates?: DebugCandidate[];
 }
 
-export function runQuery(question: string, snapshot: VaultSnapshot, k: number): QueryResult {
+export interface DebugCandidate extends QueryCandidate {
+  structuredTermCount: number;
+  descriptionHits: number;
+  bodyScore: number;
+}
+
+export function runQuery(
+  question: string,
+  snapshot: VaultSnapshot,
+  k: number,
+  options: { debug?: boolean } = {},
+): QueryResult {
   const terms = extractQueryTerms(question);
   if (terms.length === 0) {
     return { verdict: 'no-confident-match', terms: [], candidates: [] };
@@ -70,19 +92,24 @@ export function runQuery(question: string, snapshot: VaultSnapshot, k: number): 
     .sort(compareCandidates)
     .slice(0, k);
 
-  if (shouldAbstain(candidates)) {
-    return { verdict: 'no-confident-match', terms: terms.map((term) => term.raw), candidates: [] };
+  const debugCandidates = options.debug ? candidates.map(toDebugCandidate) : undefined;
+
+  if (shouldAbstain(candidates, terms.length)) {
+    return { verdict: 'no-confident-match', terms: terms.map((term) => term.raw), candidates: [], debugCandidates };
   }
 
   return {
     verdict: 'ok',
     terms: terms.map((term) => term.raw),
     candidates: candidates.map(toPublicCandidate),
+    debugCandidates,
   };
 }
 
 interface InternalCandidate extends QueryCandidate {
   structuredHits: number;
+  /** Distinct query terms with at least one structured-field (or prefix) hit — the clause-1 signal. */
+  structuredTermCount: number;
   descriptionHits: number;
   bodyScore: number;
   reviewed: boolean;
@@ -108,6 +135,7 @@ function scorePage(page: ScannedPage, terms: QueryTerm[]): InternalCandidate {
     evidence: [],
     matchedTerms: base.matchedTerms,
     structuredHits: base.structuredHits,
+    structuredTermCount: base.structuredTermCount,
     descriptionHits: base.descriptionHits,
     bodyScore: base.bodyScore,
     reviewed: page.status === 'reviewed',
@@ -138,6 +166,7 @@ function scoreBundleEntry(
     evidence: [],
     matchedTerms: base.matchedTerms,
     structuredHits: base.structuredHits,
+    structuredTermCount: base.structuredTermCount,
     descriptionHits: base.descriptionHits,
     bodyScore: base.bodyScore,
     reviewed: false,
@@ -157,6 +186,7 @@ interface FieldGroup {
 interface FieldScore {
   score: number;
   structuredHits: number;
+  structuredTermCount: number;
   descriptionHits: number;
   bodyScore: number;
   matchedTerms: string[];
@@ -165,6 +195,7 @@ interface FieldScore {
 function scoreFields(terms: QueryTerm[], fields: FieldGroup): FieldScore {
   let score = 0;
   let structuredHits = 0;
+  let structuredTermCount = 0;
   let descriptionHits = 0;
   let bodyScore = 0;
   const matchedTerms: string[] = [];
@@ -191,11 +222,12 @@ function scoreFields(terms: QueryTerm[], fields: FieldGroup): FieldScore {
     if (termScore > 0) matchedTerms.push(term.raw);
     score += termScore;
     structuredHits += titleAliasCount + tagBasenameCount + prefixCount;
+    if (titleAliasCount + tagBasenameCount + prefixCount > 0) structuredTermCount += 1;
     descriptionHits += descriptionCount;
     bodyScore += bodyCount * WEIGHT_BODY * specificity;
   }
 
-  return { score, structuredHits, descriptionHits, bodyScore, matchedTerms };
+  return { score, structuredHits, structuredTermCount, descriptionHits, bodyScore, matchedTerms };
 }
 
 function countTermIn(term: QueryTerm, field: FieldText): number {
@@ -238,18 +270,42 @@ function compareCandidates(a: InternalCandidate, b: InternalCandidate): number {
 }
 
 /**
- * Abstention (spec f2, §5.1 step 6): if nothing matched any structured field or
- * description anywhere, and the best body-only score is below the floor, the honest
- * answer is "this vault has no confident match" — not a list of noise.
+ * Confidence gate (spec 0.8 f2, §4.1): a result set is confident iff the *top*
+ * candidate is — the top item is what an agent reads first and trusts most; if the
+ * best evidence is a one-word collision, the whole list is noise. A top candidate is
+ * confident when any clause holds:
+ *   1. Structured anchor: some query term hit title/aliases/tags/basename (or
+ *      prefix-matched them) AND distinct-term coverage clears ABSTAIN_STRUCT_COVERAGE.
+ *      Single-term questions pass trivially (coverage 1/1) — including CJK
+ *      single-chunk queries, by design (spec §4.3 boundary note).
+ *   2. Coverage anchor: description/body prose covers ABSTAIN_SOFT_COVERAGE of the
+ *      terms with prose evidence at or above the floor — a question restated in a
+ *      page's prose is an answer even when the title uses different words.
+ *   3. Pure source-graph reach: the candidate's own text matched *nothing* and its
+ *      entire standing comes from evidence in a cited source note — the bilingual
+ *      mechanism, where coverage is computed against the compiled page and would
+ *      misjudge cross-language questions. Candidates with direct matches must earn
+ *      confidence through clauses 1-2; an evidence top-up on a one-word collision is
+ *      not an anchor (calibration: unconditional evidence leaked q-031/033/034/035).
  */
-function shouldAbstain(candidates: InternalCandidate[]): boolean {
+function shouldAbstain(candidates: InternalCandidate[], termCount: number): boolean {
   if (candidates.length === 0) return true;
-  const anyStructured = candidates.some(
-    (candidate) => candidate.structuredHits > 0 || candidate.descriptionHits > 0 || candidate.evidence.length > 0,
-  );
-  if (anyStructured) return false;
-  const topBodyScore = Math.max(...candidates.map((candidate) => candidate.bodyScore));
-  return topBodyScore < ABSTAIN_BODY_FLOOR;
+  const top = candidates[0];
+  const coverage = termCount > 0 ? top.matchedTerms.length / termCount : 0;
+
+  if (top.structuredTermCount > 0 && coverage >= ABSTAIN_STRUCT_COVERAGE) return false;
+  if (coverage >= ABSTAIN_SOFT_COVERAGE && top.descriptionHits + top.bodyScore >= ABSTAIN_BODY_FLOOR) return false;
+  if (top.matchedTerms.length === 0 && top.evidence.length > 0) return false;
+  return true;
+}
+
+function toDebugCandidate(candidate: InternalCandidate): DebugCandidate {
+  return {
+    ...toPublicCandidate(candidate),
+    structuredTermCount: candidate.structuredTermCount,
+    descriptionHits: candidate.descriptionHits,
+    bodyScore: candidate.bodyScore,
+  };
 }
 
 function toPublicCandidate(candidate: InternalCandidate): QueryCandidate {

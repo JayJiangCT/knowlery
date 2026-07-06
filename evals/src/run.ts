@@ -30,6 +30,28 @@ const F2_THRESHOLDS = {
   aliasRecallAt10: 0.625,
   bilingualRecallAt10: 0.5,
   bundleRecallAt5: 0.667,
+  /**
+   * Spec 0.8 f2, §4.4: unanswerable questions are hand-built probes of a
+   * deterministic gate — anything below "all of them" means a known collision
+   * shape still defeats it.
+   */
+  unanswerableAccuracy: 1,
+};
+
+/**
+ * The pre-gate engine's report on the expanded golden set, frozen as the answerable
+ * floor (spec 0.8 f2, §4.3 step 2). The confidence gate must never abstain its way
+ * below these — over-abstention is the same bug in the opposite direction. Values are
+ * the exact pre-gate run rounded down a hair to dodge float equality.
+ */
+const ENGINE_ANSWERABLE_FLOOR: Record<string, { recallAt10: number; mrr: number }> = {
+  'entity-lookup': { recallAt10: 1, mrr: 0.999 },
+  'concept-lookup': { recallAt10: 1, mrr: 0.899 },
+  synthesis: { recallAt10: 1, mrr: 0.999 },
+  alias: { recallAt10: 0.75, mrr: 0.624 },
+  bilingual: { recallAt10: 0.75, mrr: 0.458 },
+  bundle: { recallAt10: 1, mrr: 0.999 },
+  'user-note': { recallAt10: 1, mrr: 0.866 },
 };
 
 const EVALS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -273,7 +295,7 @@ function assertF2Thresholds(engineReport: EvalReport): void {
   checkFloor(
     'unanswerable accuracy',
     engineReport.aggregate.unanswerableAccuracy,
-    baseline.aggregate.unanswerableAccuracy ?? 0,
+    F2_THRESHOLDS.unanswerableAccuracy,
   );
 
   for (const [category, frozen] of Object.entries(baseline.perCategory)) {
@@ -281,6 +303,13 @@ function assertF2Thresholds(engineReport: EvalReport): void {
     const current = engineReport.perCategory[category];
     checkFloor(`${category} recall@10 (no regression)`, current?.recallAt10 ?? null, frozen.recallAt10 ?? 0);
     checkFloor(`${category} MRR (no regression)`, current?.mrr ?? null, frozen.mrr ?? 0);
+  }
+
+  // Spec 0.8 f2, §4.3 step 4: gate-on engine vs. the frozen pre-gate engine floor.
+  for (const [category, floor] of Object.entries(ENGINE_ANSWERABLE_FLOOR)) {
+    const current = engineReport.perCategory[category];
+    checkFloor(`${category} recall@10 (pre-gate floor)`, current?.recallAt10 ?? null, floor.recallAt10);
+    checkFloor(`${category} MRR (pre-gate floor)`, current?.mrr ?? null, floor.mrr);
   }
 
   if (failures.length > 0) {
