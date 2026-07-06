@@ -69,6 +69,13 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       const abstain = await run('node', [cliPath, 'query', '--dir', vaultDir, 'zebra quantum lighthouse']);
       expect(abstain.stdout).toContain('No confident matches');
 
+      // Near-collision abstention (spec 0.8 f2, §5.4): "widget" hits the existing
+      // page title but covers 1/3 terms — the confidence gate must refuse, not rank noise.
+      const nearCollision = await run('node', [cliPath, 'query', '--dir', vaultDir, 'widget pricing roadmap']);
+      expect(nearCollision.stdout).toContain('No confident matches');
+      const embeddedNearCollision = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), 'widget pricing roadmap']);
+      expect(embeddedNearCollision.stdout.trim()).toBe(nearCollision.stdout.trim());
+
       // Missing question: usage error, exit 2.
       const noQuestion = await run('node', [cliPath, 'query', '--dir', vaultDir]).catch(
         (error: { code: number; stderr: string }) => error,

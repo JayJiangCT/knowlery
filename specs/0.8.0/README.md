@@ -10,7 +10,7 @@ engineering debt from two release cycles is cleared.
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | Headless bundle export: `knowlery bundle export` with a file-driven review gate | [f1-headless-export.md](./f1-headless-export.md) | 0.7 F1/F2/F4 |
-| F2 | Score-quality abstention (eval-calibrated) | (spec pending) | 0.6 F1 harness |
+| F2 | Score-quality abstention (eval-calibrated) | [f2-score-quality-abstention.md](./f2-score-quality-abstention.md) | 0.6 F1 harness |
 | F3 | Release engineering hygiene: npm Trusted Publishing (OIDC), idempotent publish step, `bin` path fix, CLI EPIPE handling | (spec pending) | — |
 | F4 | Repo lint hygiene: unscoped-eslint crash (`.venv*/`, `tests/` typed-lint), 0.6-scan warning cleanup, `display` → `getSettingDefinitions` | (spec pending) | — |
 
@@ -32,7 +32,9 @@ the most careful eval work; F3/F4 are independent and can interleave).
 - Lockstep versioning (one version, one tag, plugin + CLI together); workspace format
   versioned separately via the manifest; sync downgrade guard active since 0.7.0.
 - SDD process unchanged: spec → maintainer acceptance → implementation → maintainer
-  self-test, per feature, stacked branches `cursor/08-f<N>-<name>-92eb`.
+  self-test, per feature, branches `cursor/08-f<N>-<name>-92eb` cut from `main` after
+  the previous feature merges (stacking only if a feature must build on an unmerged
+  predecessor — 0.8 has no such dependency after F1).
 
 ## Consolidated backlog ledger (source of the F2–F4 scopes)
 
@@ -44,3 +46,7 @@ the most careful eval work; F3/F4 are independent and can interleave).
   acceptance side note) → **F4**
 - Deferred beyond 0.8: `/explore`/`/ideas` adopting the retrieval ladder wholesale;
   remote bundle distribution.
+- Abstention exactly-half-coverage boundary (F2 acceptance residual, seed cases in
+  the f2 spec §7 addendum): 2-term queries whose top candidate matches exactly one
+  term pass clause 1's `>=` comparison; distinguishing them from legitimate
+  half-coverage answers needs a specificity signal on the *unmatched* terms.

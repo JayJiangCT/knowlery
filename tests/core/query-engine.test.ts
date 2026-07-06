@@ -3,7 +3,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { extractQueryTerms, prefixMatches } from '../../src/core/query/tokenize';
 import { fieldText, scanVault, type ScannedPage, type VaultSnapshot } from '../../src/core/query/scan';
-import { runQuery } from '../../src/core/query/engine';
+import {
+  ABSTAIN_BODY_FLOOR,
+  ABSTAIN_SOFT_COVERAGE,
+  ABSTAIN_STRUCT_COVERAGE,
+  runQuery,
+} from '../../src/core/query/engine';
 
 const FIXTURE_VAULT = join(__dirname, '..', '..', 'evals', 'fixtures', 'vault');
 
@@ -121,7 +126,10 @@ describe('runQuery scoring', () => {
     expect(result.candidates).toEqual([]);
   });
 
-  it('does not abstain when a title matches', () => {
+  // Pre-0.8 this asserted the opposite: one title hit anywhere defeated abstention.
+  // That is exactly the q-030 collision the 0.8 f2 gate exists to close — a single
+  // structured hit now also needs term coverage (clause 1).
+  it('abstains when a title matches only a minority of the query terms (spec 0.8 f2, §4.1 clause 1)', () => {
     const page = makePage({
       path: 'concepts/procurement.md',
       title: 'Procurement',
@@ -129,7 +137,131 @@ describe('runQuery scoring', () => {
       tier: 'agent',
     });
     const result = runQuery('gpu procurement budget', makeSnapshot([page]), 10);
+    expect(result.verdict).toBe('no-confident-match');
+  });
+});
+
+describe('confidence gate (spec 0.8 f2, §4.1)', () => {
+  it('exports the calibrated constants the sweep fixed', () => {
+    expect(ABSTAIN_STRUCT_COVERAGE).toBe(0.5);
+    expect(ABSTAIN_SOFT_COVERAGE).toBe(2 / 3);
+    expect(ABSTAIN_BODY_FLOOR).toBe(2);
+  });
+
+  it('clause 1: a structured hit with majority coverage is confident', () => {
+    const page = makePage({
+      path: 'concepts/procurement.md',
+      title: 'GPU Procurement',
+      titleAlias: fieldText('GPU Procurement'),
+      tier: 'agent',
+    });
+    const result = runQuery('gpu procurement budget', makeSnapshot([page]), 10);
     expect(result.verdict).toBe('ok');
+  });
+
+  it('clause 1: single-term questions pass trivially on a structured hit', () => {
+    const page = makePage({
+      path: 'concepts/backpressure.md',
+      title: 'Backpressure',
+      titleAlias: fieldText('Backpressure'),
+      tier: 'agent',
+    });
+    expect(runQuery('backpressure', makeSnapshot([page]), 10).verdict).toBe('ok');
+  });
+
+  it('clause 1: CJK single-chunk queries pass on a title substring hit (spec §4.3 boundary, by design)', () => {
+    const page = makePage({
+      path: 'concepts/backpressure.md',
+      title: '背压机制',
+      titleAlias: fieldText('背压机制'),
+      tier: 'agent',
+    });
+    expect(runQuery('背压', makeSnapshot([page]), 10).verdict).toBe('ok');
+  });
+
+  it('clause 2: high prose coverage without any title overlap is confident', () => {
+    const page = makePage({
+      path: 'Projects/draft.md',
+      title: 'Unrelated Draft Title',
+      body: fieldText('no rollback path may involve restoring from backup during the migration'),
+    });
+    const result = runQuery('restore from backup during migration', makeSnapshot([page]), 10);
+    expect(result.verdict).toBe('ok');
+  });
+
+  it('clause 3: a pure source-graph candidate (zero direct matches) stays confident', () => {
+    const chineseSource = makePage({
+      path: 'Projects/调研.md',
+      title: '调研',
+      body: fieldText('推荐头部采样作为默认采样策略。'),
+    });
+    const compiledPage = makePage({
+      path: 'concepts/sampling.md',
+      title: 'Sampling Strategy',
+      titleAlias: fieldText('Sampling Strategy'),
+      sources: ['Projects/调研.md'],
+      tier: 'agent',
+    });
+    const result = runQuery('采样策略', makeSnapshot([chineseSource, compiledPage]), 10);
+    expect(result.verdict).toBe('ok');
+  });
+
+  it('collision: a tag-only hit on a minority term abstains', () => {
+    const page = makePage({
+      path: 'entities/someone.md',
+      title: 'Someone',
+      tagBasename: fieldText('person product someone'),
+      body: fieldText('a colleague on the product side'),
+      tier: 'agent',
+    });
+    const result = runQuery('hiring plan for the product team', makeSnapshot([page]), 10);
+    expect(result.verdict).toBe('no-confident-match');
+  });
+
+  it('collision: evidence topping up a one-word match is not an anchor', () => {
+    const source = makePage({
+      path: 'Daily/2026-01-01.md',
+      title: '2026-01-01',
+      body: fieldText('metrics metrics metrics discussion'),
+    });
+    const page = makePage({
+      path: 'entities/metrics-api.md',
+      title: 'Metrics API',
+      titleAlias: fieldText('Metrics API'),
+      body: fieldText('serves metrics'),
+      sources: ['Daily/2026-01-01.md'],
+      tier: 'agent',
+    });
+    const result = runQuery('who approved the vendor contract for the metrics rollout', makeSnapshot([source, page]), 10);
+    expect(result.verdict).toBe('no-confident-match');
+  });
+
+  it('collision: CJK multi-chunk query with one colliding chunk abstains', () => {
+    const page = makePage({
+      path: 'Projects/告警疲劳复盘.md',
+      title: '告警疲劳复盘',
+      titleAlias: fieldText('告警疲劳复盘'),
+      body: fieldText('值班轮次的告警复盘记录，告警太多导致麻木。'),
+    });
+    const result = runQuery('移动端的告警是谁负责的？', makeSnapshot([page]), 10);
+    expect(result.verdict).toBe('no-confident-match');
+  });
+
+  it('collision: terms scattered across pages with no single covering page abstains', () => {
+    const pageA = makePage({
+      path: 'concepts/a.md',
+      title: 'Vendors',
+      titleAlias: fieldText('Vendors'),
+      tier: 'agent',
+    });
+    const pageB = makePage({
+      path: 'concepts/b.md',
+      title: 'Contracts',
+      titleAlias: fieldText('Contracts'),
+      tier: 'agent',
+    });
+    const result = runQuery('vendor contract approval workflow rollout', makeSnapshot([pageA, pageB]), 10);
+    expect(result.verdict).toBe('no-confident-match');
   });
 });
 

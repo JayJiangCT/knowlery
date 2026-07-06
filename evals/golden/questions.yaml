@@ -203,3 +203,57 @@
     must: []
   category: unanswerable
   notes: Deliberate near-collision — "roadmap" appears on the PM page; documents the baseline's lack of an abstention signal.
+
+# --- 0.8 F2 expansion (spec 0.8 f2, §4.3) ---
+# Five unanswerable collision shapes + two answerable hard negatives that pin the
+# abstention boundary from below. Committed before the confidence gate lands, so the
+# pre-gate engine report on this expanded set is the frozen answerable floor.
+
+- id: q-031
+  question: "What is our hiring plan for the product team this year?"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Tag collision — "product" exists only as a taxonomy tag on several pages; nothing about hiring anywhere.
+
+- id: q-032
+  question: "移动端的告警是谁负责的？"
+  expected:
+    must: []
+  category: unanswerable
+  notes: CJK multi-chunk collision — chunk 告警 substring-hits the retro note's title, but 移动端 and 谁负责 match nothing (spec boundary note — single-chunk collisions are out of scope by design).
+
+- id: q-033
+  question: "Who approved the vendor contract for the metrics rollout?"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Multi-page weak scatter — "metrics" hits the API page, other terms scatter or miss; no single page covers more than one term.
+
+- id: q-034
+  question: "Who runs the data warehouse team at Nimbus Labs?"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Entity-adjacent — the company page exists (two structured title hits) but the vault tracks no data warehouse team; probes multi-hit low-coverage.
+
+- id: q-035
+  question: "What is the pricing model for Pulseboard enterprise plans?"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Entity-adjacent — known entity name plus an attribute the vault has nothing on; the realistic agent-query shape of q-030.
+
+- id: q-036
+  question: "Can we restore from backup during the migration?"
+  expected:
+    must: [Projects/pulseboard-rollback-draft.md]
+  category: user-note
+  notes: Answerable hard negative — zero title overlap ("Pulseboard Rollback Draft"); the body's hard rule restates every query term.
+
+- id: q-037
+  question: "How many samples per second can we sustain?"
+  expected:
+    must: [Projects/q3-capacity-planning.md]
+  category: user-note
+  notes: Answerable hard negative — zero title overlap ("Q3 Capacity Planning"); answered only by the body's numbers section.
