@@ -216,7 +216,7 @@ async function readCommunityPlugins(app: App): Promise<CommunityPluginsReadResul
 
   try {
     const content = await app.vault.adapter.read(path);
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     if (!Array.isArray(parsed)) {
       return {
         ok: false,

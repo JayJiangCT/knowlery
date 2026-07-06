@@ -1,4 +1,5 @@
 import { Platform } from 'obsidian';
+import { execFile } from 'child_process';
 
 export interface CliDetection {
   claudeCode: { installed: boolean; version?: string };
@@ -41,7 +42,6 @@ function detectCliTool(toolName: string): Promise<CliToolResult> {
 }
 
 function detectCliToolUnix(toolName: string): Promise<CliToolResult> {
-  const { execFile } = require('child_process') as typeof import('child_process');
   const safeName = toolName.replace(/[^a-zA-Z0-9\-_]/g, '');
   if (!safeName) return Promise.resolve({ installed: false });
 
@@ -78,7 +78,6 @@ function detectCliToolUnix(toolName: string): Promise<CliToolResult> {
 }
 
 function detectCliToolWindows(toolName: string): Promise<CliToolResult> {
-  const { execFile } = require('child_process') as typeof import('child_process');
 
   return new Promise(resolve => {
     execFile('where.exe', [toolName], { timeout: 5000 }, (whereError, whereStdout) => {

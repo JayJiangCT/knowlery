@@ -118,7 +118,7 @@ export async function loadSkillsLock(fs: VaultFs): Promise<SkillsLock> {
     return { version: '1.0.0', skills: {} };
   }
   const content = await fs.read(normalizeVaultPath(LOCK_FILE));
-  return JSON.parse(content);
+  return JSON.parse(content) as SkillsLock;
 }
 
 export async function saveSkillsLock(fs: VaultFs, lock: SkillsLock): Promise<void> {
@@ -159,8 +159,8 @@ export async function listSkills(fs: VaultFs): Promise<SkillInfo[]> {
     let kind: SkillKind = 'tooling';
     try {
       const parsed = matter(content);
-      description = parsed.data.description || '';
-      const rawKind = parsed.data.kind;
+      description = typeof parsed.data.description === 'string' ? parsed.data.description : '';
+      const rawKind: unknown = parsed.data.kind;
       if (rawKind === 'knowledge' || rawKind === 'tooling') {
         kind = rawKind;
       }

@@ -115,7 +115,7 @@ export async function readLatestDailyReviewResult(app: App): Promise<LatestDaily
 
 export function parseDailyReviewResult(content: string, expectedRequestId?: string): DailyReviewParseResult {
   try {
-    const parsed = JSON.parse(content);
+    const parsed: unknown = JSON.parse(content);
     const result = DailyReviewResultSchema.safeParse(parsed);
     if (result.success) {
       if (expectedRequestId && result.data.requestId !== expectedRequestId) {

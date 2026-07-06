@@ -68,7 +68,7 @@ function tryReadActivityRecord(
   errors: ActivityParseError[],
 ): boolean {
   try {
-    const parsed = JSON.parse(candidate);
+    const parsed: unknown = JSON.parse(candidate);
     const result = ActivityRecordSchema.safeParse(parsed);
     if (result.success) {
       records.push(result.data);

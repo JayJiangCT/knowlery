@@ -8,6 +8,7 @@ import type {
 } from '../types';
 import { installClaudian } from './claudian-installer';
 import { detectNode } from './node-detect';
+import { execFile } from 'child_process';
 
 const INSTALL_ORDER: InstallItemId[] = ['platform-cli', 'claudian', 'skills-tooling'];
 
@@ -258,7 +259,6 @@ function runCommand(
   args: string[],
   timeout: number,
 ): Promise<{ stdout: string; stderr: string }> {
-  const { execFile } = require('child_process') as typeof import('child_process');
 
   if (ObsidianPlatform.isWin) {
     const executable = command === 'npm' || command === 'npx' ? `${command}.cmd` : command;

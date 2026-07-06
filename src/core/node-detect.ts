@@ -1,4 +1,5 @@
 import { Platform } from 'obsidian';
+import { execFile } from 'child_process';
 
 export interface NodeDetectResult {
   detected: boolean;
@@ -11,7 +12,6 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
     return { detected: false, version: null, path: null };
   }
 
-  const { execFile } = require('child_process') as typeof import('child_process');
 
   if (customPath) {
     const result = await tryNodeExecFile(execFile, customPath);
@@ -50,7 +50,6 @@ export async function detectNode(customPath?: string): Promise<NodeDetectResult>
 }
 
 function resolveNodeViaShell(): Promise<NodeDetectResult | null> {
-  const { execFile } = require('child_process') as typeof import('child_process');
   const home = process.env.HOME || '';
   const shell = process.env.SHELL || '/bin/zsh';
 

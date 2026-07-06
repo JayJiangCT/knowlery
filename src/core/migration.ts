@@ -249,7 +249,7 @@ export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
     const raw = await fs.read(openCodePath);
     let config: Record<string, unknown>;
     try {
-      config = JSON.parse(raw);
+      config = JSON.parse(raw) as Record<string, unknown>;
     } catch {
       return; // user-owned config — never risk corrupting it
     }
