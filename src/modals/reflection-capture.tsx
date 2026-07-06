@@ -35,7 +35,7 @@ export class ReflectionCaptureModal extends Modal {
           <ReflectionCaptureForm
             onCancel={() => this.close()}
             onSave={async (record) => {
-              await appendActivityRecord(this.app, record);
+              await appendActivityRecord(this.plugin.fs, record);
               new Notice('Reflection added to knowlery activity.');
               this.onSaved?.();
               this.close();
