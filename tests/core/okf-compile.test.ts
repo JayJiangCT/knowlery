@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { App } from 'obsidian';
 import { compileBundle } from '../../src/core/okf/compile';
 import type { CompileOptions } from '../../src/types';
-import { createOkfMockApp } from '../mocks/okf-app';
+import { createOkfMockApp, okfBundleSource, okfVaultFs } from '../mocks/okf-app';
 
 const NOW = new Date('2026-07-02T00:00:00.000Z');
 
@@ -71,7 +70,7 @@ const BASE_OPTIONS: CompileOptions = {
 describe('OKF bundle compile', () => {
   it('exports only approved items and keeps share-safe defaults', async () => {
     const app = createOkfMockApp(BASE_VAULT);
-    const result = await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
+    const result = await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
 
     expect(result.conceptCount).toBe(1);
     expect(result.rawSourceCount).toBe(1);
@@ -87,7 +86,7 @@ describe('OKF bundle compile', () => {
 
   it('writes reserved files in the spec shapes: okf_version index, dated minimal log, README', async () => {
     const app = createOkfMockApp(BASE_VAULT);
-    await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
+    await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
 
     const index = app.writes['.knowlery/exports/test-bundle/index.md'];
     expect(index.startsWith('---\nokf_version: "0.1"\n---\n')).toBe(true);
@@ -108,7 +107,7 @@ describe('OKF bundle compile', () => {
 
   it('resolves approved raw links to ../_sources/ and reports them converted', async () => {
     const app = createOkfMockApp(BASE_VAULT);
-    const result = await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
+    const result = await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
     expect(app.writes['.knowlery/exports/test-bundle/concepts/search.md']).toContain('](../_sources/Idea/private.md)');
     expect(result.wikilinksConverted).toBe(1);
     expect(result.unresolvedLinks).toEqual([]);
@@ -125,8 +124,8 @@ describe('OKF bundle compile', () => {
     });
     const clean = createOkfMockApp(BASE_VAULT);
 
-    const withBundle = await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
-    const without = await compileBundle(clean as unknown as App, BASE_OPTIONS, NOW);
+    const withBundle = await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
+    const without = await compileBundle(okfBundleSource(clean), BASE_OPTIONS, NOW);
 
     expect(withBundle.conceptCount).toBe(without.conceptCount);
     expect(app.writes['.knowlery/exports/test-bundle/concepts/foreign.md']).toBeUndefined();
@@ -147,7 +146,7 @@ describe('OKF bundle compile', () => {
       ].join('\n'),
     });
 
-    const result = await compileBundle(app as unknown as App, {
+    const result = await compileBundle(okfBundleSource(app), {
       ...BASE_OPTIONS,
       approvedConceptIds: ['concepts/search', 'concepts/hostile'],
     }, NOW);
@@ -174,7 +173,7 @@ describe('OKF bundle compile', () => {
         '',
       ].join('\n'),
     });
-    await compileBundle(app as unknown as App, BASE_OPTIONS, NOW);
+    await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
 
     const schema = app.writes['.knowlery/exports/test-bundle/SCHEMA.md'];
     // concepts/search.md declares domain: product — only that row survives.
@@ -185,7 +184,7 @@ describe('OKF bundle compile', () => {
 
   it('keeps sources verbatim and projects the full log only when opted in', async () => {
     const app = createOkfMockApp(BASE_VAULT);
-    await compileBundle(app as unknown as App, {
+    await compileBundle(okfBundleSource(app), {
       ...BASE_OPTIONS,
       includeSources: true,
       includeFullLog: true,

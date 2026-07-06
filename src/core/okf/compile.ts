@@ -1,13 +1,13 @@
 import { dirname, isAbsolute, join } from 'path';
 import { mkdir, rm, writeFile as writeFsFile } from 'fs/promises';
 import matter from 'gray-matter';
-import type { App } from 'obsidian';
-import { normalizePath } from 'obsidian';
+import type { VaultFs } from '../vault-fs';
+import { normalizeVaultPath } from '../vault-fs';
 import type { BundleFile, PageRecord, RawDependency } from './shared';
 import { BUNDLE_MARKER, conceptIdFromPath, isKnowledgePath, safeMatter, toPosixPath } from './shared';
 import type { CompileOptions, CompileResult, UnresolvedLink } from '../../types';
 import { CompileOptionsSchema } from '../../types';
-import { collectBundleInputs, readRawDependency, readSchemaMd } from './collect';
+import { collectBundleInputs, readRawDependency, readSchemaMd, type BundleSource } from './collect';
 import { mapFrontmatterToOkf } from './frontmatter-map';
 import { stringifyYaml, projectIndexes, type IndexEntryInput } from './index-project';
 import { projectLog } from './log-project';
@@ -17,13 +17,13 @@ import { buildReadme, buildSourceCopy } from './bundle-docs';
 import { scopeSchemaToBundle } from './schema-scope';
 import { collectRawBodyUnresolvedLinks, convertWikilinks } from './wikilink';
 
-export async function compileBundle(app: App, rawOptions: CompileOptions, now = new Date()): Promise<CompileResult> {
+export async function compileBundle(source: BundleSource, rawOptions: CompileOptions, now = new Date()): Promise<CompileResult> {
   const options = CompileOptionsSchema.parse(rawOptions);
-  const inputs = await collectBundleInputs(app);
+  const inputs = await collectBundleInputs(source);
   const approvedConceptIds = new Set(options.approvedConceptIds);
   const approvedRawPaths = new Set(options.approvedRawPaths.map(toPosixPath));
   const pages = inputs.pages.filter((page) => approvedConceptIds.has(page.conceptId));
-  const rawSources = await readApprovedRawDependencies(app, pages, approvedRawPaths);
+  const rawSources = await readApprovedRawDependencies(source.fs, pages, approvedRawPaths);
   const files: BundleFile[] = [];
   const indexEntries: IndexEntryInput[] = [];
   const unresolvedLinks: UnresolvedLink[] = [];
@@ -66,7 +66,7 @@ export async function compileBundle(app: App, rawOptions: CompileOptions, now = 
   }
 
   if (options.includeSchema) {
-    const schema = await readSchemaMd(app);
+    const schema = await readSchemaMd(source.fs);
     if (schema) {
       // Never ship the vault-wide SCHEMA.md verbatim — scope it to the
       // taxonomy the exported pages actually use.
@@ -123,7 +123,7 @@ export async function compileBundle(app: App, rawOptions: CompileOptions, now = 
   });
 
   const conformance = checkConformance(files);
-  await writeBundleFiles(app, options.targetDir, files, options.overwrite);
+  await writeBundleFiles(source.fs, options.targetDir, files, options.overwrite);
 
   return {
     manifest,
@@ -138,7 +138,7 @@ export async function compileBundle(app: App, rawOptions: CompileOptions, now = 
 }
 
 async function readApprovedRawDependencies(
-  app: App,
+  fs: VaultFs,
   pages: PageRecord[],
   approvedRawPaths: Set<string>,
 ): Promise<RawDependency[]> {
@@ -156,13 +156,13 @@ async function readApprovedRawDependencies(
 
   const rawSources: RawDependency[] = [];
   for (const [path, citations] of citedBy.entries()) {
-    const raw = await readRawDependency(app, path, Array.from(citations));
+    const raw = await readRawDependency(fs, path, Array.from(citations));
     if (raw) rawSources.push(raw);
   }
   return rawSources;
 }
 
-async function writeBundleFiles(app: App, targetDir: string, files: BundleFile[], overwrite: boolean): Promise<void> {
+async function writeBundleFiles(fs: VaultFs, targetDir: string, files: BundleFile[], overwrite: boolean): Promise<void> {
   assertSafeTarget(targetDir);
   const normalizedTarget = toPosixPath(targetDir);
   if (isAbsolute(targetDir)) {
@@ -177,19 +177,16 @@ async function writeBundleFiles(app: App, targetDir: string, files: BundleFile[]
     return;
   }
 
-  const adapter = app.vault.adapter;
-  if (await adapter.exists(normalizedTarget)) {
+  if (await fs.exists(normalizedTarget)) {
     if (!overwrite) throw new Error(`Export target already exists: ${normalizedTarget}`);
-    const removable = adapter as typeof adapter & { rmdir?: (path: string, recursive?: boolean) => Promise<void> };
-    if (!removable.rmdir) throw new Error(`Export target already exists and cannot be removed: ${normalizedTarget}`);
-    await removable.rmdir(normalizedTarget, true);
+    await fs.rmdir(normalizedTarget, true);
   }
-  await ensureVaultDir(app, normalizedTarget);
+  await ensureVaultDir(fs, normalizedTarget);
   for (const file of files) {
-    const path = normalizePath(`${normalizedTarget}/${file.path}`);
+    const path = normalizeVaultPath(`${normalizedTarget}/${file.path}`);
     assertSafeWritePath(path);
-    await ensureVaultDir(app, dirname(path));
-    await adapter.write(path, file.content);
+    await ensureVaultDir(fs, dirname(path));
+    await fs.write(path, file.content);
   }
 }
 
@@ -203,11 +200,11 @@ function buildReferenceFile(path: string, content: string, title: string): Bundl
   };
 }
 
-async function ensureVaultDir(app: App, path: string): Promise<void> {
-  const normalized = normalizePath(path);
-  if (!normalized || normalized === '.' || normalized === '/' || await app.vault.adapter.exists(normalized)) return;
-  await ensureVaultDir(app, dirname(normalized));
-  await app.vault.adapter.mkdir(normalized);
+async function ensureVaultDir(fs: VaultFs, path: string): Promise<void> {
+  const normalized = normalizeVaultPath(path);
+  if (!normalized || normalized === '.' || normalized === '/' || await fs.exists(normalized)) return;
+  await ensureVaultDir(fs, dirname(normalized));
+  await fs.mkdir(normalized);
 }
 
 async function assertDoesNotExistFs(path: string): Promise<void> {

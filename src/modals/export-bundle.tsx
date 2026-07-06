@@ -7,6 +7,16 @@ import type { CompileResult, ExportScopeFile, ReviewStatus, RiskHint } from '../
 import { buildClosure, readExportScope, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
 import { scanRisks } from '../core/okf/risk-scan';
 import { compileBundle } from '../core/okf/compile';
+import type { BundleSource } from '../core/okf/collect';
+import { obsidianLinkResolver } from '../platform/obsidian-link-resolver';
+
+function bundleSourceFor(plugin: KnowleryPlugin): BundleSource {
+  return {
+    fs: plugin.fs,
+    resolver: obsidianLinkResolver(plugin.app),
+    configDir: plugin.app.vault.configDir,
+  };
+}
 import { zipBundleDirectory } from '../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
 import { computeGraphLayout } from './export-graph';
@@ -158,7 +168,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const [restored, setRestored] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    void readExportScope(plugin.app).then((scope) => {
+    void readExportScope(plugin.fs).then((scope) => {
       if (cancelled) return;
       setExistingBundles(Object.entries(scope.bundles).map(([id, bundle]) => pickerEntryFrom(id, bundle)));
       const saved = scope.bundles[bundleId];
@@ -181,7 +191,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
       return;
     }
     setLoading(true);
-    buildClosure(plugin.app, bundleId, seeds, maxCompiledHops)
+    buildClosure(bundleSourceFor(plugin), bundleId, seeds, maxCompiledHops)
       .then((nextClosure) => {
         if (cancelled) return;
         setClosure(nextClosure);
@@ -204,7 +214,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   latestScope.current = closure && seeds.length > 0 ? { bundleId, title, seeds, maxCompiledHops, items } : null;
 
   const persistScope = (payload: NonNullable<typeof latestScope.current>) =>
-    writeExportScope(plugin.app, payload.bundleId, {
+    writeExportScope(plugin.fs, payload.bundleId, {
       title: payload.title,
       seeds: payload.seeds,
       maxCompiledHops: payload.maxCompiledHops,
@@ -267,7 +277,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const runExport = async () => {
     setExporting(true);
     try {
-      const compileResult = await compileBundle(plugin.app, {
+      const compileResult = await compileBundle(bundleSourceFor(plugin), {
         targetDir,
         bundleId,
         title,

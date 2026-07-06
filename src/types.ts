@@ -357,7 +357,7 @@ export type CompileResult = z.infer<typeof CompileResultSchema>;
 
 export const BUILTIN_SKILL_NAMES = [
   'cook', 'ask', 'explore', 'challenge', 'ideas', 'audit', 'organize',
-  'obsidian-cli', 'obsidian-markdown', 'obsidian-bases',
+  'obsidian-cli', 'knowlery-cli', 'obsidian-markdown', 'obsidian-bases',
   'json-canvas', 'defuddle', 'vault-conventions',
 ] as const;
 

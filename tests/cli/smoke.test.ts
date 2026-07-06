@@ -43,7 +43,7 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       await stat(join(vaultDir, '.knowlery', 'bin', 'query.mjs'));
 
       const health = await run('node', [cliPath, 'health', '--dir', vaultDir]);
-      expect(health.stdout).toContain('Built-in skills — 13 installed');
+      expect(health.stdout).toContain('Built-in skills — 14 installed');
 
       const sync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
       const secondSync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
@@ -97,6 +97,26 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       expect(list.stdout).toContain('smoke.pack v1.0.0');
       const uninstall = await run('node', [cliPath, 'bundle', 'uninstall', 'smoke.pack', '--dir', vaultDir]);
       expect(uninstall.stdout).toContain('Uninstalled smoke.pack');
+
+      // export -> review -> export --zip -> install into a fresh workspace (spec 0.8 f1, §5.5).
+      const gate = await run('node', [cliPath, 'bundle', 'export', 'widget-design', '--dir', vaultDir]).catch(
+        (error: { code: number; stdout: string }) => error,
+      );
+      expect(gate.code).toBe(1);
+      expect(gate.stdout).toContain('[unreviewed');
+      const review = await run('node', [cliPath, 'bundle', 'review', 'widget-design', '--dir', vaultDir, '--approve', 'concepts/widget-design']);
+      expect(review.stdout).toContain('fully reviewed');
+      const exported = await run('node', [cliPath, 'bundle', 'export', 'widget-design', '--dir', vaultDir, '--zip']);
+      expect(exported.stdout).toContain('Exported creator.widget.design v0.1.0');
+      const zipPath = exported.stdout.match(/Zip:\s+(\S+)/)?.[1];
+      expect(zipPath).toBeTruthy();
+
+      const kb3 = join(workDir, 'kb3');
+      await run('node', [cliPath, 'init', '--dir', kb3, '--platform', 'claude-code', '--name', 'KB3']);
+      const installExported = await run('node', [cliPath, 'bundle', 'install', zipPath!, '--dir', kb3, '--skip-conformance']);
+      expect(installExported.stdout).toContain('Installed creator.widget.design v0.1.0');
+      const bundleQuery = await run('node', [cliPath, 'query', '--dir', kb3, 'widget design']);
+      expect(bundleQuery.stdout).toContain('widget-design');
 
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(

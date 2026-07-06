@@ -65,7 +65,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const [staleness, setStaleness] = useState<StalenessReport | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
-    const activity = await readRecentActivityRecords(plugin.app, 14);
+    const activity = await readRecentActivityRecords(plugin.fs, 14);
     setModel(buildTodayModel(getVaultStats(plugin.app), activity.records));
     setRecords(activity.records);
     setRecordCount(activity.records.length);
@@ -76,7 +76,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       requestExists: await plugin.app.vault.adapter.exists(normalizePath(request.requestPath)),
       result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
     });
-    setBundleSummary(await summarizeBundleScope(plugin.app, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
+    setBundleSummary(await summarizeBundleScope(plugin.fs, sanitizeBundleId(plugin.settings.bundleCreatorName, plugin.settings.kbName)));
     setInstalledBundles(await readInstalledBundles(plugin.fs));
     const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
     setStaleness(snapshot ? computeStaleness(snapshot) : null);
@@ -141,7 +141,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const generateReport = async () => {
     setGenerating(true);
     try {
-      const result = await readRecentActivityRecords(plugin.app, 7);
+      const result = await readRecentActivityRecords(plugin.fs, 7);
       const written = await writeWeeklyBakeReport(plugin.app, buildWeeklyBakeModel(result.records));
       setLatestReportExists(true);
       new Notice(`Weekly summary generated: ${written.latestPath}`);
@@ -171,7 +171,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   const polishWithAgent = async () => {
     setPolishing(true);
     try {
-      const result = await readRecentActivityRecords(plugin.app, 7);
+      const result = await readRecentActivityRecords(plugin.fs, 7);
       const request = buildDailyReviewRequest(result.records);
       await writeDailyReviewRequest(plugin.app, request);
       // Weekly review sends the structured request prompt as-is (no ledger-reminder wrapper).

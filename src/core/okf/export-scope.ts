@@ -1,8 +1,8 @@
-import type { App } from 'obsidian';
-import { normalizePath } from 'obsidian';
 import type { ExportScopeFile, ReviewStatus } from '../../types';
 import { ExportScopeFileSchema } from '../../types';
-import { collectBundleInputs, readRawDependency } from './collect';
+import type { VaultFs } from '../vault-fs';
+import { normalizeVaultPath } from '../vault-fs';
+import { collectBundleInputs, readRawDependency, type BundleSource } from './collect';
 import type { PageRecord, RawDependency } from './shared';
 import { DEFAULT_MAX_COMPILED_HOPS, EXPORT_SCOPE_PATH, isKnowledgePath, toPosixPath } from './shared';
 import { sha256 } from './hash';
@@ -35,12 +35,12 @@ export interface ScopeClosure {
 }
 
 export async function buildClosure(
-  app: App,
+  source: BundleSource,
   bundleId: string,
   seeds: string[],
   maxCompiledHops = DEFAULT_MAX_COMPILED_HOPS,
 ): Promise<ScopeClosure> {
-  const { pages } = await collectBundleInputs(app);
+  const { pages } = await collectBundleInputs(source);
   const pageById = new Map(pages.map((page) => [page.conceptId, page]));
   const included = new Map<string, PageRecord>();
   const rawCitations = new Map<string, Set<string>>();
@@ -71,8 +71,8 @@ export async function buildClosure(
     }
   }
 
-  const rawDependencies = await readRawDependencies(app, rawCitations);
-  const scopeFile = await readExportScope(app);
+  const rawDependencies = await readRawDependencies(source.fs, rawCitations);
+  const scopeFile = await readExportScope(source.fs);
   const bundle = scopeFile.bundles[bundleId];
   const persistedItems = bundle?.items ?? {};
   const hasSavedScope = bundle !== undefined;
@@ -86,19 +86,18 @@ export async function buildClosure(
   return { pages: Array.from(included.values()), rawDependencies, items, edges };
 }
 
-export async function readExportScope(app: App): Promise<ExportScopeFile> {
-  const adapter = app.vault.adapter;
-  const path = normalizePath(EXPORT_SCOPE_PATH);
-  if (!(await adapter.exists(path))) return { schemaVersion: 1, bundles: {} };
+export async function readExportScope(fs: VaultFs): Promise<ExportScopeFile> {
+  const path = normalizeVaultPath(EXPORT_SCOPE_PATH);
+  if (!(await fs.exists(path))) return { schemaVersion: 1, bundles: {} };
   try {
-    return ExportScopeFileSchema.parse(JSON.parse(await adapter.read(path)));
+    return ExportScopeFileSchema.parse(JSON.parse(await fs.read(path)));
   } catch {
     return { schemaVersion: 1, bundles: {} };
   }
 }
 
 export async function writeExportScope(
-  app: App,
+  fs: VaultFs,
   bundleId: string,
   update: {
     title?: string;
@@ -107,7 +106,7 @@ export async function writeExportScope(
     items: Array<{ id: string; status: ReviewStatus; contentHash: string }>;
   },
 ): Promise<void> {
-  const scope = await readExportScope(app);
+  const scope = await readExportScope(fs);
   const existing = scope.bundles[bundleId]?.items ?? {};
   scope.bundles[bundleId] = {
     title: update.title ?? scope.bundles[bundleId]?.title,
@@ -131,17 +130,17 @@ export async function writeExportScope(
     }
   }
 
-  await ensureScopeDir(app);
-  await app.vault.adapter.write(EXPORT_SCOPE_PATH, `${JSON.stringify(scope, null, 2)}\n`);
+  await ensureScopeDir(fs);
+  await fs.write(EXPORT_SCOPE_PATH, `${JSON.stringify(scope, null, 2)}\n`);
 }
 
-export async function summarizeBundleScope(app: App, bundleId: string): Promise<{
+export async function summarizeBundleScope(fs: VaultFs, bundleId: string): Promise<{
   seeds: number;
   approved: number;
   unreviewed: number;
   flagged: number;
 }> {
-  const scope = await readExportScope(app);
+  const scope = await readExportScope(fs);
   const bundle = scope.bundles[bundleId];
   if (!bundle) return { seeds: 0, approved: 0, unreviewed: 0, flagged: 0 };
   const counts = { seeds: bundle.seeds.length, approved: 0, unreviewed: 0, flagged: 0 };
@@ -208,10 +207,10 @@ function addRawCitation(rawCitations: Map<string, Set<string>>, path: string, ci
   rawCitations.get(normalized)!.add(citedBy);
 }
 
-async function readRawDependencies(app: App, rawCitations: Map<string, Set<string>>): Promise<RawDependency[]> {
+async function readRawDependencies(fs: VaultFs, rawCitations: Map<string, Set<string>>): Promise<RawDependency[]> {
   const dependencies: RawDependency[] = [];
   for (const [path, citedBy] of rawCitations.entries()) {
-    const raw = await readRawDependency(app, path, Array.from(citedBy));
+    const raw = await readRawDependency(fs, path, Array.from(citedBy));
     if (raw) dependencies.push(raw);
   }
   return dependencies;
@@ -226,9 +225,9 @@ function rawPathsFromSources(value: unknown): string[] {
     .filter((entry) => entry.endsWith('.md') && !entry.startsWith('http'));
 }
 
-async function ensureScopeDir(app: App): Promise<void> {
-  if (!(await app.vault.adapter.exists('.knowlery'))) {
-    await app.vault.adapter.mkdir('.knowlery');
+async function ensureScopeDir(fs: VaultFs): Promise<void> {
+  if (!(await fs.exists('.knowlery'))) {
+    await fs.mkdir('.knowlery');
   }
 }
 

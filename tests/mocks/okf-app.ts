@@ -52,6 +52,27 @@ export function okfVaultFs(app: MockOkfApp): VaultFs {
   };
 }
 
+import type { BundleSource } from '../../src/core/okf/collect';
+
+/**
+ * Adapts the OKF mock app into a BundleSource for the inverted export-side modules
+ * (spec 0.8 f1): okfVaultFs for I/O plus a LinkResolver over the mock metadataCache,
+ * mirroring src/platform/obsidian-link-resolver.ts exactly.
+ */
+export function okfBundleSource(app: MockOkfApp): BundleSource {
+  return {
+    fs: okfVaultFs(app),
+    resolver: {
+      resolve: (target, fromPath) => {
+        const dest = app.metadataCache.getFirstLinkpathDest(target, fromPath);
+        return dest ? dest.path : null;
+      },
+      resolvedLinks: () => app.metadataCache.resolvedLinks ?? {},
+    },
+    configDir: app.vault.configDir,
+  };
+}
+
 export function createOkfMockApp(
   initialFiles: Record<string, string>,
   options: { resolvedLinks?: Record<string, Record<string, number>> } = {},
@@ -105,9 +126,11 @@ export function createOkfMockApp(
       getFirstLinkpathDest: (linkpath: string) => {
         const withExt = linkpath.endsWith('.md') ? linkpath : `${linkpath}.md`;
         if (files[withExt] !== undefined) return { path: withExt };
-        // Basename resolution, like Obsidian's shortest-path matching.
-        const match = Object.keys(files).find((path) => path.endsWith(`/${withExt}`));
-        return match ? { path: match } : null;
+        // Basename resolution: unique match only. Ambiguous basenames resolve to
+        // null — the semantic the 0.8 f1 spec fixed for the headless resolver,
+        // mirrored here so parity tests compare like with like.
+        const matches = Object.keys(files).filter((path) => path.endsWith(`/${withExt}`));
+        return matches.length === 1 ? { path: matches[0] } : null;
       },
       resolvedLinks: options.resolvedLinks ?? {},
     },

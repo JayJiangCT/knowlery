@@ -27,6 +27,9 @@ Usage:
   knowlery bundle install <zip-or-folder> [--dir <path>] [--force] [--skip-conformance]
   knowlery bundle list      [--dir <path>] [--json]
   knowlery bundle uninstall <bundle-id> [--dir <path>]
+  knowlery bundle export <seed-concept-id> [--dir <path>] [--hops <n>] [--zip] [--json]
+  knowlery bundle review <seed-concept-id> [--dir <path>] [--list] [--json]
+                         [--approve <id>...] [--flag <id>...]
   knowlery --version | --help
 
 The same workspace format as the Knowlery Obsidian plugin — a folder initialized here
@@ -40,9 +43,16 @@ interface ParsedArgs {
   platform?: string;
   name?: string;
   k?: number;
+  hops?: number;
   force: boolean;
   skipConformance: boolean;
   json: boolean;
+  zip: boolean;
+  list: boolean;
+  creator?: string;
+  bundleVersion?: string;
+  approve: string[];
+  flag: string[];
   version: boolean;
   help: boolean;
 }
@@ -65,8 +75,18 @@ function parseArgs(argv: string[]): ParsedArgs {
     force: false,
     skipConformance: false,
     json: false,
+    zip: false,
+    list: false,
+    approve: [],
+    flag: [],
     version: false,
     help: false,
+  };
+  const takeValues = (start: number): { values: string[]; next: number } => {
+    const values: string[] = [];
+    let i = start;
+    while (i < argv.length && !argv[i].startsWith('-')) values.push(argv[i++]);
+    return { values, next: i - 1 };
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -77,6 +97,24 @@ function parseArgs(argv: string[]): ParsedArgs {
       const value = parseInt(argv[++i] ?? '', 10);
       if (Number.isFinite(value) && value > 0) parsed.k = value;
     }
+    else if (arg === '--hops') {
+      const value = parseInt(argv[++i] ?? '', 10);
+      if (Number.isFinite(value) && value >= 0) parsed.hops = value;
+    }
+    else if (arg === '--creator') parsed.creator = argv[++i];
+    else if (arg === '--bundle-version') parsed.bundleVersion = argv[++i];
+    else if (arg === '--approve') {
+      const { values, next } = takeValues(i + 1);
+      parsed.approve.push(...values);
+      i = next;
+    }
+    else if (arg === '--flag') {
+      const { values, next } = takeValues(i + 1);
+      parsed.flag.push(...values);
+      i = next;
+    }
+    else if (arg === '--zip') parsed.zip = true;
+    else if (arg === '--list') parsed.list = true;
     else if (arg === '--force') parsed.force = true;
     else if (arg === '--skip-conformance') parsed.skipConformance = true;
     else if (arg === '--json') parsed.json = true;
@@ -155,9 +193,17 @@ async function main(): Promise<void> {
         arg: args.positionals[0] === 'install' && args.positionals[1] !== undefined
           ? resolve(args.positionals[1])
           : args.positionals[1],
+        root,
         force: args.force,
         skipConformance: args.skipConformance,
         json: args.json,
+        hops: args.hops,
+        zip: args.zip,
+        creator: args.creator,
+        bundleVersion: args.bundleVersion,
+        list: args.list,
+        approve: args.approve,
+        flag: args.flag,
         log,
       });
       break;

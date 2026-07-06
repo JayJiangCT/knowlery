@@ -244,7 +244,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.activityLoggingEnabled = value;
             await this.plugin.saveSettings();
-            await setActivityLoggingEnabled(this.app, value);
+            await setActivityLoggingEnabled(this.plugin.fs, value);
           });
       });
 

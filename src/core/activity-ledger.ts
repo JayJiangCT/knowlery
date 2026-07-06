@@ -1,6 +1,6 @@
-import { App, normalizePath } from 'obsidian';
 import type { ActivityParseError, ActivityRecord } from '../types';
-import { ensureDir } from './vault-io';
+import type { VaultFs } from './vault-fs';
+import { normalizeVaultPath } from './vault-fs';
 import { parseActivityJsonl } from './activity-model';
 
 export const ACTIVITY_DIR = '.knowlery/activity';
@@ -11,44 +11,43 @@ export interface ActivityLedgerReadResult {
   errors: ActivityParseError[];
 }
 
-export async function isActivityLoggingEnabled(app: App): Promise<boolean> {
-  return !(await app.vault.adapter.exists(normalizePath(ACTIVITY_DISABLED_PATH)));
+export async function isActivityLoggingEnabled(fs: VaultFs): Promise<boolean> {
+  return !(await fs.exists(normalizeVaultPath(ACTIVITY_DISABLED_PATH)));
 }
 
-export async function setActivityLoggingEnabled(app: App, enabled: boolean): Promise<void> {
-  const markerPath = normalizePath(ACTIVITY_DISABLED_PATH);
+export async function setActivityLoggingEnabled(fs: VaultFs, enabled: boolean): Promise<void> {
+  const markerPath = normalizeVaultPath(ACTIVITY_DISABLED_PATH);
   if (enabled) {
-    if (await app.vault.adapter.exists(markerPath)) {
-      await app.vault.adapter.remove(markerPath);
+    if (await fs.exists(markerPath)) {
+      await fs.remove(markerPath);
     }
     return;
   }
 
-  await ensureDir(app, '.knowlery');
-  await app.vault.adapter.write(markerPath, 'Activity logging disabled by Knowlery settings.\n');
+  await fs.mkdir('.knowlery');
+  await fs.write(markerPath, 'Activity logging disabled by Knowlery settings.\n');
 }
 
-export async function appendActivityRecord(app: App, record: ActivityRecord): Promise<void> {
-  if (!(await isActivityLoggingEnabled(app))) return;
+export async function appendActivityRecord(fs: VaultFs, record: ActivityRecord): Promise<void> {
+  if (!(await isActivityLoggingEnabled(fs))) return;
 
-  await ensureDir(app, ACTIVITY_DIR);
+  await fs.mkdir(ACTIVITY_DIR);
   const date = record.time.slice(0, 10);
-  const path = normalizePath(`${ACTIVITY_DIR}/${date}.jsonl`);
-  const existing = await app.vault.adapter.exists(path)
-    ? await app.vault.adapter.read(path)
+  const path = normalizeVaultPath(`${ACTIVITY_DIR}/${date}.jsonl`);
+  const existing = await fs.exists(path)
+    ? await fs.read(path)
     : '';
   const next = `${existing}${existing.endsWith('\n') || existing.length === 0 ? '' : '\n'}${JSON.stringify(record)}\n`;
-  await app.vault.adapter.write(path, next);
+  await fs.write(path, next);
 }
 
 export async function readRecentActivityRecords(
-  app: App,
+  fs: VaultFs,
   days = 14,
   now = new Date(),
 ): Promise<ActivityLedgerReadResult> {
-  const adapter = app.vault.adapter;
-  const dir = normalizePath(ACTIVITY_DIR);
-  if (!(await adapter.exists(dir))) return { records: [], errors: [] };
+  const dir = normalizeVaultPath(ACTIVITY_DIR);
+  if (!(await fs.exists(dir))) return { records: [], errors: [] };
 
   const wanted = new Set<string>();
   for (let offset = 0; offset < days; offset += 1) {
@@ -57,7 +56,7 @@ export async function readRecentActivityRecords(
     wanted.add(`${date.toISOString().slice(0, 10)}.jsonl`);
   }
 
-  const listing = await adapter.list(dir);
+  const listing = await fs.list(dir);
   const records: ActivityRecord[] = [];
   const errors: ActivityParseError[] = [];
 
@@ -65,7 +64,7 @@ export async function readRecentActivityRecords(
     const filename = filePath.split('/').pop();
     if (!filename || !wanted.has(filename)) continue;
 
-    const content = await adapter.read(normalizePath(filePath));
+    const content = await fs.read(normalizeVaultPath(filePath));
     const parsed = parseActivityJsonl(content, filePath);
     records.push(...parsed.records);
     errors.push(...parsed.errors);

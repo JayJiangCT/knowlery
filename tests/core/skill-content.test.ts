@@ -65,6 +65,47 @@ describe('retrieval-aware /cook (spec 0.7 f5, §4.3)', () => {
   });
 });
 
+describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
+  it('ships as a tooling builtin', () => {
+    const found = BUNDLED_SKILLS.find((entry) => entry.name === 'knowlery-cli');
+    expect(found?.kind).toBe('tooling');
+  });
+
+  it('covers the full command surface', () => {
+    const content = skill('knowlery-cli');
+    for (const command of [
+      'knowlery init', 'knowlery sync', 'knowlery health', 'knowlery query', 'knowlery stale',
+      'knowlery bundle install', 'knowlery bundle list', 'knowlery bundle uninstall',
+      'knowlery bundle export', 'knowlery bundle review',
+    ]) {
+      expect(content).toContain(command);
+    }
+  });
+
+  it('teaches health as a post-bulk-change verification step', () => {
+    expect(skill('knowlery-cli')).toContain('After any bulk change');
+  });
+
+  it('states the export review conduct: full checklist, user decisions only, explicit ids', () => {
+    const content = skill('knowlery-cli');
+    expect(content).toContain('Nothing ships unreviewed');
+    expect(content).toContain('There is no approve-all flag');
+    // 1. Present the checklist completely, warnings verbatim.
+    expect(content).toContain('**completely**');
+    expect(content).toContain('Never summarize warnings away');
+    // 2. "Approve all" only after the full checklist was shown, expanded into ids.
+    expect(content).toContain('only after');
+    expect(content).toContain('expand it into explicit ids');
+    // 3. Never act on own initiative; echo back what was recorded.
+    expect(content).toContain('Never approve or flag items on your own initiative');
+    expect(content).toContain('echo back');
+  });
+
+  it('shares the review state with the Obsidian modal (same scope file)', () => {
+    expect(skill('knowlery-cli')).toContain('.knowlery/export-scope.json');
+  });
+});
+
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
   it('names the deterministic tools and the dangling-sources category', () => {
     const audit = skill('audit');
