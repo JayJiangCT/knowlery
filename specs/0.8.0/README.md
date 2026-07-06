@@ -32,7 +32,9 @@ the most careful eval work; F3/F4 are independent and can interleave).
 - Lockstep versioning (one version, one tag, plugin + CLI together); workspace format
   versioned separately via the manifest; sync downgrade guard active since 0.7.0.
 - SDD process unchanged: spec → maintainer acceptance → implementation → maintainer
-  self-test, per feature, stacked branches `cursor/08-f<N>-<name>-92eb`.
+  self-test, per feature, branches `cursor/08-f<N>-<name>-92eb` cut from `main` after
+  the previous feature merges (stacking only if a feature must build on an unmerged
+  predecessor — 0.8 has no such dependency after F1).
 
 ## Consolidated backlog ledger (source of the F2–F4 scopes)
 

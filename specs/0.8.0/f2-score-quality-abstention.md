@@ -121,7 +121,15 @@ collision shape that exists in the fixture vault:
   `product`) appearing as a tag on many pages.
 - **CJK substring collision:** a Chinese question about a topic the vault lacks,
   sharing one common chunk (e.g. 告警) with existing pages — probes clause 1 under
-  CJK's substring matching, where a single chunk is the whole query.
+  CJK's substring matching. **Boundary note (maintainer clarification at spec
+  review):** these cases must be **multi-chunk** questions where only one common
+  chunk collides — coverage then correctly fails clause 1. A *single-chunk*
+  unanswerable question whose chunk substring-hits a title is mechanically
+  indistinguishable from a legitimate single-term lookup ("背压" hitting the
+  backpressure page is exactly how CJK retrieval is supposed to work), so clause 1's
+  "single-term questions trivially pass" applies to CJK single-chunk queries too, by
+  design. That residual leak is recorded as a known limitation, not probed by a
+  golden case the gate cannot honestly distinguish.
 - **Multi-page weak scatter:** each query term matches *somewhere*, but no single
   page covers more than one — probes that coverage is per-candidate, not per-corpus.
 - **Entity-adjacent:** asks about a person/project the vault genuinely doesn't track,
@@ -132,9 +140,22 @@ description/body phrasing with zero title overlap — the q-024 shape, but in th
 `user-note` tier where no bundle-index description helps. These pin `C_soft` from
 below; if calibration can't hold them, the constants are wrong, not the cases.
 
-Category counts and the frozen prompt-waterfall baseline are re-run once after the
-golden set grows (the baseline retriever is frozen code, so this is mechanical) and
-committed as the new comparison floor — same procedure as 0.6 F1 established.
+**Metric floor procedure after expansion** (maintainer clarification at spec review —
+the denominators change, so "holds current numbers" needs an operational definition):
+
+1. The golden set expansion lands as its own commit, **before** any engine change.
+2. The **current (pre-gate) engine** runs once against the expanded set; that report
+   is frozen as the new answerable floor — per-category recall@5/@10 and MRR. Old
+   cases thus keep their old behavior inside the new denominators, and the new
+   answerable hard negatives enter the floor at whatever the pre-gate engine scores
+   on them (today's engine abstains almost never, so they are expected to be
+   answered; if the pre-gate engine misses one, that miss is *in* the floor and the
+   gate is only obligated not to add to it).
+3. The prompt-waterfall baseline is re-run mechanically on the expanded set (frozen
+   code) and committed alongside, keeping the cross-retriever comparison meaningful.
+4. Acceptance then compares gate-on vs. the step-2 floor: no answerable category may
+   drop on any metric. The unanswerable gate (§4.4) is measured on the expanded set
+   only — there is no "old unanswerable floor" worth preserving at 2/3.
 
 ### 4.4 Eval gate extension
 
