@@ -44,14 +44,14 @@ const F2_THRESHOLDS = {
  * below these — over-abstention is the same bug in the opposite direction. Values are
  * the exact pre-gate run rounded down a hair to dodge float equality.
  */
-const ENGINE_ANSWERABLE_FLOOR: Record<string, { recallAt10: number; mrr: number }> = {
-  'entity-lookup': { recallAt10: 1, mrr: 0.999 },
-  'concept-lookup': { recallAt10: 1, mrr: 0.899 },
-  synthesis: { recallAt10: 1, mrr: 0.999 },
-  alias: { recallAt10: 0.75, mrr: 0.624 },
-  bilingual: { recallAt10: 0.75, mrr: 0.458 },
-  bundle: { recallAt10: 1, mrr: 0.999 },
-  'user-note': { recallAt10: 1, mrr: 0.866 },
+const ENGINE_ANSWERABLE_FLOOR: Record<string, { recallAt5: number; recallAt10: number; mrr: number }> = {
+  'entity-lookup': { recallAt5: 1, recallAt10: 1, mrr: 0.999 },
+  'concept-lookup': { recallAt5: 1, recallAt10: 1, mrr: 0.899 },
+  synthesis: { recallAt5: 1, recallAt10: 1, mrr: 0.999 },
+  alias: { recallAt5: 0.75, recallAt10: 0.75, mrr: 0.624 },
+  bilingual: { recallAt5: 0.75, recallAt10: 0.75, mrr: 0.458 },
+  bundle: { recallAt5: 1, recallAt10: 1, mrr: 0.999 },
+  'user-note': { recallAt5: 1, recallAt10: 1, mrr: 0.866 },
 };
 
 const EVALS_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -308,6 +308,7 @@ function assertF2Thresholds(engineReport: EvalReport): void {
   // Spec 0.8 f2, §4.3 step 4: gate-on engine vs. the frozen pre-gate engine floor.
   for (const [category, floor] of Object.entries(ENGINE_ANSWERABLE_FLOOR)) {
     const current = engineReport.perCategory[category];
+    checkFloor(`${category} recall@5 (pre-gate floor)`, current?.recallAt5 ?? null, floor.recallAt5);
     checkFloor(`${category} recall@10 (pre-gate floor)`, current?.recallAt10 ?? null, floor.recallAt10);
     checkFloor(`${category} MRR (pre-gate floor)`, current?.mrr ?? null, floor.mrr);
   }

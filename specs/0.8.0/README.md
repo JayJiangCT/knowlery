@@ -46,3 +46,7 @@ the most careful eval work; F3/F4 are independent and can interleave).
   acceptance side note) → **F4**
 - Deferred beyond 0.8: `/explore`/`/ideas` adopting the retrieval ladder wholesale;
   remote bundle distribution.
+- Abstention exactly-half-coverage boundary (F2 acceptance residual, seed cases in
+  the f2 spec §7 addendum): 2-term queries whose top candidate matches exactly one
+  term pass clause 1's `>=` comparison; distinguishing them from legitimate
+  half-coverage answers needs a specificity signal on the *unmatched* terms.

@@ -233,4 +233,25 @@ redundant — high prose coverage is an anchor regardless.
 every answerable category exactly at its pre-gate floor — aggregate recall@10 0.931,
 MRR 0.833; the two pre-existing ranking misses (q-016, q-020) unchanged in number.
 The pre-gate floor is enforced in CI via `ENGINE_ANSWERABLE_FLOOR` in `evals/src/run.ts`
-alongside the new `unanswerableAccuracy: 1` threshold — no §4.4 concession was needed.
+(per-category recall@5, recall@10, and MRR — the recall@5 column was added at
+implementation acceptance to match §4.3 step 2 exactly) alongside the new
+`unanswerableAccuracy: 1` threshold — no §4.4 concession was needed.
+
+**Real-vault residuals (maintainer acceptance round, recorded as future calibration
+samples — not golden cases yet, since the fixture lacks their shapes):**
+
+| question (real vault) | outcome | mechanism |
+|---|---|---|
+| 斑马 的移动端路线图是什么 | leaked (returned the 斑马 entity page) | 2 chunks after stopword split, 1 hits the title — coverage exactly ½, and clause 1 is `>=` C_struct |
+| 莫言 的企业定价方案是什么 | leaked (returned the 莫言 entity page) | same boundary shape |
+| 胚胎筛查 的 API webhook 怎么接入 | leaked (returned installed drone bundle's API/webhook pages) | mixed CJK+latin; the two latin terms hit bundle titles — again exactly-half coverage |
+| 鼠疫 的 iOS 应用路线图是什么 | correct abstain | 3 terms, 1 hit — coverage ⅓ < ½ |
+
+All three leaks sit on the same edge: **top-candidate coverage of exactly ½ passes
+clause 1's `>=` comparison**. Tightening to strict `>` (or raising C_struct past 0.5)
+was checked against the fixture during the original sweep — it over-abstains q-013
+(synthesis), q-017 (alias), and q-037 (hard negative), all legitimate half-coverage
+answers. Distinguishing the two halves likely needs a signal the gate doesn't use yet
+(e.g. whether the *unmatched* terms are high-specificity CJK chunks vs. latin filler).
+Deferred to the backlog with these four questions as the seed cases; per maintainer
+decision the exactly-half leak ships as a known boundary in 0.8.0.
