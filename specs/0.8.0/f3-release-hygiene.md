@@ -1,6 +1,6 @@
 # F3 (0.8.0) — Release Engineering Hygiene
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f3-release-hygiene-92eb` (off `main` @ 0.8 F2)
 - **Depends on:** — (independent of F1/F2; source of scope: 0.7.0 release findings,
