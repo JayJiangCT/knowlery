@@ -1,6 +1,6 @@
 # F4 (0.8.0) — Repo Lint Hygiene
 
-- **Status:** Accepted 2026-07-06 (with exact-pin amendment) — implementation in progress
+- **Status:** Accepted 2026-07-06 (with exact-pin amendment) — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f4-lint-hygiene-92eb` (off `main` @ 0.8 F3)
 - **Depends on:** — (independent; scope from the 0.6.1 scan + 0.7 F1 acceptance side
