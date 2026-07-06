@@ -1,6 +1,6 @@
 # F1 (0.8.0) — Headless Bundle Export: `knowlery bundle export` / `review`
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f1-headless-export-92eb` (off `main` @ 0.7.0)
 - **Depends on:** 0.7 F1 (VaultFs), F2 (CLI shell), F4 (bundle receiving side)
@@ -66,9 +66,14 @@ target resolution.
 ```ts
 interface LinkResolver {
   resolve(linkTarget: string, fromPath: string): string | null; // vault-relative path
-  backlinksOf(path: string): string[];
+  /** resolvedLinks-shaped map (from -> { to -> count }) for backlink computation. */
+  resolvedLinks(): Record<string, Record<string, number>>;
 }
 ```
+
+*(Implementation note: the backlink surface landed as the `resolvedLinks()` map rather
+than a per-path `backlinksOf` — it is what `collect` actually consumes, and it keeps
+the Obsidian implementation a zero-logic wrapper over `metadataCache.resolvedLinks`.)*
 
 - **Obsidian implementation**: wraps `metadataCache.getFirstLinkpathDest` /
   `resolvedLinks` — current behavior, byte-preserved.
@@ -76,8 +81,10 @@ interface LinkResolver {
   page (`okf/wikilink.ts` is already pure), resolve by exact path, then by unique
   basename (Obsidian's shortest-path convention; ambiguous basenames resolve to null,
   matching a cache miss). Backlinks are the inverted map.
-- `collect`'s activity-ledger read (recency hints for the modal UI) becomes an
-  optional input; the CLI path skips it.
+- `collect`'s activity-ledger read: rather than making activity an optional input the
+  CLI skips (the drafted plan), `activity-ledger.ts` itself was inverted onto `VaultFs`
+  — required for the byte-identical guarantee (§5.1), since `log.md` in the compiled
+  bundle projects from activity records and must not differ between shells.
 - Purity guard extends over the inverted export modules; `risk-scan.ts` and
   `wikilink.ts` are already pure.
 
