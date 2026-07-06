@@ -5,6 +5,7 @@ import { previewInstall } from '../../core/okf/install-scan';
 import { installBundle, InstallBlockedError } from '../../core/okf/install';
 import { uninstallBundle } from '../../core/okf/uninstall';
 import { readInstalledBundles } from '../../core/okf/registry';
+import { runBundleExport, runBundleReview } from './bundle-export';
 import { CliError } from './shared';
 
 const BUNDLE_USAGE = [
@@ -12,15 +13,27 @@ const BUNDLE_USAGE = [
   '  knowlery bundle install <zip-or-folder> [--dir <vault>] [--force] [--skip-conformance]',
   '  knowlery bundle list      [--dir <vault>] [--json]',
   '  knowlery bundle uninstall <bundle-id> [--dir <vault>]',
+  '  knowlery bundle export <seed-concept-id> [--dir <vault>] [--hops <n>] [--zip] [--json]',
+  '  knowlery bundle review <seed-concept-id> [--dir <vault>] [--list] [--json]',
+  '                         [--approve <id>...] [--flag <id>...]',
 ].join('\n');
 
 export interface BundleCommandOptions {
   sub?: string;
-  /** Source path (install) or bundle id (uninstall). Source is pre-resolved by main. */
+  /** Source path (install), bundle id (uninstall), or seed concept id (export/review). */
   arg?: string;
+  /** Absolute vault root — export needs it for zip paths. */
+  root: string;
   force?: boolean;
   skipConformance?: boolean;
   json?: boolean;
+  hops?: number;
+  zip?: boolean;
+  creator?: string;
+  bundleVersion?: string;
+  list?: boolean;
+  approve?: string[];
+  flag?: string[];
   log: (line: string) => void;
 }
 
@@ -43,6 +56,31 @@ export async function runBundleCommand(fs: VaultFs, options: BundleCommandOption
       break;
     case 'uninstall':
       await uninstall(fs, options);
+      break;
+    case 'export':
+      await runBundleExport(fs, {
+        seed: options.arg,
+        root: options.root,
+        hops: options.hops,
+        zip: options.zip,
+        json: options.json,
+        creator: options.creator,
+        bundleVersion: options.bundleVersion,
+        log: options.log,
+      });
+      break;
+    case 'review':
+      await runBundleReview(fs, {
+        seed: options.arg,
+        root: options.root,
+        hops: options.hops,
+        json: options.json,
+        creator: options.creator,
+        list: options.list,
+        approve: options.approve ?? [],
+        flag: options.flag ?? [],
+        log: options.log,
+      });
       break;
     default:
       throw new CliError(
