@@ -33,7 +33,8 @@ recorded at the time:
 ## 2. Goals
 
 1. `release.yml` publishes to npm via OIDC Trusted Publishing — no token secret in
-   the workflow, provenance automatic.
+   the workflow, provenance automatic. `package.json` gains the `repository` field
+   the OIDC identity check matches against.
 2. Re-running the release workflow on an already-published tag succeeds as a no-op
    (both the GitHub release and the npm publish steps).
 3. `npm publish --dry-run` is warning-clean (bin path fixed).
@@ -66,13 +67,24 @@ Workflow changes to the "Publish CLI to npm" step:
   `_authToken` in `.npmrc` breaks the OIDC exchange, so nothing may write one.
 - Provenance needs no flag — automatic under trusted publishing from a public repo.
 - Prerelease tags keep `--tag beta`.
+- **`package.json` gains a `repository` field** (maintainer finding at spec review —
+  P1): the npm troubleshooting docs state that when publishing from GitHub, the
+  manifest's `repository.url` must match the GitHub repo exactly; today the field is
+  absent entirely. Add:
+
+  ```json
+  "repository": { "type": "git", "url": "git+https://github.com/JayJiangCT/knowlery.git" }
+  ```
 
 **Maintainer one-time actions (§6):** on npmjs.com → package `knowlery` → Settings →
 Trusted Publisher: GitHub Actions, owner `JayJiangCT`, repo `knowlery`, workflow
-filename `release.yml` (exact, case-sensitive, `.yml` included). Then delete the
-`NPM_TOKEN` GitHub secret and revoke the token on npmjs.com. Failure mode if
-misconfigured: `ENEEDAUTH` at publish — the fix is always "make the four fields match
-exactly".
+filename `release.yml` (exact, case-sensitive, `.yml` included), and under **Allowed
+actions** select at least `npm publish` (maintainer finding at spec review — the
+current config UI requires choosing permitted actions; without it the publish is
+rejected even with matching identity fields). Then delete the `NPM_TOKEN` GitHub
+secret and revoke the token on npmjs.com. Failure mode if misconfigured: `ENEEDAUTH`
+at publish — the fix is always "make the identity fields match exactly and check the
+allowed actions".
 
 ### 4.2 Idempotent publish
 
@@ -103,18 +115,30 @@ checklist includes the dry-run so the fix is observed rather than assumed.
 handle it — every command writes through the shared `log` closure, and stream errors
 arrive asynchronously, so per-call handling would be both scattered and racy.
 
-Tested at the smoke level on the built artifact: `bash -c 'node knowlery-cli.mjs
-query ... | head -1'` over a query with multi-line output must exit 0 with no stack
-trace on stderr — this is the exact agent-pipes-to-head shape from the 0.7.0 finding.
+Tested at the smoke level on the built artifact, over a query with multi-line output —
+the exact agent-pipes-to-head shape from the 0.7.0 finding. **Test-validity note
+(maintainer finding at spec review — P1):** a plain `bash -c '… | head -1'` reports
+`head`'s exit status and would be falsely green even while node dies of EPIPE, so the
+assertion must observe the *node* side of the pipe:
+
+```bash
+bash -o pipefail -c 'node knowlery-cli.mjs query ... | head -1'
+```
+
+(or equivalently check `${PIPESTATUS[0]}`), plus asserting stderr carries no stack
+trace.
 
 ## 5. Acceptance criteria
 
-1. `release.yml` publish step is token-free (no `NPM_TOKEN` reference anywhere in the
-   repo), ensures npm ≥ 11.5.1, and is guarded by the §4.2 registry check.
-2. `package.json` bin entry has no `./` prefix; `npm publish --dry-run` runs
-   warning-clean (§6 verification).
-3. Smoke test: piping built-CLI query output into `head -1` exits 0, prints the first
-   line only, and writes no stack trace — asserted in `tests/cli/smoke.test.ts`.
+1. `release.yml` publish step is token-free — no `NPM_TOKEN` reference remains in
+   workflows or runtime source (historical spec/changelog documentation exempt —
+   maintainer wording fix at spec review) — ensures npm ≥ 11.5.1, and is guarded by
+   the §4.2 registry check.
+2. `package.json` bin entry has no `./` prefix and the `repository` field matches
+   this GitHub repo; `npm publish --dry-run` runs warning-clean (§6 verification).
+3. Smoke test: piping built-CLI query output into `head -1` exits 0 **as observed
+   with `pipefail`/`PIPESTATUS[0]` on the node side**, prints the first line only,
+   and writes no stack trace — asserted in `tests/cli/smoke.test.ts`.
 4. `npm test`, lint, build, eval `--assert-baseline` green.
 5. **Deferred-to-release verification (recorded, not CI-checkable):** the first tag
    push after this merges (0.8.0 itself) is the end-to-end proof of the OIDC path —
@@ -123,8 +147,9 @@ trace on stderr — this is the exact agent-pipes-to-head shape from the 0.7.0 f
 
 ## 6. Maintainer self-test checklist (acceptance round)
 
-1. On npmjs.com, register the trusted publisher for `knowlery` (fields per §4.1);
-   then delete the `NPM_TOKEN` GitHub secret and revoke the npm token.
+1. On npmjs.com, register the trusted publisher for `knowlery` (fields **and allowed
+   actions** per §4.1); then delete the `NPM_TOKEN` GitHub secret and revoke the npm
+   token.
 2. Locally: `npm run build && npm publish --dry-run` — confirm the file list is
    `knowlery-cli.mjs` + `README.md` + `LICENSE` and there is no bin-cleaning warning.
 3. Locally: `knowlery query "<anything>" | head -1` in an initialized vault — first
