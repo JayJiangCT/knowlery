@@ -27,7 +27,7 @@ describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
     const fs = createMemoryFs({ '.knowlery/manifest.json': manifest() });
     const result = await runVaultSync(fs, 'claude-code', '0.7.0');
     expect(result).toEqual({ skipped: false });
-    const written = JSON.parse(fs.files.get('.knowlery/manifest.json')!);
+    const written = JSON.parse(fs.files.get('.knowlery/manifest.json')!) as { lastSyncedBy?: string };
     expect(written.lastSyncedBy).toBe('0.7.0');
   });
 
@@ -37,7 +37,7 @@ describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
     });
     const result = await runVaultSync(fs, 'claude-code', '0.8.0');
     expect(result).toEqual({ skipped: false });
-    expect(JSON.parse(fs.files.get('.knowlery/manifest.json')!).lastSyncedBy).toBe('0.8.0');
+    expect((JSON.parse(fs.files.get('.knowlery/manifest.json')!) as { lastSyncedBy?: string }).lastSyncedBy).toBe('0.8.0');
   });
 
   it('allows legacy vaults without the field or without a manifest', async () => {
@@ -55,7 +55,7 @@ describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
     const result = await runVaultSync(fs, 'claude-code', undefined);
     expect(result).toEqual({ skipped: false });
     // Nothing recorded either — dev builds neither honor nor set the record.
-    expect(JSON.parse(fs.files.get('.knowlery/manifest.json')!).lastSyncedBy).toBe('99.0.0');
+    expect((JSON.parse(fs.files.get('.knowlery/manifest.json')!) as { lastSyncedBy?: string }).lastSyncedBy).toBe('99.0.0');
   });
 
   it('ignores prerelease suffixes when ordering', () => {

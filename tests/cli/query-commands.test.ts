@@ -28,7 +28,7 @@ describe('knowlery query (spec 0.7 f3, §5.1)', () => {
   it('honors --k and --json', () => {
     const { log, output } = capture();
     runQueryCommand(FIXTURE_VAULT, { question: 'pulseboard metrics', k: 2, json: true, log });
-    const parsed = JSON.parse(output());
+    const parsed = JSON.parse(output()) as { verdict: string; candidates: unknown[] };
     expect(parsed.verdict).toBe('ok');
     expect(parsed.candidates.length).toBeLessThanOrEqual(2);
   });
@@ -64,7 +64,7 @@ describe('knowlery stale (spec 0.7 f3, §5.2)', () => {
   it('emits parseable json', () => {
     const { log, output } = capture();
     runStaleCommand(FIXTURE_VAULT, { json: true, log });
-    const parsed = JSON.parse(output());
+    const parsed = JSON.parse(output()) as { verdict: string; candidates: unknown[] };
     expect(parsed).toHaveProperty('stalePages');
     expect(parsed).toHaveProperty('uncookedNotes');
     expect(parsed).toHaveProperty('danglingSources');

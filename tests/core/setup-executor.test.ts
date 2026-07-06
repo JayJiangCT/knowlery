@@ -66,9 +66,9 @@ describe('executeSetup over nodeVaultFs (spec 0.7 f1, §6.2)', () => {
       expect(claudeMd).toContain('@rules/activity-ledger.md');
 
       // Lock, manifest, retrieval script
-      const lock = JSON.parse(await readFile(join(root, 'skills-lock.json'), 'utf8'));
+      const lock = JSON.parse(await readFile(join(root, 'skills-lock.json'), 'utf8')) as { skills: Record<string, unknown> };
       expect(Object.keys(lock.skills).sort()).toEqual(BUNDLED_SKILLS.map((s) => s.name).sort());
-      const manifest = JSON.parse(await readFile(join(root, '.knowlery/manifest.json'), 'utf8'));
+      const manifest = JSON.parse(await readFile(join(root, '.knowlery/manifest.json'), 'utf8')) as { platform: string; kbName: string };
       expect(manifest.platform).toBe('claude-code');
       expect(manifest.kbName).toBe('Test KB');
       const script = await readFile(join(root, '.knowlery/bin/query.mjs'), 'utf8');

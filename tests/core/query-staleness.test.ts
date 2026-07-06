@@ -107,7 +107,7 @@ describe('staleness transports (spec f3, §4.3)', () => {
   });
 
   it('json mode emits the structured report', () => {
-    const parsed = JSON.parse(handleStaleCli({ json: 'true' }, staleVault));
+    const parsed = JSON.parse(handleStaleCli({ json: 'true' }, staleVault)) as { stalePages: unknown[]; uncookedNotes: unknown[] };
     expect(parsed.stalePages).toHaveLength(1);
     expect(parsed.uncookedNotes).toEqual([]);
   });

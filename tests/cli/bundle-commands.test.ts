@@ -67,7 +67,7 @@ describe('knowlery bundle install (spec 0.7 f4, §5.1-2)', () => {
       expect(lines.join('\n')).toContain('Installed jay.drone-delivery v0.1.0');
 
       await stat(join(root, 'Library/jay.drone-delivery/concepts/foo.md'));
-      const registry = JSON.parse(await readFile(join(root, '.knowlery/bundles.json'), 'utf8'));
+      const registry = JSON.parse(await readFile(join(root, '.knowlery/bundles.json'), 'utf8')) as { bundles: Record<string, { conformance: string; title: string }> };
       expect(registry.bundles['jay.drone-delivery'].conformance).toBe('passed');
       expect(await readFile(join(root, 'KNOWLEDGE.md'), 'utf8')).toContain('KNOWLERY:INSTALLED_BUNDLES:BEGIN');
     });
@@ -116,7 +116,7 @@ describe('knowlery bundle install (spec 0.7 f4, §5.1-2)', () => {
       expect((error as CliError).message).toContain('--skip-conformance');
 
       await runBundleCommand(fs, { sub: 'install', arg: source, skipConformance: true, log: silent });
-      const registry = JSON.parse(await readFile(join(root, '.knowlery/bundles.json'), 'utf8'));
+      const registry = JSON.parse(await readFile(join(root, '.knowlery/bundles.json'), 'utf8')) as { bundles: Record<string, { conformance: string; title: string }> };
       expect(registry.bundles['jay.drone-delivery'].conformance).toBe('skipped');
     });
   });
@@ -134,7 +134,7 @@ describe('knowlery bundle list / uninstall (spec 0.7 f4, §5.1/§5.3)', () => {
 
       const jsonLines: string[] = [];
       await runBundleCommand(fs, { sub: 'list', json: true, log: (l) => jsonLines.push(l) });
-      expect(JSON.parse(jsonLines.join('\n')).bundles['jay.drone-delivery'].title).toBe('Drone Delivery');
+      expect((JSON.parse(jsonLines.join('\n')) as { bundles: Record<string, { conformance: string; title: string }> }).bundles['jay.drone-delivery'].title).toBe('Drone Delivery');
 
       await runBundleCommand(fs, { sub: 'uninstall', arg: 'jay.drone-delivery', log: silent });
       await expect(stat(join(root, 'Library/jay.drone-delivery'))).rejects.toThrow();
