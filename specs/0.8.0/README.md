@@ -11,7 +11,7 @@ engineering debt from two release cycles is cleared.
 |---|---------|------|------------|
 | F1 | Headless bundle export: `knowlery bundle export` with a file-driven review gate | [f1-headless-export.md](./f1-headless-export.md) | 0.7 F1/F2/F4 |
 | F2 | Score-quality abstention (eval-calibrated) | [f2-score-quality-abstention.md](./f2-score-quality-abstention.md) | 0.6 F1 harness |
-| F3 | Release engineering hygiene: npm Trusted Publishing (OIDC), idempotent publish step, `bin` path fix, CLI EPIPE handling | (spec pending) | — |
+| F3 | Release engineering hygiene: npm Trusted Publishing (OIDC), idempotent publish step, `bin` path fix, CLI EPIPE handling | [f3-release-hygiene.md](./f3-release-hygiene.md) | — |
 | F4 | Repo lint hygiene: unscoped-eslint crash (`.venv*/`, `tests/` typed-lint), 0.6-scan warning cleanup, `display` → `getSettingDefinitions` | (spec pending) | — |
 
 Execution order: F1 → F2 → F3 → F4 (F1 is the spine; F2 touches the engine and needs

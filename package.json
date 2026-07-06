@@ -2,8 +2,12 @@
   "name": "knowlery",
   "version": "0.7.0",
   "description": "A warm personal knowledge review space for your vault.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JayJiangCT/knowlery.git"
+  },
   "bin": {
-    "knowlery": "./knowlery-cli.mjs"
+    "knowlery": "knowlery-cli.mjs"
   },
   "files": [
     "knowlery-cli.mjs",

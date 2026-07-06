@@ -1,6 +1,6 @@
 # F2 (0.8.0) — Score-Quality Abstention (Eval-Calibrated)
 
-- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
+- **Status:** Done — maintainer acceptance testing (§6) passed 2026-07-06; real-vault residuals recorded in §7
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f2-abstention-92eb` (off `main` @ 0.8 F1)
 - **Depends on:** 0.6 F1 (eval harness, golden set, frozen baseline), 0.6 F2 (engine)
