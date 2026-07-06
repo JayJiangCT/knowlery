@@ -149,9 +149,9 @@ export function SkillsLibrary() {
   }, [plugin]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
     const ref = plugin.events.on('dashboard-refresh', () => {
-      refresh();
+      void refresh();
     });
     return () => plugin.events.offref(ref);
   }, [plugin, refresh]);
@@ -182,14 +182,14 @@ export function SkillsLibrary() {
         <div className="knowlery-skills__actions">
           <button
             className="knowlery-btn knowlery-btn--outline"
-            onClick={() => new SkillEditorModal(plugin.app, plugin, 'create', null, refresh).open()}
+            onClick={() => new SkillEditorModal(plugin.app, plugin, 'create', null, () => void refresh()).open()}
           >
             <IconPlus size={14} />
             <span>Create</span>
           </button>
           <button
             className="knowlery-btn knowlery-btn--outline"
-            onClick={() => new SkillBrowserModal(plugin.app, plugin, refresh).open()}
+            onClick={() => new SkillBrowserModal(plugin.app, plugin, () => void refresh()).open()}
           >
             <IconPlus size={14} />
             <span>Browse</span>
@@ -210,7 +210,7 @@ export function SkillsLibrary() {
           key={config.id}
           config={config}
           skills={items}
-          onRefresh={refresh}
+          onRefresh={() => void refresh()}
         />
       ))}
 
@@ -227,7 +227,7 @@ export function SkillsLibrary() {
           </header>
           <div className="knowlery-skill-list">
             {grouped.disabled.map((s) => (
-              <SkillRow key={s.name} skill={s} onRefresh={refresh} />
+              <SkillRow key={s.name} skill={s} onRefresh={() => void refresh()} />
             ))}
           </div>
         </section>

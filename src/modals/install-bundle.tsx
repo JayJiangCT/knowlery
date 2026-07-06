@@ -176,7 +176,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
             className="knowlery-btn knowlery-btn--primary"
             disabled={installing || (!stage.conformance.conformant && !acknowledgeConformanceIssues)}
             onClick={() =>
-              confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues)
+              void confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues)
             }
           >
             {installing ? 'Installing…' : 'Install'}
@@ -190,7 +190,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     <div className="knowlery-install">
       <p>Pick a knowledge bundle (.zip or folder) to install.</p>
       {error && <div className="knowlery-install__error">{error}</div>}
-      <button type="button" className="knowlery-btn knowlery-btn--primary" onClick={pickSource}>
+      <button type="button" className="knowlery-btn knowlery-btn--primary" onClick={() => void pickSource()}>
         Choose bundle…
       </button>
     </div>

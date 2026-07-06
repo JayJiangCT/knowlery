@@ -261,7 +261,7 @@ function SkillDetailContent(props: {
                 <button
                   type="button"
                   className="knowlery-code-block__copy"
-                  onClick={handleCopy}
+                  onClick={() => void handleCopy()}
                 >
                   <IconClipboard size={14} />
                   <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -311,7 +311,7 @@ function SkillDetailContent(props: {
           <button
             type="button"
             className="knowlery-btn knowlery-btn--outline"
-            onClick={handleViewSource}
+            onClick={() => void handleViewSource()}
           >
             <IconBookOpen size={14} />
             <span>View source</span>
@@ -320,7 +320,7 @@ function SkillDetailContent(props: {
             <button
               type="button"
               className="knowlery-btn knowlery-btn--outline"
-              onClick={handleEnable}
+              onClick={() => void handleEnable()}
             >
               Enable
             </button>
@@ -336,7 +336,7 @@ function SkillDetailContent(props: {
               <button
                 type="button"
                 className="knowlery-btn knowlery-btn--outline knowlery-btn--danger"
-                onClick={handleDisable}
+                onClick={() => void handleDisable()}
               >
                 Disable
               </button>
@@ -353,7 +353,7 @@ function SkillDetailContent(props: {
               <button
                 type="button"
                 className={`knowlery-btn knowlery-btn--outline knowlery-btn--danger${confirmDelete ? ' is-confirming' : ''}`}
-                onClick={handleDelete}
+                onClick={() => void handleDelete()}
               >
                 {confirmDelete ? 'Confirm delete' : 'Delete'}
               </button>

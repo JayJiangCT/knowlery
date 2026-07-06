@@ -10,6 +10,7 @@ import {
   IconExternalLink,
 } from '../views/Icons';
 import { markSkillInstalledFromRegistry } from '../core/skill-manager';
+import { execFile } from 'child_process';
 
 /* ------------------------------------------------------------------ */
 /*  Modal wrapper                                                      */
@@ -85,7 +86,6 @@ function quoteForWindowsCmd(value: string): string {
 }
 
 function runSkillsCommand(args: string[], cwd: string, timeout = 30000): Promise<string> {
-  const { execFile } = require('child_process') as typeof import('child_process');
 
   if (Platform.isWin) {
     return new Promise((resolve, reject) => {
@@ -262,7 +262,7 @@ function SkillBrowserContent(props: { onClose: () => void; onChange?: () => void
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Enter') void handleSearch();
   };
 
   return (
@@ -278,7 +278,7 @@ function SkillBrowserContent(props: { onClose: () => void; onChange?: () => void
         />
         <button
           className="knowlery-skill-browser__search-btn"
-          onClick={handleSearch}
+          onClick={() => void handleSearch()}
           disabled={searching || !query.trim()}
         >
           {searching ? 'Searching...' : 'Search'}
@@ -336,7 +336,7 @@ function SkillBrowserContent(props: { onClose: () => void; onChange?: () => void
                   ) : (
                     <button
                       className="knowlery-skill-browser__btn-install"
-                      onClick={() => handleInstall(r)}
+                      onClick={() => void handleInstall(r)}
                       disabled={installing !== null}
                     >
                       {isInstalling ? 'Installing...' : 'Install'}

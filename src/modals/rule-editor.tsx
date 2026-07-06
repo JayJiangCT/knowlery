@@ -175,7 +175,7 @@ function RuleEditorContent(props: {
         <button onClick={props.onCancel}>Cancel</button>
         <button
           className="mod-cta"
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={!filename || !content}
         >
           Save

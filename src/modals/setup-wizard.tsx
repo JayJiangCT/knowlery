@@ -894,7 +894,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
             <button
               type="button"
               className="knowlery-btn knowlery-btn--primary"
-              onClick={handleMigration}
+              onClick={() => void handleMigration()}
             >
               Migrate to Knowlery
               <IconArrowRight size={14} />
@@ -941,7 +941,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
                 onSelectionChange={handleInstallSelectionChange}
                 onNodePathChange={handleNodePathChange}
                 onNodePathCommit={handleNodePathCommit}
-                onAutoDetectNode={handleAutoDetectNode}
+                onAutoDetectNode={() => void handleAutoDetectNode()}
               />
             </div>
           </div>
@@ -1012,7 +1012,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
           <button
             type="button"
             className="knowlery-btn knowlery-btn--primary"
-            onClick={handleSetup}
+            onClick={() => void handleSetup()}
             disabled={environmentLoading}
           >
             {environmentLoading ? 'Checking environment' : isReinstall ? 'Update vault' : 'Set up vault'}

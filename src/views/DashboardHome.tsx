@@ -84,9 +84,9 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   }, [plugin]);
 
   useEffect(() => {
-    refresh();
+    void refresh();
     const ref = plugin.events.on('dashboard-refresh', (payload?: DashboardRefreshPayload) => {
-      refresh(payload);
+      void refresh(payload);
     });
     return () => plugin.events.offref(ref);
   }, [plugin, refresh]);
@@ -106,7 +106,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   }, [plugin]);
 
   const addReflection = () => {
-    new ReflectionCaptureModal(plugin.app, plugin, () => refresh()).open();
+    new ReflectionCaptureModal(plugin.app, plugin, () => void refresh()).open();
   };
 
   const openShareModal = (seed?: string) => {
@@ -216,8 +216,8 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         <TodayMoveActions
           model={model}
           onAddReflection={addReflection}
-          onCopyRequest={copyRequest}
-          onSendRequest={sendRequest}
+          onCopyRequest={(request) => void copyRequest(request)}
+          onSendRequest={(request) => void sendRequest(request)}
           onNavigateAllMoves={() => props.navigate('all-moves')}
         />
       </section>
@@ -241,14 +241,14 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               <button
                 type="button"
                 className="knowlery-btn knowlery-btn--primary"
-                onClick={() => sendRequest(noteRequest ?? undefined)}
+                onClick={() => void sendRequest(noteRequest ?? undefined)}
               >
                 <span>Send to agent</span>
               </button>
               <button
                 type="button"
                 className="knowlery-btn knowlery-btn--outline"
-                onClick={() => copyRequest(noteRequest ?? undefined)}
+                onClick={() => void copyRequest(noteRequest ?? undefined)}
               >
                 <IconClipboard size={14} />
                 <span>Copy prompt</span>
@@ -291,7 +291,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             <button
               type="button"
               className="knowlery-btn knowlery-btn--primary"
-              onClick={generateReport}
+              onClick={() => void generateReport()}
               disabled={generating}
             >
               {generating ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconBookOpen size={14} />}
@@ -300,7 +300,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             <button
               type="button"
               className="knowlery-btn knowlery-btn--outline"
-              onClick={openLatestReport}
+              onClick={() => void openLatestReport()}
               disabled={!latestReportExists}
             >
               <IconExternalLink size={14} />
@@ -309,14 +309,14 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             <button
               type="button"
               className="knowlery-btn knowlery-btn--outline"
-              onClick={polishWithAgent}
+              onClick={() => void polishWithAgent()}
               disabled={polishing}
             >
               {polishing ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconPlay size={14} />}
               <span>{polishing ? 'Preparing…' : 'Send for review'}</span>
             </button>
           </div>
-          <WeeklyReviewStatus dailyReview={dailyReview} onCheckResult={() => refresh()} />
+          <WeeklyReviewStatus dailyReview={dailyReview} onCheckResult={() => void refresh()} />
         </article>
       </section>
 
@@ -356,7 +356,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         </article>
       </section>
 
-      <InstalledBundlesSection registry={installedBundles} onUninstall={removeBundle} />
+      <InstalledBundlesSection registry={installedBundles} onUninstall={(bundleId) => void removeBundle(bundleId)} />
 
       <section className="knowlery-home__stats" aria-label="Vault stats">
         {model.stats.map((stat) => (
