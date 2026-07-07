@@ -15,7 +15,9 @@ important thing to understand is that they are separate:
    reachable. Who can install depends on where it lives: public host (anyone),
    private repo (collaborators or org members), or a file you sent directly.
 4. **Install** — [from a URL](./install-from-url) or from a local file.
-5. **Subscribe & update** — *(arrives later in the 0.9 series.)*
+5. **[Subscribe & update](./subscribe-update)** — `check-updates` asks each
+   bundle's source for newer versions; `update` installs them through the same
+   gates. Pull-based, with local modifications protected.
 
 ## The recommended team setup: an organization shelf
 
