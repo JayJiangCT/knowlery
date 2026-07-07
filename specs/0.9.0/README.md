@@ -162,6 +162,30 @@ default-private posture). Docs are therefore a gated deliverable, not a follow-u
   self-test, per feature, branches `cursor/09-f<N>-<name>-92eb` cut from `main`
   after the previous feature merges.
 
+## Beyond 0.9 — the hosted-platform trajectory (recorded, not scheduled)
+
+Maintainer direction at F2 spec review: with sufficient adoption, a hosted KB
+platform becomes viable — owners pay a small service fee to publish to the cloud,
+subscribers subscribe to owners, owners choose free or paid, paid content earning
+through the platform. It also closes the known boundary of the GitHub-based flow
+(the education barrier for non-engineering users). What 0.9 does *today* to keep
+that door open, at zero extra cost:
+
+- **The bundle format and every gate are already host-agnostic** — a platform
+  hosts the same sealed artifact GitHub does, and F1 installs from any https URL.
+- **F2 isolates GitHub behind a "publish target"** (§4.6 boundary discipline);
+  the platform is a second target, not a redesign.
+- **F3 must define an abstract "upstream" protocol** ("latest version for this
+  source") with GitHub Releases as its first implementation — subscription
+  mechanics never hardwire GitHub API shapes.
+- **The credential line stays honest by layering**: the OSS tool remains
+  credential-free toward GitHub (delegation to `gh`); a future platform is an
+  *optional, explicitly authenticated* target/source whose auth lives in a
+  platform client layer, never in the core. Recorded now so the principle isn't
+  quietly violated later.
+- Far-future operational load (moderation, DMCA, payments, tax) is acknowledged
+  and deliberately unaddressed until the platform is real.
+
 ## Backlog ledger (recorded, schedulable opportunistically in 0.9)
 
 - Settings fallback deletion + `minAppVersion` bump — **blocked on Obsidian 1.13

@@ -154,11 +154,14 @@ is missing), the suggested tag, the sha256 to post next to the link, and the
 one-line `gh` install hint. Values precomputed; the resulting release is
 indistinguishable from a `gh`-published one (F1 installs it identically).
 
-**Decision point (from the plan, for this spec's review):** should the plugin's
-setup wizard also offer confirmed `gh` installation alongside its existing
-optional tools? CLI-side stays detect-and-guide regardless. My recommendation:
-defer — publish is new, evidence about where owners actually get stuck should
-drive wizard changes.
+**Decision (maintainer, at spec review):** no wizard installation, no forcing —
+guidance happens **at publish time**, the moment of strongest motivation: when
+`gh` is missing, the degradation output leads with the recommendation ("publishing
+works best with GitHub's CLI — one command to install: …"), followed by the full
+manual web path as the zero-tooling floor. The education barrier for
+non-engineering users is recorded as a known boundary of the GitHub-based flow —
+it is the exact gap a future hosted platform would close (see the plan's
+"Beyond 0.9" note).
 
 ### 4.6 Plugin parity
 
@@ -169,6 +172,12 @@ audience statement + copyable install command on success. Shells out to the same
 `gh`; missing `gh` renders the §4.5 checklist with copy buttons. Core publish
 logic lives in `src/core/okf/publish.ts` (pure node, injectable `gh` runner —
 same pattern as `remote-source.ts`) so both shells share it verbatim.
+
+**Boundary discipline (plan: Beyond 0.9):** the target-independent stages
+(review gate, second gate, compile+zip, audience statement) never see GitHub —
+`publish.ts` isolates all `gh`/GitHub assumptions in a *publish target*
+implementation, of which GitHub Releases is v1's only one. A future hosted
+platform slots in as a second target without touching the gates.
 
 ### 4.7 Skill conduct
 
