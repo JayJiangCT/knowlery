@@ -1,6 +1,6 @@
 # F1 (0.9.0) — Remote Install: `knowlery bundle install <url>`
 
-- **Status:** Accepted 2026-07-07 — implementation in progress
+- **Status:** Accepted 2026-07-07 — implemented; automated acceptance passed, awaiting manual §7 (private release + Obsidian modal)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-plan-92eb` (plan + spec + implementation ride one PR,
   0.8 F1 precedent)
