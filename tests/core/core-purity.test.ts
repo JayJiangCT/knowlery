@@ -25,6 +25,8 @@ const INVERTED_MODULES = [
   'cli/commands/bundle-export.ts',
   'cli/commands/bundle-publish.ts',
   'cli/commands/bundle-update.ts',
+  'cli/commands/kb.ts',
+  'core/kb-registry.ts',
   'core/okf/zip.ts',
   'core/okf/publish.ts',
   'core/okf/upstream.ts',

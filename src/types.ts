@@ -102,6 +102,10 @@ export interface KnowlerySettings {
   nodePath: string;
   onboardingDismissed: boolean;
   activityLoggingEnabled: boolean;
+  /** Register this vault in the global KB registry for CLI/agent access (spec 1.0 f1, §4.5). */
+  registerVaultGlobally: boolean;
+  /** The exact registry name this plugin created — the only name toggle-off may remove. */
+  registryOwnedName: string | null;
   lastSyncedVersion: string;
   lastSeenReleaseVersion: string;
   bundleCreatorName: string;
@@ -162,6 +166,8 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   nodePath: '',
   onboardingDismissed: false,
   activityLoggingEnabled: true,
+  registerVaultGlobally: true,
+  registryOwnedName: null,
   lastSyncedVersion: '',
   lastSeenReleaseVersion: '',
   bundleCreatorName: '',
@@ -374,6 +380,14 @@ export const CompileResultSchema = z.object({
   targetDir: z.string(),
 });
 export type CompileResult = z.infer<typeof CompileResultSchema>;
+
+export const KbRegistrySchema = z.object({
+  schemaVersion: z.literal(1),
+  kbs: z.record(z.object({
+    path: z.string().min(1),
+  })),
+});
+export type KbRegistry = z.infer<typeof KbRegistrySchema>;
 
 export const BUILTIN_SKILL_NAMES = [
   'cook', 'ask', 'explore', 'challenge', 'ideas', 'audit', 'organize',

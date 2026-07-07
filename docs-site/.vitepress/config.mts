@@ -15,6 +15,7 @@ const englishSidebar = [
     text: 'Use Knowlery',
     items: [
       { text: 'Guides', link: '/guides/' },
+      { text: 'Multiple Knowledge Bases', link: '/guides/multiple-knowledge-bases' },
       {
         text: 'Sharing Knowledge',
         link: '/sharing/',
@@ -50,6 +51,7 @@ const chineseSidebar = [
     text: '使用 Knowlery',
     items: [
       { text: '使用指南', link: '/zh/guides/' },
+      { text: '使用多个知识库', link: '/zh/guides/multiple-knowledge-bases' },
       {
         text: '分享知识',
         link: '/zh/sharing/',

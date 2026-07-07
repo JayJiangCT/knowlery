@@ -5,7 +5,9 @@ import { CliError, type Prompt } from './commands/shared';
 import { runInit } from './commands/init';
 import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
-import { runQueryCommand } from './commands/query';
+import { runFederatedQueryCommand, runQueryCommand } from './commands/query';
+import { runKbCommand } from './commands/kb';
+import { KbRegistryError, resolveKb } from '../core/kb-registry';
 import { runStaleCommand } from './commands/stale';
 import { runBundleCommand } from './commands/bundle';
 
@@ -31,9 +33,10 @@ const USAGE = `knowlery — knowledge base lifecycle for agent clients
 
 Usage:
   knowlery init   [--dir <path>] [--platform claude-code|opencode] [--name <kb name>] [--force]
+  knowlery kb add <name> [path] | kb list [--json] | kb remove <name>
   knowlery sync   [--dir <path>]
   knowlery health [--dir <path>] [--json]
-  knowlery query  "<question>" [--dir <path>] [--k <n>] [--json]
+  knowlery query  "<question>" [--dir <path> | --kb <name> | --kb '*'] [--k <n>] [--json]
   knowlery stale  [--dir <path>] [--json]
   knowlery bundle install <zip-or-folder-or-url> [--dir <path>] [--verify <sha256>]
                           [--force] [--skip-conformance]
@@ -56,6 +59,8 @@ interface ParsedArgs {
   /** Positionals after the command: query's question, or bundle's subcommand + argument. */
   positionals: string[];
   dir: string;
+  dirExplicit: boolean;
+  kb?: string;
   platform?: string;
   name?: string;
   k?: number;
@@ -81,6 +86,7 @@ interface ParsedArgs {
 /** How many positionals (after the command) each command accepts. */
 const POSITIONAL_LIMITS: Record<string, number> = {
   init: 0,
+  kb: 3,
   sync: 0,
   health: 0,
   query: 1,
@@ -93,6 +99,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     command: undefined,
     positionals: [],
     dir: '.',
+    dirExplicit: false,
     force: false,
     skipConformance: false,
     json: false,
@@ -114,7 +121,11 @@ function parseArgs(argv: string[]): ParsedArgs {
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
-    if (arg === '--dir') parsed.dir = argv[++i] ?? '.';
+    if (arg === '--dir') {
+      parsed.dir = argv[++i] ?? '.';
+      parsed.dirExplicit = true;
+    }
+    else if (arg === '--kb') parsed.kb = argv[++i];
     else if (arg === '--platform') parsed.platform = argv[++i];
     else if (arg === '--name') parsed.name = argv[++i];
     else if (arg === '--k') {
@@ -187,10 +198,44 @@ async function main(): Promise<void> {
     throw new CliError(`Unexpected argument: ${args.positionals[limit]}\n\n${USAGE}`, 2);
   }
 
-  const root = resolve(args.dir);
+  // --kb resolution (spec 1.0 f1, §4.3): additive sugar ending at path
+  // resolution; --dir untouched; both at once is ambiguous.
+  if (args.kb !== undefined && args.dirExplicit) {
+    throw new CliError('Pass either --kb or --dir, not both.', 2);
+  }
+  if (args.kb !== undefined && args.command === 'init') {
+    throw new CliError('init does not take --kb (the name does not exist yet). Initialize with --dir, then: knowlery kb add <name> <path>.', 2);
+  }
+  if (args.kb !== undefined && args.command === 'kb') {
+    throw new CliError('kb commands manage the registry itself and do not take --kb.', 2);
+  }
+  const federated = args.kb === '*';
+  let resolvedDir = args.dir;
+  if (args.kb !== undefined && !federated) {
+    try {
+      resolvedDir = await resolveKb(args.kb);
+    } catch (error) {
+      if (error instanceof KbRegistryError) throw new CliError(error.message);
+      throw error;
+    }
+  }
+  if (federated && args.command !== 'query') {
+    throw new CliError(`--kb '*' (federated) is supported for query only.`, 2);
+  }
+
+  const root = resolve(resolvedDir);
   const fs = nodeVaultFs(root);
 
   switch (args.command) {
+    case 'kb':
+      await runKbCommand({
+        sub: args.positionals[0],
+        name: args.positionals[1],
+        path: args.positionals[2] !== undefined ? resolve(args.positionals[2]) : undefined,
+        json: args.json,
+        log,
+      });
+      break;
     case 'init':
       await runInit(fs, {
         platform: args.platform,
@@ -210,7 +255,11 @@ async function main(): Promise<void> {
       await runHealth(fs, { root, json: args.json, log });
       break;
     case 'query':
-      runQueryCommand(root, { question: args.positionals[0], k: args.k, json: args.json, log });
+      if (federated) {
+        await runFederatedQueryCommand({ question: args.positionals[0], k: args.k, json: args.json, log });
+      } else {
+        runQueryCommand(root, { question: args.positionals[0], k: args.k, json: args.json, log });
+      }
       break;
     case 'stale':
       runStaleCommand(root, { json: args.json, log });
