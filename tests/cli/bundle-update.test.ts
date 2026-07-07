@@ -3,7 +3,6 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInit } from '../../src/cli/commands/init';
-import { runBundleCommand } from '../../src/cli/commands/bundle';
 import { runBundleUpdate, runCheckUpdates } from '../../src/cli/commands/bundle-update';
 import { CliError } from '../../src/cli/commands/shared';
 import { nodeVaultFs } from '../../src/platform/node-fs';

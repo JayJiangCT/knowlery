@@ -18,7 +18,7 @@ import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
 import { InstallBundleModal } from '../modals/install-bundle';
 import { summarizeBundleScope } from '../core/okf/export-scope';
-import { collectUpdateStatuses, type UpdateStatus } from '../core/okf/update-check';
+import { collectUpdateStatuses, modifiedFiles, type UpdateStatus } from '../core/okf/update-check';
 import type { UpstreamDeps } from '../core/okf/upstream';
 import { downloadRemoteBundle, type RemoteFetchResult } from '../core/okf/remote-source';
 import { readBundleEntries } from '../core/okf/zip';
@@ -425,6 +425,21 @@ function InstalledBundlesSection(props: {
   const updateBundle = async (id: string, url: string) => {
     setUpdating(id);
     try {
+      // Local-modification protection (spec 0.9 f3, §4.3.3) — the same core check
+      // the CLI runs. The dashboard offers no force path; deliberate overwrites
+      // go through `knowlery bundle update <id> --force`.
+      const entry = registry.bundles[id];
+      const changed = await modifiedFiles(plugin.fs, entry);
+      if (changed.length > 0) {
+        const preview = changed.slice(0, 3).join('\n');
+        const more = changed.length > 3 ? `\n…and ${changed.length - 3} more` : '';
+        new Notice(
+          `${id} was modified locally — updating would overwrite these edits:\n${preview}${more}\n`
+          + 'Move your notes into your own pages, or run `knowlery bundle update '
+          + `${id} --force\` from the CLI to overwrite.`,
+        );
+        return;
+      }
       const downloaded = await downloadRemoteBundle(url, { fetchImpl: obsidianRemoteFetch });
       try {
         const bundleEntries = await readBundleEntries(downloaded.zipPath);
