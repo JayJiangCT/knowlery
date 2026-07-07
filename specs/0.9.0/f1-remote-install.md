@@ -126,6 +126,14 @@ pattern). Kept deliberately thin — one input, same core.
 `--verify` conduct (if the user provided a hash, pass it; never fabricate one),
 and the private-source degradation path.
 
+### 4.7 Docs chapter (plan: documentation is a gated deliverable)
+
+This PR opens the docs site's **"Sharing Knowledge"** section (sidebar entry under
+"Use Knowlery", English + `zh/`) with its receiving-side chapters: *Install from a
+URL* (public / private / `--verify`, the no-`gh` browser path) and the
+troubleshooting page seeded with the defining confusion — *"the link 404s" = no
+access, not a broken link*. Publish/subscribe chapters land with F2/F3.
+
 ## 5. Safety properties, restated as tests
 
 1. **Same gates, remote or local**: a zip with a path-safety violation (or failing
@@ -154,8 +162,11 @@ on the built artifact.
    byte-identical).
 2. `bundle list` shows source provenance; `--json` carries the full source.
 3. Skill content assertions updated (URL form, verify conduct, degradation path).
-4. `npm test`, lint, build, eval `--assert-baseline` green.
-5. Plugin modal URL input works against the same core (maintainer-verified, §7).
+4. Docs: "Sharing Knowledge" section exists in both locales with the
+   install-from-URL chapter and the seeded troubleshooting page (§4.7);
+   `npm run docs:build` green.
+5. `npm test`, lint, build, eval `--assert-baseline` green.
+6. Plugin modal URL input works against the same core (maintainer-verified, §7).
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
