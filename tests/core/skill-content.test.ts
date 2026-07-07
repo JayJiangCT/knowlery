@@ -104,6 +104,15 @@ describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
   it('shares the review state with the Obsidian modal (same scope file)', () => {
     expect(skill('knowlery-cli')).toContain('.knowlery/export-scope.json');
   });
+
+  it('teaches URL installs: gh delegation, browser degradation, verify conduct (spec 0.9 f1)', () => {
+    const content = skill('knowlery-cli');
+    expect(content).toContain('accepts an https URL');
+    expect(content).toContain('gh` login');
+    expect(content).toContain('never ask for or handle tokens');
+    expect(content).toContain('--verify <sha256>');
+    expect(content).toContain('Never fabricate or guess a checksum');
+  });
 });
 
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
