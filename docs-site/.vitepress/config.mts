@@ -19,6 +19,8 @@ const englishSidebar = [
         text: 'Sharing Knowledge',
         link: '/sharing/',
         items: [
+          { text: 'Publish a Bundle', link: '/sharing/publish' },
+          { text: 'Grant Access', link: '/sharing/grant-access' },
           { text: 'Install from a URL', link: '/sharing/install-from-url' },
           { text: 'Troubleshooting', link: '/sharing/troubleshooting' },
         ],
@@ -51,6 +53,8 @@ const chineseSidebar = [
         text: '分享知识',
         link: '/zh/sharing/',
         items: [
+          { text: '发布知识包', link: '/zh/sharing/publish' },
+          { text: '授权', link: '/zh/sharing/grant-access' },
           { text: '从 URL 安装', link: '/zh/sharing/install-from-url' },
           { text: '故障排查', link: '/zh/sharing/troubleshooting' },
         ],

@@ -283,12 +283,22 @@ export type ConformanceReport = z.infer<typeof ConformanceReportSchema>;
 export const ReviewStatusSchema = z.enum(['unreviewed', 'approved', 'flagged']);
 export type ReviewStatus = z.infer<typeof ReviewStatusSchema>;
 
+export const PublishConfigSchema = z.object({
+  repo: z.string().min(1),
+  visibility: z.enum(['private', 'public']),
+});
+export type PublishConfig = z.infer<typeof PublishConfigSchema>;
+
 export const ExportScopeFileSchema = z.object({
   schemaVersion: z.literal(1),
   bundles: z.record(z.object({
     title: z.string().optional(),
     seeds: z.array(z.string()),
     maxCompiledHops: z.number().int().min(0).default(1),
+    /** Version of the last export — publish re-uses it (spec 0.9 f2, §4.1 step 2). */
+    lastVersion: z.string().optional(),
+    /** Publish target, remembered per bundle (spec 0.9 f2, §4.2). */
+    publish: PublishConfigSchema.optional(),
     items: z.record(z.object({
       status: ReviewStatusSchema,
       contentHashAtReview: z.string().nullable(),
@@ -318,7 +328,11 @@ export type InstalledBundlesFile = z.infer<typeof InstalledBundlesFileSchema>;
 
 export const RiskHintSchema = z.object({
   itemId: z.string(),
-  kind: z.enum(['email', 'sensitive-url', 'person-page', 'meeting-like-path']),
+  kind: z.enum([
+    'email', 'sensitive-url', 'person-page', 'meeting-like-path',
+    // 0.9 f2 §4.4 — highest-cost-if-public patterns.
+    'credential', 'private-ip', 'phone-number',
+  ]),
   evidence: z.string(),
 });
 export type RiskHint = z.infer<typeof RiskHintSchema>;

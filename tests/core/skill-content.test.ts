@@ -105,6 +105,18 @@ describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
     expect(skill('knowlery-cli')).toContain('.knowlery/export-scope.json');
   });
 
+  it('states the publish conduct: destination restated, risks shown before acknowledging, output relayed (spec 0.9 f2)', () => {
+    const content = skill('knowlery-cli');
+    expect(content).toContain('knowlery bundle publish');
+    expect(content).toContain('never pass');
+    expect(content).toContain('--public');
+    expect(content).toContain('Only pass');
+    expect(content).toContain('--acknowledge-risks');
+    expect(content).toContain('never on your own initiative');
+    expect(content).toContain('audience statement');
+    expect(content.replace(/\s+/g, ' ')).toContain('A public release is permanent');
+  });
+
   it('teaches URL installs: gh delegation, browser degradation, verify conduct (spec 0.9 f1)', () => {
     const content = skill('knowlery-cli');
     expect(content).toContain('accepts an https URL');

@@ -11,7 +11,7 @@ residual ledger.
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | Remote install: `bundle install <url>`, source recording, `gh` fallback for private repos | [f1-remote-install.md](./f1-remote-install.md) | 0.7 F4 install pipeline |
-| F2 | Publish flow: `bundle publish` to GitHub Releases, incl. publisher-side configuration (per-bundle target repo, `gh` detection & guided setup, repo bootstrap); default-private posture; public-destination second gate; credential-pattern risk scan | (spec pending) | 0.8 F1 export |
+| F2 | Publish flow: `bundle publish` to GitHub Releases, incl. publisher-side configuration (per-bundle target repo, `gh` detection & guided setup, repo bootstrap); default-private posture; public-destination second gate; credential-pattern risk scan | [f2-publish-flow.md](./f2-publish-flow.md) | 0.8 F1 export |
 | F3 | Update & subscription: `bundle check-updates` / `bundle update`, local-modification protection, dashboard surfacing | (spec pending) | F1 (source recording), F2 (versioned upstream) |
 | F4 | Retrieval: unmatched-term specificity signal (closes the exactly-half coverage boundary) | (spec pending) | 0.8 F2 gate + seed cases |
 
@@ -161,6 +161,30 @@ default-private posture). Docs are therefore a gated deliverable, not a follow-u
 - SDD process unchanged: spec → maintainer acceptance → implementation → maintainer
   self-test, per feature, branches `cursor/09-f<N>-<name>-92eb` cut from `main`
   after the previous feature merges.
+
+## Beyond 0.9 — the hosted-platform trajectory (recorded, not scheduled)
+
+Maintainer direction at F2 spec review: with sufficient adoption, a hosted KB
+platform becomes viable — owners pay a small service fee to publish to the cloud,
+subscribers subscribe to owners, owners choose free or paid, paid content earning
+through the platform. It also closes the known boundary of the GitHub-based flow
+(the education barrier for non-engineering users). What 0.9 does *today* to keep
+that door open, at zero extra cost:
+
+- **The bundle format and every gate are already host-agnostic** — a platform
+  hosts the same sealed artifact GitHub does, and F1 installs from any https URL.
+- **F2 isolates GitHub behind a "publish target"** (§4.6 boundary discipline);
+  the platform is a second target, not a redesign.
+- **F3 must define an abstract "upstream" protocol** ("latest version for this
+  source") with GitHub Releases as its first implementation — subscription
+  mechanics never hardwire GitHub API shapes.
+- **The credential line stays honest by layering**: the OSS tool remains
+  credential-free toward GitHub (delegation to `gh`); a future platform is an
+  *optional, explicitly authenticated* target/source whose auth lives in a
+  platform client layer, never in the core. Recorded now so the principle isn't
+  quietly violated later.
+- Far-future operational load (moderation, DMCA, payments, tax) is acknowledged
+  and deliberately unaddressed until the platform is real.
 
 ## Backlog ledger (recorded, schedulable opportunistically in 0.9)
 
