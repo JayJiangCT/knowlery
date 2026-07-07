@@ -4976,6 +4976,17 @@
   justify-content: space-between;
 }
 
+.knowlery-home__installed-check {
+  margin-left: auto;
+  font-size: var(--knowlery-meta-size);
+}
+
+.knowlery-home__installed .knowlery-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .knowlery-export__publish {
   margin-top: 16px;
   padding-top: 12px;
