@@ -1,10 +1,25 @@
-import { App, Modal, Notice } from 'obsidian';
+import { App, Modal, Notice, requestUrl } from 'obsidian';
 import { StrictMode, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
 import type { ConformanceReport } from '../types';
+import { Readable } from 'node:stream';
 import { readBundleEntries, type BundleSourceEntry } from '../core/okf/zip';
+import { downloadRemoteBundle, isRemoteSource, type RemoteFetchResult } from '../core/okf/remote-source';
+
+/**
+ * The plugin shell's transport (spec 0.9 f1): Obsidian's requestUrl bypasses
+ * renderer CORS restrictions that plain fetch would hit for arbitrary hosts.
+ */
+async function obsidianFetch(url: string): Promise<RemoteFetchResult> {
+  const response = await requestUrl({ url, throw: false });
+  return {
+    status: response.status,
+    ok: response.status >= 200 && response.status < 300,
+    body: Readable.from(Buffer.from(response.arrayBuffer)),
+  };
+}
 import { previewInstall } from '../core/okf/install-scan';
 import { installBundle, InstallBlockedError } from '../core/okf/install';
 import { readInstalledBundles, resolveInstallAction } from '../core/okf/registry';
@@ -55,7 +70,7 @@ export class InstallBundleModal extends Modal {
 
 type Stage =
   | { kind: 'pick' }
-  | { kind: 'preview'; path: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; blockedInstalledVersion: string | null }
+  | { kind: 'preview'; path: string; source: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; blockedInstalledVersion: string | null }
   | { kind: 'result'; conformance: 'passed' | 'failed' | 'skipped' };
 
 function InstallBundleContent(props: { onClose: () => void }) {
@@ -63,6 +78,8 @@ function InstallBundleContent(props: { onClose: () => void }) {
   const [stage, setStage] = useState<Stage>({ kind: 'pick' });
   const [error, setError] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [url, setUrl] = useState('');
   const [acknowledgeConformanceIssues, setAcknowledgeConformanceIssues] = useState(false);
 
   const pickSource = async () => {
@@ -76,7 +93,33 @@ function InstallBundleContent(props: { onClose: () => void }) {
     await loadPreview(result.filePaths[0]);
   };
 
-  const loadPreview = async (path: string) => {
+  // Remote sources (spec 0.9 f1, §4.5): same download helper as the CLI, then
+  // the modal's existing preview/confirm flow. The registry records the URL.
+  const installFromUrl = async () => {
+    const trimmed = url.trim();
+    if (!isRemoteSource(trimmed)) {
+      setError('Enter an http(s) URL to a bundle zip.');
+      return;
+    }
+    setError(null);
+    setDownloading(true);
+    try {
+      const downloaded = await downloadRemoteBundle(trimmed, { fetchImpl: obsidianFetch, log: (line) => new Notice(line) });
+      try {
+        // Entries are fully read into memory before cleanup, so the temp file's
+        // lifetime ends here regardless of what the user does with the preview.
+        await loadPreview(downloaded.zipPath, trimmed);
+      } finally {
+        await downloaded.cleanup();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const loadPreview = async (path: string, recordedSource = path) => {
     setError(null);
     setAcknowledgeConformanceIssues(false);
     try {
@@ -87,6 +130,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
       setStage({
         kind: 'preview',
         path,
+        source: recordedSource,
         entries,
         manifestId: manifest.id,
         manifestVersion: manifest.version,
@@ -105,7 +149,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     setError(null);
     try {
       const result = await installBundle(plugin.fs, stage.entries, {
-        source: stage.path,
+        source: stage.source,
         force,
         skipConformanceGate,
       });
@@ -193,6 +237,27 @@ function InstallBundleContent(props: { onClose: () => void }) {
       <button type="button" className="knowlery-btn knowlery-btn--primary" onClick={() => void pickSource()}>
         Choose bundle…
       </button>
+      <div className="knowlery-install__url-row">
+        <input
+          type="text"
+          className="knowlery-install__url-input"
+          placeholder="…or paste a bundle URL (https://)"
+          value={url}
+          disabled={downloading}
+          onChange={(event) => setUrl(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void installFromUrl();
+          }}
+        />
+        <button
+          type="button"
+          className="knowlery-btn knowlery-btn--outline"
+          disabled={downloading || !url.trim()}
+          onClick={() => void installFromUrl()}
+        >
+          {downloading ? 'Downloading…' : 'Fetch'}
+        </button>
+      </div>
     </div>
   );
 }
