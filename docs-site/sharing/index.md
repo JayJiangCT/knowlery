@@ -7,15 +7,13 @@ important thing to understand is that they are separate:
 1. **Export & review** — pick a seed topic; every page and source in scope gets an
    explicit per-item approval (nothing ships unreviewed). See the export command in
    the [Reference](/reference/).
-2. **Publish** — put the bundle zip somewhere others can reach: a GitHub Release, a
-   static file host, or simply a message attachment. *(A guided `bundle publish`
-   flow arrives later in the 0.9 series.)*
-3. **Grant access** — publishing does **not** make the bundle reachable.
-   Who can install depends on where it lives:
-   - **Public release / public host** — anyone with the link.
-   - **Private GitHub repo** — only people with read access: invited collaborators,
-     or (recommended for teams) members of the organization that owns the repo.
-   - **A file you sent directly** — whoever received it.
+2. **[Publish](./publish)** — `knowlery bundle publish` creates a GitHub Release
+   in your configured repo and hands back the complete message to forward (URL,
+   checksum, audience). Private by default; public destinations pass a second
+   gate.
+3. **[Grant access](./grant-access)** — publishing does **not** make the bundle
+   reachable. Who can install depends on where it lives: public host (anyone),
+   private repo (collaborators or org members), or a file you sent directly.
 4. **Install** — [from a URL](./install-from-url) or from a local file.
 5. **Subscribe & update** — *(arrives later in the 0.9 series.)*
 
