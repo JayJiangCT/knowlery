@@ -47,6 +47,16 @@ independent engine work and can interleave.
   pattern) is an F2 spec decision point.
 - **Pull, not push.** No daemon, no notifications. `check-updates` runs on demand
   (command, `sync` report, dashboard card); agents provide the subscription cadence.
+- **Recommended team topology: an organization-owned shelf** (maintainer decision
+  at plan review). For team sharing, a private repo under a GitHub organization
+  (e.g. `your-org/kb-bundles`) with base permission Read gives every member access
+  with zero per-user management — membership *is* the subscription permission, and
+  its lifecycle follows the org (join → access, leave → revoked). Finer scoping via
+  org teams stays a GitHub-side concern Knowlery never sees. Multiple owners
+  publishing to one shelf makes it a team knowledge hub for free. This is a
+  documented usage pattern of the credential-delegation design, not a feature:
+  F2/F3 specs and docs write their examples against it. (GitHub Free orgs suffice —
+  unlimited private repos and members.)
 
 ## Publisher-side configuration (maintainer requirement at plan review, binding on F2)
 
