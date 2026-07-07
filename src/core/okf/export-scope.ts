@@ -112,6 +112,9 @@ export async function writeExportScope(
     title: update.title ?? scope.bundles[bundleId]?.title,
     seeds: update.seeds,
     maxCompiledHops: update.maxCompiledHops,
+    // Persisted publish/version metadata survives scope rewrites (spec 0.9 f2, §4.2).
+    lastVersion: scope.bundles[bundleId]?.lastVersion,
+    publish: scope.bundles[bundleId]?.publish,
     items: {},
   };
 
@@ -131,6 +134,20 @@ export async function writeExportScope(
   }
 
   await ensureScopeDir(fs);
+  await fs.write(EXPORT_SCOPE_PATH, `${JSON.stringify(scope, null, 2)}\n`);
+}
+
+/** Merge publish/version metadata into a bundle's scope entry without touching review state. */
+export async function writeBundleMeta(
+  fs: VaultFs,
+  bundleId: string,
+  meta: { lastVersion?: string; publish?: import('../../types').PublishConfig },
+): Promise<void> {
+  const scope = await readExportScope(fs);
+  const bundle = scope.bundles[bundleId];
+  if (!bundle) return;
+  if (meta.lastVersion !== undefined) bundle.lastVersion = meta.lastVersion;
+  if (meta.publish !== undefined) bundle.publish = meta.publish;
   await fs.write(EXPORT_SCOPE_PATH, `${JSON.stringify(scope, null, 2)}\n`);
 }
 
