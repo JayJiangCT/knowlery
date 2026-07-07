@@ -20,6 +20,13 @@ contracts freeze under semver.
 Execution order: F1 → F2 → F3 → F4 → F5. F1 is pure CLI groundwork (valuable
 alone, MCP is its second consumer); F5 is the release itself wearing a spec.
 
+**F1 compatibility contract (frozen at plan review):** `--kb` is *additive
+sugar* — it resolves through the registry to a directory and proceeds exactly as
+`--dir` would. `--dir` remains fully supported forever (it is part of the 1.0
+CLI freeze); passing both is an error (ambiguous, no silent precedence);
+passing neither keeps today's cwd default. **The registry is never a
+prerequisite** — every existing headless workflow runs unchanged without one.
+
 ## The product story (maintainer framing, binding on F2/F3 design)
 
 Knowlery MCP exists to make the KB **faster to cold-start and easier to
@@ -42,10 +49,30 @@ maintain**:
    with per-KB attribution.
 2. **Read wide, write narrow.** Read tools cover the whole surface. Writes are
    exactly three, each with a structural safety argument: `init_kb` creates only
-   new directories (never touches existing content), `capture` appends **only to
-   the inbox** (the compiled layer is reachable only through `/cook`'s reviewed
+   new directories (precisely bounded below), `capture` appends **only to the
+   inbox** (the compiled layer is reachable only through `/cook`'s reviewed
    pipeline — the same gate philosophy as export review), `sync` is the existing
-   idempotent, downgrade-guarded operation.
+   idempotent, downgrade-guarded operation whose written content is **determined
+   entirely by the local binary** — the caller supplies zero content, so a
+   remote caller cannot inject anything through it.
+
+   **`init_kb` path contract (frozen at plan review — "only creates" alone is
+   not an argument once remote exposure exists):**
+   - The requested path is expanded and **canonicalized (symlinks resolved)
+     before every check**; all subsequent rules apply to the real path.
+   - The parent directory must already exist and be user-writable — `init_kb`
+     creates **at most one new leaf directory**, never a recursive tree of
+     arbitrary depth.
+   - The target must not exist or must be an empty directory; a non-empty
+     directory is refused (stricter than CLI `init --force` — MCP offers no
+     force).
+   - The target must not lie inside an existing registered KB, and never inside
+     Knowlery-internal paths.
+   - **Remote mode confines `init_kb` further**: paths must resolve under a
+     `--kb-root <dir>` the operator configured when starting the server; no
+     `--kb-root`, no remote init at all.
+   - Failure cleanup: init writes only inside the newly created directory; on
+     failure the created directory is removed — no partial state outside it.
 3. **Skills become prompts; pages become resources.** The 14 built-in skills map
    onto MCP prompts (the retrieval ladder, cook discipline, review conduct — the
    accumulated craft ships with the tools, not just the tools). Knowledge pages
@@ -54,10 +81,16 @@ maintain**:
 4. **stdio is full-featured; remote is opt-in and read-only by default.** The
    local server (Claude Desktop, Claude Code, Cursor, gemini-cli) gets
    everything. `knowlery mcp serve --http` requires an explicit flag, a
-   locally-generated bearer token, and grants reads only — `--allow-capture` and
-   `--allow-init` opt writes in individually. Knowlery still never *manages*
-   credentials: the token is generated and configured by the user, verified by
-   comparison, stored nowhere else.
+   locally-generated bearer token, and grants reads only. **Every write tool
+   has its own opt-in flag — `--allow-capture`, `--allow-init`, `--allow-sync`
+   — one uniform rule, no implicit bundling** (plan-review correction: the
+   draft omitted sync's flag, leaving its remote contract ambiguous). `sync` is
+   offered remotely at all only because its content is binary-determined (see
+   principle 2); operators who consider workspace maintenance a local-only
+   concern simply never pass `--allow-sync`, and the remote "maintenance one
+   call away" story narrows accordingly to health/stale reporting. Knowlery
+   still never *manages* credentials: the token is generated and configured by
+   the user, verified by comparison, stored nowhere else.
 5. **The remote protocol is the platform's dress rehearsal.** A future hosted
    platform's product form is exactly "a remote MCP endpoint over your KBs" —
    F4's tool contracts and auth boundary are designed so the platform is a
