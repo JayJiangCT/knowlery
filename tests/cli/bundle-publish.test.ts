@@ -165,6 +165,12 @@ describe('publish safety properties (spec 0.9 f2, §5)', () => {
       });
       const upload = forced.calls.find((call) => call[0] === 'release' && call[1] === 'upload');
       expect(upload).toContain('--clobber');
+      // Maintainer acceptance blocker: the release body's install+verify line
+      // must follow the replaced asset — --force also edits the notes.
+      const edit = forced.calls.find((call) => call[0] === 'release' && call[1] === 'edit');
+      expect(edit).toBeDefined();
+      const notes = edit![edit!.indexOf('--notes') + 1];
+      expect(notes).toMatch(/--verify sha256-[0-9a-f]{64}/);
     });
   });
 

@@ -116,24 +116,25 @@ export async function runBundlePublish(fs: VaultFs, options: PublishCommandOptio
   }
 
   // 6. Release (spec §4.1.6).
+  const fileName = zipPath.split('/').pop() ?? 'bundle.zip';
+  const url = assetUrl(repo, tag, fileName);
+  const releaseInput = {
+    repo,
+    tag,
+    title: `${scope.title} v${version}`,
+    notes: buildReleaseNotes({ title: scope.title, version, conceptCount: result.conceptCount, sha256, url }),
+    assetPath: zipPath,
+  };
   if (await releaseTagExists(gh, repo, tag)) {
     if (!options.force) {
       throw new CliError(
         `${tag} is already published to ${repo}. Bump the version at export (--bundle-version), or pass --force to replace the asset.`,
       );
     }
-    await wrapPublishError(() => createRelease(gh, { repo, tag, title: '', notes: '', assetPath: zipPath, replaceExisting: true }));
+    // Notes are regenerated too — the body's checksum must follow the asset.
+    await wrapPublishError(() => createRelease(gh, { ...releaseInput, replaceExisting: true }));
   } else {
-    const fileName = zipPath.split('/').pop() ?? 'bundle.zip';
-    const url = assetUrl(repo, tag, fileName);
-    await wrapPublishError(() => createRelease(gh, {
-      repo,
-      tag,
-      title: `${scope.title} v${version}`,
-      notes: buildReleaseNotes({ title: scope.title, version, conceptCount: result.conceptCount, sha256, url }),
-      assetPath: zipPath,
-      replaceExisting: false,
-    }));
+    await wrapPublishError(() => createRelease(gh, { ...releaseInput, replaceExisting: false }));
   }
 
   // Persist the target for next time (spec §4.2).
@@ -142,8 +143,6 @@ export async function runBundlePublish(fs: VaultFs, options: PublishCommandOptio
   });
 
   // 7. Audience statement (spec §4.1.7).
-  const fileName = zipPath.split('/').pop() ?? 'bundle.zip';
-  const url = assetUrl(repo, tag, fileName);
   if (options.json) {
     options.log(JSON.stringify({
       status: 'published',

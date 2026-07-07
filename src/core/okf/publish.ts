@@ -109,9 +109,14 @@ export interface ReleaseInput {
 
 export async function createRelease(gh: GhRunner, input: ReleaseInput): Promise<void> {
   if (input.replaceExisting) {
-    // --force semantics: replace the asset on the existing release.
+    // --force semantics: replace the asset on the existing release, then bring
+    // the release body with it — its install+verify line carries the asset's
+    // checksum, and a stale one would fail (or mis-teach) whoever copies it
+    // (maintainer acceptance blocker, 0.9 f2).
     const upload = await gh(['release', 'upload', input.tag, input.assetPath, '--repo', input.repo, '--clobber']);
     if (!upload.ok) throw new PublishError(`Could not replace the release asset: ${upload.error ?? 'unknown gh error'}`);
+    const edit = await gh(['release', 'edit', input.tag, '--repo', input.repo, '--title', input.title, '--notes', input.notes]);
+    if (!edit.ok) throw new PublishError(`Asset replaced, but the release notes could not be updated — fix them manually (they show a stale checksum): ${edit.error ?? 'unknown gh error'}`);
     return;
   }
   const result = await gh([
