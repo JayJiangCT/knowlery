@@ -230,8 +230,9 @@ export default class KnowleryPlugin extends Plugin {
    * plugin load.
    */
   private registerQueryCliHandler(): void {
-    // Belt-and-suspenders: minAppVersion is 1.12.2 (the registerCliHandler API's
-    // version), but a missing or failing CLI host must never break plugin load.
+    // Belt-and-suspenders: minAppVersion (1.13.0 as of 0.8) is well past the
+    // registerCliHandler API's 1.12.2 introduction, but a missing or failing
+    // CLI host must never break plugin load.
     if (typeof this.registerCliHandler !== 'function') return;
     try {
       this.registerCliHandler(
