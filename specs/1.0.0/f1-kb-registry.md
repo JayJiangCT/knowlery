@@ -28,10 +28,11 @@ knowlery query --kb '*' "..."      # federated query with per-KB attribution
 ```
 
 1. A **global registry** of named knowledge bases, independent of any vault.
-2. `--kb <name>` on every command that takes `--dir`, under the plan's frozen
-   compatibility contract: additive sugar, `--dir` untouched forever, both at
-   once is an error, neither keeps the cwd default, **the registry is never a
-   prerequisite**.
+2. `--kb <name>` on every **existing-KB** command that takes `--dir` (`init`
+   is the explicit exception — it errors helpfully, see §4.3), under the plan's
+   frozen compatibility contract: additive sugar, `--dir` untouched forever,
+   both at once is an error, neither keeps the cwd default, **the registry is
+   never a prerequisite**.
 3. **Federated query**: `--kb '*'` runs the engine per registered KB and merges
    ranked results with per-KB attribution (scores are comparable — same engine,
    same weights). "Which KB did I put that in?" becomes one call.
@@ -113,11 +114,17 @@ to add on demand.
 The Obsidian plugin registers its vault on setup completion and on load of an
 initialized vault: name = the kbName slug (deduplicated with a numeric suffix
 on collision), skipped if the path is already registered. A settings toggle
-("Register this vault for CLI/agent access", default **on**) opts out and
-unregisters. Rationale for default-on: the registry is an address book whose
-entries are harmless metadata, and the entire 1.0 story depends on KBs being
-discoverable — but the toggle keeps it a choice.
-**Decision point for spec review:** default-on vs default-off.
+("Register this vault for CLI/agent access", default **on** — maintainer
+decision at spec review) opts out and unregisters.
+
+**Ownership rule (maintainer correction at spec review):** the plugin records
+**the exact name it created** in its own plugin settings, and toggle-off
+removes **only that name**. If the path was already registered when the plugin
+first looked (a user-created entry, e.g. `work`), the plugin creates nothing,
+records no ownership, and toggle-off removes nothing — a pre-existing entry is
+the user's, never the plugin's to delete. If the plugin-owned entry was
+meanwhile removed or repointed by the user, toggle-off is a silent no-op
+(remove exactly what you created, or nothing).
 
 ### 4.6 Docs
 
@@ -137,8 +144,11 @@ names the user used; never register/remove on the agent's own initiative).
    path is skipped with a note, not fatal; all-abstain lists consulted KBs;
    merge ordering is score-descending across KBs.
 4. Plugin registration: registers once (no duplicate churn on every load),
-   collision gets a suffix, toggle-off unregisters; all through the same core
-   registry module (purity-guarded, shared by CLI and plugin).
+   collision gets a suffix; **ownership**: toggle-off removes only the
+   plugin-created name — a pre-existing user entry for the same path survives
+   toggle-off, and a user-removed plugin entry makes toggle-off a no-op; all
+   through the same core registry module (purity-guarded, shared by CLI and
+   plugin).
 
 ## 6. Acceptance criteria
 
