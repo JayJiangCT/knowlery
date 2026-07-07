@@ -11,7 +11,7 @@ contracts freeze under semver.
 
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
-| F1 | KB registry: named knowledge bases (`kb add/list/remove`), `--kb` across all commands, federated query with source attribution | (spec pending) | — |
+| F1 | KB registry: named knowledge bases (`kb add/list/remove`), `--kb` across all commands, federated query with source attribution | [f1-kb-registry.md](./f1-kb-registry.md) | — |
 | F2 | `knowlery mcp` (stdio): read tools (`list_kbs`, `query`, `stale`, `health`, `list_bundles`), skills as MCP prompts, pages as MCP resources | (spec pending) | F1 |
 | F3 | The write path: `init_kb` (cold start from a conversation), `capture` (inbox-only), `sync`; agent conduct for writes | (spec pending) | F2 |
 | F4 | Remote mode (self-hosted): Streamable HTTP + token auth, read-only by default, tunnel guidance, the per-agent access matrix | (spec pending) | F2 |
