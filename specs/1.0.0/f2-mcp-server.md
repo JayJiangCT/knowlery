@@ -102,10 +102,13 @@ list vs. all-14.
 
 - URI scheme: `knowlery://<kb>/<vault-relative-path>` (e.g.
   `knowlery://work/concepts/backpressure.md`).
-- `resources/list` returns one entry point per registered KB (its
-  `KNOWLEDGE.md`) plus a resource *template*
-  (`knowlery://{kb}/{+path}`) — the listing stays bounded regardless of vault
-  size; agents reach specific pages through query results and wikilinks.
+- Listing follows the protocol's split (maintainer P2 at spec review — MCP
+  keeps concrete resources and templates on separate methods):
+  **`resources/list`** returns exactly one concrete resource per registered KB
+  (its `KNOWLEDGE.md` entry point); **`resources/templates/list`** exposes the
+  `knowlery://{kb}/{+path}` resource template. The listing stays bounded
+  regardless of vault size; agents reach specific pages through query results
+  and wikilinks, instantiating the template.
 - **Readable-path allowlist (maintainer P1 at spec review — the product
   boundary that free-form notes stay yours):** resource reads serve only the
   *curated knowledge surface* —
@@ -147,8 +150,10 @@ now.
 3. Resources: traversal attempts (`../`, absolute paths, symlink out of the
    KB) are refused; **a user-tier note (`Projects/…`, `Daily/…`) is refused
    with the boundary explanation even though `query` can surface it**; a
-   compiled page and a `Library/` bundle page read verbatim; the resource
-   listing is bounded (entry points + template, not one entry per page).
+   compiled page and a `Library/` bundle page read verbatim; **`resources/list`
+   carries exactly the per-KB entry points and `resources/templates/list`
+   carries the template — asserted as two separate protocol calls**, never one
+   entry per page.
 4. Result-vs-error semantics: an unhealthy `health` and an abstaining `query`
    come back as successful results with the finding in `structuredContent`;
    unknown `kb` and malformed input come back as tool errors.
