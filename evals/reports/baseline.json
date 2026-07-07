@@ -1,13 +1,13 @@
 {
   "retriever": "baseline-ask-step2",
-  "generatedAt": "2026-07-06T07:31:40.899Z",
+  "generatedAt": "2026-07-07T13:34:28.574Z",
   "k": 10,
   "aggregate": {
-    "cases": 37,
-    "recallAt5": 0.6206896551724138,
-    "recallAt10": 0.7931034482758621,
-    "mrr": 0.41360153256704973,
-    "unanswerableAccuracy": 0.25
+    "cases": 41,
+    "recallAt5": 0.6333333333333333,
+    "recallAt10": 0.8,
+    "mrr": 0.43314814814814806,
+    "unanswerableAccuracy": 0.18181818181818182
   },
   "perCategory": {
     "entity-lookup": {
@@ -39,10 +39,10 @@
       "unanswerableAccuracy": null
     },
     "bilingual": {
-      "cases": 4,
-      "recallAt5": 0.25,
-      "recallAt10": 0.25,
-      "mrr": 0.25,
+      "cases": 5,
+      "recallAt5": 0.4,
+      "recallAt10": 0.4,
+      "mrr": 0.4,
       "unanswerableAccuracy": null
     },
     "bundle": {
@@ -60,11 +60,11 @@
       "unanswerableAccuracy": null
     },
     "unanswerable": {
-      "cases": 8,
+      "cases": 11,
       "recallAt5": null,
       "recallAt10": null,
       "mrr": null,
-      "unanswerableAccuracy": 0.25
+      "unanswerableAccuracy": 0.18181818181818182
     }
   },
   "perQuestion": [
@@ -98,13 +98,13 @@
         "entities/pulseboard.md",
         "concepts/retention-policy.md",
         "concepts/response-time-metrics.md",
+        "entities/蜂鸟.md",
         "entities/grafana-bridge.md",
         "entities/ingest-pipeline.md",
         "entities/dana-kim.md",
         "concepts/sampling-strategy.md",
         "entities/collector-daemon.md",
-        "comparisons/timescaledb-vs-clickhouse.md",
-        "entities/metrics-api.md"
+        "comparisons/timescaledb-vs-clickhouse.md"
       ],
       "recallAt5": 1,
       "recallAt10": 1,
@@ -339,6 +339,7 @@
       "top": [
         "entities/alice-chen.md",
         "queries/who-owns-what.md",
+        "entities/蜂鸟.md",
         "entities/ingest-pipeline.md",
         "entities/collector-daemon.md",
         "entities/nimbus-labs.md",
@@ -748,10 +749,10 @@
         "concepts/response-time-metrics.md",
         "entities/collector-daemon.md",
         "queries/why-pull-model.md",
+        "entities/蜂鸟.md",
         "entities/grafana-bridge.md",
         "entities/ingest-pipeline.md",
-        "entities/dana-kim.md",
-        "concepts/sampling-strategy.md"
+        "entities/dana-kim.md"
       ],
       "recallAt5": null,
       "recallAt10": null,
@@ -793,6 +794,77 @@
       "recallAt5": 0,
       "recallAt10": 1,
       "reciprocalRank": 0.1111111111111111,
+      "unanswerableCorrect": null,
+      "missedMust": []
+    },
+    {
+      "id": "q-038",
+      "category": "unanswerable",
+      "question": "蜂鸟的移动端路线图是什么？",
+      "top": [
+        "entities/蜂鸟.md"
+      ],
+      "recallAt5": null,
+      "recallAt10": null,
+      "reciprocalRank": null,
+      "unanswerableCorrect": false,
+      "missedMust": []
+    },
+    {
+      "id": "q-039",
+      "category": "unanswerable",
+      "question": "数据仓库的 metrics API 怎么接入？",
+      "top": [
+        "entities/pulseboard.md",
+        "concepts/response-time-metrics.md",
+        "comparisons/push-vs-pull-metrics.md",
+        "entities/metrics-api.md",
+        "concepts/cardinality-explosion.md",
+        "entities/grafana-bridge.md",
+        "concepts/service-level-objectives.md",
+        "concepts/tail-latency.md",
+        "queries/who-owns-what.md",
+        "entities/collector-daemon.md"
+      ],
+      "recallAt5": null,
+      "recallAt10": null,
+      "reciprocalRank": null,
+      "unanswerableCorrect": false,
+      "missedMust": []
+    },
+    {
+      "id": "q-040",
+      "category": "unanswerable",
+      "question": "pulseboard 移动端路线图是什么？",
+      "top": [
+        "entities/pulseboard.md",
+        "concepts/retention-policy.md",
+        "concepts/response-time-metrics.md",
+        "entities/蜂鸟.md",
+        "entities/grafana-bridge.md",
+        "entities/ingest-pipeline.md",
+        "entities/dana-kim.md",
+        "concepts/sampling-strategy.md",
+        "entities/collector-daemon.md",
+        "comparisons/timescaledb-vs-clickhouse.md"
+      ],
+      "recallAt5": null,
+      "recallAt10": null,
+      "reciprocalRank": null,
+      "unanswerableCorrect": false,
+      "missedMust": []
+    },
+    {
+      "id": "q-041",
+      "category": "bilingual",
+      "question": "告警疲劳复盘 status",
+      "top": [
+        "Projects/告警疲劳复盘.md",
+        "Library/observability-starter/concepts/opentelemetry-semantic-conventions.md"
+      ],
+      "recallAt5": 1,
+      "recallAt10": 1,
+      "reciprocalRank": 1,
       "unanswerableCorrect": null,
       "missedMust": []
     }
