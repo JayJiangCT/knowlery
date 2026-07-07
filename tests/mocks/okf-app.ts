@@ -48,6 +48,18 @@ export function okfVaultFs(app: MockOkfApp): VaultFs {
       delete app.writes[path];
     },
     rmdir: (path, recursive) => adapter.rmdir(path, recursive),
+    rename: async (oldPath, newPath) => {
+      const prefix = `${oldPath}/`;
+      for (const key of Object.keys(app.writes)) {
+        if (key === oldPath) {
+          app.writes[newPath] = app.writes[key];
+          delete app.writes[key];
+        } else if (key.startsWith(prefix)) {
+          app.writes[`${newPath}/${key.slice(prefix.length)}`] = app.writes[key];
+          delete app.writes[key];
+        }
+      }
+    },
     list: (path) => adapter.list(path),
   };
 }

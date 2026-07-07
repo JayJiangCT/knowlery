@@ -17,6 +17,8 @@ export interface VaultFs {
   mkdir(path: string): Promise<void>;
   remove(path: string): Promise<void>;
   rmdir(path: string, recursive: boolean): Promise<void>;
+  /** Rename/move a file or directory (spec 0.9 f3 — the staged-replacement swap). */
+  rename(oldPath: string, newPath: string): Promise<void>;
   list(path: string): Promise<{ files: string[]; folders: string[] }>;
 }
 
@@ -54,6 +56,11 @@ export function loggingVaultFs(inner: VaultFs): { fs: VaultFs; writes: string[] 
       rmdir: async (path, recursive) => {
         await inner.rmdir(path, recursive);
         record(path);
+      },
+      rename: async (oldPath, newPath) => {
+        await inner.rename(oldPath, newPath);
+        record(oldPath);
+        record(newPath);
       },
     },
   };
