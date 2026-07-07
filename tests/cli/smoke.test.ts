@@ -145,6 +145,33 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       const bundleQuery = await run('node', [cliPath, 'query', '--dir', kb3, 'widget design']);
       expect(bundleQuery.stdout).toContain('widget-design');
 
+      // Remote install (spec 0.9 f1): the built artifact installs from a served URL.
+      const { createServer } = await import('node:http');
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      zip.file('knowlery-bundle.json', JSON.stringify({
+        schemaVersion: 1, okfVersion: '0.1', id: 'remote.smoke', title: 'Remote Smoke',
+        version: '1.0.0', creator: { name: 'Smoke', url: '' },
+        releasedAt: '2026-07-07T00:00:00.000Z', entrypoint: 'index.md',
+        contentHash: 'sha256-remote-smoke', license: 'personal', knowleryVersion: '0.8.0', conceptCount: 1,
+      }));
+      zip.file('index.md', '---\nokf_version: "0.1"\n---\n\n# Remote Smoke\n');
+      zip.file('concepts/remote-thing.md', '---\ntype: Concept\ntitle: Remote Thing\ndescription: A remote smoke thing\ndomain: smoke\ntimestamp: 2026-07-07T00:00:00.000Z\n---\n\nBody.');
+      const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+      const bundleServer = createServer((_req, res) => { res.writeHead(200); res.end(zipBuffer); });
+      await new Promise<void>((r) => bundleServer.listen(0, '127.0.0.1', r));
+      const port = (bundleServer.address() as { port: number }).port;
+      try {
+        const remoteInstall = await run('node', [cliPath, 'bundle', 'install', `http://127.0.0.1:${port}/remote.zip`, '--dir', vaultDir, '--skip-conformance']);
+        expect(remoteInstall.stdout).toContain('Installed remote.smoke v1.0.0');
+        expect(remoteInstall.stdout).toContain('plain http');
+        const remoteList = await run('node', [cliPath, 'bundle', 'list', '--dir', vaultDir]);
+        expect(remoteList.stdout).toContain('from 127.0.0.1');
+        await run('node', [cliPath, 'bundle', 'uninstall', 'remote.smoke', '--dir', vaultDir]);
+      } finally {
+        await new Promise<void>((r) => bundleServer.close(() => r()));
+      }
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,
