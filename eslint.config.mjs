@@ -8,9 +8,10 @@ export default defineConfig([
     // (spec 0.8 f4, §4.1): generated artifacts, build shims (inert scanner
     // stand-ins, not application code), and local tool dirs are out.
     ignores: [
-      '.agents/**',
-      '.claude/**',
-      '.venv*/**',
+      // Any hidden directory: .venv*, .agents, .claude, and whatever local
+      // tooling drops next (.remember, .worktrees, …) — maintainer acceptance
+      // finding: enumerating them one by one is a losing game.
+      '.*/**',
       'build/**',
       // Vitepress site scaffolding — not covered by the app tsconfig, never
       // linted before f4 either (status quo, not a new exemption).
