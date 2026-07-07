@@ -195,5 +195,7 @@ that door open, at zero extra cost:
 - Ranking misses q-016 (unrecorded synonym) and q-020 (English question → Chinese
   note) — engine work beyond F4's scope; q-016 may be unsolvable inside the
   no-synonym-dictionary design line.
-- F4 seed cases requiring fixture shapes: 斑马/莫言/胚胎筛查/鼠疫 real-vault probes
-  from the 0.8 F2 acceptance round (recorded in `specs/0.8.0/f2` §7).
+- ~~F4 seed cases requiring fixture shapes~~ — closed by F4 (specificity-weighted
+  coverage); the 0.8 exactly-half boundary is fixed, remaining recorded leak: an
+  all-latin exactly-half collision (no rarity signal without corpus statistics;
+  never observed in practice).

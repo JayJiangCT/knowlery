@@ -1,6 +1,6 @@
 # F4 (0.9.0) — Retrieval: Specificity-Weighted Coverage
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-07 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f4-specificity-92eb`
 - **Depends on:** 0.8 F2 (confidence gate + calibration discipline), its §7
@@ -44,7 +44,7 @@ Why this is the right shape:
    ratio reduces to the current count ratio. Six of eight golden categories
    cannot move, by construction.
 2. The seed cases resolve correctly *with the existing thresholds*:
-   - 斑马(2) matched / 移动端路线图(5) unmatched → 2⁄7 < ½ → **abstains**
+   - 斑马(2) matched / 移动端路线图(6) unmatched → 2⁄8 < ½ → **abstains**
    - api(1)+webhook(1) matched / 胚胎筛查(4)+接入(2) unmatched → 2⁄8 < ½ → **abstains**
    - and the guard case q-021 keeps answering: 性能优化调研(6)+推荐(2) matched /
      采样方法(4) unmatched → 8⁄12 ≥ ½ → **passes**
@@ -101,7 +101,7 @@ in 0.9"; the abstention explanation in the docs gains one sentence on weighting.
    gate's decision inputs are bit-identical pre/post (unit test over the
    coverage function, plus the frozen floors holding).
 2. Each seed shape abstains; the guard shape answers (fixture-driven).
-3. Unit tests pin the weighted arithmetic: 2⁄7 abstains under clause 1, 8⁄12
+3. Unit tests pin the weighted arithmetic: 2⁄8 abstains under clause 1, 8⁄12
    passes, weights of mixed queries computed as specified.
 4. `unanswerableAccuracy` stays gated at 1.0 over the grown set; all per-category
    floors hold (`--assert-baseline`).
@@ -124,3 +124,23 @@ in 0.9"; the abstention explanation in the docs gains one sentence on weighting.
    now abstain; 鼠疫 keeps abstaining; your normal CJK questions keep answering.
 2. Spot-check a couple of mixed-language questions you actually use.
 3. `npm test && npm run eval -- --assert-baseline` — green.
+
+## 8. Verification addendum (implementation record)
+
+Floor procedure executed per §4.2:
+
+1. **Pre-change run** (expanded set, 41 cases): the three new unanswerable shapes
+   leak as designed — unanswerable **8/11**; answerable floors captured
+   (bilingual grew a case: 0.8/0.8/0.566 re-frozen; all other categories
+   unchanged); waterfall baseline re-frozen.
+2. **Weighted gate on**: unanswerable **11/11**; every answerable category
+   exactly at its pre-change floor (aggregate recall@10 0.933, MRR 0.839 —
+   identical to pre-change, confirming the latin-invariance construction); the
+   two pre-existing ranking misses (q-016, q-020) unchanged in number.
+3. No sweep was needed: zero new constants, as specced. One arithmetic
+   correction during implementation: 移动端路线图 is 6 characters, so the 斑马
+   shape computes **2⁄8** (spec draft said 2⁄7); conclusions unaffected.
+4. Both maintainer implementation watch-points landed as tests: duplicate/stray
+   `matchedTerms` entries are weightless by construction (Set + Map lookup,
+   unit-pinned), and latin-only invariance is pinned directly on
+   `weightedCoverage`, not only via eval floors.
