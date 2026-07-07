@@ -165,7 +165,7 @@ function SkillEditorContent(props: {
         <button onClick={props.onCancel}>Cancel</button>
         <button
           className="mod-cta"
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={showNameField ? !name.trim() || !content : !content}
         >
           {saveLabel}

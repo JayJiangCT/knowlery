@@ -77,7 +77,7 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
         prompt: async () => answers.shift() ?? '',
         log: silent,
       });
-      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8'));
+      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8')) as { name: string };
       expect(opencode.name).toBe('Prompted KB');
     });
   });
@@ -123,7 +123,7 @@ describe('knowlery health (spec 0.7 f2, §6.3)', () => {
 
       const lines: string[] = [];
       await runHealth(fs, { root, json: true, log: (line) => lines.push(line) });
-      const report = JSON.parse(lines.join('\n'));
+      const report = JSON.parse(lines.join('\n')) as { healthy: boolean; config: { skillsComplete: { missing: string[] } }; knowledgePages: Record<string, unknown> };
       expect(report.healthy).toBe(true);
       expect(report.config.skillsComplete.missing).toEqual([]);
       expect(Object.keys(report.knowledgePages)).toEqual(['entities', 'concepts', 'comparisons', 'queries']);

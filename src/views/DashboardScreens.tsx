@@ -50,7 +50,7 @@ function AllActivityScreen(props: { navigate: (s: DashboardScreen, payload?: unk
   const [records, setRecords] = useState<ActivityRecord[]>([]);
 
   useEffect(() => {
-    readRecentActivityRecords(plugin.fs, 50).then(({ records: loaded }) => {
+    void readRecentActivityRecords(plugin.fs, 50).then(({ records: loaded }) => {
       setRecords(loaded);
     });
   }, [plugin]);

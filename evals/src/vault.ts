@@ -84,7 +84,7 @@ function loadBundles(root: string): FixtureBundle[] {
   const registryPath = join(root, '.knowlery', 'bundles.json');
   let registry: { bundles: Record<string, { title: string; libraryPath: string }> };
   try {
-    registry = JSON.parse(readFileSync(registryPath, 'utf8'));
+    registry = JSON.parse(readFileSync(registryPath, 'utf8')) as { bundles: Record<string, { title: string; libraryPath: string }> };
   } catch {
     return [];
   }

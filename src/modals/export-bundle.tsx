@@ -382,7 +382,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
           includeSources={includeSources}
           zipPath={zipPath}
           onOpen={() => openFolder(plugin, result.targetDir)}
-          onZip={saveZip}
+          onZip={() => void saveZip()}
           onClose={props.onClose}
         />
       </div>
@@ -412,7 +412,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
                 <span>Target folder</span>
                 <div className="knowlery-export__path-field">
                   <input value={targetDir} onChange={(event) => setTargetDir(event.currentTarget.value)} />
-                  <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={() => chooseTargetFolder(setTargetDir)}>
+                  <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={() => void chooseTargetFolder(setTargetDir)}>
                     Choose folder…
                   </button>
                 </div>
@@ -456,7 +456,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
               type="button"
               className="knowlery-btn knowlery-btn--primary"
               disabled={exporting || counts.approved === 0}
-              onClick={runExport}
+              onClick={() => void runExport()}
             >
               {exporting ? 'Exporting…' : 'Export bundle'}
             </button>

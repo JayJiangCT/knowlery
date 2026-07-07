@@ -112,7 +112,7 @@ describe('handleQueryCli (spec f5, §5.3)', () => {
   it('honors k and json flags', () => {
     const snapshot = scanVault(FIXTURE_VAULT);
     const output = handleQueryCli({ question: 'pulseboard metrics', k: '2', json: 'true' }, snapshot);
-    const parsed = JSON.parse(output);
+    const parsed = JSON.parse(output) as { verdict: string; candidates: unknown[] };
     expect(parsed.verdict).toBe('ok');
     expect(parsed.candidates.length).toBeLessThanOrEqual(2);
   });

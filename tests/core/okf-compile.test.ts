@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compileBundle } from '../../src/core/okf/compile';
 import type { CompileOptions } from '../../src/types';
-import { createOkfMockApp, okfBundleSource, okfVaultFs } from '../mocks/okf-app';
+import { createOkfMockApp, okfBundleSource } from '../mocks/okf-app';
 
 const NOW = new Date('2026-07-02T00:00:00.000Z');
 
@@ -99,7 +99,7 @@ describe('OKF bundle compile', () => {
 
     expect(app.writes['.knowlery/exports/test-bundle/README.md']).toContain('type: Reference');
 
-    const agentIndex = JSON.parse(app.writes['.knowlery/exports/test-bundle/agent-index.json']);
+    const agentIndex = JSON.parse(app.writes['.knowlery/exports/test-bundle/agent-index.json']) as { generatedAt: string; groups: { byType: Record<string, string[]> }; rawSources: Array<{ citedBy: string[] }> };
     expect(agentIndex.generatedAt).toBe(NOW.toISOString());
     expect(agentIndex.groups.byType.Concept).toContain('concepts/search');
     expect(agentIndex.rawSources[0].citedBy).toEqual(['concepts/search']);

@@ -149,7 +149,7 @@ function loadBundleEntries(root: string): ScannedBundleEntry[] {
   if (!existsSync(registryPath)) return [];
   let registry: { bundles?: Record<string, BundleRegistryEntry> };
   try {
-    registry = JSON.parse(readFileSync(registryPath, 'utf8'));
+    registry = JSON.parse(readFileSync(registryPath, 'utf8')) as { bundles?: Record<string, BundleRegistryEntry> };
   } catch {
     return [];
   }
@@ -160,7 +160,7 @@ function loadBundleEntries(root: string): ScannedBundleEntry[] {
     if (!existsSync(indexPath)) continue;
     let agentIndex: { concepts?: AgentIndexConceptEntry[] };
     try {
-      agentIndex = JSON.parse(readFileSync(indexPath, 'utf8'));
+      agentIndex = JSON.parse(readFileSync(indexPath, 'utf8')) as { concepts?: AgentIndexConceptEntry[] };
     } catch {
       continue;
     }

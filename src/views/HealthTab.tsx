@@ -133,10 +133,10 @@ export function HealthTab() {
 
   useEffect(() => {
     loadStats();
-    loadIntegrity();
+    void loadIntegrity();
     const ref = plugin.events.on('dashboard-refresh', (payload?: DashboardRefreshPayload) => {
       loadStats();
-      loadIntegrity(payload);
+      void loadIntegrity(payload);
     });
     return () => {
       plugin.events.offref(ref);
@@ -275,7 +275,7 @@ export function HealthTab() {
       {!diagnosis && !diagnosisRunning && (
         <button
           className="knowlery-btn knowlery-btn--primary is-full-width"
-          onClick={handleRunDiagnosis}
+          onClick={() => void handleRunDiagnosis()}
         >
           <IconPlay size={14} />
           Run diagnosis

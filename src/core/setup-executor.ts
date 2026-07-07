@@ -90,7 +90,7 @@ export async function readManifest(fs: VaultFs): Promise<Manifest | null> {
   if (!(await fs.exists(path))) return null;
   try {
     const content = await fs.read(path);
-    return JSON.parse(content);
+    return JSON.parse(content) as Manifest;
   } catch {
     return null;
   }

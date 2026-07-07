@@ -1,4 +1,4 @@
-import { App, Modal, Notice, PluginSettingTab, Setting } from 'obsidian';
+import { App, Modal, Notice, PluginSettingTab, Setting, type SettingDefinition, type SettingDefinitionItem } from 'obsidian';
 import { StrictMode } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from './main';
@@ -20,7 +20,7 @@ class ConfirmModal extends Modal {
     app: App,
     private title: string,
     private message: string,
-    private onConfirm: () => void,
+    private onConfirm: () => void | Promise<void>,
   ) {
     super(app);
   }
@@ -44,14 +44,23 @@ class ConfirmModal extends Modal {
   }
 
   onClose() {
-    if (this.confirmed) this.onConfirm();
+    if (this.confirmed) void this.onConfirm();
   }
 }
 
+/**
+ * Declarative settings tab (spec 0.8 f4, §4.3, amended at acceptance): one
+ * definitions array, two renderers. On Obsidian >= 1.13 the framework renders
+ * `getSettingDefinitions()` declaratively (and feeds settings search); on public
+ * releases (1.12.x — 1.13 is Catalyst-only as of 0.8.0) the framework calls the
+ * legacy `display()`, which renders the *same* definitions through a small
+ * imperative interpreter below. Single source, so the two paths cannot drift.
+ */
 export class KnowlerySettingTab extends PluginSettingTab {
-  private nodeDetectMessage: string | null = null;
-  private nodeDetecting = false;
   private advancedRoot: Root | null = null;
+  /** null until the async vault check lands — both branches hidden meanwhile. */
+  private initialized: boolean | null = null;
+  /** Fallback-path bookkeeping: true while the pre-1.13 imperative render is showing. */
   private tabOpen = false;
 
   constructor(app: App, private plugin: KnowleryPlugin) {
@@ -60,292 +69,416 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   hide(): void {
     this.tabOpen = false;
+    // The render-item cleanup usually handles this; hide() is the guaranteed hook.
     this.advancedRoot?.unmount();
     this.advancedRoot = null;
   }
 
-  async display(): Promise<void> {
-    this.advancedRoot?.unmount();
-    this.advancedRoot = null;
-    this.tabOpen = true;
-    const { containerEl } = this;
-    containerEl.empty();
+  /**
+   * Legacy entry point, called by Obsidian < 1.13 only (1.13+ renders the
+   * definitions itself and never calls this — exactly the fallback arrangement
+   * the API docs prescribe for plugins supporting older versions).
+   */
+  display(): void {
+    this.renderFallback();
+  }
 
-    const initialized = await isVaultInitialized(this.plugin.fs);
-
-    if (!this.tabOpen) return;
-
-    if (!initialized) {
-      this.renderUninitializedState(containerEl);
-    } else {
-      this.renderInitializedState(containerEl);
+  /** Re-render whichever path is active after state the definitions read has changed. */
+  private requestRender(): void {
+    // Capability detection, not a version check: SettingTab.update() exists on
+    // >= 1.13 (the declarative renderer); on public 1.12.x we re-run the
+    // imperative fallback ourselves. Accessed structurally so the code carries
+    // no hard dependency on the 1.13 API surface (minAppVersion stays 1.12.2).
+    const declarativeUpdate = (this as { update?: () => void }).update;
+    if (typeof declarativeUpdate === 'function') {
+      declarativeUpdate.call(this);
+    } else if (this.tabOpen) {
+      this.renderFallback();
     }
   }
 
-  private renderUninitializedState(containerEl: HTMLElement): void {
-    const banner = containerEl.createDiv({ cls: 'knowlery-settings-banner' });
-    new Setting(banner).setName('Vault not set up').setHeading();
-    banner.createEl('p', {
-      text: 'This vault hasn\'t been configured for AI yet. Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.',
-    });
-    const bannerBtn = banner.createEl('button', {
-      text: 'Initialize vault',
-      cls: 'mod-cta',
-    });
-    bannerBtn.addEventListener('click', () => {
-      new SetupWizardModal(this.plugin.app, this.plugin, () => {
-        this.plugin.onSetupComplete();
-        if (this.tabOpen) void this.display();
-      }).open();
-    });
-
-    this.renderNodeSetting(containerEl);
+  private renderFallback(): void {
+    this.tabOpen = true;
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
+    const { containerEl } = this;
+    containerEl.empty();
+    this.renderDefinitionsInto(containerEl, this.getSettingDefinitions());
   }
 
-  private renderInitializedState(containerEl: HTMLElement): void {
-    this.renderGeneralSection(containerEl);
-    this.renderPlatformSection(containerEl);
-    this.renderActivitySection(containerEl);
-    this.renderBundleDefaultsSection(containerEl);
-    this.renderMaintenanceSection(containerEl);
-    this.renderAdvancedSection(containerEl);
-  }
+  private renderDefinitionsInto(containerEl: HTMLElement, items: SettingDefinitionItem[]): void {
+    const hidden = (visible?: boolean | (() => boolean)) =>
+      visible === false || (typeof visible === 'function' && !visible());
 
-  private renderAdvancedSection(containerEl: HTMLElement): void {
-    const mount = containerEl.createDiv({ cls: 'knowlery-settings-advanced-mount' });
-    this.advancedRoot = createRoot(mount);
-    this.advancedRoot.render(
-      <StrictMode>
-        <PluginContext.Provider value={this.plugin}>
-          <SettingsAdvanced />
-        </PluginContext.Provider>
-      </StrictMode>,
-    );
-  }
+    for (const item of items) {
+      if ('type' in item && (item.type === 'group' || item.type === 'list')) {
+        if (hidden(item.visible)) continue;
+        if (item.heading) new Setting(containerEl).setName(item.heading).setHeading();
+        this.renderDefinitionsInto(containerEl, item.items ?? []);
+        continue;
+      }
+      if ('type' in item) continue; // 'page' — not used by this tab
+      const definition = item;
+      if (hidden(definition.visible)) continue;
 
-  private renderGeneralSection(containerEl: HTMLElement): void {
-    new Setting(containerEl)
-      .setName('Knowledge base name')
-      .setDesc('Updates KNOWLEDGE.md and regenerates agent config when saved.')
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.kbName)
-          .onChange(async (value) => {
-            this.plugin.settings.kbName = value;
+      const setting = new Setting(containerEl).setName(definition.name);
+      if (definition.desc) setting.setDesc(definition.desc);
+
+      if (definition.render) {
+        // Our render callbacks ignore the 1.13 SettingGroup parameter.
+        (definition.render as (setting: Setting) => void | (() => void))(setting);
+        continue;
+      }
+      const control = definition.control;
+      if (!control) continue;
+      const current = this.getControlValue(control.key) ?? control.defaultValue;
+      if (control.type === 'toggle') {
+        setting.addToggle((toggle) =>
+          toggle.setValue(current === true).onChange((value) => {
+            void this.setControlValue(control.key, value);
           }),
-      )
-      .addButton((btn) =>
-        btn.setButtonText('Save').onClick(async () => {
-          await this.plugin.saveSettings();
-          await this.updateKbName();
-          new Notice('Knowledge base name updated');
-        }),
-      );
-
-    this.renderNodeSetting(containerEl);
+        );
+      } else if (control.type === 'text') {
+        setting.addText((text) => {
+          if (control.placeholder) text.setPlaceholder(control.placeholder);
+          text.setValue(typeof current === 'string' ? current : '').onChange((value) => {
+            void this.setControlValue(control.key, value);
+          });
+        });
+      }
+    }
   }
 
-  private renderPlatformSection(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName('Platform').setHeading();
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    // Vault state is async and this runs on every display — kick a check and
+    // re-render only when the answer changes, so the tab self-corrects each open.
+    this.refreshInitialized();
 
+    return [
+      this.setupBannerItem(),
+      this.kbNameItem(),
+      this.nodePathItem(),
+      {
+        type: 'group',
+        heading: 'Platform',
+        visible: () => this.initialized === true,
+        items: [this.platformSwitchItem()],
+      },
+      {
+        type: 'group',
+        heading: 'Activity',
+        visible: () => this.initialized === true,
+        items: [
+          {
+            name: 'Activity logging',
+            desc: `Store private activity summaries in ${ACTIVITY_DIR}. Agents should write summaries only, not full conversations.`,
+            control: { type: 'toggle', key: 'activityLoggingEnabled', defaultValue: true },
+          },
+          this.activityRuleItem(),
+        ],
+      },
+      {
+        type: 'group',
+        heading: 'Knowledge bundle defaults',
+        visible: () => this.initialized === true,
+        items: [
+          {
+            name: 'Creator name',
+            desc: 'Used as the default creator in exported knowledge bundle manifests.',
+            control: { type: 'text', key: 'bundleCreatorName' },
+          },
+          {
+            name: 'Creator URL',
+            desc: 'Optional URL included in exported bundle metadata.',
+            control: { type: 'text', key: 'bundleCreatorUrl' },
+          },
+          {
+            name: 'Default license',
+            desc: 'Prefilled when sharing a knowledge bundle.',
+            control: { type: 'text', key: 'bundleDefaultLicense', defaultValue: 'personal' },
+          },
+        ],
+      },
+      {
+        type: 'group',
+        heading: 'Maintenance',
+        visible: () => this.initialized === true,
+        items: [this.regenerateConfigItem(), this.reinitializeItem()],
+      },
+      this.advancedSectionItem(),
+    ];
+  }
+
+  getControlValue(key: string): unknown {
+    return this.plugin.settings[key as keyof typeof this.plugin.settings];
+  }
+
+  setControlValue(key: string, value: unknown): Promise<void> {
+    return this.applyControlValue(key, value);
+  }
+
+  private async applyControlValue(key: string, value: unknown): Promise<void> {
+    const settings = this.plugin.settings;
+    switch (key) {
+      case 'activityLoggingEnabled': {
+        const enabled = value === true;
+        settings.activityLoggingEnabled = enabled;
+        await this.plugin.saveSettings();
+        await setActivityLoggingEnabled(this.plugin.fs, enabled);
+        return;
+      }
+      case 'bundleCreatorName':
+        settings.bundleCreatorName = typeof value === 'string' ? value : '';
+        break;
+      case 'bundleCreatorUrl':
+        settings.bundleCreatorUrl = typeof value === 'string' ? value : '';
+        break;
+      case 'bundleDefaultLicense':
+        settings.bundleDefaultLicense = typeof value === 'string' && value ? value : 'personal';
+        break;
+      default:
+        return;
+    }
+    await this.plugin.saveSettings();
+  }
+
+  private refreshInitialized(): void {
+    void isVaultInitialized(this.plugin.fs).then((value) => {
+      if (value !== this.initialized) {
+        this.initialized = value;
+        this.requestRender();
+      }
+    });
+  }
+
+  private setupBannerItem(): SettingDefinition {
+    return {
+      name: 'Vault not set up',
+      desc: 'This vault hasn\'t been configured for AI yet. Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.',
+      visible: () => this.initialized === false,
+      searchable: false,
+      render: (setting) => {
+        setting.settingEl.addClass('knowlery-settings-banner');
+        setting.addButton((btn) =>
+          btn
+            .setButtonText('Initialize vault')
+            .setCta()
+            .onClick(() => {
+              new SetupWizardModal(this.plugin.app, this.plugin, () => {
+                this.plugin.onSetupComplete();
+                this.refreshInitialized();
+              }).open();
+            }),
+        );
+      },
+    };
+  }
+
+  private kbNameItem(): SettingDefinition {
+    return {
+      name: 'Knowledge base name',
+      desc: 'Updates KNOWLEDGE.md and regenerates agent config when saved.',
+      visible: () => this.initialized === true,
+      render: (setting) => {
+        setting
+          .addText((text) =>
+            text.setValue(this.plugin.settings.kbName).onChange((value) => {
+              this.plugin.settings.kbName = value;
+            }),
+          )
+          .addButton((btn) =>
+            btn.setButtonText('Save').onClick(() => {
+              void (async () => {
+                await this.plugin.saveSettings();
+                await this.updateKbName();
+                new Notice('Knowledge base name updated');
+              })();
+            }),
+          );
+      },
+    };
+  }
+
+  private nodePathItem(): SettingDefinition {
+    return {
+      name: 'Node.js path',
+      desc: 'Path to Node.js. Usually leave blank. Only needed if node is in a non-standard location (enter absolute path, e.g. /usr/local/bin/node).',
+      aliases: ['node'],
+      render: (setting) => {
+        setting.addText((text) =>
+          text
+            .setPlaceholder('/usr/local/bin/node')
+            .setValue(this.plugin.settings.nodePath)
+            .onChange((value) => {
+              this.plugin.settings.nodePath = value;
+              void this.plugin.saveSettings();
+            }),
+        );
+        const messageEl = setting.settingEl.parentElement?.createDiv({
+          cls: 'knowlery-settings__node-message',
+        }) ?? null;
+        setting.addButton((btn) =>
+          btn.setButtonText('Auto-detect').onClick(() => {
+            btn.setButtonText('Detecting…').setDisabled(true);
+            const report = (message: string) => {
+              if (messageEl) messageEl.setText(message);
+              new Notice(message);
+            };
+            void (async () => {
+              try {
+                const result = await detectNode();
+                if (result.detected && result.path) {
+                  this.plugin.settings.nodePath = result.path;
+                  await this.plugin.saveSettings();
+                  report(`Detected Node.js ${result.version ?? ''} at ${result.path}`.trim());
+                } else {
+                  report('Node.js not found. Install Node.js or enter the path manually.');
+                }
+              } catch (error) {
+                report(`Could not detect Node.js: ${formatSettingError(error)}`);
+              } finally {
+                btn.setButtonText('Auto-detect').setDisabled(false);
+              }
+            })();
+          }),
+        );
+        return () => messageEl?.remove();
+      },
+    };
+  }
+
+  private platformSwitchItem(): SettingDefinition {
     const currentLabel =
       this.plugin.settings.platform === 'claude-code' ? 'Claude Code' : 'OpenCode';
     const otherPlatform: Platform =
       this.plugin.settings.platform === 'claude-code' ? 'opencode' : 'claude-code';
-    const otherLabel =
-      otherPlatform === 'claude-code' ? 'Claude Code' : 'OpenCode';
+    const otherLabel = otherPlatform === 'claude-code' ? 'Claude Code' : 'OpenCode';
 
-    new Setting(containerEl)
-      .setName('Current platform')
-      .setDesc(currentLabel)
-      .addButton((btn) =>
-        btn.setButtonText(`Switch to ${otherLabel}`).onClick(() => {
-          new ConfirmModal(
-            this.plugin.app,
-            'Switch platform',
-            `Switch to ${otherLabel}? New config files will be generated. Existing config files are kept as backup.`,
-            async () => {
-              await migratePlatform(
-                this.plugin.fs,
-                this.plugin.settings.platform,
-                otherPlatform,
-                this.plugin.settings.kbName,
-                true,
-              );
-              this.plugin.settings.platform = otherPlatform;
-              await this.plugin.saveSettings();
-              new Notice(`Switched to ${otherLabel}`);
-              if (this.tabOpen) this.display();
-            },
-          ).open();
-        }),
-      );
-  }
-
-  private renderNodeSetting(containerEl: HTMLElement): void {
-    new Setting(containerEl)
-      .setName('Node.js path')
-      .setDesc('Path to Node.js. Usually leave blank. Only needed if node is in a non-standard location (enter absolute path, e.g. /usr/local/bin/node).')
-      .addText((text) =>
-        text
-          .setPlaceholder('/usr/local/bin/node')
-          .setValue(this.plugin.settings.nodePath)
-          .onChange(async (value) => {
-            this.plugin.settings.nodePath = value;
-            await this.plugin.saveSettings();
-          }),
-      )
-      .addButton((btn) =>
-        btn
-          .setButtonText(this.nodeDetecting ? 'Detecting…' : 'Auto-detect')
-          .setDisabled(this.nodeDetecting)
-          .onClick(async () => {
-            this.nodeDetecting = true;
-            this.nodeDetectMessage = 'Detecting Node.js...';
-            await this.display();
-            try {
-              const result = await detectNode();
-              if (result.detected && result.path) {
-                this.plugin.settings.nodePath = result.path;
-                await this.plugin.saveSettings();
-                this.nodeDetectMessage = `Detected Node.js ${result.version ?? ''} at ${result.path}`.trim();
-                new Notice(this.nodeDetectMessage);
-              } else {
-                this.nodeDetectMessage = 'Node.js not found. Install Node.js or enter the path manually.';
-                new Notice(this.nodeDetectMessage);
-              }
-            } catch (error) {
-              this.nodeDetectMessage = `Could not detect Node.js: ${formatSettingError(error)}`;
-              new Notice(this.nodeDetectMessage);
-            } finally {
-              this.nodeDetecting = false;
-              if (this.tabOpen) await this.display();
-            }
-          }),
-      );
-
-    if (this.nodeDetectMessage) {
-      containerEl.createDiv({
-        cls: 'knowlery-settings__node-message',
-        text: this.nodeDetectMessage,
-      });
-    }
-  }
-
-  private renderActivitySection(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName('Activity').setHeading();
-
-    new Setting(containerEl)
-      .setName('Activity logging')
-      .setDesc(`Store private activity summaries in ${ACTIVITY_DIR}. Agents should write summaries only, not full conversations.`)
-      .addToggle((toggle) => {
-        toggle
-          .setValue(this.plugin.settings.activityLoggingEnabled)
-          .onChange(async (value) => {
-            this.plugin.settings.activityLoggingEnabled = value;
-            await this.plugin.saveSettings();
-            await setActivityLoggingEnabled(this.plugin.fs, value);
-          });
-      });
-
-    new Setting(containerEl)
-      .setName('Activity ledger rule')
-      .setDesc('Install or refresh the agent rule that asks agents to leave private session receipts.')
-      .addButton((button) => {
-        button
-          .setButtonText('Refresh rule')
-          .onClick(async () => {
-            await installActivityLedgerRule(this.plugin.fs, this.plugin.settings.platform);
-            new Notice('Activity ledger rule refreshed.');
-          });
-      });
-  }
-
-  private renderBundleDefaultsSection(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName('Knowledge bundle defaults').setHeading();
-
-    new Setting(containerEl)
-      .setName('Creator name')
-      .setDesc('Used as the default creator in exported knowledge bundle manifests.')
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.bundleCreatorName)
-          .onChange(async (value) => {
-            this.plugin.settings.bundleCreatorName = value;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName('Creator URL')
-      .setDesc('Optional URL included in exported bundle metadata.')
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.bundleCreatorUrl)
-          .onChange(async (value) => {
-            this.plugin.settings.bundleCreatorUrl = value;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName('Default license')
-      .setDesc('Prefilled when sharing a knowledge bundle.')
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.bundleDefaultLicense)
-          .onChange(async (value) => {
-            this.plugin.settings.bundleDefaultLicense = value || 'personal';
-            await this.plugin.saveSettings();
-          }),
-      );
-  }
-
-  private renderMaintenanceSection(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName('Maintenance').setHeading();
-
-    new Setting(containerEl)
-      .setName('Regenerate agent config')
-      .setDesc(
-        this.plugin.settings.platform === 'claude-code'
-          ? 'Recreate .claude/CLAUDE.md from current settings.'
-          : 'Recreate opencode.json from current settings.',
-      )
-      .addButton((btn) =>
-        btn.setButtonText('Regenerate').onClick(async () => {
-          await generatePlatformConfig(
-            this.plugin.fs,
-            this.plugin.settings.platform,
-            this.plugin.settings.kbName,
-          );
-          new Notice('Agent config regenerated');
-        }),
-      );
-
-    new Setting(containerEl)
-      .setName('Re-initialize vault')
-      .setDesc('Re-run the full setup. Overwrites built-in skills and agent config. Custom skills are preserved.')
-      .addButton((btn) =>
-        btn
-          .setButtonText('Re-initialize')
-          .setCta()
-          .onClick(() => {
+    return {
+      name: 'Current platform',
+      desc: currentLabel,
+      aliases: ['claude code', 'opencode'],
+      render: (setting) => {
+        setting.addButton((btn) =>
+          btn.setButtonText(`Switch to ${otherLabel}`).onClick(() => {
             new ConfirmModal(
               this.plugin.app,
-              'Re-initialize vault',
-              'This will overwrite all built-in skills and regenerate agent config. Custom skills and your knowledge files are preserved. Continue?',
+              'Switch platform',
+              `Switch to ${otherLabel}? New config files will be generated. Existing config files are kept as backup.`,
               async () => {
-                await executeSetup(
+                await migratePlatform(
                   this.plugin.fs,
                   this.plugin.settings.platform,
+                  otherPlatform,
                   this.plugin.settings.kbName,
-                  () => {},
+                  true,
                 );
-                new Notice('Vault re-initialized');
+                this.plugin.settings.platform = otherPlatform;
+                await this.plugin.saveSettings();
+                new Notice(`Switched to ${otherLabel}`);
+                this.requestRender();
               },
             ).open();
           }),
-      );
+        );
+      },
+    };
+  }
+
+  private activityRuleItem(): SettingDefinition {
+    return {
+      name: 'Activity ledger rule',
+      desc: 'Install or refresh the agent rule that asks agents to leave private session receipts.',
+      render: (setting) => {
+        setting.addButton((button) =>
+          button.setButtonText('Refresh rule').onClick(() => {
+            void (async () => {
+              await installActivityLedgerRule(this.plugin.fs, this.plugin.settings.platform);
+              new Notice('Activity ledger rule refreshed.');
+            })();
+          }),
+        );
+      },
+    };
+  }
+
+  private regenerateConfigItem(): SettingDefinition {
+    return {
+      name: 'Regenerate agent config',
+      desc:
+        this.plugin.settings.platform === 'claude-code'
+          ? 'Recreate .claude/CLAUDE.md from current settings.'
+          : 'Recreate opencode.json from current settings.',
+      render: (setting) => {
+        setting.addButton((btn) =>
+          btn.setButtonText('Regenerate').onClick(() => {
+            void (async () => {
+              await generatePlatformConfig(
+                this.plugin.fs,
+                this.plugin.settings.platform,
+                this.plugin.settings.kbName,
+              );
+              new Notice('Agent config regenerated');
+            })();
+          }),
+        );
+      },
+    };
+  }
+
+  private reinitializeItem(): SettingDefinition {
+    return {
+      name: 'Re-initialize vault',
+      desc: 'Re-run the full setup. Overwrites built-in skills and agent config. Custom skills are preserved.',
+      render: (setting) => {
+        setting.addButton((btn) =>
+          btn
+            .setButtonText('Re-initialize')
+            .setCta()
+            .onClick(() => {
+              new ConfirmModal(
+                this.plugin.app,
+                'Re-initialize vault',
+                'This will overwrite all built-in skills and regenerate agent config. Custom skills and your knowledge files are preserved. Continue?',
+                async () => {
+                  await executeSetup(
+                    this.plugin.fs,
+                    this.plugin.settings.platform,
+                    this.plugin.settings.kbName,
+                    () => {},
+                  );
+                  new Notice('Vault re-initialized');
+                },
+              ).open();
+            }),
+        );
+      },
+    };
+  }
+
+  private advancedSectionItem(): SettingDefinition {
+    return {
+      name: 'Advanced',
+      searchable: false,
+      visible: () => this.initialized === true,
+      render: (setting) => {
+        setting.settingEl.empty();
+        const mount = setting.settingEl.createDiv({ cls: 'knowlery-settings-advanced-mount' });
+        this.advancedRoot?.unmount();
+        this.advancedRoot = createRoot(mount);
+        this.advancedRoot.render(
+          <StrictMode>
+            <PluginContext.Provider value={this.plugin}>
+              <SettingsAdvanced />
+            </PluginContext.Provider>
+          </StrictMode>,
+        );
+        return () => {
+          this.advancedRoot?.unmount();
+          this.advancedRoot = null;
+        };
+      },
+    };
   }
 
   private async updateKbName(): Promise<void> {

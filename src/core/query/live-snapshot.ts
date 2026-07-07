@@ -140,7 +140,7 @@ export class LiveQuerySnapshot {
           const indexPath = `${bundle.libraryPath}/agent-index.json`;
           if (!(await adapter.exists(indexPath))) continue;
           try {
-            const agentIndex = JSON.parse(await adapter.read(indexPath));
+            const agentIndex = JSON.parse(await adapter.read(indexPath)) as { concepts?: import('./scan').AgentIndexConceptEntry[] };
             entries.push(...bundleEntriesFromIndex(bundleId, bundle.libraryPath, agentIndex));
           } catch {
             // Malformed bundle index — skip this bundle, keep the rest.

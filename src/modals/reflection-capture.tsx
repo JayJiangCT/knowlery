@@ -129,7 +129,7 @@ function ReflectionCaptureForm(props: {
       </div>
       <div className="knowlery-modal__actions">
         <button onClick={props.onCancel}>Cancel</button>
-        <button className="mod-cta" disabled={!summary.trim() || saving} onClick={save}>
+        <button className="mod-cta" disabled={!summary.trim() || saving} onClick={() => void save()}>
           {saving ? 'Saving...' : 'Save reflection'}
         </button>
       </div>

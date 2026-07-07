@@ -20,7 +20,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "lint": "eslint src",
+    "lint": "eslint .",
     "docs:dev": "vitepress dev docs-site",
     "docs:build": "vitepress build docs-site",
     "docs:preview": "vitepress preview docs-site",
@@ -42,7 +42,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-obsidianmd": "^0.3.0",
     "gray-matter": "^4.0.0",
-    "obsidian": "latest",
+    "obsidian": "1.13.1",
     "playwright": "^1.60.0",
     "semver": "^7.7.4",
     "tslib": "^2.6.0",

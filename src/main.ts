@@ -252,7 +252,7 @@ export default class KnowleryPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<KnowlerySettings> | null);
   }
 
   async saveSettings() {

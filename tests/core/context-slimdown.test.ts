@@ -15,7 +15,7 @@ describe('slimmed templates (spec f4, §4.1)', () => {
   });
 
   it('opencode.json template lists the operating card and rules only', () => {
-    const parsed = JSON.parse(generateOpenCodeJson('My KB'));
+    const parsed = JSON.parse(generateOpenCodeJson('My KB')) as { instructions: string[] };
     expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
   });
 
@@ -80,7 +80,7 @@ describe('migrateFixedContextImports (spec f4, §4.2)', () => {
     });
     await migrateFixedContextImports(fs);
 
-    const parsed = JSON.parse(fs.files.get('opencode.json')!);
+    const parsed = JSON.parse(fs.files.get('opencode.json')!) as { instructions: string[]; name: string; customKey: unknown };
     expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
     expect(parsed.name).toBe('My KB');
     expect(parsed.customKey).toEqual({ nested: true });

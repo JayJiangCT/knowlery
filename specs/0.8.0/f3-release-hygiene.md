@@ -1,6 +1,6 @@
 # F3 (0.8.0) — Release Engineering Hygiene
 
-- **Status:** Accepted 2026-07-06 — implemented, awaiting maintainer acceptance testing (§6)
+- **Status:** Done — maintainer acceptance passed 2026-07-06 (trusted publisher configured, token retired); §5.5 OIDC end-to-end proof lands with the 0.8.0 tag
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f3-release-hygiene-92eb` (off `main` @ 0.8 F2)
 - **Depends on:** — (independent of F1/F2; source of scope: 0.7.0 release findings,

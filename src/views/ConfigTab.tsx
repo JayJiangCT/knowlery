@@ -119,9 +119,9 @@ export function ConfigTab() {
   }, [plugin, settings.platform]);
 
   useEffect(() => {
-    refreshRules();
+    void refreshRules();
     const ref = plugin.events.on('dashboard-refresh', (payload?: DashboardRefreshPayload) => {
-      refreshRules(payload);
+      void refreshRules(payload);
     });
     return () => plugin.events.offref(ref);
   }, [plugin, refreshRules]);
@@ -129,28 +129,28 @@ export function ConfigTab() {
   const openFile = (path: string) => {
     const file = plugin.app.vault.getFileByPath(normalizePath(path));
     if (file) {
-      plugin.app.workspace.getLeaf(false).openFile(file);
+      void plugin.app.workspace.getLeaf(false).openFile(file);
     } else {
       new Notice(`File not found: ${path}`);
     }
   };
 
   const handleView = (rule: RuleInfo) => {
-    new RuleEditorModal(plugin.app, plugin, 'view', rule, refreshRules).open();
+    new RuleEditorModal(plugin.app, plugin, 'view', rule, () => void refreshRules()).open();
   };
 
   const handleEdit = (rule: RuleInfo) => {
-    new RuleEditorModal(plugin.app, plugin, 'edit', rule, refreshRules).open();
+    new RuleEditorModal(plugin.app, plugin, 'edit', rule, () => void refreshRules()).open();
   };
 
   const handleDelete = async (rule: RuleInfo) => {
     await deleteRule(plugin.fs, settings.platform, rule.filename);
     new Notice(`Deleted rule "${rule.name}"`);
-    refreshRules();
+    void refreshRules();
   };
 
   const handleAdd = () => {
-    new RuleEditorModal(plugin.app, plugin, 'add', null, refreshRules).open();
+    new RuleEditorModal(plugin.app, plugin, 'add', null, () => void refreshRules()).open();
   };
 
   return (
@@ -208,7 +208,7 @@ export function ConfigTab() {
             rule={rule}
             onView={() => handleView(rule)}
             onEdit={() => handleEdit(rule)}
-            onDelete={() => handleDelete(rule)}
+            onDelete={() => void handleDelete(rule)}
           />
         ))}
 

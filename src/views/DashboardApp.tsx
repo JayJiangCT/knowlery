@@ -50,9 +50,9 @@ export function DashboardApp() {
   }, []);
 
   useEffect(() => {
-    isVaultInitialized(plugin.fs).then(setInitialized);
+    void isVaultInitialized(plugin.fs).then(setInitialized);
     const recheck = () => {
-      isVaultInitialized(plugin.fs).then(setInitialized);
+      void isVaultInitialized(plugin.fs).then(setInitialized);
     };
     const ref = plugin.events.on('setup-complete', recheck);
     return () => plugin.events.offref(ref);
@@ -205,7 +205,7 @@ export function DashboardApp() {
             </div>
             <button
               className="knowlery-banner__close"
-              onClick={dismissBanner}
+              onClick={() => void dismissBanner()}
               aria-label="Dismiss"
             >
               <IconX size={14} />
