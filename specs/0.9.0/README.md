@@ -81,6 +81,13 @@ The owner's setup experience is part of the feature, not an assumed prerequisite
    action reading the same per-bundle config and shelling out to the same `gh`
    (desktop-only, as with existing tool integrations); a missing `gh` renders
    guidance, not an error.
+6. **Publish output names the audience** (maintainer concern at plan review:
+   publishing does not grant access — a private release is invisible to anyone
+   without repo read). Success output explicitly answers "who can install this":
+   org shelf → "members with read access to <org>/<repo>"; personal private repo →
+   "only you and collaborators" plus the invite URL; public → "anyone". The
+   grant-access step stops being an implicit assumption and becomes a stated part
+   of the publish flow.
 
 Explicitly out: any `git init`/remote management/token entry UI inside Knowlery —
 every GitHub-side operation is either one `gh` command or a precise instruction to
