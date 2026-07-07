@@ -1,6 +1,6 @@
 # F2 (0.9.0) — Publish Flow: `knowlery bundle publish`
 
-- **Status:** Accepted 2026-07-07 — implemented, awaiting maintainer acceptance testing (§7)
+- **Status:** Done — maintainer acceptance passed 2026-07-07 (real-shelf round incl. the --force notes-refresh blocker, found and fixed at acceptance; public second gate covered by tests per maintainer decision)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f2-publish-92eb`
 - **Depends on:** 0.8 F1 (export + review gate), 0.9 F1 (remote install — the
