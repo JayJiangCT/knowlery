@@ -1,6 +1,6 @@
 # F3 (0.9.0) — Update & Subscription: `check-updates` / `update`
 
-- **Status:** Accepted 2026-07-07 (with staged-replacement and shared-comparator corrections) — implemented, awaiting maintainer acceptance testing (§7)
+- **Status:** Done — maintainer acceptance passed 2026-07-07 (real shelf round; two dashboard amendments found and fixed at acceptance: modification guard on the Update button, Electron-PATH gh resolution)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f3-updates-92eb`
 - **Depends on:** F1 (source seam: registry records re-fetchable URLs; download

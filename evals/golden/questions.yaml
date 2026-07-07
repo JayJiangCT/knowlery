@@ -257,3 +257,37 @@
     must: [Projects/q3-capacity-planning.md]
   category: user-note
   notes: Answerable hard negative — zero title overlap ("Q3 Capacity Planning"); answered only by the body's numbers section.
+
+# --- 0.9 F4 expansion (spec 0.9 f4, §4.2) ---
+# The exactly-half coverage boundary shapes from the 0.8 acceptance probes, now
+# hosted by fixture content (entities/蜂鸟.md is the short-CJK-titled entity).
+# Committed before the weighted gate lands; the pre-change engine leaks the three
+# unanswerable cases by design.
+
+- id: q-038
+  question: "蜂鸟的移动端路线图是什么？"
+  expected:
+    must: []
+  category: unanswerable
+  notes: The 斑马 shape — short CJK title hit (蜂鸟, weight 2) vs long unmatched chunk (移动端路线图, weight 6). Unweighted coverage 1/2 leaks; weighted 2/8 abstains.
+
+- id: q-039
+  question: "数据仓库的 metrics API 怎么接入？"
+  expected:
+    must: []
+  category: unanswerable
+  notes: The 胚胎筛查 shape — latin terms (metrics, api) collide with real pages while the CJK intent chunks (数据仓库, 接入) go unmatched. Unweighted 2/4 leaks; weighted 2/8 abstains.
+
+- id: q-040
+  question: "pulseboard 移动端路线图是什么？"
+  expected:
+    must: []
+  category: unanswerable
+  notes: Latin-anchored variant — one latin title hit (pulseboard, weight 1) vs the long CJK chunk (weight 6). Unweighted 1/2 leaks; weighted 1/7 abstains.
+
+- id: q-041
+  question: "告警疲劳复盘 status"
+  expected:
+    must: [Projects/告警疲劳复盘.md]
+  category: bilingual
+  notes: Answerable guard — the long CJK title chunk (weight 6) is the question's substance; the stray latin token (weight 1) going unmatched must not flip the verdict. Weighted 6/7 passes clause 1.

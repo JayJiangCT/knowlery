@@ -49,7 +49,7 @@ const ENGINE_ANSWERABLE_FLOOR: Record<string, { recallAt5: number; recallAt10: n
   'concept-lookup': { recallAt5: 1, recallAt10: 1, mrr: 0.899 },
   synthesis: { recallAt5: 1, recallAt10: 1, mrr: 0.999 },
   alias: { recallAt5: 0.75, recallAt10: 0.75, mrr: 0.624 },
-  bilingual: { recallAt5: 0.75, recallAt10: 0.75, mrr: 0.458 },
+  bilingual: { recallAt5: 0.8, recallAt10: 0.8, mrr: 0.566 },
   bundle: { recallAt5: 1, recallAt10: 1, mrr: 0.999 },
   'user-note': { recallAt5: 1, recallAt10: 1, mrr: 0.866 },
 };
