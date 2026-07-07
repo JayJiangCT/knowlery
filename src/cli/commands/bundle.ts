@@ -8,6 +8,7 @@ import { readInstalledBundles } from '../../core/okf/registry';
 import { RemoteSourceError, downloadRemoteBundle, isRemoteSource, verifyFileIntegrity } from '../../core/okf/remote-source';
 import { nodeFetch } from '../../platform/node-fetch';
 import { runBundleExport, runBundleReview } from './bundle-export';
+import { runBundlePublish } from './bundle-publish';
 import { CliError } from './shared';
 
 const BUNDLE_USAGE = [
@@ -16,6 +17,8 @@ const BUNDLE_USAGE = [
   '  knowlery bundle list      [--dir <vault>] [--json]',
   '  knowlery bundle uninstall <bundle-id> [--dir <vault>]',
   '  knowlery bundle export <seed-concept-id> [--dir <vault>] [--hops <n>] [--zip] [--json]',
+  '  knowlery bundle publish <seed-concept-id> [--dir <vault>] [--repo <owner/name>] [--public]',
+  '                          [--acknowledge-risks] [--force]',
   '  knowlery bundle review <seed-concept-id> [--dir <vault>] [--list] [--json]',
   '                         [--approve <id>...] [--flag <id>...]',
 ].join('\n');
@@ -38,6 +41,10 @@ export interface BundleCommandOptions {
   list?: boolean;
   approve?: string[];
   flag?: string[];
+  repo?: string;
+  public?: boolean;
+  acknowledgeRisks?: boolean;
+  prompt?: import('./shared').Prompt;
   log: (line: string) => void;
 }
 
@@ -70,6 +77,19 @@ export async function runBundleCommand(fs: VaultFs, options: BundleCommandOption
         json: options.json,
         creator: options.creator,
         bundleVersion: options.bundleVersion,
+        log: options.log,
+      });
+      break;
+    case 'publish':
+      await runBundlePublish(fs, {
+        seed: options.arg,
+        root: options.root,
+        repo: options.repo,
+        public: options.public,
+        acknowledgeRisks: options.acknowledgeRisks,
+        force: options.force,
+        json: options.json,
+        prompt: options.prompt ?? null,
         log: options.log,
       });
       break;

@@ -4,7 +4,7 @@ import type { VaultFs } from '../../core/vault-fs';
 import type { BundleSource } from '../../core/okf/collect';
 import { collectBundleInputs } from '../../core/okf/collect';
 import { buildHeadlessLinkResolver } from '../../core/okf/link-resolver';
-import { buildClosure, readExportScope, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
+import { buildClosure, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
 import { scanRisks } from '../../core/okf/risk-scan';
 import { compileBundle } from '../../core/okf/compile';
 import { zipBundleDirectory } from '../../core/okf/zip';
@@ -41,7 +41,7 @@ export interface ReviewCommandOptions {
   log: (line: string) => void;
 }
 
-interface ResolvedScope {
+export interface ResolvedScope {
   source: BundleSource;
   bundleId: string;
   title: string;
@@ -73,24 +73,10 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
   }
 
   const version = options.bundleVersion ?? '0.1.0';
-  const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
-  const approved = scope.closure.items.filter((item) => item.status === 'approved');
-  const result = await compileBundle(scope.source, {
-    targetDir,
-    bundleId: scope.bundleId,
-    title: scope.title,
-    version,
-    license: 'personal',
-    creator: { name: options.creator ?? '', url: '' },
-    includeSchema: true,
-    includeFullLog: false,
-    includeSources: false,
-    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
-    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
-    overwrite: true,
-  });
+  const result = await compileScope(scope, version, options.creator);
+  await writeBundleMeta(fs, scope.bundleId, { lastVersion: version });
 
-  const zipPath = options.zip ? await zipBundleDirectory(join(options.root, targetDir)) : null;
+  const zipPath = options.zip ? await zipBundleDirectory(join(options.root, result.targetDir)) : null;
 
   if (options.json) {
     options.log(JSON.stringify({
@@ -166,7 +152,7 @@ export async function runBundleReview(fs: VaultFs, options: ReviewCommandOptions
   }
 }
 
-async function resolveScope(
+export async function resolveScope(
   fs: VaultFs,
   seedInput: string,
   options: { hops?: number; creator?: string },
@@ -206,8 +192,28 @@ async function resolveSeed(source: BundleSource, seedInput: string): Promise<str
   throw new CliError(`No knowledge page found for seed "${seedInput}". Seeds are concept ids like concepts/<name> (run \`knowlery query\` to find one).`);
 }
 
+/** The export compile step, shared with publish (spec 0.9 f2, §4.1 step 2). */
+export async function compileScope(scope: ResolvedScope, version: string, creator?: string) {
+  const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
+  const approved = scope.closure.items.filter((item) => item.status === 'approved');
+  return compileBundle(scope.source, {
+    targetDir,
+    bundleId: scope.bundleId,
+    title: scope.title,
+    version,
+    license: 'personal',
+    creator: { name: creator ?? '', url: '' },
+    includeSchema: true,
+    includeFullLog: false,
+    includeSources: false,
+    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
+    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
+    overwrite: true,
+  });
+}
+
 /** Mirror of the modal's debounced persist — resumable, shared with the Obsidian shell. */
-async function persistScope(fs: VaultFs, scope: ResolvedScope): Promise<void> {
+export async function persistScope(fs: VaultFs, scope: ResolvedScope): Promise<void> {
   await writeExportScope(fs, scope.bundleId, {
     title: scope.title,
     seeds: scope.seeds,
@@ -216,7 +222,7 @@ async function persistScope(fs: VaultFs, scope: ResolvedScope): Promise<void> {
   });
 }
 
-function printChecklist(
+export function printChecklist(
   scope: ResolvedScope,
   options: { json?: boolean; log: (line: string) => void; jsonStatus: 'checklist' | 'review-required' },
 ): void {
