@@ -1178,6 +1178,7 @@ no running Obsidian needed. Install: \`npm install -g knowlery\`. All commands a
 | \`knowlery bundle uninstall <bundle-id>\` | Remove an installed bundle | Bundle no longer wanted |
 | \`knowlery bundle export <seed> [--hops n] [--zip] [--json]\` | Compile reviewed knowledge into a shareable bundle | User wants to share a topic |
 | \`knowlery bundle review <seed> [--list] [--json] [--approve <id>...] [--flag <id>...]\` | Record per-item review decisions | Working through the export checklist |
+| \`knowlery bundle publish <seed> [--repo <owner/name>] [--public] [--acknowledge-risks] [--force]\` | Release a reviewed bundle to GitHub | User wants a shareable URL |
 
 ## Exporting a bundle: the review gate
 
@@ -1227,6 +1228,23 @@ knowlery query "what did the team decide about X"
 # Install from a link (public source, or a private GitHub release via the user's gh login)
 knowlery bundle install https://github.com/team/kb-bundles/releases/download/v1.2.0/pack.zip
 \`\`\`
+
+## Publishing conduct (required)
+
+\`bundle publish\` releases a reviewed bundle to a GitHub repo and prints who can
+install it. The same review gate as export applies; publishing adds decisions that
+are **always the user's**:
+
+1. Before running, restate the destination and its visibility ("publishing to
+   your-org/kb-bundles, private"). The default is private; never pass \`--public\`
+   unless the user explicitly said "public".
+2. If a public publish reports risk-hinted items, present that list to the user
+   verbatim. Only pass \`--acknowledge-risks\` after the user has seen the items and
+   explicitly consented — never on your own initiative. A public release is
+   permanent; say so.
+3. After publishing, relay the audience statement and the install+verify line
+   exactly as printed — they tell the user who can access it and what to share.
+4. If gh is unavailable, relay the printed manual checklist instead of improvising.
 
 ## Installing from URLs
 
