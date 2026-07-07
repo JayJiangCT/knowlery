@@ -315,6 +315,12 @@ export const InstalledBundleEntrySchema = z.object({
   libraryPath: z.string().min(1),
   manifestContentHash: z.string(),
   installedContentHash: z.string(),
+  /**
+   * Per-file hashes of the installed .md entries (spec 0.9 f3 §4.3.3 — lets the
+   * local-modification check name exactly which files changed). Optional:
+   * pre-0.9 installs lack it and fall back to the aggregate hash.
+   */
+  fileHashes: z.record(z.string()).optional(),
   conformance: z.enum(['passed', 'failed', 'skipped']),
   conformanceErrorCount: z.number().int().nonnegative(),
 });
