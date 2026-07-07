@@ -54,6 +54,9 @@ async function add(options: KbCommandOptions): Promise<void> {
 }
 
 async function list(options: KbCommandOptions): Promise<void> {
+  if (options.name !== undefined) {
+    throw new CliError(`kb list takes no arguments, got: ${options.name}\n\n${KB_USAGE}`, 2);
+  }
   const listings = await listKbs();
   if (options.json) {
     options.log(JSON.stringify({ registry: registryPath(), kbs: listings }, null, 2));
@@ -71,6 +74,9 @@ async function list(options: KbCommandOptions): Promise<void> {
 
 async function remove(options: KbCommandOptions): Promise<void> {
   if (!options.name) throw new CliError(`Missing KB name.\n\n${KB_USAGE}`, 2);
+  if (options.path !== undefined) {
+    throw new CliError(`kb remove takes exactly one argument, got extra: ${options.path}\n\n${KB_USAGE}`, 2);
+  }
   const removed = await removeKb(options.name);
   if (!removed) throw new CliError(`No KB registered as "${options.name}".`);
   options.log(`Removed ${options.name} from the registry (its files are untouched).`);

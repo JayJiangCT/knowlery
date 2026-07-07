@@ -72,6 +72,18 @@ describe('registry file (spec 1.0 f1, §5.2)', () => {
     expect(await readFile(registryPath(), 'utf8')).toBe('{ not json'); // untouched
   });
 
+  it('invalid or reserved keys in a hand-edited registry are treated as corrupt (read-boundary enforcement)', async () => {
+    await mkdir(join(workDir, 'config'), { recursive: true });
+    const dir = await makeKb('victim');
+    for (const badName of ['Work KB', '*']) {
+      await writeFile(registryPath(), JSON.stringify({ schemaVersion: 1, kbs: { [badName]: { path: dir } } }));
+      await expect(readKbRegistry()).rejects.toThrow(/invalid entry name/);
+      await expect(addKb('good', dir)).rejects.toThrow(KbRegistryError); // never rewrites the bad keys away
+      const { readFile } = await import('node:fs/promises');
+      expect(await readFile(registryPath(), 'utf8')).toContain(badName);
+    }
+  });
+
   it('duplicate paths warn (returned), never error; remove never touches files', async () => {
     const dir = await makeKb('shared');
     await addKb('one', dir);
@@ -154,6 +166,23 @@ describe('kb command + federated query (spec 1.0 f1, §5.1/§5.3)', () => {
     expect(lines.join('\n')).toContain('cmd');
     await runKbCommand({ sub: 'remove', name: 'cmd', log: silent });
     await expect(runKbCommand({ sub: 'remove', name: 'cmd', log: silent })).rejects.toThrow(CliError);
+  });
+
+  it('extra positionals fail loud: kb list takes none, kb remove takes exactly one', async () => {
+    const dir = await makeKb('arity');
+    await runKbCommand({ sub: 'add', name: 'arity', path: dir, log: silent });
+
+    const listError = await runKbCommand({ sub: 'list', name: 'junk', log: silent })
+      .then(() => null, (thrown: unknown) => thrown);
+    expect(listError).toBeInstanceOf(CliError);
+    expect((listError as CliError).exitCode).toBe(2);
+
+    const removeError = await runKbCommand({ sub: 'remove', name: 'arity', path: 'typo', log: silent })
+      .then(() => null, (thrown: unknown) => thrown);
+    expect(removeError).toBeInstanceOf(CliError);
+    expect((removeError as CliError).exitCode).toBe(2);
+    // The entry survived the malformed invocation.
+    expect(Object.keys((await readKbRegistry()).kbs)).toContain('arity');
   });
 
   it('federated query attributes results per KB and skips broken entries with a note', async () => {

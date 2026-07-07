@@ -37,14 +37,29 @@ export async function readKbRegistry(): Promise<KbRegistry> {
     }
     throw error;
   }
+  let registry: KbRegistry;
   try {
-    return KbRegistrySchema.parse(JSON.parse(raw));
+    registry = KbRegistrySchema.parse(JSON.parse(raw));
   } catch {
     throw new KbRegistryError(
       `The KB registry at ${path} is corrupt and was NOT reset (it lists your knowledge bases). `
       + 'Repair or remove the file manually, then retry.',
     );
   }
+  // The name invariants hold at the read boundary, not only at addKb — a
+  // hand-edited registry with an invalid or reserved key ("Work KB", "*")
+  // would otherwise break federation semantics and survive rewrites
+  // (maintainer acceptance finding).
+  for (const name of Object.keys(registry.kbs)) {
+    const invalid = validateKbName(name);
+    if (invalid) {
+      throw new KbRegistryError(
+        `The KB registry at ${path} contains an invalid entry name "${name}" (${invalid}) `
+        + 'and was NOT reset. Repair the file manually, then retry.',
+      );
+    }
+  }
+  return registry;
 }
 
 async function writeKbRegistry(registry: KbRegistry): Promise<void> {
