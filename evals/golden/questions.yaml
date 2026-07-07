@@ -269,7 +269,7 @@
   expected:
     must: []
   category: unanswerable
-  notes: The 斑马 shape — short CJK title hit (蜂鸟, weight 2) vs long unmatched chunk (移动端路线图, weight 5). Unweighted coverage 1/2 leaks; weighted 2/7 abstains.
+  notes: The 斑马 shape — short CJK title hit (蜂鸟, weight 2) vs long unmatched chunk (移动端路线图, weight 6). Unweighted coverage 1/2 leaks; weighted 2/8 abstains.
 
 - id: q-039
   question: "数据仓库的 metrics API 怎么接入？"
@@ -283,7 +283,7 @@
   expected:
     must: []
   category: unanswerable
-  notes: Latin-anchored variant — one latin title hit (pulseboard, weight 1) vs the long CJK chunk (weight 5). Unweighted 1/2 leaks; weighted 1/6 abstains.
+  notes: Latin-anchored variant — one latin title hit (pulseboard, weight 1) vs the long CJK chunk (weight 6). Unweighted 1/2 leaks; weighted 1/7 abstains.
 
 - id: q-041
   question: "告警疲劳复盘 status"
