@@ -10,7 +10,7 @@ residual ledger.
 
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
-| F1 | Remote install: `bundle install <url>`, source recording, `gh` fallback for private repos | (spec pending) | 0.7 F4 install pipeline |
+| F1 | Remote install: `bundle install <url>`, source recording, `gh` fallback for private repos | [f1-remote-install.md](./f1-remote-install.md) | 0.7 F4 install pipeline |
 | F2 | Publish flow: `bundle publish` to GitHub Releases, incl. publisher-side configuration (per-bundle target repo, `gh` detection & guided setup, repo bootstrap); default-private posture; public-destination second gate; credential-pattern risk scan | (spec pending) | 0.8 F1 export |
 | F3 | Update & subscription: `bundle check-updates` / `bundle update`, local-modification protection, dashboard surfacing | (spec pending) | F1 (source recording), F2 (versioned upstream) |
 | F4 | Retrieval: unmatched-term specificity signal (closes the exactly-half coverage boundary) | (spec pending) | 0.8 F2 gate + seed cases |
