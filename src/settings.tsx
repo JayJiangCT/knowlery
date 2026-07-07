@@ -1,4 +1,4 @@
-import { App, Modal, Notice, PluginSettingTab, type SettingDefinition, type SettingDefinitionItem } from 'obsidian';
+import { App, Modal, Notice, PluginSettingTab, Setting, type SettingDefinition, type SettingDefinitionItem } from 'obsidian';
 import { StrictMode } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from './main';
@@ -49,25 +49,104 @@ class ConfirmModal extends Modal {
 }
 
 /**
- * Declarative settings tab (spec 0.8 f4, §4.3): definitions replace the deprecated
- * imperative `display()`. Simple controls are declarative (and feed Obsidian's
- * settings search); composite rows (text + button) and the React advanced section
- * use the `render` escape hatch with the same Setting builders as before, so the
- * rendered UI is unchanged.
+ * Declarative settings tab (spec 0.8 f4, §4.3, amended at acceptance): one
+ * definitions array, two renderers. On Obsidian >= 1.13 the framework renders
+ * `getSettingDefinitions()` declaratively (and feeds settings search); on public
+ * releases (1.12.x — 1.13 is Catalyst-only as of 0.8.0) the framework calls the
+ * legacy `display()`, which renders the *same* definitions through a small
+ * imperative interpreter below. Single source, so the two paths cannot drift.
  */
 export class KnowlerySettingTab extends PluginSettingTab {
   private advancedRoot: Root | null = null;
   /** null until the async vault check lands — both branches hidden meanwhile. */
   private initialized: boolean | null = null;
+  /** Fallback-path bookkeeping: true while the pre-1.13 imperative render is showing. */
+  private tabOpen = false;
 
   constructor(app: App, private plugin: KnowleryPlugin) {
     super(app, plugin);
   }
 
   hide(): void {
+    this.tabOpen = false;
     // The render-item cleanup usually handles this; hide() is the guaranteed hook.
     this.advancedRoot?.unmount();
     this.advancedRoot = null;
+  }
+
+  /**
+   * Legacy entry point, called by Obsidian < 1.13 only (1.13+ renders the
+   * definitions itself and never calls this — exactly the fallback arrangement
+   * the API docs prescribe for plugins supporting older versions).
+   */
+  display(): void {
+    this.renderFallback();
+  }
+
+  /** Re-render whichever path is active after state the definitions read has changed. */
+  private requestRender(): void {
+    // Capability detection, not a version check: SettingTab.update() exists on
+    // >= 1.13 (the declarative renderer); on public 1.12.x we re-run the
+    // imperative fallback ourselves. Accessed structurally so the code carries
+    // no hard dependency on the 1.13 API surface (minAppVersion stays 1.12.2).
+    const declarativeUpdate = (this as { update?: () => void }).update;
+    if (typeof declarativeUpdate === 'function') {
+      declarativeUpdate.call(this);
+    } else if (this.tabOpen) {
+      this.renderFallback();
+    }
+  }
+
+  private renderFallback(): void {
+    this.tabOpen = true;
+    this.advancedRoot?.unmount();
+    this.advancedRoot = null;
+    const { containerEl } = this;
+    containerEl.empty();
+    this.renderDefinitionsInto(containerEl, this.getSettingDefinitions());
+  }
+
+  private renderDefinitionsInto(containerEl: HTMLElement, items: SettingDefinitionItem[]): void {
+    const hidden = (visible?: boolean | (() => boolean)) =>
+      visible === false || (typeof visible === 'function' && !visible());
+
+    for (const item of items) {
+      if ('type' in item && (item.type === 'group' || item.type === 'list')) {
+        if (hidden(item.visible)) continue;
+        if (item.heading) new Setting(containerEl).setName(item.heading).setHeading();
+        this.renderDefinitionsInto(containerEl, item.items ?? []);
+        continue;
+      }
+      if ('type' in item) continue; // 'page' — not used by this tab
+      const definition = item;
+      if (hidden(definition.visible)) continue;
+
+      const setting = new Setting(containerEl).setName(definition.name);
+      if (definition.desc) setting.setDesc(definition.desc);
+
+      if (definition.render) {
+        // Our render callbacks ignore the 1.13 SettingGroup parameter.
+        (definition.render as (setting: Setting) => void | (() => void))(setting);
+        continue;
+      }
+      const control = definition.control;
+      if (!control) continue;
+      const current = this.getControlValue(control.key) ?? control.defaultValue;
+      if (control.type === 'toggle') {
+        setting.addToggle((toggle) =>
+          toggle.setValue(current === true).onChange((value) => {
+            void this.setControlValue(control.key, value);
+          }),
+        );
+      } else if (control.type === 'text') {
+        setting.addText((text) => {
+          if (control.placeholder) text.setPlaceholder(control.placeholder);
+          text.setValue(typeof current === 'string' ? current : '').onChange((value) => {
+            void this.setControlValue(control.key, value);
+          });
+        });
+      }
+    }
   }
 
   getSettingDefinitions(): SettingDefinitionItem[] {
@@ -167,7 +246,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
     void isVaultInitialized(this.plugin.fs).then((value) => {
       if (value !== this.initialized) {
         this.initialized = value;
-        this.update();
+        this.requestRender();
       }
     });
   }
@@ -252,7 +331,6 @@ export class KnowlerySettingTab extends PluginSettingTab {
                   this.plugin.settings.nodePath = result.path;
                   await this.plugin.saveSettings();
                   report(`Detected Node.js ${result.version ?? ''} at ${result.path}`.trim());
-                  this.update();
                 } else {
                   report('Node.js not found. Install Node.js or enter the path manually.');
                 }
@@ -298,7 +376,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
                 this.plugin.settings.platform = otherPlatform;
                 await this.plugin.saveSettings();
                 new Notice(`Switched to ${otherLabel}`);
-                this.update();
+                this.requestRender();
               },
             ).open();
           }),
