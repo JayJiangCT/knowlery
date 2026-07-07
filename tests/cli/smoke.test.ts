@@ -85,6 +85,17 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       });
       expect(epipeExit).toBe(0);
 
+      // Weighted-coverage abstention (spec 0.9 f4, §5.5): a short CJK title hit
+      // with a long unmatched chunk abstains identically on both transports.
+      await writeFile(
+        join(vaultDir, 'entities', '云雀.md'),
+        '---\ntitle: 云雀\ntype: entity\ncreated: 2026-01-01\n---\n\n云雀 is a codename.\n',
+      );
+      const weightedCli = await run('node', [cliPath, 'query', '--dir', vaultDir, '云雀的移动端路线图是什么']);
+      expect(weightedCli.stdout).toContain('No confident matches');
+      const weightedEmbedded = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), '云雀的移动端路线图是什么']);
+      expect(weightedEmbedded.stdout.trim()).toBe(weightedCli.stdout.trim());
+
       // Abstention is a result, not an error: exit 0.
       const abstain = await run('node', [cliPath, 'query', '--dir', vaultDir, 'zebra quantum lighthouse']);
       expect(abstain.stdout).toContain('No confident matches');

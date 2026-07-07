@@ -8,7 +8,9 @@ import {
   ABSTAIN_SOFT_COVERAGE,
   ABSTAIN_STRUCT_COVERAGE,
   runQuery,
+  weightedCoverage,
 } from '../../src/core/query/engine';
+import type { QueryTerm } from '../../src/core/query/tokenize';
 
 const FIXTURE_VAULT = join(__dirname, '..', '..', 'evals', 'fixtures', 'vault');
 
@@ -138,6 +140,48 @@ describe('runQuery scoring', () => {
     });
     const result = runQuery('gpu procurement budget', makeSnapshot([page]), 10);
     expect(result.verdict).toBe('no-confident-match');
+  });
+});
+
+describe('specificity-weighted coverage (spec 0.9 f4)', () => {
+  const latin = (raw: string): QueryTerm => ({ raw, variants: [raw], cjk: false });
+  const cjk = (raw: string): QueryTerm => ({ raw, variants: [raw], cjk: true });
+
+  it('latin-only queries reduce exactly to the count ratio (0.8 invariance, pinned directly)', () => {
+    const terms = [latin('mobile'), latin('app'), latin('roadmap')];
+    expect(weightedCoverage(['roadmap'], terms)).toBe(1 / 3);
+    expect(weightedCoverage(['mobile', 'roadmap'], terms)).toBe(2 / 3);
+    expect(weightedCoverage(['mobile', 'app', 'roadmap'], terms)).toBe(1);
+  });
+
+  it('a CJK chunk weighs its character length: the 斑马 shape computes 2/8', () => {
+    const terms = [cjk('蜂鸟'), cjk('移动端路线图')];
+    expect(weightedCoverage(['蜂鸟'], terms)).toBe(2 / 8);
+  });
+
+  it('the q-021 guard shape computes 8/12 and clears clause 1', () => {
+    const terms = [cjk('性能优化调研'), cjk('推荐'), cjk('采样方法')];
+    expect(weightedCoverage(['性能优化调研', '推荐'], terms)).toBe(8 / 12);
+    expect(8 / 12).toBeGreaterThanOrEqual(ABSTAIN_STRUCT_COVERAGE);
+  });
+
+  it('duplicate matched entries never double-count; stray strings are weightless', () => {
+    const terms = [cjk('蜂鸟'), cjk('移动端路线图')];
+    expect(weightedCoverage(['蜂鸟', '蜂鸟'], terms)).toBe(2 / 8);
+    expect(weightedCoverage(['蜂鸟', 'not-a-term'], terms)).toBe(2 / 8);
+  });
+
+  it('gate end to end: short-CJK title hit with a long unmatched chunk abstains', () => {
+    const page = makePage({
+      path: 'entities/蜂鸟.md',
+      title: '蜂鸟',
+      titleAlias: fieldText('蜂鸟'),
+      body: fieldText('蜂鸟 is the collector rewrite codename.'),
+      tier: 'agent',
+    });
+    expect(runQuery('蜂鸟的移动端路线图是什么？', makeSnapshot([page]), 10).verdict).toBe('no-confident-match');
+    // The single-chunk lookup keeps working (0.8 boundary note unchanged).
+    expect(runQuery('蜂鸟', makeSnapshot([page]), 10).verdict).toBe('ok');
   });
 });
 

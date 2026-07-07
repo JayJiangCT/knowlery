@@ -94,7 +94,7 @@ export function runQuery(
 
   const debugCandidates = options.debug ? candidates.map(toDebugCandidate) : undefined;
 
-  if (shouldAbstain(candidates, terms.length)) {
+  if (shouldAbstain(candidates, terms)) {
     return { verdict: 'no-confident-match', terms: terms.map((term) => term.raw), candidates: [], debugCandidates };
   }
 
@@ -270,10 +270,35 @@ function compareCandidates(a: InternalCandidate, b: InternalCandidate): number {
 }
 
 /**
- * Confidence gate (spec 0.8 f2, §4.1): a result set is confident iff the *top*
- * candidate is — the top item is what an agent reads first and trusts most; if the
- * best evidence is a one-word collision, the whole list is noise. A top candidate is
- * confident when any clause holds:
+ * Specificity-weighted coverage (spec 0.9 f4): a latin token weighs 1, a CJK chunk
+ * weighs its character length — a long stopword-delimited chunk going *unmatched*
+ * is a strong signal the question is about something else (the same reasoning that
+ * gives CJK matches ×2 scoring specificity). Latin-only queries reduce exactly to
+ * the 0.8 count ratio, by construction.
+ */
+export function termWeight(term: QueryTerm): number {
+  return term.cjk ? term.raw.length : 1;
+}
+
+export function weightedCoverage(matchedRaw: string[], terms: QueryTerm[]): number {
+  const weights = new Map(terms.map((term) => [term.raw, termWeight(term)]));
+  const total = terms.reduce((sum, term) => sum + termWeight(term), 0);
+  if (total === 0) return 0;
+  // Map matched raws back through the query's own term list — unknown or
+  // duplicated entries never double-count (terms are deduplicated upstream,
+  // and the Map lookup makes stray strings weightless).
+  let matched = 0;
+  for (const raw of new Set(matchedRaw)) {
+    matched += weights.get(raw) ?? 0;
+  }
+  return matched / total;
+}
+
+/**
+ * Confidence gate (spec 0.8 f2, §4.1; coverage weighted per spec 0.9 f4): a result
+ * set is confident iff the *top* candidate is — the top item is what an agent reads
+ * first and trusts most; if the best evidence is a one-word collision, the whole
+ * list is noise. A top candidate is confident when any clause holds:
  *   1. Structured anchor: some query term hit title/aliases/tags/basename (or
  *      prefix-matched them) AND distinct-term coverage clears ABSTAIN_STRUCT_COVERAGE.
  *      Single-term questions pass trivially (coverage 1/1) — including CJK
@@ -288,10 +313,10 @@ function compareCandidates(a: InternalCandidate, b: InternalCandidate): number {
  *      confidence through clauses 1-2; an evidence top-up on a one-word collision is
  *      not an anchor (calibration: unconditional evidence leaked q-031/033/034/035).
  */
-function shouldAbstain(candidates: InternalCandidate[], termCount: number): boolean {
+function shouldAbstain(candidates: InternalCandidate[], terms: QueryTerm[]): boolean {
   if (candidates.length === 0) return true;
   const top = candidates[0];
-  const coverage = termCount > 0 ? top.matchedTerms.length / termCount : 0;
+  const coverage = weightedCoverage(top.matchedTerms, terms);
 
   if (top.structuredTermCount > 0 && coverage >= ABSTAIN_STRUCT_COVERAGE) return false;
   if (coverage >= ABSTAIN_SOFT_COVERAGE && top.descriptionHits + top.bodyScore >= ABSTAIN_BODY_FLOOR) return false;
