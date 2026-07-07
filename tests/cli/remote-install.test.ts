@@ -68,6 +68,10 @@ beforeAll(async () => {
     } else if (req.url === '/invalid.zip') {
       res.writeHead(200);
       res.end(invalidZip);
+    } else if (req.url === '/redirect.zip') {
+      // The public-GitHub shape: asset URLs 302 to storage before serving bytes.
+      res.writeHead(302, { location: '/pack.zip' });
+      res.end();
     } else if (req.url === '/drop.zip') {
       res.writeHead(200, { 'content-length': String(goodZip.length) });
       res.write(goodZip.subarray(0, 100));
@@ -116,6 +120,14 @@ describe('remote install (spec 0.9 f1, §5)', () => {
       const listLines: string[] = [];
       await runBundleCommand(fs, { sub: 'list', root, log: (line) => listLines.push(line) });
       expect(listLines.join('\n')).toContain('from 127.0.0.1');
+    });
+  });
+
+  it('follows redirects — the public-GitHub asset shape (302 to storage)', async () => {
+    await withWorkspace(async (root) => {
+      const fs = nodeVaultFs(root);
+      await runBundleCommand(fs, { sub: 'install', arg: `${baseUrl}/redirect.zip`, root, log: silent });
+      expect(await fs.exists('Library/jay.remote-pack/index.md')).toBe(true);
     });
   });
 
