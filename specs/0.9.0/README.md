@@ -118,6 +118,31 @@ Personal knowledge bases are the substrate; a public release is irreversible
    The per-item human review remains the last line; the default-private posture is
    the largest single safety feature.
 
+## Documentation as a first-class deliverable (maintainer requirement at plan review)
+
+Remote sharing is the release's headline, and half its user experience is
+*understanding the model* (publish ≠ grant access; the org topology; the
+default-private posture). Docs are therefore a gated deliverable, not a follow-up:
+
+1. The docs site gains a dedicated top-level section — **"Sharing Knowledge"** in
+   the sidebar's "Use Knowlery" group (English + `zh/`, both locales as the site
+   already maintains) — covering the full journey in order: export & review →
+   publish (and *who can now install* — the audience concept) → grant access
+   (collaborator / org / public, with the org shelf as the recommended team
+   recipe) → install from URL → subscribe & update. Plus the security posture
+   (default private, the public second gate, what pattern scanning can and cannot
+   catch) and a troubleshooting page whose first entry is the defining confusion:
+   *"the link 404s for my teammate" = they lack access, not a broken link*.
+2. **Each of F1–F3 ships its docs chapter in the same PR as the feature** —
+   acceptance criteria in every spec include the docs pages, so the section grows
+   feature by feature and is complete when F3 lands, never trailing the code.
+3. Agent-side training mirrors it: the `knowlery-cli` skill updates (already in
+   each feature's scope) are the machine-readable counterpart of the guide, and
+   the guide links agents' conduct rules so human and agent readers see one
+   consistent model.
+4. The 0.9.0 announcement/changelog leads with the sharing story and links the
+   guide as the canonical entry point.
+
 ## Non-goals for 0.9.0
 
 - No central registry, hosting, discovery, or search of published bundles.
