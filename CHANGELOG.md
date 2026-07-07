@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.9.0] — 2026-07-07
+
+Theme: knowledge that travels — the sharing loop 0.8.0 completed mechanically gains
+its last mile: bundles move over the network, subscribers pull updates, and public
+publishing is guarded in proportion to its irreversibility. Developed spec-first;
+the accepted specs live in `specs/0.9.0/`.
+
+### New features
+
+- **Install from URLs.** `knowlery bundle install <url>` downloads and runs the
+  identical local pipeline — same conformance, version, and path-safety gates.
+  Public sources fetch anonymously; a private GitHub release retries through your
+  own `gh` login automatically, with a browser-download path when `gh` is absent.
+  `--verify <sha256>` checks the raw bytes before anything is unpacked. The
+  Obsidian install dialog accepts the same URLs.
+- **Publish with one command.** `knowlery bundle publish <seed>` runs the export
+  review gate, compiles, and creates a GitHub Release in your remembered per-bundle
+  repo — then prints the complete message to forward: asset URL, its SHA-256, and
+  the **audience statement** (who can install, how to grant access — publishing
+  and access are separate steps, and the tooling now says so). Private is the
+  default everywhere; a missing repo is created private. Publishing **publicly**
+  passes a second gate: approved items carrying risk hints are re-listed for
+  separate informed consent, with the permanence of public releases stated
+  outright. The export modal gains the same publish panel.
+- **Subscribe & update.** `knowlery bundle check-updates` asks each installed
+  bundle's source for newer versions (strictly read-only, honest about what it
+  can't check); `knowlery bundle update <id> | --all` installs them through the
+  full gate pipeline. Local edits inside an installed bundle refuse the update,
+  naming exactly which files changed. The dashboard gets Check-updates and
+  per-bundle Update buttons. Pull-based by design — no daemon, no notifications.
+- **Retrieval: the exactly-half boundary closes.** Coverage in the abstention gate
+  is now specificity-weighted (a CJK chunk weighs its length), so short-title
+  collisions like "斑马的移动端路线图" abstain instead of ranking noise — with
+  zero new constants and latin-only behavior provably unchanged.
+
+### Improvements
+
+- **Sharing Knowledge documentation** — a new docs-site section (English and
+  Chinese) covering the full journey: export & review, publish, grant access
+  (with the recommended org-shelf team setup), install from URL, subscribe &
+  update, and troubleshooting starting with "the link 404s = access, not a broken
+  link".
+- **Risk scanning grows credential patterns**: API-key shapes, private key blocks,
+  private IPs, phone numbers — surfaced at export review and re-confirmed at
+  public publish; evidence is redacted so hints never repeat a secret.
+- The `knowlery-cli` skill teaches agents the full sharing surface with strict
+  conduct: never `--public`, `--acknowledge-risks`, or `update` on the agent's own
+  initiative.
+
+### Under the hood
+
+- **Staged bundle replacement**: installs and updates write to a staging dir and
+  swap — a failure at any point leaves the previous version in place (previously a
+  mid-write failure could lose it).
+- `gh` binary resolution through common install locations, so the Obsidian plugin
+  (whose Electron process lacks the shell PATH) sees the same `gh` as the
+  terminal.
+- The upstream version-check protocol is host-agnostic by construction — GitHub
+  Releases is its first implementation.
+
 ## [0.8.0] — 2026-07-07
 
 Theme: close the sharing loop, pay the quality debt — knowledge bundle **export** goes
