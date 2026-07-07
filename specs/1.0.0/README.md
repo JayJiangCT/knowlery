@@ -43,10 +43,12 @@ maintain**:
 
 ## MCP design principles (binding on F2–F4)
 
-1. **The registry is the addressing layer.** Every MCP tool takes a `kb` name
-   resolved through the F1 registry; the MCP server holds no per-vault state of
-   its own. Federated query (`kb: "*"`) is registry iteration + result merging
-   with per-KB attribution.
+1. **The registry is the addressing layer.** Every tool operating on an
+   *existing* KB takes a `kb` name resolved through the F1 registry (`init_kb`
+   is the one exception by nature — it takes a name and a path and *creates*
+   the registry entry); the MCP server holds no per-vault state of its own.
+   Federated query (`kb: "*"`) is registry iteration + result merging with
+   per-KB attribution.
 2. **Read wide, write narrow.** Read tools cover the whole surface. Writes are
    exactly three, each with a structural safety argument: `init_kb` creates only
    new directories (precisely bounded below), `capture` appends **only to the
@@ -71,8 +73,11 @@ maintain**:
    - **Remote mode confines `init_kb` further**: paths must resolve under a
      `--kb-root <dir>` the operator configured when starting the server; no
      `--kb-root`, no remote init at all.
-   - Failure cleanup: init writes only inside the newly created directory; on
-     failure the created directory is removed — no partial state outside it.
+   - Failure cleanup: init writes only inside the target directory; on failure,
+     a **newly-created** target is removed entirely, while a **pre-existing
+     empty** target has only this run's written contents rolled back — the
+     user's directory itself is never deleted. No partial state outside the
+     target either way.
 3. **Skills become prompts; pages become resources.** The 14 built-in skills map
    onto MCP prompts (the retrieval ladder, cook discipline, review conduct — the
    accumulated craft ships with the tools, not just the tools). Knowledge pages
