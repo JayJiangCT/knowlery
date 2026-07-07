@@ -15,6 +15,14 @@ const englishSidebar = [
     text: 'Use Knowlery',
     items: [
       { text: 'Guides', link: '/guides/' },
+      {
+        text: 'Sharing Knowledge',
+        link: '/sharing/',
+        items: [
+          { text: 'Install from a URL', link: '/sharing/install-from-url' },
+          { text: 'Troubleshooting', link: '/sharing/troubleshooting' },
+        ],
+      },
       { text: 'Troubleshooting', link: '/troubleshooting/' },
       { text: 'Reference', link: '/reference/' },
     ],
@@ -39,6 +47,14 @@ const chineseSidebar = [
     text: '使用 Knowlery',
     items: [
       { text: '使用指南', link: '/zh/guides/' },
+      {
+        text: '分享知识',
+        link: '/zh/sharing/',
+        items: [
+          { text: '从 URL 安装', link: '/zh/sharing/install-from-url' },
+          { text: '故障排查', link: '/zh/sharing/troubleshooting' },
+        ],
+      },
       { text: '故障排查', link: '/zh/troubleshooting/' },
       { text: '参考', link: '/zh/reference/' },
     ],

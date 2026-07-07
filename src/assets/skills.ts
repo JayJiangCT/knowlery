@@ -1173,7 +1173,7 @@ no running Obsidian needed. Install: \`npm install -g knowlery\`. All commands a
 | \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
 | \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
 | \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes | Deciding what to re-cook |
-| \`knowlery bundle install <zip-or-folder>\` | Install a shared knowledge bundle into Library/ | User received a bundle |
+| \`knowlery bundle install <zip-folder-or-url>\` | Install a shared knowledge bundle into Library/ | User received a bundle or a link to one |
 | \`knowlery bundle list [--json]\` | Show installed bundles | Checking what knowledge is available |
 | \`knowlery bundle uninstall <bundle-id>\` | Remove an installed bundle | Bundle no longer wanted |
 | \`knowlery bundle export <seed> [--hops n] [--zip] [--json]\` | Compile reviewed knowledge into a shareable bundle | User wants to share a topic |
@@ -1223,7 +1223,21 @@ knowlery bundle export drone-delivery --zip      # compiles + zips once fully re
 # Install what someone shared
 knowlery bundle install ~/Downloads/team.bundle.zip
 knowlery query "what did the team decide about X"
+
+# Install from a link (public source, or a private GitHub release via the user's gh login)
+knowlery bundle install https://github.com/team/kb-bundles/releases/download/v1.2.0/pack.zip
 \`\`\`
+
+## Installing from URLs
+
+\`bundle install\` accepts an https URL to a bundle zip. Public sources download
+anonymously; a private GitHub release is fetched through the user's own \`gh\` login
+automatically. If neither works, relay the printed guidance to the user (download in
+the browser, then install the local file) — never ask for or handle tokens.
+
+Integrity: if the user provided a checksum alongside the link, pass it with
+\`--verify <sha256>\`. Never fabricate or guess a checksum; if none was provided,
+install without \`--verify\`.
 `,
   },
   {

@@ -35,7 +35,8 @@ Usage:
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path>] [--k <n>] [--json]
   knowlery stale  [--dir <path>] [--json]
-  knowlery bundle install <zip-or-folder> [--dir <path>] [--force] [--skip-conformance]
+  knowlery bundle install <zip-or-folder-or-url> [--dir <path>] [--verify <sha256>]
+                          [--force] [--skip-conformance]
   knowlery bundle list      [--dir <path>] [--json]
   knowlery bundle uninstall <bundle-id> [--dir <path>]
   knowlery bundle export <seed-concept-id> [--dir <path>] [--hops <n>] [--zip] [--json]
@@ -62,6 +63,7 @@ interface ParsedArgs {
   list: boolean;
   creator?: string;
   bundleVersion?: string;
+  verify?: string;
   approve: string[];
   flag: string[];
   version: boolean;
@@ -114,6 +116,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
     else if (arg === '--creator') parsed.creator = argv[++i];
     else if (arg === '--bundle-version') parsed.bundleVersion = argv[++i];
+    else if (arg === '--verify') parsed.verify = argv[++i];
     else if (arg === '--approve') {
       const { values, next } = takeValues(i + 1);
       parsed.approve.push(...values);
@@ -200,13 +203,15 @@ async function main(): Promise<void> {
     case 'bundle':
       await runBundleCommand(fs, {
         sub: args.positionals[0],
-        // install's source path resolves against the caller's cwd, not --dir.
-        arg: args.positionals[0] === 'install' && args.positionals[1] !== undefined
+        // install's source path resolves against the caller's cwd, not --dir;
+        // URLs pass through untouched (spec 0.9 f1).
+        arg: args.positionals[0] === 'install' && args.positionals[1] !== undefined && !/^https?:\/\//i.test(args.positionals[1])
           ? resolve(args.positionals[1])
           : args.positionals[1],
         root,
         force: args.force,
         skipConformance: args.skipConformance,
+        verify: args.verify,
         json: args.json,
         hops: args.hops,
         zip: args.zip,

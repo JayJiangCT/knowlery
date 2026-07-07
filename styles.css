@@ -4975,3 +4975,13 @@
   display: flex;
   justify-content: space-between;
 }
+
+.knowlery-install__url-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.knowlery-install__url-input {
+  flex: 1;
+}

@@ -5,12 +5,14 @@ import { previewInstall } from '../../core/okf/install-scan';
 import { installBundle, InstallBlockedError } from '../../core/okf/install';
 import { uninstallBundle } from '../../core/okf/uninstall';
 import { readInstalledBundles } from '../../core/okf/registry';
+import { RemoteSourceError, downloadRemoteBundle, isRemoteSource, verifyFileIntegrity } from '../../core/okf/remote-source';
+import { nodeFetch } from '../../platform/node-fetch';
 import { runBundleExport, runBundleReview } from './bundle-export';
 import { CliError } from './shared';
 
 const BUNDLE_USAGE = [
   'Usage:',
-  '  knowlery bundle install <zip-or-folder> [--dir <vault>] [--force] [--skip-conformance]',
+  '  knowlery bundle install <zip-or-folder-or-url> [--dir <vault>] [--verify <sha256>] [--force] [--skip-conformance]',
   '  knowlery bundle list      [--dir <vault>] [--json]',
   '  knowlery bundle uninstall <bundle-id> [--dir <vault>]',
   '  knowlery bundle export <seed-concept-id> [--dir <vault>] [--hops <n>] [--zip] [--json]',
@@ -26,6 +28,8 @@ export interface BundleCommandOptions {
   root: string;
   force?: boolean;
   skipConformance?: boolean;
+  /** sha256 integrity check for remote installs (spec 0.9 f1, §4.3). */
+  verify?: string;
   json?: boolean;
   hops?: number;
   zip?: boolean;
@@ -95,11 +99,46 @@ async function install(fs: VaultFs, options: BundleCommandOptions): Promise<void
     throw new CliError(`Missing bundle source.\n\n${BUNDLE_USAGE}`, 2);
   }
 
+  // Remote sources (spec 0.9 f1): download first, then the identical local
+  // pipeline runs on the temp file. The registry records the original URL —
+  // the seam F3's update checking reads.
+  if (isRemoteSource(options.arg)) {
+    const downloaded = await downloadRemote(options.arg, options);
+    try {
+      await installFrom(fs, downloaded.zipPath, options.arg, options);
+    } finally {
+      await downloaded.cleanup();
+    }
+    return;
+  }
+
+  if (options.verify) {
+    // --verify composes with local files too (useful for forwarded zips).
+    try {
+      await verifyFileIntegrity(options.arg, options.verify);
+    } catch (error) {
+      if (error instanceof RemoteSourceError) throw new CliError(error.message);
+      throw error;
+    }
+  }
+  await installFrom(fs, options.arg, options.arg, options);
+}
+
+async function downloadRemote(url: string, options: BundleCommandOptions) {
+  try {
+    return await downloadRemoteBundle(url, { fetchImpl: nodeFetch, verify: options.verify, log: options.log });
+  } catch (error) {
+    if (error instanceof RemoteSourceError) throw new CliError(error.message);
+    throw error;
+  }
+}
+
+async function installFrom(fs: VaultFs, sourcePath: string, recordedSource: string, options: BundleCommandOptions): Promise<void> {
   let entries;
   try {
-    entries = await readBundleEntries(options.arg);
+    entries = await readBundleEntries(sourcePath);
   } catch (error) {
-    throw new CliError(`Could not read bundle source ${options.arg}: ${error instanceof Error ? error.message : String(error)}`);
+    throw new CliError(`Could not read bundle source ${recordedSource}: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // Preview for the summary line; installBundle re-runs the same preview internally.
@@ -115,7 +154,7 @@ async function install(fs: VaultFs, options: BundleCommandOptions): Promise<void
 
   try {
     const result = await installBundle(fs, entries, {
-      source: options.arg,
+      source: recordedSource,
       force: options.force,
       skipConformanceGate: options.skipConformance,
     });
@@ -147,7 +186,16 @@ async function list(fs: VaultFs, options: BundleCommandOptions): Promise<void> {
   }
   for (const [id, entry] of entries) {
     options.log(`${id} v${entry.version} — "${entry.title}"`);
-    options.log(`  installed ${entry.installedAt.slice(0, 10)} · conformance ${entry.conformance} · ${entry.libraryPath}`);
+    const provenance = isRemoteSource(entry.source) ? ` · from ${sourceDomain(entry.source)}` : '';
+    options.log(`  installed ${entry.installedAt.slice(0, 10)} · conformance ${entry.conformance} · ${entry.libraryPath}${provenance}`);
+  }
+}
+
+function sourceDomain(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return 'remote';
   }
 }
 
