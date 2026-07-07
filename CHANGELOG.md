@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.8.0] — 2026-07-07
+
+Theme: close the sharing loop, pay the quality debt — knowledge bundle **export** goes
+headless (completing OKF end to end), the retrieval engine learns to give an honest
+"no", and two release cycles of engineering debt are cleared. Developed spec-first;
+the accepted specs live in `specs/0.8.0/`.
+
+### New features
+
+- **Headless bundle export** — `knowlery bundle export <seed>` and
+  `knowlery bundle review <seed>` complete the sharing loop from the terminal:
+  - `export` walks links from a seed concept and compiles the reviewed scope into a
+    shareable bundle (`--zip` optional) — or, if anything in scope is unreviewed,
+    prints the review checklist with per-item risk hints and refuses (exit 1, nothing
+    written). "Nothing ships unreviewed" is unchanged; there is deliberately no
+    approve-all flag.
+  - `review --approve/--flag <id>...` records enumerated decisions with content
+    hashes; editing an approved page automatically re-invalidates it.
+  - The review state is the same `.knowlery/export-scope.json` the plugin's export
+    modal edits — start reviewing in Obsidian, compile from the terminal, or the
+    reverse. For identical approvals the two shells produce byte-identical bundles.
+- **`knowlery-cli` skill** (builtin #14): teaches agents the full CLI command surface
+  and the export review conduct — present the full checklist to the human verbatim,
+  translate only their stated decisions into enumerated calls, never approve on the
+  agent's own initiative.
+- **Score-quality abstention.** The retrieval engine now reasons about *query
+  coverage* instead of mere match existence: a single common word colliding with one
+  field no longer defeats abstention ("mobile app roadmap" matching a page that
+  mentions "roadmap" now abstains instead of ranking noise). Calibrated against an
+  expanded golden set (8 unanswerable collision shapes, accuracy 1.000 from 2/3) with
+  zero regression on any answerable category; the thresholds are CI-enforced.
+
+### Improvements
+
+- **Settings tab modernized** for Obsidian 1.13's declarative settings API (search
+  integration included) with a fallback renderer for current public releases —
+  one definitions array drives both, `minAppVersion` stays 1.12.2.
+- **CLI is pipe-friendly**: `knowlery query ... | head -1` and friends exit 0 quietly
+  when the consumer closes the pipe early, instead of dying with an EPIPE stack.
+- **CI now runs lint and the full test suite on every PR**, and the eslint setup
+  covers `tests/` and `evals/` with typed rules — repo-wide `eslint .` runs clean.
+
+### Under the hood
+
+- Export-side core (`collect`/`export-scope`/`compile`) inverted onto `VaultFs` plus a
+  new `LinkResolver` abstraction; headless wikilink resolution matches the
+  metadata-cache closure on the eval fixture (parity-tested).
+- npm publishing migrated to **OIDC Trusted Publishing** — no long-lived token
+  anywhere; provenance attestations generated automatically; the release workflow is
+  idempotent on re-runs.
+- The 0.6-era lint debt is paid: eight typed rules re-enabled at error severity
+  (~107 violations fixed across src and tests), obsidian typings pinned exactly,
+  `bin` path warning fixed.
+
 ## [0.7.0] — 2026-07-04
 
 Theme: one core, two shells — Knowlery's knowledge-base lifecycle is now available as
