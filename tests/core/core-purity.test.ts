@@ -24,6 +24,7 @@ const INVERTED_MODULES = [
   'cli/commands/bundle.ts',
   'cli/commands/bundle-export.ts',
   'core/okf/zip.ts',
+  'core/okf/remote-source.ts',
   'core/okf/collect.ts',
   'core/okf/export-scope.ts',
   'core/okf/compile.ts',
