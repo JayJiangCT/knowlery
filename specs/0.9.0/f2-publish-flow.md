@@ -1,6 +1,6 @@
 # F2 (0.9.0) — Publish Flow: `knowlery bundle publish`
 
-- **Status:** Accepted 2026-07-07 — implementation in progress
+- **Status:** Accepted 2026-07-07 — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f2-publish-92eb`
 - **Depends on:** 0.8 F1 (export + review gate), 0.9 F1 (remote install — the
