@@ -80,9 +80,13 @@ implementation:
   never need `gh` and private shelves use the receiver's own login).
 - Filters tags by the bundle's own prefix `<bundle-id>-v` (a multi-bundle shelf
   contains other bundles' tags; they are not this bundle's versions) and picks
-  the highest by numeric dotted-segment comparison. Prerelease suffixes compare
-  lexically after numerics — recorded simplification, not a promise of full
-  semver.
+  the highest using **the same comparator the install version gate already
+  uses** (`compareVersions` in `registry.ts`, exported and shared — maintainer
+  spec-review correction: one comparator, not two). The version contract for
+  bundles is **stable dotted-numeric** (`1.2.0`); prerelease suffixes are out
+  of contract — the existing comparator effectively ignores them, and rather
+  than promising lexical ordering the spec documents the contract and leaves
+  prerelease ordering unspecified.
 - Returns the release's zip asset URL — which is precisely what F2 published
   and F1 installs.
 
@@ -103,13 +107,24 @@ individual bundles degrade to `unreachable` lines, never abort the run.
    Library copy (same recipe as install: sorted `path\ncontent` of `.md`
    entries) and compare with the registry's `installedContentHash`. Mismatch →
    list the differing files, refuse without `--force`.
-4. Newer → the F1 remote-install path on `latest.url` with force semantics
-   (the version gate sees a newer version and passes; the Library subtree is
-   replaced wholesale, as install already does). Registry entry updates:
-   version, source (the new URL), hashes, conformance, installedAt.
-5. Failure at any gate leaves the installed version untouched (the install
-   pipeline stages to temp and replaces only on success — existing behavior,
-   restated as a test).
+4. Newer → the F1 remote-install path on `latest.url` (the version gate sees a
+   newer version and passes). Registry entry updates: version, source (the new
+   URL), hashes, conformance, installedAt.
+5. **Staged replacement — a new requirement, not existing behavior**
+   (maintainer spec-review correction: today's install pipeline does
+   `rmdir Library/<id>` *then* writes file by file, so a mid-write failure
+   loses the old version — a latent defect that `update` would turn into a
+   high-frequency path). The install pipeline's replace case is rebuilt:
+   - New content is written to a sibling staging dir
+     (`Library/.staging-<id>/`) **after** all gates have passed.
+   - Swap: live → `Library/.old-<id>/`, staging → live, then the backup is
+     dropped.
+   - Any failure **before** the swap leaves the live copy untouched; a failure
+     **mid-swap** leaves the backup dir in place and the error names it for
+     manual restore (true atomicity isn't available cross-platform; a
+     restorable backup is the honest guarantee).
+   - This requires a `rename` operation on `VaultFs` (Obsidian's adapter and
+     node fs both provide one); `--force` re-installs inherit the same safety.
 
 ### 4.4 Dashboard surfacing
 
@@ -142,8 +157,13 @@ load (pull means pull).
    registry; the old content is gone, the new present.
 6. Private upstream without `gh`: `check-updates` reports skipped (exit 0);
    `update` fails with the browser-path guidance (F1's), Library untouched.
-7. A failing download or gate mid-update leaves the installed version intact.
-8. Version comparison: `1.10.0 > 1.9.0` (numeric segments, not lexical).
+7. Staged replacement: a failure before the swap (download, any gate, staging
+   write) leaves the live copy byte-identical; a simulated mid-swap failure
+   leaves the `.old-<id>` backup present and named in the error. Both asserted
+   against the rebuilt replace path; plain `--force` re-install inherits and is
+   tested once too.
+8. Version comparison: `1.10.0 > 1.9.0` (numeric segments, not lexical), via
+   the single shared comparator.
 
 Mechanics: scripted transport + `gh` runner (the F1/F2 seams); loopback HTTP for
 the actual asset download in the update round trip.
