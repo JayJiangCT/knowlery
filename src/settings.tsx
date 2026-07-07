@@ -159,6 +159,12 @@ export class KnowlerySettingTab extends PluginSettingTab {
       this.kbNameItem(),
       this.nodePathItem(),
       {
+        name: 'Register vault for CLI/agent access',
+        desc: 'Keep this vault in the global KB registry so knowlery --kb and agents can find it by name.',
+        visible: () => this.initialized === true,
+        control: { type: 'toggle', key: 'registerVaultGlobally', defaultValue: true },
+      },
+      {
         type: 'group',
         heading: 'Platform',
         visible: () => this.initialized === true,
@@ -220,6 +226,12 @@ export class KnowlerySettingTab extends PluginSettingTab {
   private async applyControlValue(key: string, value: unknown): Promise<void> {
     const settings = this.plugin.settings;
     switch (key) {
+      case 'registerVaultGlobally': {
+        settings.registerVaultGlobally = value === true;
+        await this.plugin.saveSettings();
+        await this.plugin.syncKbRegistration();
+        return;
+      }
       case 'activityLoggingEnabled': {
         const enabled = value === true;
         settings.activityLoggingEnabled = enabled;

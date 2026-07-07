@@ -1,6 +1,7 @@
 import { Events, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, KNOWLEDGE_DIRS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
+import { ensureVaultRegistered, unregisterOwnedVault } from './core/kb-registry';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { ReflectionCaptureModal } from './modals/reflection-capture';
 import { ReleaseNotesModal } from './modals/release-notes-modal';
@@ -54,6 +55,7 @@ export default class KnowleryPlugin extends Plugin {
     this.fs = obsidianVaultFs(this.app);
     this.liveSnapshot = new LiveQuerySnapshot(this.app);
     this.registerQueryCliHandler();
+    void this.syncKbRegistration();
 
     this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 
@@ -281,7 +283,38 @@ export default class KnowleryPlugin extends Plugin {
 
   onSetupComplete() {
     this.events.trigger('setup-complete');
+    void this.syncKbRegistration();
     void this.activateDashboard();
+  }
+
+  /**
+   * KB registry integration (spec 1.0 f1, §4.5): register on setup/load, under
+   * the ownership rule — the plugin remembers exactly the name it created and
+   * only ever removes that; a pre-existing user entry is never touched.
+   */
+  async syncKbRegistration(): Promise<void> {
+    const adapter = this.app.vault.adapter as { getBasePath?: () => string };
+    const basePath = adapter.getBasePath?.();
+    if (!basePath) return; // desktop-only concern
+
+    try {
+      if (!this.settings.registerVaultGlobally) {
+        await unregisterOwnedVault(basePath, this.settings.registryOwnedName);
+        if (this.settings.registryOwnedName !== null) {
+          this.settings.registryOwnedName = null;
+          await this.saveSettings();
+        }
+        return;
+      }
+      if (!(await isVaultInitialized(this.fs))) return;
+      const { ownedName } = await ensureVaultRegistered(basePath, this.settings.kbName, this.settings.registryOwnedName);
+      if (ownedName !== this.settings.registryOwnedName) {
+        this.settings.registryOwnedName = ownedName;
+        await this.saveSettings();
+      }
+    } catch (error) {
+      console.warn('knowlery: KB registry sync failed', error);
+    }
   }
 
   private async maybeShowReleaseNotes(
