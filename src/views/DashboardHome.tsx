@@ -42,6 +42,10 @@ function pluginUpstreamDeps(): UpstreamDeps {
       const response = await requestUrl({ url, throw: false });
       return { status: response.status, ok: response.status >= 200 && response.status < 300, text: response.text };
     },
+    // ghApi deliberately not overridden: the default runner resolves the gh
+    // binary through common install locations (gh-binary.ts), which is what
+    // makes private-shelf checks work inside Electron's minimal GUI PATH
+    // (maintainer acceptance finding, 0.9 f3).
   };
 }
 import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';

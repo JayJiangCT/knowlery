@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import { compareVersions } from './registry';
 import { parseGithubReleaseAssetUrl } from './remote-source';
+import { resolveGhBinary } from './gh-binary';
 
 /**
  * The upstream protocol (spec 0.9 f3, §4.1 — plan-binding): "latest published
@@ -99,11 +100,12 @@ function parseReleases(text: string): ReleaseRecord[] {
   }
 }
 
-function defaultGhApi(path: string): Promise<{ ok: boolean; stdout: string; error?: string }> {
+async function defaultGhApi(path: string): Promise<{ ok: boolean; stdout: string; error?: string }> {
+  const binary = await resolveGhBinary();
+  if (!binary) return { ok: false, stdout: '', error: 'gh-not-installed' };
   return new Promise((resolve) => {
-    execFile('gh', ['api', path], { timeout: 60_000 }, (error, stdout, stderr) => {
+    execFile(binary, ['api', path], { timeout: 60_000 }, (error, stdout, stderr) => {
       if (!error) resolve({ ok: true, stdout });
-      else if ((error as NodeJS.ErrnoException).code === 'ENOENT') resolve({ ok: false, stdout: '', error: 'gh-not-installed' });
       else resolve({ ok: false, stdout, error: stderr || error.message });
     });
   });

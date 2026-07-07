@@ -28,6 +28,7 @@ const INVERTED_MODULES = [
   'core/okf/zip.ts',
   'core/okf/publish.ts',
   'core/okf/upstream.ts',
+  'core/okf/gh-binary.ts',
   'core/okf/update-check.ts',
   'core/okf/remote-source.ts',
   'core/okf/collect.ts',
