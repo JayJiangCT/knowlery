@@ -44,6 +44,8 @@ Usage:
                          [--approve <id>...] [--flag <id>...]
   knowlery bundle publish <seed-concept-id> [--dir <path>] [--repo <owner/name>]
                           [--public] [--acknowledge-risks] [--force]
+  knowlery bundle check-updates [--dir <path>] [--json]
+  knowlery bundle update <bundle-id> | --all  [--dir <path>] [--force]
   knowlery --version | --help
 
 The same workspace format as the Knowlery Obsidian plugin — a folder initialized here
@@ -67,6 +69,7 @@ interface ParsedArgs {
   bundleVersion?: string;
   verify?: string;
   repo?: string;
+  all: boolean;
   public: boolean;
   acknowledgeRisks: boolean;
   approve: string[];
@@ -95,6 +98,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     json: false,
     zip: false,
     list: false,
+    all: false,
     public: false,
     acknowledgeRisks: false,
     approve: [],
@@ -126,6 +130,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     else if (arg === '--verify') parsed.verify = argv[++i];
     else if (arg === '--repo') parsed.repo = argv[++i];
     else if (arg === '--public') parsed.public = true;
+    else if (arg === '--all') parsed.all = true;
     else if (arg === '--acknowledge-risks') parsed.acknowledgeRisks = true;
     else if (arg === '--approve') {
       const { values, next } = takeValues(i + 1);
@@ -231,6 +236,7 @@ async function main(): Promise<void> {
         approve: args.approve,
         flag: args.flag,
         repo: args.repo,
+        all: args.all,
         public: args.public,
         acknowledgeRisks: args.acknowledgeRisks,
         prompt: makePrompt(),
