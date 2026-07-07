@@ -18,6 +18,36 @@ import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
 import { InstallBundleModal } from '../modals/install-bundle';
 import { summarizeBundleScope } from '../core/okf/export-scope';
+import { collectUpdateStatuses, modifiedFiles, type UpdateStatus } from '../core/okf/update-check';
+import type { UpstreamDeps } from '../core/okf/upstream';
+import { downloadRemoteBundle, type RemoteFetchResult } from '../core/okf/remote-source';
+import { readBundleEntries } from '../core/okf/zip';
+import { installBundle } from '../core/okf/install';
+import { requestUrl } from 'obsidian';
+import { Readable } from 'node:stream';
+
+/** Plugin-shell transports for the update loop (spec 0.9 f3): requestUrl, as in F1. */
+async function obsidianRemoteFetch(url: string): Promise<RemoteFetchResult> {
+  const response = await requestUrl({ url, throw: false });
+  return {
+    status: response.status,
+    ok: response.status >= 200 && response.status < 300,
+    body: Readable.from(Buffer.from(response.arrayBuffer)),
+  };
+}
+
+function pluginUpstreamDeps(): UpstreamDeps {
+  return {
+    fetchText: async (url) => {
+      const response = await requestUrl({ url, throw: false });
+      return { status: response.status, ok: response.status >= 200 && response.status < 300, text: response.text };
+    },
+    // ghApi deliberately not overridden: the default runner resolves the gh
+    // binary through common install locations (gh-binary.ts), which is what
+    // makes private-shelf checks work inside Electron's minimal GUI PATH
+    // (maintainer acceptance finding, 0.9 f3).
+  };
+}
 import { conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
 import type { InstalledBundlesFile } from '../types';
 import { readInstalledBundles } from '../core/okf/registry';
@@ -374,32 +404,111 @@ function InstalledBundlesSection(props: {
   registry: InstalledBundlesFile | null;
   onUninstall: (bundleId: string) => void;
 }) {
+  const plugin = usePlugin();
   const { registry } = props;
+  const [statuses, setStatuses] = useState<Map<string, UpdateStatus> | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
   if (!registry) return null;
   const entries = Object.entries(registry.bundles);
   if (entries.length === 0) return null;
 
+  // Pull means pull (spec 0.9 f3): checking happens on click, never on load.
+  const checkUpdates = async () => {
+    setChecking(true);
+    try {
+      const found = await collectUpdateStatuses(plugin.fs, pluginUpstreamDeps());
+      setStatuses(new Map(found.map((status) => [status.id, status])));
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : String(error));
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const updateBundle = async (id: string, url: string) => {
+    setUpdating(id);
+    try {
+      // Local-modification protection (spec 0.9 f3, §4.3.3) — the same core check
+      // the CLI runs. The dashboard offers no force path; deliberate overwrites
+      // go through `knowlery bundle update <id> --force`.
+      const entry = registry.bundles[id];
+      const changed = await modifiedFiles(plugin.fs, entry);
+      if (changed.length > 0) {
+        const preview = changed.slice(0, 3).join('\n');
+        const more = changed.length > 3 ? `\n…and ${changed.length - 3} more` : '';
+        new Notice(
+          `${id} was modified locally — updating would overwrite these edits:\n${preview}${more}\n`
+          + 'Move your notes into your own pages, or run `knowlery bundle update '
+          + `${id} --force\` from the CLI to overwrite.`,
+        );
+        return;
+      }
+      const downloaded = await downloadRemoteBundle(url, { fetchImpl: obsidianRemoteFetch });
+      try {
+        const bundleEntries = await readBundleEntries(downloaded.zipPath);
+        await installBundle(plugin.fs, bundleEntries, { source: url });
+      } finally {
+        await downloaded.cleanup();
+      }
+      new Notice(`${id} updated.`);
+      setStatuses(null);
+      plugin.events.trigger('dashboard-refresh');
+    } catch (error) {
+      new Notice(`Update failed — the installed version is untouched. ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   return (
     <section className="knowlery-home__installed">
-      <div className="knowlery-section-label">Installed bundles</div>
-      {entries.map(([id, entry]) => (
-        <div key={id} className="knowlery-home__installed-row">
-          <div className="knowlery-home__installed-body">
-            <span className="knowlery-home__installed-title">{entry.title}</span>
-            <span className="knowlery-home__installed-meta">v{entry.version}</span>
+      <div className="knowlery-section-label">
+        Installed bundles
+        <button
+          type="button"
+          className="knowlery-btn knowlery-btn--outline knowlery-home__installed-check"
+          disabled={checking}
+          onClick={() => void checkUpdates()}
+        >
+          {checking ? 'Checking…' : 'Check updates'}
+        </button>
+      </div>
+      {entries.map(([id, entry]) => {
+        const status = statuses?.get(id);
+        return (
+          <div key={id} className="knowlery-home__installed-row">
+            <div className="knowlery-home__installed-body">
+              <span className="knowlery-home__installed-title">{entry.title}</span>
+              <span className="knowlery-home__installed-meta">
+                v{entry.version}
+                {status?.kind === 'current' && ' · up to date'}
+                {(status?.kind === 'unchecked' || status?.kind === 'skipped' || status?.kind === 'unreachable') && ` · ${status.reason}`}
+              </span>
+            </div>
+            {status?.kind === 'available' && (
+              <button
+                type="button"
+                className="knowlery-btn knowlery-btn--primary"
+                disabled={updating !== null}
+                onClick={() => void updateBundle(id, status.url)}
+              >
+                {updating === id ? 'Updating…' : `Update to v${status.latest}`}
+              </button>
+            )}
+            <span className={`knowlery-badge knowlery-badge--${entry.conformance === 'passed' ? 'success' : 'warning'}`}>
+              {entry.conformance}
+            </span>
+            <button
+              type="button"
+              className="knowlery-btn knowlery-btn--outline"
+              onClick={() => props.onUninstall(id)}
+            >
+              <span>Uninstall</span>
+            </button>
           </div>
-          <span className={`knowlery-badge knowlery-badge--${entry.conformance === 'passed' ? 'success' : 'warning'}`}>
-            {entry.conformance}
-          </span>
-          <button
-            type="button"
-            className="knowlery-btn knowlery-btn--outline"
-            onClick={() => props.onUninstall(id)}
-          >
-            <span>Uninstall</span>
-          </button>
-        </div>
-      ))}
+        );
+      })}
     </section>
   );
 }

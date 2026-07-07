@@ -9,6 +9,7 @@ import { RemoteSourceError, downloadRemoteBundle, isRemoteSource, verifyFileInte
 import { nodeFetch } from '../../platform/node-fetch';
 import { runBundleExport, runBundleReview } from './bundle-export';
 import { runBundlePublish } from './bundle-publish';
+import { runBundleUpdate, runCheckUpdates } from './bundle-update';
 import { CliError } from './shared';
 
 const BUNDLE_USAGE = [
@@ -19,6 +20,8 @@ const BUNDLE_USAGE = [
   '  knowlery bundle export <seed-concept-id> [--dir <vault>] [--hops <n>] [--zip] [--json]',
   '  knowlery bundle publish <seed-concept-id> [--dir <vault>] [--repo <owner/name>] [--public]',
   '                          [--acknowledge-risks] [--force]',
+  '  knowlery bundle check-updates [--dir <vault>] [--json]',
+  '  knowlery bundle update <bundle-id> | --all  [--dir <vault>] [--force]',
   '  knowlery bundle review <seed-concept-id> [--dir <vault>] [--list] [--json]',
   '                         [--approve <id>...] [--flag <id>...]',
 ].join('\n');
@@ -42,6 +45,7 @@ export interface BundleCommandOptions {
   approve?: string[];
   flag?: string[];
   repo?: string;
+  all?: boolean;
   public?: boolean;
   acknowledgeRisks?: boolean;
   prompt?: import('./shared').Prompt;
@@ -78,6 +82,20 @@ export async function runBundleCommand(fs: VaultFs, options: BundleCommandOption
         creator: options.creator,
         bundleVersion: options.bundleVersion,
         log: options.log,
+      });
+      break;
+    case 'check-updates':
+      await runCheckUpdates(fs, { json: options.json, log: options.log });
+      break;
+    case 'update':
+      await runBundleUpdate(fs, {
+        target: options.arg,
+        all: options.all,
+        force: options.force,
+        json: options.json,
+        root: options.root,
+        log: options.log,
+        install: (url) => install(fs, { ...options, arg: url, verify: undefined }),
       });
       break;
     case 'publish':

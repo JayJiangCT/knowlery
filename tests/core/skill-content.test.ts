@@ -117,6 +117,14 @@ describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
     expect(content.replace(/\s+/g, ' ')).toContain('A public release is permanent');
   });
 
+  it('teaches the subscription loop: read-only checks, never auto-update (spec 0.9 f3)', () => {
+    const content = skill('knowlery-cli');
+    expect(content).toContain('knowlery bundle check-updates');
+    expect(content).toContain('knowlery bundle update');
+    expect(content.replace(/\s+/g, ' ')).toContain('never run `update` without the user asking');
+    expect(content).toContain('read-only');
+  });
+
   it('teaches URL installs: gh delegation, browser degradation, verify conduct (spec 0.9 f1)', () => {
     const content = skill('knowlery-cli');
     expect(content).toContain('accepts an https URL');

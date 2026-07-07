@@ -36,7 +36,12 @@ export function resolveInstallAction(
   return { kind: 'blocked', installedVersion: existing.version };
 }
 
-function compareVersions(a: string, b: string): number {
+/**
+ * The one version comparator (spec 0.9 f3 — shared by the install gate and the
+ * upstream picker). Bundle version contract: stable dotted-numeric; prerelease
+ * suffixes are out of contract and effectively ignored.
+ */
+export function compareVersions(a: string, b: string): number {
   const partsA = a.split('.').map((part) => parseInt(part, 10) || 0);
   const partsB = b.split('.').map((part) => parseInt(part, 10) || 0);
   const length = Math.max(partsA.length, partsB.length);

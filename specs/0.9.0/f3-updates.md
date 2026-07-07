@@ -1,6 +1,6 @@
 # F3 (0.9.0) — Update & Subscription: `check-updates` / `update`
 
-- **Status:** Accepted 2026-07-07 (with staged-replacement and shared-comparator corrections) — implementation in progress
+- **Status:** Accepted 2026-07-07 (with staged-replacement and shared-comparator corrections) — implemented, awaiting maintainer acceptance testing (§7)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f3-updates-92eb`
 - **Depends on:** F1 (source seam: registry records re-fetchable URLs; download
@@ -133,6 +133,19 @@ individual bundles degrade to `unreachable` lines, never abort the run.
 annotates each bundle — `v1.2.0 → v1.3.0 available` with an Update button, `up
 to date`, or the unchecked/skipped reason. No automatic checking on dashboard
 load (pull means pull).
+
+**Acceptance amendments (maintainer findings on the real vault):**
+
+1. The Update button runs the same `modifiedFiles` core check the CLI runs and
+   refuses with the named files — the dashboard deliberately offers no force
+   path (explicit overwrites go through the CLI's `--force`).
+2. Private-shelf checks inside Obsidian showed `gh needed` even with gh
+   installed: **Electron's GUI process doesn't inherit the shell PATH** (the
+   same problem `node-detect.ts` solves for node). All default gh runners
+   (remote-install fallback, publish, upstream checks) now resolve the binary
+   through `gh-binary.ts` — bare `gh` first, then the common install locations
+   (`/opt/homebrew/bin`, `/usr/local/bin`, Windows Program Files) — so the CLI
+   and the plugin see the same gh.
 
 ### 4.5 Skill + docs
 

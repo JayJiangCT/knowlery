@@ -1179,6 +1179,8 @@ no running Obsidian needed. Install: \`npm install -g knowlery\`. All commands a
 | \`knowlery bundle export <seed> [--hops n] [--zip] [--json]\` | Compile reviewed knowledge into a shareable bundle | User wants to share a topic |
 | \`knowlery bundle review <seed> [--list] [--json] [--approve <id>...] [--flag <id>...]\` | Record per-item review decisions | Working through the export checklist |
 | \`knowlery bundle publish <seed> [--repo <owner/name>] [--public] [--acknowledge-risks] [--force]\` | Release a reviewed bundle to GitHub | User wants a shareable URL |
+| \`knowlery bundle check-updates [--json]\` | Ask each installed bundle's source for newer versions | User wonders if shared knowledge is current |
+| \`knowlery bundle update <id> | --all [--force]\` | Install available updates through the full gate pipeline | check-updates found something |
 
 ## Exporting a bundle: the review gate
 
@@ -1245,6 +1247,16 @@ are **always the user's**:
 3. After publishing, relay the audience statement and the install+verify line
    exactly as printed — they tell the user who can access it and what to share.
 4. If gh is unavailable, relay the printed manual checklist instead of improvising.
+
+## Subscription conduct
+
+\`check-updates\` is read-only and safe to run whenever freshness matters — run it
+proactively when the user asks questions against installed bundles that might be
+stale. Report its findings verbatim (including \`unchecked\`/\`skipped\` reasons);
+**never run \`update\` without the user asking** — new knowledge changes what the
+vault answers, and that is the user's call. If update refuses because the bundle
+was locally modified, relay the file list and the guidance (move notes into the
+user's own pages); \`--force\` only on explicit instruction.
 
 ## Installing from URLs
 

@@ -55,6 +55,8 @@ export function obsidianVaultFs(app: App): VaultFs {
 
     remove: (path) => adapter.remove(normalizePath(path)),
 
+    rename: (oldPath, newPath) => adapter.rename(normalizePath(oldPath), normalizePath(newPath)),
+
     rmdir: async (path, recursive) => {
       const normalized = normalizePath(path);
       const withRmdir = adapter as typeof adapter & AdapterWithRmdir;

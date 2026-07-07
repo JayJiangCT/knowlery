@@ -60,24 +60,59 @@ export async function installBundle(
   }
 
   const libraryDir = `Library/${manifest.id}`;
+  // Path safety is asserted against the final destination; the staging dir is a
+  // sibling under Library/ so the same containment argument covers it.
   const safeWrites = entries.map((entry) => ({
-    fullPath: assertSafeInstallPath(libraryDir, entry.path),
+    relativePath: assertSafeInstallPath(libraryDir, entry.path).slice(`${libraryDir}/`.length),
     content: entry.content,
   }));
 
-  if (existing) await fs.rmdir(normalizeVaultPath(libraryDir), true);
+  // Staged replacement (spec 0.9 f3, §4.3.5): the previous rmdir-then-write
+  // sequence lost the installed copy when a mid-write failure hit — a latent
+  // defect that updates would have made a high-frequency path. All gates have
+  // passed by this point; now: write to a staging sibling, swap via a backup,
+  // drop the backup. A failure before the swap leaves the live copy untouched;
+  // a failure mid-swap leaves the named backup for manual restore.
+  const stagingDir = `Library/.staging-${manifest.id}`;
+  const backupDir = `Library/.old-${manifest.id}`;
+  await fs.rmdir(normalizeVaultPath(stagingDir), true).catch(() => { /* no stale staging */ });
 
-  for (const { fullPath, content } of safeWrites) {
-    await ensureVaultDir(fs, dirname(fullPath));
-    await fs.write(normalizeVaultPath(fullPath), content);
+  try {
+    for (const { relativePath, content } of safeWrites) {
+      const stagedPath = `${stagingDir}/${relativePath}`;
+      await ensureVaultDir(fs, dirname(stagedPath));
+      await fs.write(normalizeVaultPath(stagedPath), content);
+    }
+  } catch (error) {
+    await fs.rmdir(normalizeVaultPath(stagingDir), true).catch(() => { /* best-effort cleanup */ });
+    throw error;
   }
 
+  if (existing || await fs.exists(normalizeVaultPath(libraryDir))) {
+    await fs.rmdir(normalizeVaultPath(backupDir), true).catch(() => { /* no stale backup */ });
+    await fs.rename(normalizeVaultPath(libraryDir), normalizeVaultPath(backupDir));
+    try {
+      await fs.rename(normalizeVaultPath(stagingDir), normalizeVaultPath(libraryDir));
+    } catch (error) {
+      throw new Error(
+        `Install failed mid-swap: the previous version was preserved at ${backupDir}/ — rename it back to ${libraryDir}/ to restore. (${error instanceof Error ? error.message : String(error)})`,
+      );
+    }
+    await fs.rmdir(normalizeVaultPath(backupDir), true).catch(() => { /* best-effort cleanup */ });
+  } else {
+    await ensureVaultDir(fs, 'Library');
+    await fs.rename(normalizeVaultPath(stagingDir), normalizeVaultPath(libraryDir));
+  }
+
+  const mdEntries = entries.filter((entry) => entry.path.endsWith('.md'));
   const installedContentHash = sha256(
-    entries
-      .filter((entry) => entry.path.endsWith('.md'))
+    mdEntries
       .map((entry) => `${entry.path}\n${entry.content}`)
       .sort()
       .join('\n'),
+  );
+  const fileHashes = Object.fromEntries(
+    mdEntries.map((entry) => [entry.path, sha256(entry.content)]),
   );
 
   registry.bundles[manifest.id] = {
@@ -88,6 +123,7 @@ export async function installBundle(
     libraryPath: `${libraryDir}/`,
     manifestContentHash: manifest.contentHash,
     installedContentHash,
+    fileHashes,
     conformance: conformanceOutcome,
     conformanceErrorCount: conformance.errors.length,
   };

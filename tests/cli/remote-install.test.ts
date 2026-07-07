@@ -14,6 +14,7 @@ import {
   downloadRemoteBundle,
   parseGithubReleaseAssetUrl,
 } from '../../src/core/okf/remote-source';
+import { resetGhBinaryCache } from '../../src/core/okf/gh-binary';
 
 const silent = () => {};
 
@@ -279,8 +280,10 @@ describe('gh tier scoping (spec 0.9 f1, §5.5)', () => {
     await writeFile(fixturePath, goodZip);
     await writeFile(stubPath, [
       '#!/usr/bin/env node',
-      "const fs = require('fs');",
       "const args = process.argv.slice(2);",
+      // The binary resolver probes with --version before any real call.
+      "if (args.includes('--version')) { console.log('gh version 0.0-stub'); process.exit(0); }",
+      "const fs = require('fs');",
       "const dir = args[args.indexOf('--dir') + 1];",
       "const pattern = args[args.indexOf('--pattern') + 1];",
       `fs.copyFileSync(${JSON.stringify(fixturePath)}, require('path').join(dir, pattern));`,
@@ -289,6 +292,7 @@ describe('gh tier scoping (spec 0.9 f1, §5.5)', () => {
 
     const originalPath = process.env.PATH;
     process.env.PATH = `${stubDir}:${originalPath}`;
+    resetGhBinaryCache();
     try {
       const downloaded = await downloadRemoteBundle(GH_URL, { fetchImpl: refused });
       try {
@@ -298,6 +302,7 @@ describe('gh tier scoping (spec 0.9 f1, §5.5)', () => {
       }
     } finally {
       process.env.PATH = originalPath;
+      resetGhBinaryCache();
       await rm(stubDir, { recursive: true, force: true });
     }
   });

@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { resolveGhBinary } from './gh-binary';
 import type { RiskHint } from '../../types';
 import type { ScopeItem } from './export-scope';
 
@@ -23,11 +24,12 @@ export interface GhResult {
 /** Injectable for tests; defaults to spawning `gh` from PATH. */
 export type GhRunner = (args: string[]) => Promise<GhResult>;
 
-export function defaultGhRunner(args: string[]): Promise<GhResult> {
+export async function defaultGhRunner(args: string[]): Promise<GhResult> {
+  const binary = await resolveGhBinary();
+  if (!binary) return { ok: false, stdout: '', error: 'gh-not-installed' };
   return new Promise((resolve) => {
-    execFile('gh', args, { timeout: 300_000 }, (error, stdout, stderr) => {
+    execFile(binary, args, { timeout: 300_000 }, (error, stdout, stderr) => {
       if (!error) resolve({ ok: true, stdout });
-      else if ((error as NodeJS.ErrnoException).code === 'ENOENT') resolve({ ok: false, stdout: '', error: 'gh-not-installed' });
       else resolve({ ok: false, stdout, error: stderr || error.message });
     });
   });

@@ -65,6 +65,32 @@ export function createMemoryFs(initialFiles: Record<string, string> = {}): Memor
       files.delete(path);
     },
 
+    rename: async (oldPath, newPath) => {
+      if (files.has(oldPath)) {
+        files.set(newPath, files.get(oldPath)!);
+        files.delete(oldPath);
+        addParentDirs(newPath);
+        writeLog.push(newPath);
+        return;
+      }
+      // Directory move: re-key every child.
+      const prefix = `${oldPath}/`;
+      for (const file of [...files.keys()]) {
+        if (file.startsWith(prefix)) {
+          files.set(`${newPath}/${file.slice(prefix.length)}`, files.get(file)!);
+          files.delete(file);
+        }
+      }
+      for (const dir of [...dirs]) {
+        if (dir === oldPath || dir.startsWith(prefix)) {
+          dirs.delete(dir);
+          dirs.add(dir === oldPath ? newPath : `${newPath}/${dir.slice(prefix.length)}`);
+        }
+      }
+      addParentDirs(`${newPath}/x`);
+      writeLog.push(newPath);
+    },
+
     rmdir: async (path, recursive) => {
       if (!recursive) {
         dirs.delete(path);

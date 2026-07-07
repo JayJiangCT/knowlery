@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
+import { resolveGhBinary } from './gh-binary';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { createWriteStream } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -173,10 +174,11 @@ async function downloadViaGh(
 }
 
 async function defaultGhRunner(args: string[]): Promise<{ ok: boolean; error?: string }> {
+  const binary = await resolveGhBinary();
+  if (!binary) return { ok: false, error: 'gh is not installed' };
   return new Promise((resolve) => {
-    execFile('gh', args, { timeout: 120_000 }, (error, _stdout, stderr) => {
+    execFile(binary, args, { timeout: 120_000 }, (error, _stdout, stderr) => {
       if (!error) resolve({ ok: true });
-      else if ((error as NodeJS.ErrnoException).code === 'ENOENT') resolve({ ok: false, error: 'gh is not installed' });
       else resolve({ ok: false, error: stderr || error.message });
     });
   });

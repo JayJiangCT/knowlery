@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rm, unlink, writeFile, stat } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm, unlink, writeFile, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { VaultFs } from '../core/vault-fs';
 import { normalizeVaultPath } from '../core/vault-fs';
@@ -47,6 +47,10 @@ export function nodeVaultFs(root: string): VaultFs {
 
     rmdir: async (path, recursive) => {
       await rm(abs(path), { recursive, force: true });
+    },
+
+    rename: async (oldPath, newPath) => {
+      await rename(abs(oldPath), abs(newPath));
     },
 
     list: async (path) => {
