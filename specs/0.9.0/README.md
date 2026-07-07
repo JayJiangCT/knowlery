@@ -34,6 +34,17 @@ independent engine work and can interleave.
   (three tiers: anonymous URL → documented two-step `gh release download` → automatic
   `gh` fallback when an unauthenticated GitHub fetch fails). No tokens stored,
   configured, or seen.
+- **`gh` is an accelerator, never a prerequisite** (maintainer question at plan
+  review). Every flow has a no-`gh` degradation: public install/update-check never
+  need it; private install falls back to browser download (the receiver's browser
+  session is the credential) + local-file install; **publish falls back to a guided
+  manual web release** — Knowlery precomputes every value (zip path, target repo
+  URL, tag name) and prints/renders a copy-ready checklist, so the manual path costs
+  a minute and produces an artifact indistinguishable from a `gh`-published one;
+  private update checks skip gracefully with a one-line note. Where `gh` is absent,
+  the CLI guides installation (one command per platform); whether the plugin's setup
+  wizard additionally offers confirmed installation (the existing optional-tools
+  pattern) is an F2 spec decision point.
 - **Pull, not push.** No daemon, no notifications. `check-updates` runs on demand
   (command, `sync` report, dashboard card); agents provide the subscription cadence.
 
