@@ -183,6 +183,22 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
         await new Promise<void>((r) => bundleServer.close(() => r()));
       }
 
+      // KB registry (spec 1.0 f1): register, resolve --kb from an unrelated cwd,
+      // federated attribution, and the --kb/--dir conflict — on the built artifact.
+      const configDir = join(workDir, 'kb-config');
+      const kbEnv = { ...process.env, KNOWLERY_CONFIG_DIR: configDir };
+      await run('node', [cliPath, 'kb', 'add', 'smoke', vaultDir], { env: kbEnv });
+      const kbList = await run('node', [cliPath, 'kb', 'list'], { env: kbEnv });
+      expect(kbList.stdout).toContain('smoke');
+      const kbQuery = await run('node', [cliPath, 'query', '--kb', 'smoke', 'widget design'], { env: kbEnv });
+      expect(kbQuery.stdout).toContain('concepts/widget-design.md');
+      const federated = await run('node', [cliPath, 'query', '--kb', '*', 'widget design'], { env: kbEnv });
+      expect(federated.stdout).toContain('smoke: concepts/widget-design.md');
+      const conflict = await run('node', [cliPath, 'query', '--kb', 'smoke', '--dir', vaultDir, 'x'], { env: kbEnv })
+        .catch((error: { code: number; stderr: string }) => error);
+      expect(conflict.code).toBe(2);
+      expect(conflict.stderr).toContain('not both');
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,
