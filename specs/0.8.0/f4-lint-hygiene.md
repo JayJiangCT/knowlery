@@ -1,6 +1,6 @@
 # F4 (0.8.0) — Repo Lint Hygiene
 
-- **Status:** Accepted 2026-07-06 (with exact-pin amendment) — implemented, awaiting maintainer acceptance testing (§6)
+- **Status:** Done — maintainer acceptance passed 2026-07-07 (with two acceptance amendments: generic hidden-dir ignores; Catalyst finding → two-renderer settings design, minAppVersion stays 1.12.2)
 - **Target release:** 0.8.0
 - **Branch:** `cursor/08-f4-lint-hygiene-92eb` (off `main` @ 0.8 F3)
 - **Depends on:** — (independent; scope from the 0.6.1 scan + 0.7 F1 acceptance side
