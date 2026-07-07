@@ -77,9 +77,16 @@ knowlery mcp        # stdio server; runs until the client disconnects
 Tools return both a human-readable text block (what the shells already print —
 shared formatters) and `structuredContent` mirroring the `--json` shapes the
 CLI has carried since 0.7 — the schemas that already exist become the MCP
-contract. `query`'s abstention returns `verdict: "no-confident-match"` with
-the consulted-KBs list in the federated case; agents are told (in the tool
-description) that abstention is an answer.
+contract.
+
+**Findings are data; only broken calls are errors** (maintainer P2 at spec
+review, generalizing the abstention rule): a query abstention
+(`verdict: "no-confident-match"`, with the consulted-KBs list when federated),
+an unhealthy `health` report (`structuredContent.healthy: false` — where the
+CLI exits 1, MCP returns a successful result carrying the finding), and a
+stale-heavy `stale` report are all **successful tool results**. Tool errors
+are reserved for invalid input, unknown `kb` names, and I/O failures. Tool
+descriptions state this so agents relay findings instead of retrying.
 
 ### 4.3 Skills as prompts
 
@@ -99,9 +106,21 @@ list vs. all-14.
   `KNOWLEDGE.md`) plus a resource *template*
   (`knowlery://{kb}/{+path}`) — the listing stays bounded regardless of vault
   size; agents reach specific pages through query results and wikilinks.
-- Reads canonicalize and **prefix-check against the KB root** (no traversal,
-  no symlink escape — the `init_kb` discipline applied to reads), refuse
-  non-markdown binaries, and pass through `.md` content verbatim.
+- **Readable-path allowlist (maintainer P1 at spec review — the product
+  boundary that free-form notes stay yours):** resource reads serve only the
+  *curated knowledge surface* —
+  `KNOWLEDGE.md`, the four compiled dirs (`entities/`, `concepts/`,
+  `comparisons/`, `queries/`), and installed-bundle pages under `Library/`.
+  Everything else (`Daily/`, `Projects/`, arbitrary `.md`) is refused with an
+  explanation. This creates a deliberate asymmetry with `query`, which
+  surfaces user-tier pages by 0.6 design: an agent may *discover* a raw note's
+  existence (path, title, description — retrieval metadata), but reading its
+  full content over MCP is out of bounds; the refusal message says so and
+  points at `/cook` as the way content is promoted into the readable layer.
+- Reads additionally canonicalize and **prefix-check against the KB root** (no
+  traversal, no symlink escape — the `init_kb` discipline applied to reads),
+  refuse non-markdown binaries, and pass through allowed `.md` content
+  verbatim.
 
 ### 4.5 Client setup docs
 
@@ -126,13 +145,18 @@ now.
    arguments (missing question, extra fields) → schema rejection; the server
    never crashes on bad input (the F1 lesson, protocol edition).
 3. Resources: traversal attempts (`../`, absolute paths, symlink out of the
-   KB) are refused; a legitimate read returns the page verbatim; the resource
+   KB) are refused; **a user-tier note (`Projects/…`, `Daily/…`) is refused
+   with the boundary explanation even though `query` can surface it**; a
+   compiled page and a `Library/` bundle page read verbatim; the resource
    listing is bounded (entry points + template, not one entry per page).
-4. Prompts: the curated set is exactly present; each returns non-empty content
+4. Result-vs-error semantics: an unhealthy `health` and an abstaining `query`
+   come back as successful results with the finding in `structuredContent`;
+   unknown `kb` and malformed input come back as tool errors.
+5. Prompts: the curated set is exactly present; each returns non-empty content
    matching the bundled skill.
-5. Federated query via MCP matches the CLI's federated output for the same
+6. Federated query via MCP matches the CLI's federated output for the same
    fixture registry (shared-core proof).
-6. Smoke: the built `knowlery-cli.mjs` speaks real stdio JSON-RPC — spawn,
+7. Smoke: the built `knowlery-cli.mjs` speaks real stdio JSON-RPC — spawn,
    initialize, `tools/list`, one `query` call, clean shutdown.
 
 ## 6. Acceptance criteria
