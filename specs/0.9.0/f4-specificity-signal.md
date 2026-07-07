@@ -1,6 +1,6 @@
 # F4 (0.9.0) — Retrieval: Specificity-Weighted Coverage
 
-- **Status:** Accepted 2026-07-07 — implemented, awaiting maintainer acceptance testing (§7)
+- **Status:** Done — maintainer acceptance passed 2026-07-07 (implementation review + golden-notes arithmetic fix at acceptance)
 - **Target release:** 0.9.0
 - **Branch:** `cursor/09-f4-specificity-92eb`
 - **Depends on:** 0.8 F2 (confidence gate + calibration discipline), its §7
