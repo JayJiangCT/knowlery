@@ -46,8 +46,10 @@ Investigation results on current `main` (all reproduced, not assumed):
 3. Obsidian typings pinned exactly at `1.13.1` (maintainer decision at spec
    review: a `^` range still drifts on future 1.14/1.15 resolutions — the exact
    pin is what actually removes install-day drift; future bumps become deliberate
-   commits); the settings tab migrates from the deprecated `display()` to
-   declarative `getSettingDefinitions()`, and `minAppVersion` bumps to `1.13.0`.
+   commits); the settings tab migrates to declarative `getSettingDefinitions()`
+   with `display()` retained only as the pre-1.13 interpreter of the same
+   definitions (amended at acceptance — see §4.3; `minAppVersion` stays 1.12.2
+   because Obsidian 1.13 is Catalyst-only).
 4. A `ci.yml` workflow runs lint + tests on every PR and push to `main`, making
    F4's state the enforced floor rather than a snapshot.
 
@@ -116,9 +118,34 @@ Migration shape: `getSettingDefinitions()` returns the general / platform /
 activity / bundle-defaults / maintenance groups as definitions (controls wired
 through `getControlValue`/`setControlValue` overrides onto `plugin.settings`);
 the uninitialized-vault banner and the React advanced section become `render`
-items; `hide()` keeps unmounting the React root. `display()` is deleted, not kept
-as a parallel fallback — dual rendering paths of the same settings is drift by
-construction.
+items; `hide()` keeps unmounting the React root.
+
+**Amended at maintainer acceptance (blank-settings finding).** The original plan
+deleted `display()` and bumped `minAppVersion` to 1.13.0. The maintainer's
+real-vault test showed a completely blank settings page — and the root cause
+invalidated the plan's premise: **Obsidian 1.13 is Catalyst-only** (early
+access; verified against the official changelog — latest public release is
+1.12.7, 2026-03-23). Shipping `minAppVersion: 1.13.0` would have locked every
+public-release user out of 0.8.0.
+
+Revised design — *one definitions array, two renderers*:
+
+- `minAppVersion` stays **1.12.2**.
+- `getSettingDefinitions()` remains the single source of truth. On >= 1.13 the
+  framework renders it declaratively (settings search included).
+- `display()` returns as the documented pre-1.13 fallback — but instead of a
+  second hand-maintained rendering, it runs a ~60-line interpreter that renders
+  the *same* definitions imperatively (groups → headings, `control` items →
+  `addToggle`/`addText` wired through the same `get/setControlValue`, `render`
+  items called directly). The drift-by-construction objection to the original
+  "dual path" option is void: there is one description of the settings and two
+  mechanical consumers of it.
+- Re-renders go through a capability-detected `requestRender()`:
+  `SettingTab.update()` when it exists (1.13+), re-running the fallback renderer
+  otherwise. Structural access keeps `obsidianmd/no-unsupported-api` satisfied
+  at `minAppVersion` 1.12.2.
+- When 1.13 reaches public release, deleting the fallback is a two-line change
+  and the minAppVersion bump can ride any later release.
 
 ### 4.4 CI workflow
 
@@ -141,8 +168,10 @@ per-concern.
    and CI-diffed.)
 4. Obsidian typings pinned exactly at `1.13.1` in `package.json` (no `latest`,
    no `^` range) with `package-lock.json` resolved to `obsidian@1.13.1`;
-   `minAppVersion` 1.13.0; `src/settings.tsx` has no `display()` and lint shows
-   zero `no-deprecated` errors.
+   `minAppVersion` **stays 1.12.2** (amended — 1.13 is Catalyst-only, §4.3);
+   `src/settings.tsx` keeps `display()` solely as the pre-1.13 fallback that
+   interprets the same definitions, our own code never calls it, and lint shows
+   zero `no-deprecated` / `no-unsupported-api` errors.
 5. `ci.yml` present and green on this PR (it self-tests: the PR that introduces
    it must pass it).
 6. Full suite: `npm test`, `npm run build`, `npm run eval -- --assert-baseline`
@@ -150,12 +179,14 @@ per-concern.
 
 ## 6. Maintainer self-test checklist (acceptance round)
 
-1. Obsidian ≥ 1.13.0 with the built plugin: open Settings → Knowlery. Verify all
-   sections render, every control reads and persists correctly (platform switch,
-   activity toggle, bundle defaults, maintenance actions), the uninitialized-vault
-   banner still appears in a fresh vault, and the advanced React section works.
-2. Settings **search** (the 1.13 feature the declarative API feeds): search for a
-   Knowlery setting name from Obsidian's settings search — it should be findable.
+1. On your **public-release Obsidian (1.12.x)** with the built plugin: open
+   Settings → Knowlery. Verify all sections render via the fallback interpreter,
+   every control reads and persists correctly (platform switch, activity toggle,
+   bundle defaults, maintenance actions), the uninitialized-vault banner still
+   appears in a fresh vault, and the advanced React section works.
+2. (Deferred until 1.13 is available to you — Catalyst or public:) the
+   declarative path renders identically and Knowlery settings appear in
+   Obsidian's settings search.
 3. Repo root: `npx eslint .` — zero problems, no crash, with your `.venv*` dirs
    present.
 4. `npm test && npm run eval -- --assert-baseline` — green.
