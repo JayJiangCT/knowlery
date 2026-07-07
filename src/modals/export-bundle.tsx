@@ -4,9 +4,24 @@ import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
 import type { CompileResult, ExportScopeFile, ReviewStatus, RiskHint } from '../types';
-import { buildClosure, readExportScope, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
+import { buildClosure, readExportScope, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
 import { scanRisks } from '../core/okf/risk-scan';
 import { compileBundle } from '../core/okf/compile';
+import {
+  IRREVERSIBILITY_STATEMENT,
+  assetUrl,
+  buildAudienceStatement,
+  buildManualChecklist,
+  buildReleaseNotes,
+  checkGhReady,
+  createPrivateRepo,
+  createRelease,
+  defaultGhRunner,
+  inspectRepo,
+  releaseTag,
+  releaseTagExists,
+  sha256OfFile,
+} from '../core/okf/publish';
 import type { BundleSource } from '../core/okf/collect';
 import { obsidianLinkResolver } from '../platform/obsidian-link-resolver';
 
@@ -42,6 +57,9 @@ const RISK_LABEL: Record<RiskHint['kind'], string> = {
   'sensitive-url': 'private tool URL',
   'person-page': 'person page',
   'meeting-like-path': 'meeting note',
+  credential: 'credential/secret',
+  'private-ip': 'private IP address',
+  'phone-number': 'phone number',
 };
 
 interface PickerEntry {
@@ -292,6 +310,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
         overwrite: true,
       });
       setResult(compileResult);
+      await writeBundleMeta(plugin.fs, bundleId, { lastVersion: version });
       setPhase('result');
       plugin.events.trigger('dashboard-refresh');
     } catch (error) {
@@ -384,6 +403,16 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
           onOpen={() => openFolder(plugin, result.targetDir)}
           onZip={() => void saveZip()}
           onClose={props.onClose}
+        />
+        <PublishPanel
+          bundleId={bundleId}
+          title={title}
+          version={version}
+          conceptCount={result.conceptCount}
+          targetDir={result.targetDir}
+          riskyItems={items
+            .filter((item) => item.status === 'approved' && risksByItem.has(item.id))
+            .map((item) => ({ id: item.id, title: item.title, hints: risksByItem.get(item.id) ?? [] }))}
         />
       </div>
     );
@@ -1150,6 +1179,176 @@ function ResultReport(props: {
         </button>
         <button type="button" className="knowlery-btn knowlery-btn--primary" onClick={props.onClose}>Done</button>
       </div>
+    </section>
+  );
+}
+
+/**
+ * Publish to GitHub (spec 0.9 f2, §4.6): the modal face of the same publish core
+ * the CLI uses — same config, same gh, same second gate. Private is preselected;
+ * a public destination requires acknowledging every risk-hinted approved item.
+ */
+function PublishPanel(props: {
+  bundleId: string;
+  title: string;
+  version: string;
+  conceptCount: number;
+  targetDir: string;
+  riskyItems: Array<{ id: string; title: string; hints: RiskHint[] }>;
+}) {
+  const plugin = usePlugin();
+  const [repo, setRepo] = useState('');
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private');
+  const [createIfMissing, setCreateIfMissing] = useState(true);
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    void readExportScope(plugin.fs).then((scope) => {
+      const config = scope.bundles[props.bundleId]?.publish;
+      if (config) {
+        setRepo(config.repo);
+        setVisibility(config.visibility);
+      }
+    });
+  }, [plugin.fs, props.bundleId]);
+
+  const publish = async () => {
+    setMessage(null);
+    setOutcome(null);
+    if (!/^[^/\s]+\/[^/\s]+$/.test(repo.trim())) {
+      setMessage('Enter the target repo as owner/name.');
+      return;
+    }
+    if (visibility === 'public' && props.riskyItems.length > 0 && !acknowledged) {
+      setMessage('Publishing publicly: acknowledge the risk-hinted items below first.');
+      return;
+    }
+    setPublishing(true);
+    try {
+      const fullPath = resolveFullPath(plugin, props.targetDir);
+      if (!fullPath) {
+        setMessage('Publishing needs the desktop app.');
+        return;
+      }
+      const zip = await zipBundleDirectory(fullPath);
+      const sha256 = await sha256OfFile(zip);
+      const tag = releaseTag(props.bundleId, props.version);
+      const target = repo.trim();
+
+      const ready = await checkGhReady(defaultGhRunner);
+      if (!ready.ready) {
+        setOutcome(buildManualChecklist({
+          reason: ready.reason ?? 'gh-not-installed',
+          zipPath: zip,
+          repo: target,
+          repoExists: false,
+          tag,
+          sha256,
+        }).split('\n'));
+        return;
+      }
+
+      let info = await inspectRepo(defaultGhRunner, target);
+      if (!info) {
+        if (!createIfMissing) {
+          setMessage(`${target} does not exist. Check "create as private repo" to create it.`);
+          return;
+        }
+        await createPrivateRepo(defaultGhRunner, target);
+        info = (await inspectRepo(defaultGhRunner, target)) ?? { exists: true, visibility: 'private', ownerType: 'user' };
+      }
+
+      if (await releaseTagExists(defaultGhRunner, target, tag)) {
+        setMessage(`${tag} is already published to ${target} — bump the version and re-export first.`);
+        return;
+      }
+
+      const fileName = zip.split('/').pop() ?? 'bundle.zip';
+      const url = assetUrl(target, tag, fileName);
+      await createRelease(defaultGhRunner, {
+        repo: target,
+        tag,
+        title: `${props.title} v${props.version}`,
+        notes: buildReleaseNotes({ title: props.title, version: props.version, conceptCount: props.conceptCount, sha256, url }),
+        assetPath: zip,
+        replaceExisting: false,
+      });
+      await writeBundleMeta(plugin.fs, props.bundleId, { publish: { repo: target, visibility: info.visibility } });
+      setOutcome([
+        `Published ${props.bundleId} v${props.version} to ${target} (${info.visibility}).`,
+        ...buildAudienceStatement(target, info),
+        `Share: knowlery bundle install ${url} --verify sha256-${sha256}`,
+      ]);
+    } catch (error) {
+      setMessage(formatError(error));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  return (
+    <section className="knowlery-export__publish">
+      <div className="knowlery-export__col-label">Publish to GitHub</div>
+      <div className="knowlery-export__publish-row">
+        <input
+          placeholder="owner/kb-bundles"
+          value={repo}
+          disabled={publishing}
+          onChange={(event) => setRepo(event.currentTarget.value)}
+        />
+        <label className="knowlery-export__publish-choice">
+          <input type="radio" checked={visibility === 'private'} onChange={() => setVisibility('private')} />
+          <span>Private</span>
+        </label>
+        <label className="knowlery-export__publish-choice">
+          <input type="radio" checked={visibility === 'public'} onChange={() => setVisibility('public')} />
+          <span>Public</span>
+        </label>
+        <button
+          type="button"
+          className="knowlery-btn knowlery-btn--primary"
+          disabled={publishing || !repo.trim()}
+          onClick={() => void publish()}
+        >
+          {publishing ? 'Publishing…' : 'Publish'}
+        </button>
+      </div>
+      <label className="knowlery-export__publish-choice">
+        <input type="checkbox" checked={createIfMissing} onChange={(event) => setCreateIfMissing(event.currentTarget.checked)} />
+        <span>Create as a private repo if it doesn't exist</span>
+      </label>
+
+      {visibility === 'public' && (
+        <div className="knowlery-export__publish-gate">
+          <div className="is-warn">{IRREVERSIBILITY_STATEMENT}</div>
+          {props.riskyItems.length > 0 && (
+            <>
+              <div>These approved items carry risk hints and would become permanently public:</div>
+              <ul>
+                {props.riskyItems.map((item) => (
+                  <li key={item.id}>
+                    <b>{item.id}</b> — {item.hints.map((hint) => `${RISK_LABEL[hint.kind]}: ${hint.evidence}`).join('; ')}
+                  </li>
+                ))}
+              </ul>
+              <label className="knowlery-export__publish-choice">
+                <input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.currentTarget.checked)} />
+                <span>I reviewed these items and consent to exposing them publicly</span>
+              </label>
+            </>
+          )}
+        </div>
+      )}
+
+      {message && <div className="knowlery-export__publish-message">{message}</div>}
+      {outcome && (
+        <div className="knowlery-export__publish-outcome">
+          {outcome.map((line) => <div key={line}>{line}</div>)}
+        </div>
+      )}
     </section>
   );
 }
