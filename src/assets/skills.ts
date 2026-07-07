@@ -1162,13 +1162,20 @@ description: Manage a Knowlery knowledge base from the command line with the sta
 
 The \`knowlery\` CLI operates the same workspace format as the Knowlery Obsidian plugin —
 no running Obsidian needed. Install: \`npm install -g knowlery\`. All commands accept
-\`--dir <path>\` (default: current directory).
+\`--dir <path>\` (default: current directory). Commands that operate on an existing
+KB also accept \`--kb <name>\` (resolved through the registry — never pass both
+\`--kb\` and \`--dir\`), and \`knowlery query --kb '*'\` searches every registered KB
+at once with per-KB attribution.
+
+Registry conduct: prefer the \`--kb\` names the user uses; never \`kb add\` or
+\`kb remove\` on your own initiative — the registry is the user's address book.
 
 ## Command reference
 
 | Command | What it does | When to use |
 | --- | --- | --- |
 | \`knowlery init\` | Create a new knowledge workspace (dirs, skills, agent instructions) | Starting a knowledge base outside Obsidian |
+| \`knowlery kb add <name> [path]\` / \`kb list\` / \`kb remove <name>\` | Manage the global registry of named knowledge bases | Working with more than one KB |
 | \`knowlery sync\` | Refresh built-in skills and instruction files to this tool version | After upgrading knowlery |
 | \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
 | \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
