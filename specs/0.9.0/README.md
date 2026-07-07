@@ -11,7 +11,7 @@ residual ledger.
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | Remote install: `bundle install <url>`, source recording, `gh` fallback for private repos | (spec pending) | 0.7 F4 install pipeline |
-| F2 | Publish flow: `bundle publish` to GitHub Releases; default-private posture; public-destination second gate; credential-pattern risk scan | (spec pending) | 0.8 F1 export |
+| F2 | Publish flow: `bundle publish` to GitHub Releases, incl. publisher-side configuration (per-bundle target repo, `gh` detection & guided setup, repo bootstrap); default-private posture; public-destination second gate; credential-pattern risk scan | (spec pending) | 0.8 F1 export |
 | F3 | Update & subscription: `bundle check-updates` / `bundle update`, local-modification protection, dashboard surfacing | (spec pending) | F1 (source recording), F2 (versioned upstream) |
 | F4 | Retrieval: unmatched-term specificity signal (closes the exactly-half coverage boundary) | (spec pending) | 0.8 F2 gate + seed cases |
 
@@ -36,6 +36,34 @@ independent engine work and can interleave.
   configured, or seen.
 - **Pull, not push.** No daemon, no notifications. `check-updates` runs on demand
   (command, `sync` report, dashboard card); agents provide the subscription cadence.
+
+## Publisher-side configuration (maintainer requirement at plan review, binding on F2)
+
+The owner's setup experience is part of the feature, not an assumed prerequisite:
+
+1. **The bundle repo is decoupled from the vault.** Bundles publish to a separate
+   GitHub repo (the "shelf"); the vault itself is never git-initialized, inspected,
+   or touched — one repo can shelve many bundles (tag prefixes) or one each.
+2. **Target remembered per bundle.** The publish target
+   (`publish: { repo, visibility }`) lives in the bundle's existing
+   `export-scope.json` entry: configured once on first `bundle publish` (flag or
+   prompt), reused on every subsequent version — and, living in a vault file, shared
+   identically by both shells.
+3. **`gh` is detected and guided, never installed or impersonated.** Publish checks
+   `gh` presence and `gh auth status` up front and emits the exact next step when
+   missing (the established `cli-detect`/`node-detect` pattern); `knowlery health`
+   reports publish-capability alongside its other checks.
+4. **Repo bootstrap with private as the hard default.** A missing target repo offers
+   `gh repo create <name> --private` (run after confirmation) — the first publish
+   lands private by construction; public is a later, explicit, second-gated upgrade.
+5. **Plugin parity.** The export modal's result phase gains a "Publish to GitHub"
+   action reading the same per-bundle config and shelling out to the same `gh`
+   (desktop-only, as with existing tool integrations); a missing `gh` renders
+   guidance, not an error.
+
+Explicitly out: any `git init`/remote management/token entry UI inside Knowlery —
+every GitHub-side operation is either one `gh` command or a precise instruction to
+the user.
 
 ## Public-exposure safety (maintainer requirement, binding on F2)
 
