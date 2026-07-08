@@ -1,5 +1,64 @@
 # Changelog
 
+## [1.0.0] — 2026-07-08
+
+Theme: the memory layer — `knowlery mcp` makes every knowledge base something
+any agent can cold-start faster and maintain more easily, and a major version
+that means it: the workspace format, the CLI surface, and the MCP tool
+contracts freeze under semver. Developed spec-first; the accepted specs live
+in `specs/1.0.0/`.
+
+### New features
+
+- **Named knowledge bases.** `knowlery kb add/list/remove` maintains a global
+  registry (`~/.config/knowlery/registry.json`); `--kb <name>` works on every
+  command that operates on an existing KB, from any directory. `--dir` keeps
+  working forever, and the registry is never a prerequisite.
+  `knowlery query --kb '*'` searches every registered KB at once, merged by
+  score with per-KB attribution. Vaults set up in Obsidian register
+  themselves (ownership-tracked — a name you registered manually is never
+  touched).
+- **`knowlery mcp` — the third shell.** An MCP server over stdio for Claude
+  Desktop/Code, Cursor, and gemini-cli: five read tools (`list_kbs`, `query`
+  incl. federation, `stale`, `health`, `list_bundles`), nine skills exposed
+  as prompts, and knowledge pages as `knowlery://<kb>/<path>` resources.
+  Reads are allowlisted to the curated surface — free-form notes stay yours;
+  `query` may surface them, reading them is out of bounds until `/cook`
+  promotes the content. Findings are data: abstention, unhealthy, and
+  stale-heavy reports are successful results agents relay, not errors they
+  retry.
+- **The write path.** Three writes, each structurally bounded: `init_kb`
+  cold-starts a KB from a conversation (canonicalize-first path contract, at
+  most one new directory, non-empty targets refused, failure cleanup that
+  never deletes a pre-existing directory); `capture` appends to `inbox/`
+  only (constructed filenames, `wx`-flag writes, symlinked inboxes refused);
+  `sync` writes only binary-determined content. The compiled layer remains
+  reachable only through `/cook`'s reviewed pipeline. Captures surface as
+  uncooked notes in `stale` and are findable by `query` immediately.
+- **Remote mode (self-hosted).** `knowlery mcp serve --port <n>` serves the
+  same handlers over Streamable HTTP behind a bearer token (env or file,
+  never argv; constant-time comparison; never logged). Read-only by default:
+  each write is its own flag (`--allow-capture`, `--allow-sync`,
+  `--allow-init --kb-root <dir>`), and a write not switched on is not
+  registered at all. Fresh server+transport per request (stateless), tunnel-
+  first deployment guidance, and shutdown that exits promptly even with a
+  client attached.
+- **The stability contract.** `docs: Reference → Stability Contract` states
+  what is frozen (workspace format, CLI surface incl. `--json` shapes and
+  exit codes, MCP contracts, OKF bundle format, KB registry) and what is
+  deliberately not (ranking internals, skill prose, plugin UI,
+  `health.config` inner keys). A dedicated `tests/contract/` suite pins every
+  frozen surface — golden MCP schema snapshot, CLI flag/arity/key-set checks,
+  format fixtures that must parse forever, and version-stamp coherence.
+  MCP output schemas advertise the frozen keys (passthrough tightened at
+  ratification), validated by the server at runtime.
+
+### Docs
+
+- New guides: Agents & MCP (client setup, tools, conduct, remote access with
+  the honest per-agent access matrix), Best Practices, CLI Workflows.
+- New developer pages: Architecture, Design Decisions.
+
 ## [0.9.0] — 2026-07-07
 
 Theme: knowledge that travels — the sharing loop 0.8.0 completed mechanically gains

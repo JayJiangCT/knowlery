@@ -1,10 +1,10 @@
 {
-  "id": "knowlery",
-  "name": "Knowlery",
-  "version": "0.9.0",
-  "minAppVersion": "1.12.2",
-  "description": "A warm personal knowledge review space for your vault.",
-  "author": "Jay Jiang",
-  "authorUrl": "https://github.com/JayJiangCT",
-  "isDesktopOnly": true
+	"id": "knowlery",
+	"name": "Knowlery",
+	"version": "1.0.0",
+	"minAppVersion": "1.12.2",
+	"description": "A warm personal knowledge review space for your vault.",
+	"author": "Jay Jiang",
+	"authorUrl": "https://github.com/JayJiangCT",
+	"isDesktopOnly": true
 }
