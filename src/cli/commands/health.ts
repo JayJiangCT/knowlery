@@ -10,18 +10,20 @@ export interface HealthOptions {
   log: (line: string) => void;
 }
 
-interface HealthReport {
+export interface HealthReport {
   config: Awaited<ReturnType<typeof checkVaultConfigFiles>>;
   knowledgePages: Record<string, number>;
   healthy: boolean;
 }
 
-export async function runHealth(fs: VaultFs, options: HealthOptions): Promise<void> {
+/** The health report as data — shared by the CLI (which exits 1 on unhealthy)
+ * and the MCP tool (for which findings are data, spec 1.0 f2 §4.2). */
+export async function buildHealthReport(fs: VaultFs, root: string): Promise<HealthReport> {
   const config = await checkVaultConfigFiles(fs, await resolvePlatform(fs));
 
   const knowledgePages: Record<string, number> = {};
   for (const dir of AGENT_DIRS) knowledgePages[dir] = 0;
-  for (const page of scanVault(options.root).pages) {
+  for (const page of scanVault(root).pages) {
     if (page.tier !== 'agent') continue;
     const dir = page.path.split('/')[0];
     knowledgePages[dir] = (knowledgePages[dir] ?? 0) + 1;
@@ -37,7 +39,12 @@ export async function runHealth(fs: VaultFs, options: HealthOptions): Promise<vo
     config.rulesConfigured &&
     config.skillsComplete.missing.length === 0;
 
-  const report: HealthReport = { config, knowledgePages, healthy };
+  return { config, knowledgePages, healthy };
+}
+
+export async function runHealth(fs: VaultFs, options: HealthOptions): Promise<void> {
+  const report = await buildHealthReport(fs, options.root);
+  const { healthy } = report;
 
   if (options.json) {
     options.log(JSON.stringify(report, null, 2));
