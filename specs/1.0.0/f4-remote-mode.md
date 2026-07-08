@@ -119,6 +119,17 @@ knowlery mcp serve --port 8787 \
   (`sessionIdGenerator: undefined`): the server holds no per-session state —
   the registry is the addressing layer (plan principle 1), so statelessness
   is free and restart-safe.
+- **The stateless lifecycle is per-request, and that is implementation
+  contract, not an option** (maintainer P2 at spec review — the SDK's own
+  constraint): the `node:http` server is long-lived, but **each incoming MCP
+  request constructs a fresh `buildMcpServer(access)` + fresh
+  `StreamableHTTPServerTransport({ sessionIdGenerator: undefined })`**,
+  handles the request, and closes both when the response closes. Reusing one
+  transport/server pair across requests causes message-ID collisions the
+  moment there is a second request or a second client (SDK 1.29 documented
+  behavior). Handler registration is cheap (schema objects + closures; every
+  tool call is a live scan anyway per the no-cache rationale), so per-request
+  construction costs nothing that matters.
 - One `node:http` server; the MCP endpoint is `POST /mcp` (plus the
   transport's own `GET`/`DELETE` handling); everything else → `404`. No
   Express — the SDK transport works against plain node req/res.
@@ -165,13 +176,18 @@ are untouched here.
    (registered, scaffolded); outside the root refused naming the root; a
    representative F3 refusal (non-empty target) reproduces through HTTP —
    same core, same message.
-5. **Stateless restart**: server restarted between two calls; the second call
+5. **Stateless lifecycle, same process**: sequential requests within one
+   server process answer correctly (the per-request transport contract —
+   this is the test that fails if an implementation reuses one
+   transport/server pair); **two concurrent clients** each complete a full
+   round trip against the same process without message-ID interference.
+6. **Stateless restart**: server restarted between two calls; the second call
    (new process, same registry) answers identically — no session coupling.
-6. **stdio unchanged**: the existing F2/F3 test files pass unmodified (the
+7. **stdio unchanged**: the existing F2/F3 test files pass unmodified (the
    `access` default proves itself).
-7. **Token hygiene**: server startup output and error responses never contain
+8. **Token hygiene**: server startup output and error responses never contain
    the token string (asserted over captured stdout/stderr and 401 bodies).
-8. **Smoke**: the built artifact starts `mcp serve` with a token file, serves
+9. **Smoke**: the built artifact starts `mcp serve` with a token file, serves
    one authorized `query` over real HTTP, rejects one unauthorized call, and
    shuts down cleanly on SIGTERM.
 
