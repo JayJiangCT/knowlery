@@ -30,6 +30,7 @@ const englishSidebar = [
       },
       { text: 'Troubleshooting', link: '/troubleshooting/' },
       { text: 'Reference', link: '/reference/' },
+      { text: 'Stability Contract', link: '/reference/stability' },
     ],
   },
   {
@@ -67,6 +68,7 @@ const chineseSidebar = [
       },
       { text: '故障排查', link: '/zh/troubleshooting/' },
       { text: '参考', link: '/zh/reference/' },
+      { text: '稳定性契约', link: '/zh/reference/stability' },
     ],
   },
   {

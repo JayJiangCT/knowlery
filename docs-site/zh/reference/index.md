@@ -7,7 +7,7 @@
 | 字段 | 当前值 |
 | --- | --- |
 | Plugin ID | `knowlery` |
-| Minimum Obsidian app version | `1.7.2` |
+| Minimum Obsidian app version | `1.12.2` |
 | Desktop-only manifest flag | `true` |
 | Main bundle | `main.js` |
 | Stylesheet | `styles.css` |
