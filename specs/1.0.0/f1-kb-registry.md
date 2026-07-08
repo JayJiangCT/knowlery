@@ -1,6 +1,6 @@
 # F1 (1.0.0) — The KB Registry: Named Knowledge Bases
 
-- **Status:** Accepted 2026-07-07 (with ownership-rule and wording corrections) — implemented, awaiting maintainer acceptance testing (§7)
+- **Status:** Done — maintainer acceptance passed 2026-07-07 (two findings fixed at acceptance: read-boundary name validation, kb subcommand arity)
 - **Target release:** 1.0.0
 - **Branch:** `cursor/1-0-plan-92eb` (spec rides the plan PR, house precedent);
   implementation follows acceptance

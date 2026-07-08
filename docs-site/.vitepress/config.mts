@@ -16,6 +16,7 @@ const englishSidebar = [
     items: [
       { text: 'Guides', link: '/guides/' },
       { text: 'Multiple Knowledge Bases', link: '/guides/multiple-knowledge-bases' },
+      { text: 'Agents & MCP', link: '/guides/agents-mcp' },
       {
         text: 'Sharing Knowledge',
         link: '/sharing/',
@@ -52,6 +53,7 @@ const chineseSidebar = [
     items: [
       { text: '使用指南', link: '/zh/guides/' },
       { text: '使用多个知识库', link: '/zh/guides/multiple-knowledge-bases' },
+      { text: 'Agent 与 MCP', link: '/zh/guides/agents-mcp' },
       {
         text: '分享知识',
         link: '/zh/sharing/',

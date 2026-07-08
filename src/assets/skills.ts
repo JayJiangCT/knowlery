@@ -1188,6 +1188,7 @@ Registry conduct: prefer the \`--kb\` names the user uses; never \`kb add\` or
 | \`knowlery bundle publish <seed> [--repo <owner/name>] [--public] [--acknowledge-risks] [--force]\` | Release a reviewed bundle to GitHub | User wants a shareable URL |
 | \`knowlery bundle check-updates [--json]\` | Ask each installed bundle's source for newer versions | User wonders if shared knowledge is current |
 | \`knowlery bundle update <id> | --all [--force]\` | Install available updates through the full gate pipeline | check-updates found something |
+| \`knowlery mcp\` | Serve tools/prompts/resources to MCP clients over stdio | Configured as an MCP server in Claude/Cursor/gemini — not run ad hoc |
 
 ## Exporting a bundle: the review gate
 

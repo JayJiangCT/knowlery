@@ -1,0 +1,271 @@
+import { realpath } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import { join, sep } from 'node:path';
+import { z } from 'zod';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { listKbs, resolveKb, KbRegistryError } from '../kb-registry';
+import { runFederatedQuery } from '../federated-query';
+import { scanVault } from '../query/scan';
+import { runQuery } from '../query/engine';
+import { computeStaleness } from '../query/staleness';
+import { readInstalledBundles } from '../okf/registry';
+import { nodeVaultFs } from '../../platform/node-fs';
+import { buildHealthReport } from '../../cli/commands/health';
+import { BUNDLED_SKILLS } from '../../assets/skills';
+
+/**
+ * The MCP server core (spec 1.0 f2): tool/prompt/resource handlers over the KB
+ * registry. The transport is supplied by the shell (stdio in F2; HTTP in F4
+ * reuses this verbatim — the established shell-supplies-transport discipline).
+ *
+ * Semantics (spec §4.2): findings are data — abstention, unhealthy, and
+ * stale-heavy reports are successful results; tool errors are reserved for
+ * invalid input, unknown kb names, and I/O failures.
+ *
+ * Tool names, input schemas, and structured-output shapes are
+ * 1.0-frozen-candidate (spec §4.6): renames need maintainer sign-off.
+ */
+
+const SERVER_INFO = { name: 'knowlery', version: '1.0.0' };
+
+/** Skills whose content stands without Obsidian (spec §4.3, curated set). */
+export const MCP_PROMPT_SKILLS = [
+  'ask', 'cook', 'explore', 'challenge', 'ideas', 'audit', 'organize',
+  'vault-conventions', 'knowlery-cli',
+] as const;
+
+/** The curated knowledge surface readable over MCP (spec §4.4 — the product
+ * boundary that free-form notes stay yours). Query may *surface* user-tier
+ * pages; reading their full content is out of bounds. */
+const READABLE_PREFIXES = ['entities/', 'concepts/', 'comparisons/', 'queries/', 'Library/'];
+const READABLE_FILES = new Set(['KNOWLEDGE.md']);
+
+export function buildMcpServer(): McpServer {
+  const server = new McpServer(SERVER_INFO);
+  registerTools(server);
+  registerPrompts(server);
+  registerResources(server);
+  return server;
+}
+
+interface ToolResult {
+  content: Array<{ type: 'text'; text: string }>;
+  structuredContent: Record<string, unknown>;
+}
+
+function ok(structured: Record<string, unknown>, text: string): ToolResult {
+  return {
+    content: [{ type: 'text', text }],
+    structuredContent: structured,
+  };
+}
+
+/**
+ * Typed facade over `server.registerTool`. The SDK's own generic signature
+ * routes through zod-v3/v4 compat conditional types whose instantiation is
+ * TS2589-deep — inference collapses to `any` and typed lint runs out of
+ * memory. Pinning the shape to plain zod v3 (`z.ZodRawShape`) keeps handler
+ * args fully typed at a fraction of the checking cost; the runtime call is
+ * the SDK's own, unchanged.
+ *
+ * The input shape is wrapped `.strict()` before it reaches the SDK: handed a
+ * raw shape, the SDK would normalize to a default `z.object(...)`, which
+ * *strips* unknown keys — spec §4.1 requires them rejected (maintainer P2 at
+ * implementation review).
+ */
+function defineTool<Shape extends z.ZodRawShape>(
+  server: McpServer,
+  name: string,
+  config: { title: string; description: string; inputSchema: Shape; outputSchema: z.ZodRawShape },
+  handler: (args: z.infer<z.ZodObject<Shape>>) => Promise<ToolResult>,
+): void {
+  (server.registerTool as unknown as (n: string, c: unknown, cb: unknown) => void)(
+    name,
+    { ...config, inputSchema: z.object(config.inputSchema).strict() },
+    handler,
+  );
+}
+
+async function resolveKbOrThrow(name: string): Promise<string> {
+  try {
+    return await resolveKb(name);
+  } catch (error) {
+    if (error instanceof KbRegistryError) throw new Error(error.message);
+    throw error;
+  }
+}
+
+function registerTools(server: McpServer): void {
+  defineTool(server, 'list_kbs', {
+    title: 'List knowledge bases',
+    description: 'List every registered knowledge base with its path and live state '
+      + '(ok / uninitialized / missing). The registry is the address book all other tools resolve kb names through.',
+    inputSchema: {},
+    outputSchema: {
+      kbs: z.array(z.object({ name: z.string(), path: z.string(), state: z.string() })),
+    },
+  }, async () => {
+    const kbs = await listKbs();
+    const text = kbs.length === 0
+      ? 'No knowledge bases registered.'
+      : kbs.map((kb) => `${kb.name}  ${kb.path}${kb.state === 'ok' ? '' : `  [${kb.state}]`}`).join('\n');
+    return ok({ kbs }, text);
+  });
+
+  defineTool(server, 'query', {
+    title: 'Query a knowledge base',
+    description: 'Deterministic retrieval over compiled knowledge. kb is a registered name, or "*" to search '
+      + 'every registered KB with per-KB attribution. An abstention (verdict: no-confident-match) is an answer, '
+      + 'not a failure: it means the knowledge base has no confident match — relay it, do not retry or guess.',
+    inputSchema: {
+      kb: z.string().describe('Registered KB name, or "*" for all'),
+      question: z.string().min(1),
+      k: z.number().int().min(1).max(50).optional(),
+    },
+    outputSchema: {
+      verdict: z.string().optional(),
+      verdictByKb: z.record(z.string()).optional(),
+      candidates: z.array(z.object({}).passthrough()),
+    },
+  }, async ({ kb, question, k }) => {
+    const limit = k ?? 12;
+    if (kb === '*') {
+      const result = await runFederatedQuery(question, limit);
+      const text = result.candidates.length === 0
+        ? `No confident matches in any registered KB (consulted: ${Object.keys(result.verdictByKb).join(', ')}).`
+        : result.candidates.map((c) => `${c.score.toFixed(2)}  ${c.kb}: ${c.path} — ${c.title}`).join('\n');
+      return ok({ verdictByKb: result.verdictByKb, candidates: result.candidates }, text);
+    }
+    const root = await resolveKbOrThrow(kb);
+    const result = runQuery(question, scanVault(root), limit);
+    const text = result.verdict === 'no-confident-match'
+      ? `No confident matches in ${kb} for: ${result.terms.join(', ')}`
+      : result.candidates.map((c) => `${c.score.toFixed(2)}  ${c.path} — ${c.title}`).join('\n');
+    return ok({ verdict: result.verdict, candidates: result.candidates }, text);
+  });
+
+  defineTool(server, 'stale', {
+    title: 'Staleness report',
+    description: 'Compiled pages older than their sources, plus user notes never compiled. '
+      + 'This is a work list for re-cooking, not an alarm — a long list is a finding, not a failure.',
+    inputSchema: { kb: z.string() },
+    outputSchema: {
+      stalePages: z.array(z.object({}).passthrough()),
+      uncookedNotes: z.array(z.object({}).passthrough()),
+    },
+  }, async ({ kb }) => {
+    const root = await resolveKbOrThrow(kb);
+    const report = computeStaleness(scanVault(root));
+    const text = `${report.stalePages.length} stale page(s), ${report.uncookedNotes.length} uncooked note(s) in ${kb}.`;
+    return ok({ stalePages: report.stalePages, uncookedNotes: report.uncookedNotes }, text);
+  });
+
+  defineTool(server, 'health', {
+    title: 'Workspace health',
+    description: 'Workspace integrity check. An unhealthy result is a finding carried in the data '
+      + '(healthy: false) — report it and suggest `knowlery sync`; it is not a tool failure.',
+    inputSchema: { kb: z.string() },
+    outputSchema: {
+      healthy: z.boolean(),
+      config: z.object({}).passthrough(),
+      knowledgePages: z.record(z.number()),
+    },
+  }, async ({ kb }) => {
+    const root = await resolveKbOrThrow(kb);
+    const report = await buildHealthReport(nodeVaultFs(root), root);
+    return ok(
+      { healthy: report.healthy, config: report.config, knowledgePages: report.knowledgePages },
+      `${kb}: ${report.healthy ? 'healthy' : 'unhealthy — run `knowlery sync --kb ' + kb + '`'}`,
+    );
+  });
+
+  defineTool(server, 'list_bundles', {
+    title: 'Installed bundles',
+    description: 'Knowledge bundles installed in a KB, with version and source provenance.',
+    inputSchema: { kb: z.string() },
+    outputSchema: { bundles: z.record(z.object({}).passthrough()) },
+  }, async ({ kb }) => {
+    const root = await resolveKbOrThrow(kb);
+    const registry = await readInstalledBundles(nodeVaultFs(root));
+    const entries = Object.entries(registry.bundles);
+    const text = entries.length === 0
+      ? `No bundles installed in ${kb}.`
+      : entries.map(([id, entry]) => `${id} v${entry.version} — "${entry.title}"`).join('\n');
+    return ok({ bundles: registry.bundles }, text);
+  });
+}
+
+function registerPrompts(server: McpServer): void {
+  for (const name of MCP_PROMPT_SKILLS) {
+    const skill = BUNDLED_SKILLS.find((entry) => entry.name === name);
+    if (!skill) continue;
+    server.registerPrompt(name, {
+      title: name,
+      description: skill.description,
+    }, () => ({
+      messages: [{
+        role: 'user' as const,
+        content: { type: 'text' as const, text: skill.content },
+      }],
+    }));
+  }
+}
+
+function registerResources(server: McpServer): void {
+  // Concrete entry points: one per registered KB (resources/list — spec §4.4,
+  // kept separate from the template per the MCP protocol split).
+  server.registerResource('knowledge-entrypoints', new ResourceTemplate('knowlery://{kb}/{+path}', {
+    list: async () => {
+      const kbs = await listKbs();
+      return {
+        resources: kbs
+          .filter((kb) => kb.state === 'ok')
+          .map((kb) => ({
+            uri: `knowlery://${kb.name}/KNOWLEDGE.md`,
+            name: `${kb.name} — KNOWLEDGE.md`,
+            description: `Entry point of the "${kb.name}" knowledge base`,
+            mimeType: 'text/markdown',
+          })),
+      };
+    },
+  }), {
+    title: 'Knowledge pages',
+    description: 'Pages of the curated knowledge surface: KNOWLEDGE.md, the compiled dirs '
+      + '(entities/, concepts/, comparisons/, queries/), and installed-bundle pages under Library/. '
+      + 'Free-form notes are not readable over MCP — they are surfaced by query as metadata only.',
+  }, async (uri, variables) => {
+    const kb = String(variables.kb ?? '');
+    const rawPath = String(variables.path ?? '');
+    const content = await readKnowledgePage(kb, rawPath);
+    return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: content }] };
+  });
+}
+
+async function readKnowledgePage(kb: string, rawPath: string): Promise<string> {
+  const root = await resolveKbOrThrow(kb);
+  const normalized = rawPath.replace(/\\/g, '/').replace(/^\/+/, '');
+
+  const allowed = READABLE_FILES.has(normalized)
+    || READABLE_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+  if (!allowed || !normalized.endsWith('.md')) {
+    throw new Error(
+      `"${normalized}" is outside the readable knowledge surface (KNOWLEDGE.md, entities/, concepts/, `
+      + 'comparisons/, queries/, Library/). Free-form notes stay private to the vault owner — '
+      + 'content enters the readable layer by being compiled with /cook.',
+    );
+  }
+
+  // Canonicalize-first (the init_kb discipline applied to reads): the resolved
+  // real path must stay under the KB root — no traversal, no symlink escape.
+  const rootReal = await realpath(root);
+  let target: string;
+  try {
+    target = await realpath(join(rootReal, normalized));
+  } catch {
+    throw new Error(`No such page in ${kb}: ${normalized}`);
+  }
+  if (target !== rootReal && !target.startsWith(rootReal + sep)) {
+    throw new Error(`"${rawPath}" escapes the knowledge base root — refused.`);
+  }
+  return readFile(target, 'utf8');
+}
