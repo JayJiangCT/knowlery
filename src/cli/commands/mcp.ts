@@ -135,7 +135,14 @@ export async function runMcpServeCommand(
   }
 
   await new Promise<void>((resolve) => {
-    const shutdown = () => server.close(() => resolve());
+    const shutdown = () => {
+      server.close(() => resolve());
+      // close() alone waits for open keep-alive/streamable connections — an
+      // attached MCP client would stall shutdown indefinitely (maintainer P2
+      // at implementation review). Sever them: a signal is an operator's
+      // stop order, not a request to drain.
+      server.closeAllConnections();
+    };
     process.once('SIGINT', shutdown);
     process.once('SIGTERM', shutdown);
   });

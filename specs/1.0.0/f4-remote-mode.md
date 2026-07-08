@@ -75,7 +75,11 @@ knowlery mcp serve --port 8787 \
   are refused as guessable.
 - On startup the server prints: bind address, the access mode line
   ("reads only" or the enumerated writes), and the kb-root if set. It runs
-  until SIGINT/SIGTERM.
+  until SIGINT/SIGTERM. **Shutdown severs open connections** (maintainer P2 at
+  implementation review): `server.close()` alone waits out live
+  keep-alive/streamable connections, so an attached MCP client would stall the
+  exit indefinitely — a signal is an operator's stop order, not a request to
+  drain. Deploy-time restarts must work with a client attached.
 
 ### 4.2 Auth: verify by comparison, store nowhere
 
@@ -189,7 +193,8 @@ are untouched here.
    the token string (asserted over captured stdout/stderr and 401 bodies).
 9. **Smoke**: the built artifact starts `mcp serve` with a token file, serves
    one authorized `query` over real HTTP, rejects one unauthorized call, and
-   shuts down cleanly on SIGTERM.
+   exits cleanly on SIGTERM **while the MCP client is still attached** (the
+   shutdown-stall shape, maintainer P2).
 
 ## 6. Acceptance criteria
 

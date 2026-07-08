@@ -288,13 +288,22 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
           const httpQuery = await httpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
           expect((httpQuery.structuredContent as { candidates: Array<{ path: string }> }).candidates[0].path)
             .toBe('concepts/widget-design.md');
+
+          // SIGTERM with this client still attached must exit promptly —
+          // server.close() alone waits out live connections and would hang
+          // here (maintainer P2 at implementation review).
+          const exited = new Promise<number | null>((resolveExit) => serveChild.once('exit', (code) => resolveExit(code)));
+          serveChild.kill('SIGTERM');
+          const exitCode = await Promise.race([
+            exited,
+            new Promise<never>((_, reject) => setTimeout(() => reject(new Error('serve did not exit within 5s of SIGTERM while a client was attached')), 5000)),
+          ]);
+          expect(exitCode).toBe(0);
         } finally {
-          await httpClient.close();
+          await httpClient.close().catch(() => { /* server already gone */ });
         }
       } finally {
-        const exited = new Promise<number | null>((resolveExit) => serveChild.once('exit', (code) => resolveExit(code)));
-        serveChild.kill('SIGTERM');
-        expect(await exited).toBe(0);
+        if (serveChild.exitCode === null) serveChild.kill('SIGKILL');
       }
 
       // Non-TTY init without flags must fail deterministically.
