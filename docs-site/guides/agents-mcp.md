@@ -71,6 +71,9 @@ Or add the same `mcpServers` block to `~/.gemini/settings.json`.
 | `stale` | `kb` | Compiled pages older than their sources, plus never-compiled notes |
 | `health` | `kb` | Workspace integrity check |
 | `list_bundles` | `kb` | Installed knowledge bundles with provenance |
+| `init_kb` | `name`, `path`, `platform?` | Create and register a new KB — cold start from a conversation |
+| `capture` | `kb`, `content`, `title?` | Save conversation content as a new note in the KB's `inbox/` |
+| `sync` | `kb` | Refresh built-in skills and instruction files to the installed version |
 
 Every tool returns both readable text and structured JSON (the same shapes the
 CLI's `--json` flags have carried since 0.7).
@@ -85,6 +88,34 @@ names, malformed input, unreadable disks.
   precisely what you want to hear when it's true.
 - **`stale` output is a work list, not an alarm.** It tells you what to
   re-cook when you next tend the vault.
+
+## The write path
+
+Exactly three tools write, and each is structurally bounded:
+
+- **`init_kb`** creates at most one new directory (its parent must already
+  exist), refuses non-empty targets, and registers the result. A failed init
+  cleans up after itself — a directory that existed before init is never
+  deleted.
+- **`capture`** appends one new note to `inbox/` — filenames are constructed
+  from a timestamp and a slug, never taken from the caller, and nothing is
+  ever overwritten. Captures show up as *uncooked notes* in `stale` and are
+  findable by `query` immediately; `/cook` treats `inbox/` as first-priority
+  material. This is the "remember this" loop: capture in conversation, compile
+  when you next cook.
+- **`sync`** writes only content determined by the installed Knowlery version —
+  the caller supplies nothing. The downgrade guard (workspace last synced by a
+  newer version) is a tool error with the upgrade command in the message.
+
+Nothing writes the compiled layer (`entities/`, `concepts/`, `comparisons/`,
+`queries/`, `Library/`, `KNOWLEDGE.md`). Content is promoted there only through
+`/cook`'s reviewed pipeline — the same gate philosophy as bundle export review.
+
+**Write conduct** (also stated in each tool's description): write tools act on
+the user's words, not the agent's initiative. Capture only what the user asked
+to save, and echo back the written path. Restate the resolved path *before*
+calling `init_kb` — creating a directory is the user's decision. Report sync's
+file list after running it.
 
 ## Skills as prompts
 

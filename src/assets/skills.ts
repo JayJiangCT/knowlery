@@ -62,7 +62,9 @@ The report has three parts:
    those pages.
 2. **Uncooked notes** — user notes cited by no compiled page, most recent first. These
    are candidate new material; use judgment (or ask) about which are worth compiling —
-   many notes are legitimately never compiled.
+   many notes are legitimately never compiled. Notes under \`inbox/\` are the exception:
+   they were captured from conversations (MCP \`capture\`) precisely to be compiled —
+   treat them as first-priority cook material.
 3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
    report; fixing them is /audit territory.
 

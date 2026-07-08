@@ -214,11 +214,40 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       try {
         const mcpTools = await mcpClient.listTools();
         expect(mcpTools.tools.map((tool) => tool.name).sort()).toEqual(
-          ['health', 'list_bundles', 'list_kbs', 'query', 'stale'],
+          ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'stale', 'sync'],
         );
         const mcpQuery = await mcpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
         const mcpData = mcpQuery.structuredContent as { candidates: Array<{ path: string }> };
         expect(mcpData.candidates[0].path).toBe('concepts/widget-design.md');
+
+        // The write path on the built artifact (spec 1.0 f3, §5.8):
+        // init_kb → capture → query finds the capture → sync.
+        const mcpInit = await mcpClient.callTool({
+          name: 'init_kb',
+          arguments: { name: 'mcp-born', path: join(workDir, 'mcp-born'), platform: 'claude-code' },
+        });
+        expect(mcpInit.isError).toBeFalsy();
+        await stat(join(workDir, 'mcp-born', 'KNOWLEDGE.md'));
+
+        const mcpCapture = await mcpClient.callTool({
+          name: 'capture',
+          arguments: { kb: 'mcp-born', content: 'Zephyr protocol handshake uses rotating nonces.', title: 'Zephyr handshake' },
+        });
+        const captureData = mcpCapture.structuredContent as { path: string };
+        expect(captureData.path).toMatch(/^inbox\//);
+
+        const mcpFindCapture = await mcpClient.callTool({
+          name: 'query',
+          arguments: { kb: 'mcp-born', question: 'zephyr protocol handshake' },
+        });
+        const findData = mcpFindCapture.structuredContent as { candidates: Array<{ path: string }> };
+        expect(findData.candidates[0].path).toBe(captureData.path);
+
+        // First sync may stamp the manifest; the second must be a clean no-op.
+        await mcpClient.callTool({ name: 'sync', arguments: { kb: 'mcp-born' } });
+        const mcpSync = await mcpClient.callTool({ name: 'sync', arguments: { kb: 'mcp-born' } });
+        expect(mcpSync.isError).toBeFalsy();
+        expect((mcpSync.structuredContent as { updated: string[] }).updated).toEqual([]);
       } finally {
         await mcpClient.close();
       }

@@ -231,7 +231,7 @@ async function main(): Promise<void> {
 
   switch (args.command) {
     case 'mcp':
-      await runMcpCommand();
+      await runMcpCommand(typeof KNOWLERY_VERSION === 'string' ? KNOWLERY_VERSION : undefined);
       break;
     case 'kb':
       await runKbCommand({
