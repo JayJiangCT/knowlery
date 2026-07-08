@@ -15,6 +15,8 @@ const englishSidebar = [
     text: 'Use Knowlery',
     items: [
       { text: 'Guides', link: '/guides/' },
+      { text: 'Best Practices', link: '/guides/best-practices' },
+      { text: 'CLI Workflows', link: '/guides/cli-workflows' },
       { text: 'Multiple Knowledge Bases', link: '/guides/multiple-knowledge-bases' },
       { text: 'Agents & MCP', link: '/guides/agents-mcp' },
       {
@@ -35,6 +37,8 @@ const englishSidebar = [
   {
     text: 'Project',
     items: [
+      { text: 'Architecture', link: '/developer/architecture' },
+      { text: 'Design Decisions', link: '/developer/design' },
       { text: 'Developer Notes', link: '/developer/' },
     ],
   },
@@ -52,6 +56,8 @@ const chineseSidebar = [
     text: '使用 Knowlery',
     items: [
       { text: '使用指南', link: '/zh/guides/' },
+      { text: '最佳实践', link: '/zh/guides/best-practices' },
+      { text: 'CLI 工作流', link: '/zh/guides/cli-workflows' },
       { text: '使用多个知识库', link: '/zh/guides/multiple-knowledge-bases' },
       { text: 'Agent 与 MCP', link: '/zh/guides/agents-mcp' },
       {
@@ -72,6 +78,8 @@ const chineseSidebar = [
   {
     text: '项目',
     items: [
+      { text: '技术架构', link: '/zh/developer/architecture' },
+      { text: '设计决策', link: '/zh/developer/design' },
       { text: '开发者说明', link: '/zh/developer/' },
     ],
   },
