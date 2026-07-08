@@ -1,6 +1,6 @@
 # F3 (1.0.0) — The Write Path: `init_kb`, `capture`, `sync`
 
-- **Status:** Accepted 2026-07-08 (one finding at spec review: init_kb canonicalization redefined for a not-yet-existing leaf — parent realpath + canonical candidate; three decision points confirmed) — implementation in progress
+- **Status:** Done — maintainer acceptance passed 2026-07-08 (spec review: init_kb canonicalization redefined for a not-yet-existing leaf; implementation review: symlinked-inbox refusal added to capture; §7 real-client round passed)
 - **Target release:** 1.0.0
 - **Branch:** `cursor/10-f3-write-path-92eb`
 - **Depends on:** F2 (the server, the findings-are-data semantics, the
