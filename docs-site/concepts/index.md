@@ -2,16 +2,17 @@
 
 Knowlery is easiest to understand as a review layer on top of your vault. Your notes are the source material. Skills are reusable prompts. Rules are the guardrails. The dashboard turns recent activity into a small set of actions, while Obsidian settings holds the deeper maintenance tools.
 
-## One Core, Two Shells
+## One Core, Three Shells
 
-Since 0.7.0 the same knowledge-base lifecycle is available in two shells over one workspace format:
+The same knowledge-base lifecycle is available in three shells over one workspace format:
 
 | Shell | Gets you | Install |
 | --- | --- | --- |
 | Obsidian plugin | Everything: review space, Knowledge health UI, live in-app retrieval, plus all lifecycle operations | Community plugins |
-| `knowlery` CLI | `init` / `sync` / `health` / `query` / `stale` / `bundle install\|list\|uninstall` — for terminals, agents, and headless environments | `npm i -g knowlery` |
+| `knowlery` CLI | The full lifecycle — `init` / `sync` / `health` / `query` / `stale` / `kb` / `bundle …` — for terminals, agents, and headless environments | `npm i -g knowlery` |
+| MCP server | `knowlery mcp` (stdio) and `knowlery mcp serve` (remote HTTP): tools, skills-as-prompts, and pages-as-resources for any MCP-capable agent | ships with the CLI |
 
-A folder initialized by the CLI opens in Obsidian with zero migration, and any Knowlery vault works with the CLI as-is. Both shells share one implementation of sync and migrations, and the workspace records which Knowlery version last synced it — an older shell refuses to sync rather than downgrade what a newer one upgraded.
+A folder initialized by the CLI opens in Obsidian with zero migration, and any Knowlery vault works with the CLI as-is. All shells share one implementation of sync and migrations, and the workspace records which Knowlery version last synced it — an older shell refuses to sync rather than downgrade what a newer one upgraded. See [Agents & MCP](../guides/agents-mcp) for the MCP surface.
 
 ## Review Space
 

@@ -72,6 +72,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `json-canvas` | tooling | Work with JSON Canvas |
 | `defuddle` | tooling | Extract clean markdown from web pages |
 | `vault-conventions` | tooling | Enforce vault naming conventions |
+| `knowlery-cli` | tooling | Operate the knowledge base with the standalone `knowlery` CLI |
 
 ## Settings Sections
 

@@ -72,6 +72,7 @@
 | `json-canvas` | tooling | 处理 JSON Canvas |
 | `defuddle` | tooling | 从网页提取干净 markdown |
 | `vault-conventions` | tooling | 执行 vault naming conventions |
+| `knowlery-cli` | tooling | 用独立的 `knowlery` CLI 操作知识库 |
 
 ## Settings Sections
 
