@@ -45,15 +45,32 @@ export const MCP_PROMPT_SKILLS = [
 const READABLE_PREFIXES = ['entities/', 'concepts/', 'comparisons/', 'queries/', 'Library/'];
 const READABLE_FILES = new Set(['KNOWLEDGE.md']);
 
+/**
+ * Which write tools the shell offers (spec 1.0 f4, §4.3). Access is
+ * structural: a disallowed write is not registered — absent from tools/list,
+ * unknown to tools/call. There is no runtime permission check to get wrong.
+ * stdio defaults to everything enabled and unconfined (the local caller owns
+ * the machine); the HTTP shell passes exactly what its flags opted into.
+ */
+export interface McpAccess {
+  capture?: boolean;
+  sync?: boolean;
+  /** true = unconfined (stdio); { kbRoot } = confined (remote); false = absent. */
+  init?: boolean | { kbRoot: string };
+}
+
 export interface McpServerOptions {
   /** The running CLI's version, for sync's downgrade guard (spec 0.7 f5, §2.5). */
   toolVersion?: string;
+  access?: McpAccess;
 }
+
+const STDIO_ACCESS: Required<McpAccess> = { capture: true, sync: true, init: true };
 
 export function buildMcpServer(options: McpServerOptions = {}): McpServer {
   const server = new McpServer(SERVER_INFO);
   registerTools(server);
-  registerWriteTools(server, options);
+  registerWriteTools(server, { ...STDIO_ACCESS, ...options.access }, options);
   registerPrompts(server);
   registerResources(server);
   return server;
@@ -211,7 +228,13 @@ function registerTools(server: McpServer): void {
  * bounded. Conduct lives in the descriptions — write tools act on the user's
  * words, not the agent's initiative.
  */
-function registerWriteTools(server: McpServer, options: McpServerOptions): void {
+function registerWriteTools(server: McpServer, access: Required<McpAccess>, options: McpServerOptions): void {
+  if (access.init !== false) registerInitKb(server, access.init === true ? undefined : access.init.kbRoot);
+  if (access.capture) registerCapture(server);
+  if (access.sync) registerSync(server, options);
+}
+
+function registerInitKb(server: McpServer, kbRoot: string | undefined): void {
   defineTool(server, 'init_kb', {
     title: 'Initialize a knowledge base',
     description: 'Create a new Knowlery knowledge base at a path and register it under a name — cold start '
@@ -225,14 +248,16 @@ function registerWriteTools(server: McpServer, options: McpServerOptions): void 
     },
     outputSchema: { name: z.string(), path: z.string(), platform: z.string() },
   }, async ({ name, path, platform }) => {
-    const result = await runInitKb(name, path, platform ?? 'claude-code');
+    const result = await runInitKb(name, path, platform ?? 'claude-code', kbRoot);
     return ok(
       { name: result.name, path: result.path, platform: result.platform },
       `Initialized and registered "${result.name}" at ${result.path} (${result.platform}). `
       + 'Feed it with capture, then compile with /cook.',
     );
   });
+}
 
+function registerCapture(server: McpServer): void {
   defineTool(server, 'capture', {
     title: 'Capture a note',
     description: 'Save content from this conversation as a new note in the KB\'s inbox/ — "remember this". '
@@ -255,7 +280,9 @@ function registerWriteTools(server: McpServer, options: McpServerOptions): void 
       `Captured "${result.title}" to ${result.path}. It is uncooked until /cook compiles it.`,
     );
   });
+}
 
+function registerSync(server: McpServer, options: McpServerOptions): void {
   defineTool(server, 'sync', {
     title: 'Sync workspace files',
     description: 'Refresh the KB\'s built-in skills and instruction files to this Knowlery version. Idempotent; '

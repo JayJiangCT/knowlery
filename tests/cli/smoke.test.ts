@@ -252,6 +252,51 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
         await mcpClient.close();
       }
 
+      // Remote mode (spec 1.0 f4, §5.9): the built artifact serves HTTP with a
+      // token file — one authorized query, one 401, clean SIGTERM shutdown.
+      // Startup output must never contain the token (§5.8 hygiene).
+      const serveToken = 'smoke-token-0123456789abcdef';
+      const tokenFile = join(workDir, 'mcp-token');
+      await writeFile(tokenFile, `${serveToken}\n`);
+      const servePort = 20000 + Math.floor(Math.random() * 40000);
+      const serveChild = spawn('node', [cliPath, 'mcp', 'serve', '--port', String(servePort), '--token-file', tokenFile], { env: kbEnv });
+      let serveOutput = '';
+      serveChild.stdout.on('data', (chunk: Buffer) => { serveOutput += chunk.toString(); });
+      serveChild.stderr.on('data', (chunk: Buffer) => { serveOutput += chunk.toString(); });
+      try {
+        await new Promise<void>((resolveReady, rejectReady) => {
+          const poll = setInterval(() => { if (serveOutput.includes('serving on')) { clearInterval(poll); resolveReady(); } }, 50);
+          serveChild.once('exit', () => { clearInterval(poll); rejectReady(new Error(`serve exited early:\n${serveOutput}`)); });
+        });
+        expect(serveOutput).toContain('Access: reads only.');
+        expect(serveOutput).not.toContain(serveToken);
+
+        const denied = await fetch(`http://127.0.0.1:${servePort}/mcp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }),
+        });
+        expect(denied.status).toBe(401);
+
+        const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
+        const httpTransport = new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${servePort}/mcp`), {
+          requestInit: { headers: { Authorization: `Bearer ${serveToken}` } },
+        });
+        const httpClient = new Client({ name: 'smoke-http', version: '0.0.0' });
+        await httpClient.connect(httpTransport);
+        try {
+          const httpQuery = await httpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
+          expect((httpQuery.structuredContent as { candidates: Array<{ path: string }> }).candidates[0].path)
+            .toBe('concepts/widget-design.md');
+        } finally {
+          await httpClient.close();
+        }
+      } finally {
+        const exited = new Promise<number | null>((resolveExit) => serveChild.once('exit', (code) => resolveExit(code)));
+        serveChild.kill('SIGTERM');
+        expect(await exited).toBe(0);
+      }
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,

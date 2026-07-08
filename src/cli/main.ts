@@ -7,7 +7,7 @@ import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
 import { runFederatedQueryCommand, runQueryCommand } from './commands/query';
 import { runKbCommand } from './commands/kb';
-import { runMcpCommand } from './commands/mcp';
+import { runMcpCommand, runMcpServeCommand } from './commands/mcp';
 import { KbRegistryError, resolveKb } from '../core/kb-registry';
 import { runStaleCommand } from './commands/stale';
 import { runBundleCommand } from './commands/bundle';
@@ -36,6 +36,9 @@ Usage:
   knowlery init   [--dir <path>] [--platform claude-code|opencode] [--name <kb name>] [--force]
   knowlery kb add <name> [path] | kb list [--json] | kb remove <name>
   knowlery mcp    # MCP server over stdio (tools/prompts/resources for local agents)
+  knowlery mcp serve --port <n> [--host <addr>] [--allow-capture] [--allow-sync]
+                     [--allow-init --kb-root <dir>] [--token-file <path>]
+                     # remote mode: Streamable HTTP + bearer token (KNOWLERY_MCP_TOKEN)
   knowlery sync   [--dir <path>]
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path> | --kb <name> | --kb '*'] [--k <n>] [--json]
@@ -78,6 +81,13 @@ interface ParsedArgs {
   repo?: string;
   all: boolean;
   public: boolean;
+  port?: number;
+  host?: string;
+  allowCapture: boolean;
+  allowSync: boolean;
+  allowInit: boolean;
+  kbRoot?: string;
+  tokenFile?: string;
   acknowledgeRisks: boolean;
   approve: string[];
   flag: string[];
@@ -89,7 +99,7 @@ interface ParsedArgs {
 const POSITIONAL_LIMITS: Record<string, number> = {
   init: 0,
   kb: 3,
-  mcp: 0,
+  mcp: 1,
   sync: 0,
   health: 0,
   query: 1,
@@ -110,6 +120,9 @@ function parseArgs(argv: string[]): ParsedArgs {
     list: false,
     all: false,
     public: false,
+    allowCapture: false,
+    allowSync: false,
+    allowInit: false,
     acknowledgeRisks: false,
     approve: [],
     flag: [],
@@ -143,6 +156,16 @@ function parseArgs(argv: string[]): ParsedArgs {
     else if (arg === '--bundle-version') parsed.bundleVersion = argv[++i];
     else if (arg === '--verify') parsed.verify = argv[++i];
     else if (arg === '--repo') parsed.repo = argv[++i];
+    else if (arg === '--port') {
+      const value = parseInt(argv[++i] ?? '', 10);
+      if (Number.isFinite(value) && value > 0 && value < 65536) parsed.port = value;
+    }
+    else if (arg === '--host') parsed.host = argv[++i];
+    else if (arg === '--allow-capture') parsed.allowCapture = true;
+    else if (arg === '--allow-sync') parsed.allowSync = true;
+    else if (arg === '--allow-init') parsed.allowInit = true;
+    else if (arg === '--kb-root') parsed.kbRoot = argv[++i];
+    else if (arg === '--token-file') parsed.tokenFile = argv[++i];
     else if (arg === '--public') parsed.public = true;
     else if (arg === '--all') parsed.all = true;
     else if (arg === '--acknowledge-risks') parsed.acknowledgeRisks = true;
@@ -230,9 +253,25 @@ async function main(): Promise<void> {
   const fs = nodeVaultFs(root);
 
   switch (args.command) {
-    case 'mcp':
-      await runMcpCommand(typeof KNOWLERY_VERSION === 'string' ? KNOWLERY_VERSION : undefined);
+    case 'mcp': {
+      const toolVersion = typeof KNOWLERY_VERSION === 'string' ? KNOWLERY_VERSION : undefined;
+      if (args.positionals[0] === 'serve') {
+        await runMcpServeCommand({
+          port: args.port,
+          host: args.host,
+          allowCapture: args.allowCapture,
+          allowSync: args.allowSync,
+          allowInit: args.allowInit,
+          kbRoot: args.kbRoot,
+          tokenFile: args.tokenFile,
+        }, toolVersion, log);
+      } else if (args.positionals.length > 0) {
+        throw new CliError(`Unknown mcp subcommand: ${args.positionals[0]} (expected: serve)\n\n${USAGE}`, 2);
+      } else {
+        await runMcpCommand(toolVersion);
+      }
       break;
+    }
     case 'kb':
       await runKbCommand({
         sub: args.positionals[0],
