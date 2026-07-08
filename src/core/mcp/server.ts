@@ -67,6 +67,11 @@ function ok(structured: Record<string, unknown>, text: string): ToolResult {
  * memory. Pinning the shape to plain zod v3 (`z.ZodRawShape`) keeps handler
  * args fully typed at a fraction of the checking cost; the runtime call is
  * the SDK's own, unchanged.
+ *
+ * The input shape is wrapped `.strict()` before it reaches the SDK: handed a
+ * raw shape, the SDK would normalize to a default `z.object(...)`, which
+ * *strips* unknown keys — spec §4.1 requires them rejected (maintainer P2 at
+ * implementation review).
  */
 function defineTool<Shape extends z.ZodRawShape>(
   server: McpServer,
@@ -74,7 +79,11 @@ function defineTool<Shape extends z.ZodRawShape>(
   config: { title: string; description: string; inputSchema: Shape; outputSchema: z.ZodRawShape },
   handler: (args: z.infer<z.ZodObject<Shape>>) => Promise<ToolResult>,
 ): void {
-  (server.registerTool as unknown as (n: string, c: unknown, cb: unknown) => void)(name, config, handler);
+  (server.registerTool as unknown as (n: string, c: unknown, cb: unknown) => void)(
+    name,
+    { ...config, inputSchema: z.object(config.inputSchema).strict() },
+    handler,
+  );
 }
 
 async function resolveKbOrThrow(name: string): Promise<string> {

@@ -101,6 +101,15 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
 
     const malformed = await client.callTool({ name: 'query', arguments: { kb: 'work' } }); // missing question
     expect(malformed.isError).toBe(true);
+
+    // Unknown fields are rejected, not silently stripped (spec §4.1 — the SDK's
+    // default normalization strips; the strict wrapper in defineTool rejects).
+    const extraField = await client.callTool({
+      name: 'query',
+      arguments: { kb: 'work', question: 'backpressure', unexpected: 'boom' },
+    });
+    expect(extraField.isError).toBe(true);
+    expect(JSON.stringify(extraField.content)).toContain('unexpected');
   });
 
   it('federated query via MCP matches the shared core (§5.6)', async () => {
