@@ -1,6 +1,6 @@
 # F4 (1.0.0) — Remote Mode (Self-Hosted): Streamable HTTP + Token Auth
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-08 (one finding at spec review: the stateless per-request server+transport lifecycle written as implementation contract) — implementation in progress
 - **Target release:** 1.0.0
 - **Branch:** `cursor/10-f4-remote-mode-92eb`
 - **Depends on:** F2 (the handlers, reused verbatim — the shell-supplies-
