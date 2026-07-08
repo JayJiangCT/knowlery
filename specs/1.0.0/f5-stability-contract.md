@@ -57,7 +57,12 @@ ships through the full lockstep checklist. F5 is the release wearing a spec.
    shapes (existing keys), findings-vs-errors semantics, the nine prompt
    names, the `knowlery://{kb}/{+path}` resource scheme and its allowlist
    boundary, and `mcp serve`'s flags + auth contract (bearer token, 401
-   shape).
+   shape). **The frozen keys must be advertised, not just tested** (maintainer
+   finding at spec review): four tools currently declare nested output
+   objects as passthrough, so the schema a client introspects via
+   `tools/list` says nothing about the very keys the freeze promises. §4.4a
+   tightens them before ratification — with one deliberate exception,
+   `health.config`, listed under not-frozen below.
 4. **Bundle format (OKF)**: `knowlery-bundle.json` schemaVersion 1 fields,
    the zip layout (`index.md`, `agent-index.json`, `_sources/`, update log),
    and install/update gate semantics (version-increase requirement,
@@ -68,8 +73,12 @@ ships through the full lockstep checklist. F5 is the release wearing a spec.
 **Explicitly not frozen:** retrieval ranking internals (scores may improve;
 only the *shape* of results and the abstention verdict string are contract),
 skill prose (content evolves; names are contract), plugin UI, docs, eval
-thresholds, and anything under `.knowlery/` not listed above (activity,
-reports, freshness files — private state).
+thresholds, anything under `.knowlery/` not listed above (activity, reports,
+freshness files — private state), and **the inner keys of `health`'s `config`
+object** — it is a diagnostic report that grows as health checks evolve;
+freezing its internals until 2.0 would freeze the health check itself. Its
+contract is: `healthy` (boolean) and the presence of a `config` object; the
+schema stays deliberately loose and this page says so.
 
 **Deprecation path**: a surface can gain a successor (new flag, new tool) in
 a minor; the old one keeps working until a major removes it. Aliases don't
@@ -107,9 +116,21 @@ The Reference page's plugin-metadata table updates to 1.0.0.
 
 ### 4.4 Release prep and ratification sweep
 
+- **(a) Schema tightening at ratification** (the §4.1 finding — the last
+  moment the advertised schema may change is the freeze itself): `query`'s
+  `candidates` entries, `stale`'s `stalePages`/`uncookedNotes` entries, and
+  `list_bundles`' bundle entries replace `passthrough()` with their real key
+  sets (`QueryCandidate`, `StaleFinding`/`UncookedNote`, the installed-bundle
+  entry schema). `health.config` deliberately stays loose per §4.1's
+  not-frozen list. This changes no runtime values — only what `tools/list`
+  advertises — and the SDK validates results against the tightened schemas
+  from then on, making the freeze self-enforcing at runtime too. The
+  contract-test golden snapshot (§4.2.2) is generated *after* this, locking
+  the tightened schemas.
 - **Ratification**: the "1.0-frozen-candidate" markers in `core/mcp/server.ts`
-  and the F2/F4 specs flip to "1.0-frozen (see f5)"; spec README gains the
-  freeze note.
+  and the **F2/F3/F4** specs flip to "1.0-frozen (see f5)" (F3 §4.6 carries
+  the marker for the three write tools — maintainer finding: the sweep as
+  first drafted would have skipped it); spec README gains the freeze note.
 - **Lockstep bump** (the 0.9 checklist, now with MCP): `package.json` +
   `package-lock.json` (`npm install --package-lock-only`), `manifest.json`,
   `versions.json` (1.0.0 → minAppVersion 1.12.2), `compile.ts`
@@ -132,7 +153,10 @@ The Reference page's plugin-metadata table updates to 1.0.0.
 3. Version-stamp coherence: one test asserts `package.json` version ==
    `manifest.json` version == `versions.json` head == `SERVER_INFO.version` ==
    the `knowleryVersion` bundle stamp.
-4. All existing suites (391+) pass unmodified — F5 changes no behavior.
+4. All existing suites (391+) pass unmodified — F5 changes no behavior. The
+   §4.4a schema tightening is the one code change, and its safety is proven
+   by exactly those unmodified suites: every existing MCP test result still
+   validates against the tightened schemas.
 5. `docs:build` green with the stability page in both locales.
 
 ## 6. Acceptance criteria
