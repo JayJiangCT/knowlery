@@ -14,7 +14,7 @@ contracts freeze under semver.
 | F1 | KB registry: named knowledge bases (`kb add/list/remove`), `--kb` across all commands, federated query with source attribution | [f1-kb-registry.md](./f1-kb-registry.md) | — |
 | F2 | `knowlery mcp` (stdio): read tools (`list_kbs`, `query`, `stale`, `health`, `list_bundles`), skills as MCP prompts, pages as MCP resources | [f2-mcp-server.md](./f2-mcp-server.md) | F1 |
 | F3 | The write path: `init_kb` (cold start from a conversation), `capture` (inbox-only), `sync`; agent conduct for writes | [f3-write-path.md](./f3-write-path.md) | F2 |
-| F4 | Remote mode (self-hosted): Streamable HTTP + token auth, read-only by default, tunnel guidance, the per-agent access matrix | (spec pending) | F2 |
+| F4 | Remote mode (self-hosted): Streamable HTTP + token auth, read-only by default, tunnel guidance, the per-agent access matrix | [f4-remote-mode.md](./f4-remote-mode.md) | F2 |
 | F5 | The 1.0 stability contract: format/CLI/MCP-contract freeze, contract tests, docs finalization | (spec pending) | F1–F4 |
 
 Execution order: F1 → F2 → F3 → F4 → F5. F1 is pure CLI groundwork (valuable

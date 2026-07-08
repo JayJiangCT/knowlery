@@ -108,7 +108,15 @@ function isInside(candidate: string, root: string): boolean {
   return candidate === root || candidate.startsWith(root + sep);
 }
 
-export async function runInitKb(name: string, rawPath: string, platform: Platform): Promise<InitKbResult> {
+export async function runInitKb(
+  name: string,
+  rawPath: string,
+  platform: Platform,
+  /** Remote confinement (spec 1.0 f4, §4.4): when set, the canonical
+   * candidate must lie under this root. Composes with — never replaces —
+   * the F3 path contract. The caller canonicalizes at startup. */
+  kbRoot?: string,
+): Promise<InitKbResult> {
   // 1. Name validity + duplicate check — before any write, no auto-suffix
   //    (a conversation can ask; spec decision point).
   const invalid = validateKbName(name);
@@ -141,6 +149,10 @@ export async function runInitKb(name: string, rawPath: string, platform: Platfor
   }
 
   const candidate = join(parentReal, basename(expanded));
+
+  if (kbRoot !== undefined && !isInside(candidate, kbRoot)) {
+    throw new Error(`Target ${candidate} lies outside the configured --kb-root (${kbRoot}) — remote init_kb is confined to it.`);
+  }
 
   // 4. Target must not exist, or be an empty directory that is not itself a symlink.
   let targetExisted = false;

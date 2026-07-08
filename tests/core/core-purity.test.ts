@@ -31,6 +31,7 @@ const INVERTED_MODULES = [
   'core/federated-query.ts',
   'core/mcp/server.ts',
   'core/mcp/write-tools.ts',
+  'core/mcp/http-server.ts',
   'core/okf/zip.ts',
   'core/okf/publish.ts',
   'core/okf/upstream.ts',

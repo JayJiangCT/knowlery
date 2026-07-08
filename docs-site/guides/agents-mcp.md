@@ -138,6 +138,68 @@ and installed-bundle pages under `Library/`. Free-form notes (`Daily/`,
 `Projects/`, anything else) are refused — `query` may surface a raw note's
 title and path, but its content stays yours until you promote it with `/cook`.
 
+## Remote access (self-hosted)
+
+`knowlery mcp serve` runs the same server over Streamable HTTP — for reaching
+your KBs from another machine: a home server hosting them, a laptop away from
+home, a cloud agent given a tunnel URL.
+
+```bash
+# 1. Generate a token (Knowlery never generates or stores it for you)
+openssl rand -hex 32 > ~/.knowlery-mcp-token
+
+# 2. Start the server — reads only, loopback bind
+knowlery mcp serve --port 8787 --token-file ~/.knowlery-mcp-token
+```
+
+The token can also come from the `KNOWLERY_MCP_TOKEN` environment variable
+(one source only — setting both is an error; it is never accepted as a bare
+CLI argument). Tokens under 16 bytes are refused. Every request must send
+`Authorization: Bearer <token>`; failures get a `401` that reveals nothing.
+
+**Writes are off by default.** Each write tool has its own flag — no bundling:
+
+```bash
+knowlery mcp serve --port 8787 --token-file ~/.knowlery-mcp-token \
+  --allow-capture --allow-sync \
+  --allow-init --kb-root ~/kbs
+```
+
+A write that isn't switched on is not present at all — it doesn't appear in
+`tools/list` and can't be called. `--allow-init` requires `--kb-root`:
+remote-initiated KBs may only be created under that directory.
+
+**Keep the bind on `127.0.0.1` and put a tunnel in front** — the server does
+no TLS; the tunnel owns the wire:
+
+```bash
+cloudflared tunnel --url http://127.0.0.1:8787   # quick tunnel
+tailscale serve 8787                             # tailnet-only
+ssh -L 8787:127.0.0.1:8787 my-server             # plain SSH
+```
+
+Client config for a remote server (Cursor shown; Claude Code:
+`claude mcp add --transport http knowlery <url> --header "Authorization: Bearer <token>"`):
+
+```json
+{
+  "mcpServers": {
+    "knowlery-remote": {
+      "url": "https://your-tunnel-host/mcp",
+      "headers": { "Authorization": "Bearer <token>" }
+    }
+  }
+}
+```
+
+### Which agents can reach your knowledge, honestly
+
+| Agent class | 1.0 answer |
+| --- | --- |
+| Local MCP clients (Claude Desktop/Code, Cursor, gemini-cli) | `knowlery mcp` over stdio — full support, all eight tools |
+| Cloud agents with a shell (Cursor Cloud Agent, Codex-style) | already served: the CLI + bundle distribution |
+| Web-only cloud agents (ChatGPT connectors, Gemini web, Claude web) | out of scope for 1.0 — self-hosted remote + a tunnel works for the determined; the zero-setup answer is a hosted platform, which is a recorded trajectory, not a 1.0 deliverable |
+
 ## Troubleshooting
 
 - **"Unknown knowledge base"** — the name isn't registered. `knowlery kb list`
