@@ -1,6 +1,6 @@
 # F2 (1.0.0) — `knowlery mcp`: The Third Shell (stdio)
 
-- **Status:** Accepted 2026-07-08 (three review rounds: resource allowlist boundary, findings-are-data semantics, resources/list vs templates/list protocol split) — implemented, awaiting maintainer acceptance
+- **Status:** Done — maintainer acceptance passed 2026-07-08 (one finding fixed at implementation review: unknown input fields were stripped by the SDK's default normalization instead of rejected — strict-wrapped in `defineTool`; §7 real-client round passed)
 - **Target release:** 1.0.0
 - **Branch:** `cursor/10-f2-mcp-92eb`
 - **Depends on:** F1 (the registry is the addressing layer — plan-binding), 1.0
