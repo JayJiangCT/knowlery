@@ -133,6 +133,12 @@ describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
     expect(content).toContain('--verify <sha256>');
     expect(content).toContain('Never fabricate or guess a checksum');
   });
+
+  it('names the mcp command as a client-configured server, not an ad hoc command (spec 1.0 f2)', () => {
+    const content = skill('knowlery-cli');
+    expect(content).toContain('knowlery mcp');
+    expect(content).toContain('over stdio');
+  });
 });
 
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
