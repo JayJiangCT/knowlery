@@ -7,6 +7,7 @@ import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
 import { runFederatedQueryCommand, runQueryCommand } from './commands/query';
 import { runKbCommand } from './commands/kb';
+import { runMcpCommand } from './commands/mcp';
 import { KbRegistryError, resolveKb } from '../core/kb-registry';
 import { runStaleCommand } from './commands/stale';
 import { runBundleCommand } from './commands/bundle';
@@ -34,6 +35,7 @@ const USAGE = `knowlery — knowledge base lifecycle for agent clients
 Usage:
   knowlery init   [--dir <path>] [--platform claude-code|opencode] [--name <kb name>] [--force]
   knowlery kb add <name> [path] | kb list [--json] | kb remove <name>
+  knowlery mcp    # MCP server over stdio (tools/prompts/resources for local agents)
   knowlery sync   [--dir <path>]
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path> | --kb <name> | --kb '*'] [--k <n>] [--json]
@@ -87,6 +89,7 @@ interface ParsedArgs {
 const POSITIONAL_LIMITS: Record<string, number> = {
   init: 0,
   kb: 3,
+  mcp: 0,
   sync: 0,
   health: 0,
   query: 1,
@@ -227,6 +230,9 @@ async function main(): Promise<void> {
   const fs = nodeVaultFs(root);
 
   switch (args.command) {
+    case 'mcp':
+      await runMcpCommand();
+      break;
     case 'kb':
       await runKbCommand({
         sub: args.positionals[0],

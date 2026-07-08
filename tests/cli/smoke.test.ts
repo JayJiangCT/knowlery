@@ -199,6 +199,30 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       expect(conflict.code).toBe(2);
       expect(conflict.stderr).toContain('not both');
 
+      // MCP over stdio (spec 1.0 f2, §5.7): the built artifact serves a real
+      // JSON-RPC session — handshake, tool list, one query — then exits when
+      // the client hangs up.
+      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+      const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+      const mcpTransport = new StdioClientTransport({
+        command: 'node',
+        args: [cliPath, 'mcp'],
+        env: { ...kbEnv } as Record<string, string>,
+      });
+      const mcpClient = new Client({ name: 'smoke', version: '0.0.0' });
+      await mcpClient.connect(mcpTransport);
+      try {
+        const mcpTools = await mcpClient.listTools();
+        expect(mcpTools.tools.map((tool) => tool.name).sort()).toEqual(
+          ['health', 'list_bundles', 'list_kbs', 'query', 'stale'],
+        );
+        const mcpQuery = await mcpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
+        const mcpData = mcpQuery.structuredContent as { candidates: Array<{ path: string }> };
+        expect(mcpData.candidates[0].path).toBe('concepts/widget-design.md');
+      } finally {
+        await mcpClient.close();
+      }
+
       // Non-TTY init without flags must fail deterministically.
       const badInit = await run('node', [cliPath, 'init', '--dir', join(workDir, 'kb2')]).catch(
         (error: { code: number; stderr: string }) => error,
