@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -40,8 +40,8 @@ async function makeKb(name: string): Promise<string> {
   return dir;
 }
 
-async function connect(): Promise<Client> {
-  const server = buildMcpServer();
+async function connect(options: { toolVersion?: string } = {}): Promise<Client> {
+  const server = buildMcpServer(options);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
   const mcpClient = new Client({ name: 'test-client', version: '0.0.0' });
@@ -56,8 +56,9 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
     client = await connect();
 
     const tools = await client.listTools();
+    // 5 → 8 with the F3 write path — the one sanctioned existing-test change (spec 1.0 f3, §4.6).
     expect(tools.tools.map((tool) => tool.name).sort()).toEqual(
-      ['health', 'list_bundles', 'list_kbs', 'query', 'stale'],
+      ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'stale', 'sync'],
     );
     expect(tools.tools.every((tool) => tool.inputSchema)).toBe(true);
 
@@ -130,6 +131,181 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
     expect(mcpData.candidates.map((c) => `${c.kb}:${c.path}`))
       .toEqual(viaCore.candidates.map((c) => `${c.kb}:${c.path}`));
     expect(mcpData.candidates[0].kb).toBe('alpha');
+  });
+});
+
+describe('mcp write path (spec 1.0 f3, §5)', () => {
+  it('capture round trip: inbox note, verbatim content, then uncooked in stale and findable by query (§5.1)', async () => {
+    const dir = await makeKb('work');
+    await addKb('work', dir);
+    client = await connect();
+
+    const capture = await client.callTool({
+      name: 'capture',
+      arguments: { kb: 'work', content: 'Quasar beacon rotation happens nightly.', title: 'Quasar beacon' },
+    });
+    expect(capture.isError).toBeFalsy();
+    const captured = capture.structuredContent as { path: string; title: string };
+    expect(captured.path).toMatch(/^inbox\/\d{4}-\d{2}-\d{2}-\d{6}-quasar-beacon\.md$/);
+    expect(captured.title).toBe('Quasar beacon');
+
+    const written = await readFile(join(dir, captured.path), 'utf8');
+    expect(written).toContain('Quasar beacon rotation happens nightly.');
+    expect(written).toContain('source: conversation');
+
+    const stale = await client.callTool({ name: 'stale', arguments: { kb: 'work' } });
+    const staleData = stale.structuredContent as { uncookedNotes: Array<{ path: string }> };
+    expect(staleData.uncookedNotes.map((note) => note.path)).toContain(captured.path);
+
+    const found = await client.callTool({ name: 'query', arguments: { kb: 'work', question: 'quasar beacon rotation' } });
+    const foundData = found.structuredContent as { candidates: Array<{ path: string }> };
+    expect(foundData.candidates[0].path).toBe(captured.path);
+  });
+
+  it('capture is sealed: hostile titles slug inside inbox/, collisions suffix, bad input errors (§5.2)', async () => {
+    const dir = await makeKb('work');
+    await addKb('work', dir);
+    client = await connect();
+
+    const hostile = await client.callTool({
+      name: 'capture',
+      arguments: { kb: 'work', content: 'x', title: '../../etc/passwd' },
+    });
+    const hostilePath = (hostile.structuredContent as { path: string }).path;
+    expect(hostilePath).toMatch(/^inbox\/\d{4}-\d{2}-\d{2}-\d{6}-etc-passwd\.md$/);
+    await stat(join(dir, hostilePath)); // really inside the KB's inbox
+
+    const first = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: 'a', title: 'Same' } });
+    const second = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: 'b', title: 'Same' } });
+    const firstPath = (first.structuredContent as { path: string }).path;
+    const secondPath = (second.structuredContent as { path: string }).path;
+    expect(secondPath).not.toBe(firstPath);
+    expect(await readFile(join(dir, firstPath), 'utf8')).toContain('a');
+    expect(await readFile(join(dir, secondPath), 'utf8')).toContain('b');
+
+    const empty = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: '   ' } });
+    expect(empty.isError).toBe(true);
+    const star = await client.callTool({ name: 'capture', arguments: { kb: '*', content: 'x' } });
+    expect(star.isError).toBe(true);
+    const unknown = await client.callTool({ name: 'capture', arguments: { kb: 'nope', content: 'x' } });
+    expect(unknown.isError).toBe(true);
+    expect(JSON.stringify(unknown.content)).toContain('Registered: work');
+  });
+
+  it('init_kb happy path: scaffold + registration, immediately serving on the same session (§5.3)', async () => {
+    client = await connect();
+
+    const target = join(workDir, 'fresh-kb');
+    const init = await client.callTool({
+      name: 'init_kb',
+      arguments: { name: 'fresh', path: target, platform: 'claude-code' },
+    });
+    expect(init.isError).toBeFalsy();
+    const initData = init.structuredContent as { name: string; path: string };
+    expect(initData.name).toBe('fresh');
+
+    await stat(join(target, 'KNOWLEDGE.md'));
+    await stat(join(target, '.knowlery', 'manifest.json'));
+
+    const kbs = await client.callTool({ name: 'list_kbs', arguments: {} });
+    expect((kbs.structuredContent as { kbs: Array<{ name: string; state: string }> }).kbs)
+      .toContainEqual(expect.objectContaining({ name: 'fresh', state: 'ok' }));
+
+    const health = await client.callTool({ name: 'health', arguments: { kb: 'fresh' } });
+    expect((health.structuredContent as { healthy: boolean }).healthy).toBe(true);
+  });
+
+  it('init_kb path contract: parent rules, emptiness, nesting, symlinks, duplicate name (§5.4)', async () => {
+    const dir = await makeKb('work');
+    await addKb('work', dir);
+    client = await connect();
+
+    const refused = async (name: string, path: string, pattern: RegExp) => {
+      const result = await client.callTool({ name: 'init_kb', arguments: { name, path } });
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result.content)).toMatch(pattern);
+    };
+
+    await refused('a1', join(workDir, 'no-such-parent', 'kb'), /Parent directory does not exist/);
+    await refused('a2', join(workDir, 'two', 'levels'), /Parent directory does not exist/);
+    await refused('a3', dir, /not empty/);
+    await refused('a4', join(dir, 'concepts', 'nested-kb'), /inside the registered KB .*work/);
+    await refused('work', join(workDir, 'whatever'), /already registered/);
+    // Duplicate name is checked before any write: target untouched.
+    expect(await stat(join(workDir, 'whatever')).catch(() => null)).toBeNull();
+
+    // A missing leaf under a symlinked parent resolves through the parent's
+    // realpath — created at the real location, prefix checks see it (P1 fix).
+    const realParent = join(workDir, 'real-parent');
+    await mkdir(realParent);
+    await symlink(realParent, join(workDir, 'link-parent'));
+    const viaLink = await client.callTool({
+      name: 'init_kb',
+      arguments: { name: 'via-link', path: join(workDir, 'link-parent', 'linked-kb') },
+    });
+    expect(viaLink.isError).toBeFalsy();
+    const realResolved = (viaLink.structuredContent as { path: string }).path;
+    expect(realResolved).toBe(await realpath(join(realParent, 'linked-kb')));
+    expect(realResolved).toContain('real-parent');
+
+    // An existing target that is itself a symlink is refused.
+    const elsewhere = join(workDir, 'elsewhere');
+    await mkdir(elsewhere);
+    await symlink(elsewhere, join(workDir, 'sym-target'));
+    await refused('a5', join(workDir, 'sym-target'), /symlink/);
+  });
+
+  it('init_kb cleanup: newly-created target removed entirely; pre-existing empty target left standing (§5.5)', async () => {
+    client = await connect();
+    // Make the config dir unwritable so registration (addKb) fails after scaffold.
+    const configDir = process.env.KNOWLERY_CONFIG_DIR!;
+    await mkdir(configDir, { recursive: true });
+    await chmod(configDir, 0o500);
+
+    try {
+      const created = join(workDir, 'born-here');
+      const failCreated = await client.callTool({ name: 'init_kb', arguments: { name: 'doomed1', path: created } });
+      expect(failCreated.isError).toBe(true);
+      expect(await stat(created).catch(() => null)).toBeNull(); // removed entirely
+
+      const preExisting = join(workDir, 'was-here');
+      await mkdir(preExisting);
+      const failPre = await client.callTool({ name: 'init_kb', arguments: { name: 'doomed2', path: preExisting } });
+      expect(failPre.isError).toBe(true);
+      const after = await stat(preExisting).catch(() => null);
+      expect(after?.isDirectory()).toBe(true); // the user's directory survives
+      expect(await readdir(preExisting)).toEqual([]); // only this run's writes rolled back
+    } finally {
+      await chmod(configDir, 0o700);
+    }
+  });
+
+  it('sync semantics: idempotent no-change data, restores a deleted skill, downgrade is a tool error (§5.6)', async () => {
+    client = await connect({ toolVersion: '1.0.0' });
+    const target = join(workDir, 'synced');
+    await client.callTool({ name: 'init_kb', arguments: { name: 'synced', path: target } });
+
+    // The first sync may stamp lastSyncedBy into the manifest; from then on, no changes — twice.
+    await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
+    const first = await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
+    const second = await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
+    expect((first.structuredContent as { updated: string[] }).updated).toEqual([]);
+    expect((second.structuredContent as { updated: string[] }).updated).toEqual([]);
+
+    await rm(join(target, '.claude', 'skills', 'ask', 'SKILL.md'));
+    const restore = await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
+    const restored = (restore.structuredContent as { updated: string[] }).updated;
+    expect(restored.some((path) => path.includes('ask'))).toBe(true);
+    await stat(join(target, '.claude', 'skills', 'ask', 'SKILL.md'));
+
+    // Downgrade guard: a manifest marked by a newer version → tool error (spec §4.4).
+    const manifestPath = join(target, '.knowlery', 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>;
+    manifest.lastSyncedBy = '99.0.0';
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+    const downgrade = await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
+    expect(downgrade.isError).toBe(true);
+    expect(JSON.stringify(downgrade.content)).toContain('newer Knowlery');
   });
 });
 

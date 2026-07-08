@@ -9,8 +9,13 @@ import { scanVault } from '../query/scan';
 import { runQuery } from '../query/engine';
 import { computeStaleness } from '../query/staleness';
 import { readInstalledBundles } from '../okf/registry';
+import { loggingVaultFs } from '../vault-fs';
+import { isVaultInitialized } from '../setup-executor';
+import { runVaultSync } from '../vault-sync';
+import { runCapture, runInitKb } from './write-tools';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
+import { resolvePlatform } from '../../cli/commands/shared';
 import { BUNDLED_SKILLS } from '../../assets/skills';
 
 /**
@@ -40,9 +45,15 @@ export const MCP_PROMPT_SKILLS = [
 const READABLE_PREFIXES = ['entities/', 'concepts/', 'comparisons/', 'queries/', 'Library/'];
 const READABLE_FILES = new Set(['KNOWLEDGE.md']);
 
-export function buildMcpServer(): McpServer {
+export interface McpServerOptions {
+  /** The running CLI's version, for sync's downgrade guard (spec 0.7 f5, §2.5). */
+  toolVersion?: string;
+}
+
+export function buildMcpServer(options: McpServerOptions = {}): McpServer {
   const server = new McpServer(SERVER_INFO);
   registerTools(server);
+  registerWriteTools(server, options);
   registerPrompts(server);
   registerResources(server);
   return server;
@@ -193,6 +204,95 @@ function registerTools(server: McpServer): void {
       : entries.map(([id, entry]) => `${id} v${entry.version} — "${entry.title}"`).join('\n');
     return ok({ bundles: registry.bundles }, text);
   });
+}
+
+/**
+ * The write path (spec 1.0 f3): exactly three writes, each structurally
+ * bounded. Conduct lives in the descriptions — write tools act on the user's
+ * words, not the agent's initiative.
+ */
+function registerWriteTools(server: McpServer, options: McpServerOptions): void {
+  defineTool(server, 'init_kb', {
+    title: 'Initialize a knowledge base',
+    description: 'Create a new Knowlery knowledge base at a path and register it under a name — cold start '
+      + 'from a conversation. Creates at most one new directory; a non-empty target is refused. '
+      + 'Only call on the user\'s explicit request, and restate the resolved path in conversation before calling — '
+      + 'creating a directory is the user\'s decision.',
+    inputSchema: {
+      name: z.string().describe('Registry name for the new KB ([a-z0-9][a-z0-9-_]*)'),
+      path: z.string().describe('Directory to create (absolute or ~-relative); its parent must exist'),
+      platform: z.enum(['claude-code', 'opencode']).optional(),
+    },
+    outputSchema: { name: z.string(), path: z.string(), platform: z.string() },
+  }, async ({ name, path, platform }) => {
+    const result = await runInitKb(name, path, platform ?? 'claude-code');
+    return ok(
+      { name: result.name, path: result.path, platform: result.platform },
+      `Initialized and registered "${result.name}" at ${result.path} (${result.platform}). `
+      + 'Feed it with capture, then compile with /cook.',
+    );
+  });
+
+  defineTool(server, 'capture', {
+    title: 'Capture a note',
+    description: 'Save content from this conversation as a new note in the KB\'s inbox/ — "remember this". '
+      + 'Appends only; never overwrites, never touches compiled knowledge (that is /cook\'s reviewed job). '
+      + 'Only capture what the user asked to save (or offered and they accepted), and echo back the written path. '
+      + 'Never capture silently in the background.',
+    inputSchema: {
+      kb: z.string().describe('Registered KB name (writes take exactly one KB — no "*")'),
+      content: z.string().min(1),
+      title: z.string().optional(),
+    },
+    outputSchema: { path: z.string(), title: z.string() },
+  }, async ({ kb, content, title }) => {
+    if (kb === '*') {
+      throw new Error('capture writes to exactly one KB — "*" is not valid here.');
+    }
+    const result = await runCaptureOrThrow(kb, content, title);
+    return ok(
+      { path: result.path, title: result.title },
+      `Captured "${result.title}" to ${result.path}. It is uncooked until /cook compiles it.`,
+    );
+  });
+
+  defineTool(server, 'sync', {
+    title: 'Sync workspace files',
+    description: 'Refresh the KB\'s built-in skills and instruction files to this Knowlery version. Idempotent; '
+      + 'the caller supplies no content — everything written is determined by the installed binary. '
+      + 'Run when the user asks, or after they accept a suggestion (e.g. health reported missing skills); '
+      + 'report the updated-file list.',
+    inputSchema: { kb: z.string() },
+    outputSchema: { updated: z.array(z.string()) },
+  }, async ({ kb }) => {
+    const root = await resolveKbOrThrow(kb);
+    const fs = nodeVaultFs(root);
+    if (!(await isVaultInitialized(fs))) {
+      throw new Error(`"${kb}" is not an initialized Knowlery workspace (no KNOWLEDGE.md or .knowlery/manifest.json).`);
+    }
+    const { fs: logged, writes } = loggingVaultFs(fs);
+    const result = await runVaultSync(logged, await resolvePlatform(fs), options.toolVersion);
+    if (result.skipped === 'newer-shell') {
+      // The downgrade guard is a tool error, not a finding (spec §4.4): the
+      // tool's point is the write it refused to make.
+      throw new Error(
+        `This workspace was last synced by a newer Knowlery (${result.lastSyncedBy ?? 'unknown'}); syncing would downgrade it. Update first: npm i -g knowlery@latest`,
+      );
+    }
+    const text = writes.length === 0
+      ? `No changes — ${kb} is already up to date.`
+      : `Updated ${writes.length} file(s) in ${kb}:\n${writes.map((path) => `  ${path}`).join('\n')}`;
+    return ok({ updated: writes }, text);
+  });
+}
+
+async function runCaptureOrThrow(kb: string, content: string, title?: string) {
+  try {
+    return await runCapture(kb, content, title);
+  } catch (error) {
+    if (error instanceof KbRegistryError) throw new Error(error.message);
+    throw error;
+  }
 }
 
 function registerPrompts(server: McpServer): void {

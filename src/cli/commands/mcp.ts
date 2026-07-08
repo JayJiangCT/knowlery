@@ -6,8 +6,8 @@ import { buildMcpServer } from '../../core/mcp/server';
  * clients (Claude Desktop/Code, Cursor, gemini-cli); the handlers live in
  * core/mcp and know nothing about the transport.
  */
-export async function runMcpCommand(): Promise<void> {
-  const server = buildMcpServer();
+export async function runMcpCommand(toolVersion?: string): Promise<void> {
+  const server = buildMcpServer({ toolVersion });
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // The server runs until the client closes stdin; resolve on close so the
