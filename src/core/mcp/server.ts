@@ -9,6 +9,7 @@ import { scanVault } from '../query/scan';
 import { runQuery } from '../query/engine';
 import { computeStaleness } from '../query/staleness';
 import { readInstalledBundles } from '../okf/registry';
+import { InstalledBundleEntrySchema } from '../../types';
 import { loggingVaultFs } from '../vault-fs';
 import { isVaultInitialized } from '../setup-executor';
 import { runVaultSync } from '../vault-sync';
@@ -27,11 +28,13 @@ import { BUNDLED_SKILLS } from '../../assets/skills';
  * stale-heavy reports are successful results; tool errors are reserved for
  * invalid input, unknown kb names, and I/O failures.
  *
- * Tool names, input schemas, and structured-output shapes are
- * 1.0-frozen-candidate (spec §4.6): renames need maintainer sign-off.
+ * Tool names, input schemas, and structured-output shapes are 1.0-frozen
+ * (ratified by spec 1.0 f5; pinned by tests/contract/): breaking changes
+ * require a major version.
  */
 
-const SERVER_INFO = { name: 'knowlery', version: '1.0.0' };
+/** Exported for the version-coherence contract test (spec 1.0 f5, §5.3). */
+export const SERVER_INFO = { name: 'knowlery', version: '1.0.0' };
 
 /** Skills whose content stands without Obsidian (spec §4.3, curated set). */
 export const MCP_PROMPT_SKILLS = [
@@ -44,6 +47,43 @@ export const MCP_PROMPT_SKILLS = [
  * pages; reading their full content is out of bounds. */
 const READABLE_PREFIXES = ['entities/', 'concepts/', 'comparisons/', 'queries/', 'Library/'];
 const READABLE_FILES = new Set(['KNOWLEDGE.md']);
+
+/**
+ * Advertised output shapes, 1.0-frozen (spec 1.0 f5, §4.4a): the schema a
+ * client introspects via tools/list carries the frozen keys, and the SDK
+ * validates every result against it at runtime — the freeze is
+ * self-enforcing, not just tested. health's `config` stays deliberately
+ * loose (spec f5 §4.1 not-frozen list): its check fields may be added,
+ * renamed, or retired as the health checker evolves.
+ */
+const QueryCandidateSchema = z.object({
+  path: z.string(),
+  score: z.number(),
+  tier: z.enum(['agent', 'bundle', 'user']),
+  type: z.string().optional(),
+  title: z.string(),
+  description: z.string().optional(),
+  evidence: z.array(z.string()),
+  matchedTerms: z.array(z.string()),
+  /** Present on federated (`kb: "*"`) results: which KB the candidate came from. */
+  kb: z.string().optional(),
+});
+
+const StaleFindingSchema = z.object({
+  path: z.string(),
+  title: z.string(),
+  changedSources: z.array(z.object({
+    path: z.string(),
+    sourceMtimeMs: z.number(),
+    pageMtimeMs: z.number(),
+  })),
+});
+
+const UncookedNoteSchema = z.object({
+  path: z.string(),
+  title: z.string(),
+  mtimeMs: z.number(),
+});
 
 /**
  * Which write tools the shell offers (spec 1.0 f4, §4.3). Access is
@@ -153,7 +193,7 @@ function registerTools(server: McpServer): void {
     outputSchema: {
       verdict: z.string().optional(),
       verdictByKb: z.record(z.string()).optional(),
-      candidates: z.array(z.object({}).passthrough()),
+      candidates: z.array(QueryCandidateSchema),
     },
   }, async ({ kb, question, k }) => {
     const limit = k ?? 12;
@@ -178,8 +218,8 @@ function registerTools(server: McpServer): void {
       + 'This is a work list for re-cooking, not an alarm — a long list is a finding, not a failure.',
     inputSchema: { kb: z.string() },
     outputSchema: {
-      stalePages: z.array(z.object({}).passthrough()),
-      uncookedNotes: z.array(z.object({}).passthrough()),
+      stalePages: z.array(StaleFindingSchema),
+      uncookedNotes: z.array(UncookedNoteSchema),
     },
   }, async ({ kb }) => {
     const root = await resolveKbOrThrow(kb);
@@ -211,7 +251,7 @@ function registerTools(server: McpServer): void {
     title: 'Installed bundles',
     description: 'Knowledge bundles installed in a KB, with version and source provenance.',
     inputSchema: { kb: z.string() },
-    outputSchema: { bundles: z.record(z.object({}).passthrough()) },
+    outputSchema: { bundles: z.record(InstalledBundleEntrySchema) },
   }, async ({ kb }) => {
     const root = await resolveKbOrThrow(kb);
     const registry = await readInstalledBundles(nodeVaultFs(root));

@@ -1,0 +1,508 @@
+{
+  "tools": [
+    {
+      "name": "capture",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string",
+            "description": "Registered KB name (writes take exactly one KB — no \"*\")"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb",
+          "content"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "title"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "health",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "healthy": {
+            "type": "boolean"
+          },
+          "config": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "knowledgePages": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": [
+          "healthy",
+          "config",
+          "knowledgePages"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "init_kb",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Registry name for the new KB ([a-z0-9][a-z0-9-_]*)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Directory to create (absolute or ~-relative); its parent must exist"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "claude-code",
+              "opencode"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "platform"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "list_bundles",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "bundles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source": {
+                  "type": "string"
+                },
+                "installedAt": {
+                  "type": "string"
+                },
+                "libraryPath": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "manifestContentHash": {
+                  "type": "string"
+                },
+                "installedContentHash": {
+                  "type": "string"
+                },
+                "fileHashes": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "conformance": {
+                  "type": "string",
+                  "enum": [
+                    "passed",
+                    "failed",
+                    "skipped"
+                  ]
+                },
+                "conformanceErrorCount": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "version",
+                "title",
+                "source",
+                "installedAt",
+                "libraryPath",
+                "manifestContentHash",
+                "installedContentHash",
+                "conformance",
+                "conformanceErrorCount"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "bundles"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "list_kbs",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "kbs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "path",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "kbs"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "query",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string",
+            "description": "Registered KB name, or \"*\" for all"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "k": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "kb",
+          "question"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "verdict": {
+            "type": "string"
+          },
+          "verdictByKb": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                },
+                "tier": {
+                  "type": "string",
+                  "enum": [
+                    "agent",
+                    "bundle",
+                    "user"
+                  ]
+                },
+                "type": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "matchedTerms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "kb": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "score",
+                "tier",
+                "title",
+                "evidence",
+                "matchedTerms"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "candidates"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "stale",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "stalePages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "changedSources": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "sourceMtimeMs": {
+                        "type": "number"
+                      },
+                      "pageMtimeMs": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "sourceMtimeMs",
+                      "pageMtimeMs"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "path",
+                "title",
+                "changedSources"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "uncookedNotes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "mtimeMs": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "path",
+                "title",
+                "mtimeMs"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "stalePages",
+          "uncookedNotes"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "name": "sync",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kb": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "updated"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  ],
+  "prompts": [
+    "ask",
+    "audit",
+    "challenge",
+    "cook",
+    "explore",
+    "ideas",
+    "knowlery-cli",
+    "organize",
+    "vault-conventions"
+  ],
+  "resourceTemplates": [
+    "knowlery://{kb}/{+path}"
+  ]
+}

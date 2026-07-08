@@ -161,7 +161,7 @@ knowlery mcp serve --port 8787 \
 ### 4.7 The freeze runway
 
 `serve` flags and the HTTP auth contract join the 1.0-frozen-candidate set;
-F5 ratifies. Tool names/schemas are already frozen candidates from F2/F3 and
+**ratified 1.0-frozen by F5** (pinned by tests/contract/). Tool names/schemas are already frozen candidates from F2/F3 and
 are untouched here.
 
 ## 5. Safety properties, restated as tests
