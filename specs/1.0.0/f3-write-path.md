@@ -168,7 +168,7 @@ docs' conduct section:
 
 ### 4.6 Contract surface
 
-Three new tool names + input schemas join the 1.0-frozen-candidate set (F2
+Three new tool names + input schemas join the 1.0-frozen-candidate set — **ratified 1.0-frozen by F5** (F2
 §4.6); the F5 ratification covers all eight. `tools/list` grows from five to
 eight — the F2 test asserting *exactly five* tools is updated to *exactly
 eight*, and this spec sanctions that one existing-test modification explicitly

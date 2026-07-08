@@ -1,6 +1,6 @@
 # F5 (1.0.0) — The 1.0 Stability Contract
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-08 (two findings at spec review: ratification sweep covers F3's marker; passthrough tools tightened at ratification with the health.config carve-out, wording precision-fixed at maintainer read-through) — implementation in progress
 - **Target release:** 1.0.0
 - **Branch:** `cursor/10-f5-stability-contract-92eb`
 - **Depends on:** F1–F4 (the surfaces being frozen), 1.0 plan ("a major version
@@ -75,8 +75,10 @@ only the *shape* of results and the abstention verdict string are contract),
 skill prose (content evolves; names are contract), plugin UI, docs, eval
 thresholds, anything under `.knowlery/` not listed above (activity, reports,
 freshness files — private state), and **the inner keys of `health`'s `config`
-object** — it is a diagnostic report that grows as health checks evolve;
-freezing its internals until 2.0 would freeze the health check itself. Its
+object** — individual check fields may be added, renamed, or retired as the
+health checker evolves (maintainer wording fix at read-through: growth alone
+would be minor everywhere else in this document; the carve-out exists for
+rename/retire); freezing them would freeze the checks themselves. Its
 contract is: `healthy` (boolean) and the presence of a `config` object; the
 schema stays deliberately loose and this page says so.
 

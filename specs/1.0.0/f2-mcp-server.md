@@ -135,7 +135,8 @@ alarm). The `knowlery-cli` skill's command table gains the `mcp` row.
 ### 4.6 The freeze runway
 
 Tool names, input schemas, and structured-output shapes land marked
-"1.0-frozen-candidate"; F5 ratifies them into the stability contract. Renames
+"1.0-frozen-candidate"; **ratified 1.0-frozen by F5** (pinned by
+tests/contract/). Renames
 after F2 acceptance need maintainer sign-off — the contract effectively starts
 now.
 
