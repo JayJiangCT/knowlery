@@ -1,6 +1,6 @@
 # F5 (1.0.0) — The 1.0 Stability Contract
 
-- **Status:** Accepted 2026-07-08 (two findings at spec review: ratification sweep covers F3's marker; passthrough tools tightened at ratification with the health.config carve-out, wording precision-fixed at maintainer read-through) — implementation in progress
+- **Status:** Done — maintainer acceptance passed 2026-07-08 (spec review: F3 ratification gap + passthrough tightening with the health.config carve-out; read-through wording fix; §5.2 mutation check performed at implementation, both contract suites caught their mutations)
 - **Target release:** 1.0.0
 - **Branch:** `cursor/10-f5-stability-contract-92eb`
 - **Depends on:** F1–F4 (the surfaces being frozen), 1.0 plan ("a major version
