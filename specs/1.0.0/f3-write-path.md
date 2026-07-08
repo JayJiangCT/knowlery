@@ -97,8 +97,16 @@ Order of operations — **all validation before any write**:
    conflict, not silently pick a new name. Decision point: this is stricter
    than the Obsidian plugin's self-registration suffix behavior, deliberately —
    a conversation can ask, a plugin boot cannot).
-2. The path is expanded and **canonicalized (symlinks resolved) before every
-   check**; all subsequent rules apply to the real path.
+2. **Canonicalization, defined so it works for a leaf that does not exist
+   yet** (maintainer P1 at spec review — a missing target cannot be
+   realpath'd, and skipping canonicalization to make the happy path pass
+   would gut the symlink/prefix checks): expand the path (`~`, relative →
+   absolute); **canonicalize the parent** (which must exist — rule 3) via
+   realpath; the **target canonical candidate** is
+   `join(parentReal, basename(target))`. If the target itself already exists
+   (the pre-existing-empty-dir case), realpath it too and **require it to
+   equal the candidate** — a target that is itself a symlink is refused. All
+   subsequent prefix and internal-path checks run against the candidate.
 3. The parent directory must already exist and be user-writable — `init_kb`
    creates **at most one new leaf directory**, never a recursive tree.
 4. The target must not exist, or must be an empty directory; a non-empty
@@ -175,8 +183,11 @@ eight*, and this spec sanctions that one existing-test modification explicitly
    `query`/`health` on the same server session (no restart needed).
 4. **init_kb path contract**: missing parent refused; a path needing two new
    levels refused; non-empty target refused; target inside a registered KB
-   refused; symlinked parent is canonicalized before the checks; duplicate
-   name refused **before any write** (target directory untouched).
+   refused; **a missing leaf under a symlinked parent resolves through the
+   parent's realpath** (created at the real location, and the prefix checks
+   see the real location); an existing target that is itself a symlink
+   refused; duplicate name refused **before any write** (target directory
+   untouched).
 5. **init_kb cleanup**: a failure injected after scaffolding begins (e.g.
    registration failing on an unwritable config dir) removes a newly-created
    target entirely, but for a pre-existing empty target removes only the
