@@ -183,6 +183,22 @@ describe('mcp write path (spec 1.0 f3, §5)', () => {
     expect(await readFile(join(dir, firstPath), 'utf8')).toContain('a');
     expect(await readFile(join(dir, secondPath), 'utf8')).toContain('b');
 
+    // A symlinked inbox/ (-> a compiled dir, or -> outside the KB) is refused —
+    // capture appends only to a *real* inbox (maintainer P1 at implementation review).
+    const linkedDir = await mkdtemp(join(tmpdir(), 'knowlery-linked-'));
+    try {
+      for (const linkTarget of [join(dir, 'concepts'), linkedDir]) {
+        await rm(join(dir, 'inbox'), { recursive: true, force: true });
+        await symlink(linkTarget, join(dir, 'inbox'));
+        const viaLink = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: 'x', title: 'Escapee' } });
+        expect(viaLink.isError).toBe(true);
+        expect(JSON.stringify(viaLink.content)).toContain('symlink');
+      }
+    } finally {
+      await rm(join(dir, 'inbox'), { recursive: true, force: true });
+      await rm(linkedDir, { recursive: true, force: true });
+    }
+
     const empty = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: '   ' } });
     expect(empty.isError).toBe(true);
     const star = await client.callTool({ name: 'capture', arguments: { kb: '*', content: 'x' } });

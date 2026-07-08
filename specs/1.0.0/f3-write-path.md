@@ -77,6 +77,12 @@ convention with three structural properties:
   survive slugging, so escape is structurally impossible rather than filtered.
 - Collision (same second, same slug): a numeric suffix is appended;
   `capture` **never overwrites any existing file**.
+- **`inbox/` itself must be a real directory** (maintainer P1 at
+  implementation review — slug-sealing the filename is not enough if the
+  directory is a symlink): before creating or using it, `lstat` verifies an
+  existing `inbox/` is not a symlink and is a directory; a symlinked inbox
+  (→ a compiled dir, → outside the KB) is refused with instructions, never
+  followed. (`mkdir recursive` alone would silently follow one.)
 - Note shape: frontmatter (`title`, `captured` ISO timestamp,
   `source: conversation`) + the content verbatim. Content must be non-empty;
   no upper bound (the inbox is the user's own disk).
@@ -176,8 +182,10 @@ eight*, and this spec sanctions that one existing-test modification explicitly
    end to end over the in-memory transport).
 2. **capture is sealed**: a title of `../../etc/passwd` (and separators,
    backslashes, dots) produces a slug-safe filename *inside* `inbox/`;
-   same-title-same-second collisions get suffixes, never overwrites; empty
-   content → tool error; `kb: "*"` → tool error; unknown `kb` → F1 error.
+   same-title-same-second collisions get suffixes, never overwrites; **an
+   `inbox/` that is a symlink to a compiled dir is refused, and one that is a
+   symlink out of the KB is refused** (maintainer P1); empty content → tool
+   error; `kb: "*"` → tool error; unknown `kb` → F1 error.
 3. **init_kb happy path**: scaffold matches CLI `init` (manifest, KNOWLEDGE.md,
    skills), the registry gains the name, and the new KB immediately serves
    `query`/`health` on the same server session (no restart needed).

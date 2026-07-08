@@ -1,4 +1,4 @@
-import { access, mkdir, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
@@ -49,7 +49,24 @@ export async function runCapture(kb: string, content: string, title?: string): P
   const stamp = captureTimestamp(new Date());
   const slug = slugify(noteTitle);
 
-  await mkdir(join(root, 'inbox'), { recursive: true });
+  // inbox/ must be a real directory under the KB root — a symlinked inbox
+  // (-> concepts/, -> outside the KB) would break capture's core promise of
+  // appending only to the inbox (maintainer P1 at implementation review;
+  // `mkdir recursive` alone would silently follow an existing symlink).
+  const inboxDir = join(root, 'inbox');
+  let inboxStat: Awaited<ReturnType<typeof lstat>> | null = null;
+  try {
+    inboxStat = await lstat(inboxDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  if (inboxStat === null) {
+    await mkdir(inboxDir);
+  } else if (inboxStat.isSymbolicLink()) {
+    throw new Error(`inbox/ in "${kb}" is a symlink (${inboxDir}) — capture refuses to follow it. Replace it with a real directory.`);
+  } else if (!inboxStat.isDirectory()) {
+    throw new Error(`inbox/ in "${kb}" exists but is not a directory (${inboxDir}).`);
+  }
 
   // Collision (same second, same slug): numeric suffix — capture never overwrites.
   let relPath = `inbox/${stamp}-${slug}.md`;
