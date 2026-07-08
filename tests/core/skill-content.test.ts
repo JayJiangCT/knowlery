@@ -141,6 +141,14 @@ describe('knowlery-cli skill (spec 0.8 f1, §4.3)', () => {
   });
 });
 
+describe('/cook knows the inbox (spec 1.0 f3, §4.1)', () => {
+  it('names inbox/ as first-priority capture material', () => {
+    const cook = skill('cook');
+    expect(cook).toContain('inbox/');
+    expect(cook).toContain('first-priority cook material');
+  });
+});
+
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
   it('names the deterministic tools and the dangling-sources category', () => {
     const audit = skill('audit');
