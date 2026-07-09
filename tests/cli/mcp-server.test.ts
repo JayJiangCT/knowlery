@@ -56,9 +56,9 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
     client = await connect();
 
     const tools = await client.listTools();
-    // 5 → 8 with the F3 write path — the one sanctioned existing-test change (spec 1.0 f3, §4.6).
+    // 8 → 9 with register_kb — the sanctioned count update (spec 1.1 f1, §4.3).
     expect(tools.tools.map((tool) => tool.name).sort()).toEqual(
-      ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'stale', 'sync'],
+      ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'register_kb', 'stale', 'sync'],
     );
     expect(tools.tools.every((tool) => tool.inputSchema)).toBe(true);
 
@@ -322,6 +322,69 @@ describe('mcp write path (spec 1.0 f3, §5)', () => {
     const downgrade = await client.callTool({ name: 'sync', arguments: { kb: 'synced' } });
     expect(downgrade.isError).toBe(true);
     expect(JSON.stringify(downgrade.content)).toContain('newer Knowlery');
+  });
+});
+
+describe('register_kb (spec 1.1 f1, §5)', () => {
+  it('registers an initialized KB; immediately queryable by name on the same session (§5.1)', async () => {
+    const dir = await makeKb('work'); // has KNOWLEDGE.md → initialized
+    client = await connect();
+
+    const registered = await client.callTool({ name: 'register_kb', arguments: { name: 'work', path: dir } });
+    expect(registered.isError).toBeFalsy();
+    const data = registered.structuredContent as { name: string; path: string; alsoRegisteredAs: string[] };
+    expect(data.name).toBe('work');
+    expect(data.path).toBe(await realpath(dir));
+    expect(data.alsoRegisteredAs).toEqual([]);
+
+    const kbs = await client.callTool({ name: 'list_kbs', arguments: {} });
+    expect((kbs.structuredContent as { kbs: Array<{ name: string; state: string }> }).kbs)
+      .toContainEqual(expect.objectContaining({ name: 'work', state: 'ok' }));
+
+    const query = await client.callTool({ name: 'query', arguments: { kb: 'work', question: 'backpressure' } });
+    expect((query.structuredContent as { candidates: Array<{ path: string }> }).candidates[0].path)
+      .toBe('concepts/backpressure.md');
+  });
+
+  it('refusals: missing path, uninitialized dir (both fix-it routes), duplicate name, bad grammar (§5.2)', async () => {
+    const dir = await makeKb('work');
+    await addKb('work', dir);
+    client = await connect();
+
+    const missing = await client.callTool({ name: 'register_kb', arguments: { name: 'a1', path: join(workDir, 'nope') } });
+    expect(missing.isError).toBe(true);
+
+    const plainDir = join(workDir, 'plain');
+    await mkdir(plainDir);
+    const uninit = await client.callTool({ name: 'register_kb', arguments: { name: 'a2', path: plainDir } });
+    expect(uninit.isError).toBe(true);
+    const uninitText = JSON.stringify(uninit.content);
+    expect(uninitText).toContain('init_kb');
+    expect(uninitText).toContain('knowlery init');
+
+    const registryBefore = await readFile(join(workDir, 'config', 'registry.json'), 'utf8');
+    const duplicate = await client.callTool({ name: 'register_kb', arguments: { name: 'work', path: plainDir } });
+    expect(duplicate.isError).toBe(true);
+    expect(JSON.stringify(duplicate.content)).toContain('already registered');
+    expect(await readFile(join(workDir, 'config', 'registry.json'), 'utf8')).toBe(registryBefore); // untouched
+
+    const badName = await client.callTool({ name: 'register_kb', arguments: { name: 'Work KB', path: dir } });
+    expect(badName.isError).toBe(true);
+  });
+
+  it('writes the registry only; a symlinked path registers its realpath; alsoRegisteredAs is data (§5.3, §5.4)', async () => {
+    const dir = await makeKb('work');
+    client = await connect();
+
+    const before = (await readdir(dir, { recursive: true })).sort();
+    await client.callTool({ name: 'register_kb', arguments: { name: 'first', path: dir } });
+    expect((await readdir(dir, { recursive: true })).sort()).toEqual(before); // nothing created or touched
+
+    await symlink(dir, join(workDir, 'link-to-kb'));
+    const viaLink = await client.callTool({ name: 'register_kb', arguments: { name: 'second', path: join(workDir, 'link-to-kb') } });
+    const linkData = viaLink.structuredContent as { path: string; alsoRegisteredAs: string[] };
+    expect(linkData.path).toBe(await realpath(dir)); // canonicalized through addKb
+    expect(linkData.alsoRegisteredAs).toEqual(['first']);
   });
 });
 

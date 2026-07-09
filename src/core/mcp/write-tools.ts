@@ -2,7 +2,7 @@ import { access, lstat, mkdir, readdir, realpath, rm, stat, writeFile } from 'no
 import { constants } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
-import { addKb, listKbs, readKbRegistry, registryDir, validateKbName, resolveKb } from '../kb-registry';
+import { addKb, kbState, listKbs, readKbRegistry, registryDir, validateKbName, resolveKb } from '../kb-registry';
 import { executeSetup } from '../setup-executor';
 import { nodeVaultFs } from '../../platform/node-fs';
 import type { Platform } from '../../types';
@@ -203,6 +203,47 @@ export async function runInitKb(
   }
 
   return { name, path: candidate, platform };
+}
+
+// ---------------------------------------------------------------------------
+// register_kb (spec 1.1 f1) — the registry reaches shell-less clients
+
+export interface RegisterKbResult {
+  name: string;
+  path: string;
+  alsoRegisteredAs: string[];
+}
+
+/**
+ * The MCP twin of `kb add`: registers an already initialized workspace under
+ * a name. Writes the registry file and nothing else (1.1 plan principle 3).
+ * Duplicate names hard-error like init_kb rather than inheriting kb add's
+ * overwrite behavior — a conversation can ask; re-pointing a name stays an
+ * explicit CLI act.
+ */
+export async function runRegisterKb(name: string, rawPath: string): Promise<RegisterKbResult> {
+  const invalid = validateKbName(name);
+  if (invalid) throw new Error(invalid);
+
+  const registry = await readKbRegistry();
+  if (name in registry.kbs) {
+    const names = Object.keys(registry.kbs).sort().join(', ');
+    throw new Error(`A KB named "${name}" is already registered (registered: ${names}). Re-pointing a name is a CLI act: knowlery kb remove/add.`);
+  }
+
+  const expanded = expandPath(rawPath);
+  const state = await kbState(expanded);
+  if (state !== 'ok') {
+    throw new Error(
+      state === 'missing'
+        ? `No directory at ${expanded}.`
+        : `${expanded} exists but is not an initialized Knowlery workspace (no KNOWLEDGE.md or .knowlery/manifest.json). `
+          + 'For an empty directory, init_kb can create one; for a folder with existing notes, run `knowlery init` from the CLI, then register.',
+    );
+  }
+
+  const added = await addKb(name, expanded);
+  return { name, path: added.path, alsoRegisteredAs: added.alsoRegisteredAs };
 }
 
 async function exists(path: string): Promise<boolean> {
