@@ -34,8 +34,36 @@ const SHIM = `#!/bin/sh
 exec npx -y knowlery@^1 "$@"
 `;
 
+/**
+ * The repo-root marketplace catalog (spec 1.1 f3, §4.1): makes the repository
+ * itself installable-from — `/plugin marketplace add JayJiangCT/knowlery`.
+ * Lives at <repo>/.claude-plugin/marketplace.json per the platform's
+ * marketplace-repo convention; drift-guarded like the tree.
+ */
+export function buildMarketplaceCatalog(outPath: string): void {
+  const version = readPackageVersion();
+  const catalog = {
+    name: 'knowlery',
+    owner: { name: 'Jay Jiang', url: 'https://github.com/JayJiangCT' },
+    plugins: [
+      {
+        name: 'knowlery',
+        source: './plugin',
+        description: DESCRIPTION,
+        version,
+      },
+    ],
+  };
+  mkdirSync(join(outPath, '..'), { recursive: true });
+  writeFileSync(outPath, `${JSON.stringify(catalog, null, 2)}\n`);
+}
+
+function readPackageVersion(): string {
+  return (JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')) as { version: string }).version;
+}
+
 export function buildPluginTree(outDir: string): void {
-  const version = (JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')) as { version: string }).version;
+  const version = readPackageVersion();
 
   rmSync(outDir, { recursive: true, force: true });
 
@@ -96,5 +124,7 @@ export function buildPluginTree(outDir: string): void {
 if (process.argv[1]?.endsWith('build-plugin.ts')) {
   const outDir = process.argv[2] ?? join(__dirname, '..', 'plugin');
   buildPluginTree(outDir);
-  process.stdout.write(`Plugin tree written to ${outDir}\n`);
+  const catalogPath = process.argv[3] ?? join(__dirname, '..', '.claude-plugin', 'marketplace.json');
+  buildMarketplaceCatalog(catalogPath);
+  process.stdout.write(`Plugin tree written to ${outDir}; catalog to ${catalogPath}\n`);
 }

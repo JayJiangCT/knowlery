@@ -70,6 +70,9 @@ jobs:
           fs.writeFileSync('RELEASE_NOTES.md', body + '\n');
           NODE
 
+      - name: Package plugin tree (spec 1.1 f3, §4.2 — tree contents at archive root)
+        run: npm run plugin:zip -- plugin "knowlery-plugin-$(node -p "require('./manifest.json').version").zip"
+
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
@@ -79,6 +82,7 @@ jobs:
             main.js
             manifest.json
             styles.css
+            knowlery-plugin-*.zip
 
       # OIDC trusted publishing (spec 0.8 f3, §4.1): no token — npmjs.com trusts this
       # workflow's identity via the id-token permission above. Requires npm >= 11.5.1
