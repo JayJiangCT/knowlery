@@ -149,6 +149,46 @@ describe('/cook knows the inbox (spec 1.0 f3, §4.1)', () => {
   });
 });
 
+describe('knowlery-mcp skill (spec 1.1 f2, §4.3/§5.5)', () => {
+  it('ships as a tooling builtin and maps all nine tools', () => {
+    const found = BUNDLED_SKILLS.find((entry) => entry.name === 'knowlery-mcp');
+    expect(found?.kind).toBe('tooling');
+    const content = skill('knowlery-mcp');
+    for (const tool of ['query', 'capture', 'stale', 'health', 'init_kb', 'register_kb', 'sync', 'list_kbs', 'list_bundles']) {
+      expect(content).toContain(`\`${tool}\``);
+    }
+  });
+
+  it('carries the capture→cook loop, federation timing, and the conduct digest — not per-tool parameters', () => {
+    const content = skill('knowlery-mcp');
+    expect(content).toContain('a loop, not a call');
+    expect(content).toContain('first-priority cook material');
+    expect(content).toContain("Don't federate by default");
+    expect(content).toContain('Findings are data');
+    expect(content).toContain("Writes act on the user's words");
+    expect(content).toContain("Surface conflicts, don't route around them");
+    // Division of labor: parameters live in tool descriptions.
+    expect(content.replace(/\s+/g, ' ')).toContain("Each tool's own description carries its parameters");
+  });
+});
+
+describe('transport-aware revisions (spec 1.1 f2, §4.4)', () => {
+  it('ask: MCP query is step zero of the ladder', () => {
+    const ask = skill('ask');
+    expect(ask).toContain('Transport 0');
+    expect(ask.replace(/\s+/g, ' ')).toContain('it *is* the ladder');
+  });
+
+  it('cook and audit name the MCP stale tool first', () => {
+    expect(skill('cook')).toContain('MCP `stale` tool');
+    expect(skill('audit')).toContain('MCP `stale` tool');
+  });
+
+  it('knowlery-cli points shell-less agents at knowlery-mcp', () => {
+    expect(skill('knowlery-cli')).toContain('knowlery-mcp');
+  });
+});
+
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
   it('names the deterministic tools and the dangling-sources category', () => {
     const audit = skill('audit');

@@ -17,8 +17,9 @@ clients first-class; `register_kb` makes them complete).
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | [f1-register-kb.md](./f1-register-kb.md) | 1.0 |
-| F2 | The agent plugin: one plugin tree, dual manifests (`.claude-plugin/` + `.codex-plugin/`), skills built from `BUNDLED_SKILLS`, `.mcp.json` provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | (spec pending) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
+| F2 | The agent plugin: one plugin tree, manifests for **Claude Code + Codex + Cursor** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`), skills built from `BUNDLED_SKILLS`, MCP config provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | [f2-agent-plugin.md](./f2-agent-plugin.md) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
 | F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path | (spec pending) | F2 |
+| F4 | The orientation map (the Karpathy Index.md insight, done as a *view*): a live-computed KB index — virtual MCP resource `knowlery://<kb>/index` + `knowlery index` CLI command — compiled layer grouped by type/domain plus an installed-bundles section; never persisted, so no drift and no conflict with the no-retrieval-index principle. INDEX.base stays as the Obsidian rendering of the same job (frozen surface, real plugin value) | (spec pending) | 1.0 |
 
 Execution order: F1 → F2 → F3. F1 is a small, contract-additive MCP tool
 that should exist before the plugin snapshot freezes its tool list; F3 is
@@ -95,8 +96,17 @@ distribution mechanics over F2's artifact.
   or is registration local-stdio-only in 1.1? (Leaning: own flag, same
   uniform rule as the other writes — but the registry is machine-global
   state, which is a stronger argument for local-only than capture had.)
-- **gemini-cli extensions**: third manifest in the same tree, or defer? The
-  tree layout should not preclude it either way.
+- ~~**gemini-cli extensions**: third manifest in the same tree, or defer?~~
+  **Resolved at plan amendment (maintainer decision, 2026-07-09):** gemini-cli
+  is removed from the target set — Google replaced it with the Antigravity
+  suite (desktop / CLI / IDE). The 1.1 targets are **Claude Code, Codex, and
+  Cursor** (Cursor's plugin system — `.cursor-plugin/plugin.json` + `skills/`
+  + `mcp.json`, Cursor Marketplace — verified structurally equivalent).
+  **Antigravity** is a compatible candidate (its plugin shape is the same
+  bundle idea: root `plugin.json` + `mcp_config.json` + `skills/<name>/SKILL.md`)
+  recorded as a decision point in the F2 spec: a fourth manifest is cheap if
+  wanted now, and the tree layout must not preclude it either way. Existing
+  docs mentioning gemini-cli update as part of F2/F3.
 
 ## Non-goals for 1.1.0
 

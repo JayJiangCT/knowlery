@@ -1,6 +1,6 @@
 # Agents & MCP
 
-Any MCP-capable agent — Claude Desktop, Claude Code, Cursor, gemini-cli — can
+Any MCP-capable agent — Claude Desktop, Claude Code, Codex, Cursor — can
 talk to your knowledge bases directly. `knowlery mcp` runs an MCP server over
 stdio: the agent starts it, discovers the tools, and your knowledge becomes
 ambient in every conversation, with no per-conversation setup.
@@ -54,13 +54,15 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
 }
 ```
 
-### gemini-cli
+### Codex (CLI and app)
 
-```bash
-gemini mcp add knowlery knowlery mcp
+Add to `~/.codex/config.toml` (shared by the CLI and the app):
+
+```toml
+[mcp_servers.knowlery]
+command = "knowlery"
+args = ["mcp"]
 ```
-
-Or add the same `mcpServers` block to `~/.gemini/settings.json`.
 
 ## Tools
 
@@ -129,7 +131,9 @@ file list after running it.
 
 The knowledge-workflow skills are exposed as MCP prompts, loadable from the
 client's prompt picker: `ask`, `cook`, `explore`, `challenge`, `ideas`,
-`audit`, `organize`, `vault-conventions`, `knowlery-cli`. Each returns the
+`audit`, `organize`, `vault-conventions`, `knowlery-cli`, `knowlery-mcp`
+(the front-door skill: tool selection, the capture→cook loop, and conduct —
+load it first in a new MCP session). Each returns the
 skill body verbatim — the same craft the Obsidian plugin installs, now
 machine-loadable anywhere.
 
@@ -145,6 +149,35 @@ compiled directories (`entities/`, `concepts/`, `comparisons/`, `queries/`),
 and installed-bundle pages under `Library/`. Free-form notes (`Daily/`,
 `Projects/`, anything else) are refused — `query` may surface a raw note's
 title and path, but its content stays yours until you promote it with `/cook`.
+
+## Install as a plugin
+
+The repository ships an agent plugin (`plugin/` — generated from the same
+sources as everything else): the MCP server config (provisioned via
+`npx -y knowlery@^1 mcp`, no separate install), all fifteen skills, and on
+Claude Code a `bin/` shim that puts `knowlery` on the agent's PATH. One
+install replaces the manual MCP setup above.
+
+From a checkout of this repository:
+
+- **Claude Code**: add the repo as a plugin source and install `knowlery`
+  (`/plugin marketplace add <path-or-repo>` → `/plugin install knowlery`).
+  Skills appear under the plugin's namespace (the exact slash form
+  varies by client).
+- **Codex**: add the plugin through a marketplace entry
+  (`codex plugin add knowlery@<marketplace>`); skills invoke as `@knowlery`.
+- **Cursor**: install from the plugin directory; MCP tools and skills
+  register for the agent.
+
+Marketplace listings (one-click install without a checkout) land with the
+1.1 distribution work. The plugin performs **no install scripts** — MCP
+provisioning is config + npx, nothing executes at install time.
+
+**Plugin skills vs vault skills**: plugin skills are session-global and
+namespaced (exact slash form varies by client); a Knowlery workspace also carries its own
+copies (`/ask`). Both are generated from the same source at the same
+version — whichever the agent loads, the content is identical, so seeing
+both is harmless by construction.
 
 ## Remote access (self-hosted)
 
@@ -204,7 +237,7 @@ Client config for a remote server (Cursor shown; Claude Code:
 
 | Agent class | 1.0 answer |
 | --- | --- |
-| Local MCP clients (Claude Desktop/Code, Cursor, gemini-cli) | `knowlery mcp` over stdio — full support, all eight tools |
+| Local MCP clients (Claude Desktop/Code, Codex, Cursor) | `knowlery mcp` over stdio — full support, all nine tools |
 | Cloud agents with a shell (Cursor Cloud Agent, Codex-style) | already served: the CLI + bundle distribution |
 | Web-only cloud agents (ChatGPT connectors, Gemini web, Claude web) | out of scope for 1.0 — self-hosted remote + a tunnel works for the determined; the zero-setup answer is a hosted platform, which is a recorded trajectory, not a 1.0 deliverable |
 

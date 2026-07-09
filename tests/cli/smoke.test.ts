@@ -43,7 +43,8 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       await stat(join(vaultDir, '.knowlery', 'bin', 'query.mjs'));
 
       const health = await run('node', [cliPath, 'health', '--dir', vaultDir]);
-      expect(health.stdout).toContain('Built-in skills — 14 installed');
+      // 14 → 15 with knowlery-mcp — the sanctioned count update (spec 1.1 f2, §4.3).
+      expect(health.stdout).toContain('Built-in skills — 15 installed');
 
       const sync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
       const secondSync = await run('node', [cliPath, 'sync', '--dir', vaultDir]);
