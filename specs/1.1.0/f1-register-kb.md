@@ -1,6 +1,6 @@
 # F1 (1.1.0) — `register_kb`: The Registry Reaches Shell-less Clients
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-09 (one finding at spec review: the plan README's "same duplicate-name hard error" wording corrected to state the deliberate divergence from kb add's overwrite) — implementation in progress
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f1-register-kb-92eb`
 - **Depends on:** 1.1 plan principle 3 (writes the registry, nothing else —
