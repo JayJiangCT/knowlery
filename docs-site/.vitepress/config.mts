@@ -15,6 +15,8 @@ const englishSidebar = [
     text: 'Use Knowlery',
     items: [
       { text: 'Guides', link: '/guides/' },
+      { text: 'Connect Your Agent', link: '/guides/connect-your-agent' },
+      { text: 'Talk to Your Knowledge Base', link: '/guides/talk-to-your-kb' },
       { text: 'Best Practices', link: '/guides/best-practices' },
       { text: 'CLI Workflows', link: '/guides/cli-workflows' },
       { text: 'Multiple Knowledge Bases', link: '/guides/multiple-knowledge-bases' },
@@ -57,6 +59,8 @@ const chineseSidebar = [
     text: '使用 Knowlery',
     items: [
       { text: '使用指南', link: '/zh/guides/' },
+      { text: '接入你的 Agent', link: '/zh/guides/connect-your-agent' },
+      { text: '用对话使用知识库', link: '/zh/guides/talk-to-your-kb' },
       { text: '最佳实践', link: '/zh/guides/best-practices' },
       { text: 'CLI 工作流', link: '/zh/guides/cli-workflows' },
       { text: '使用多个知识库', link: '/zh/guides/multiple-knowledge-bases' },

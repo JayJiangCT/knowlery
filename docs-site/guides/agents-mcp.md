@@ -1,66 +1,25 @@
 # Agents & MCP
 
-Any MCP-capable agent — Claude Desktop, Claude Code, Cursor, gemini-cli — can
-talk to your knowledge bases directly. `knowlery mcp` runs an MCP server over
-stdio: the agent starts it, discovers the tools, and your knowledge becomes
-ambient in every conversation, with no per-conversation setup.
+Any MCP-capable agent — Claude Desktop, Claude Code, Codex, Cursor, the
+Antigravity suite — can talk to your knowledge bases directly. `knowlery mcp`
+runs an MCP server over stdio: the agent starts it, discovers the tools, and
+your knowledge becomes ambient in every conversation, with no
+per-conversation setup.
 
 The server addresses knowledge bases by their **registry names** — register
-each one first:
-
-```bash
-knowlery kb add work ~/vaults/work-kb
-```
+each one with `knowlery kb add work ~/vaults/work-kb`, or from a
+conversation with the `register_kb` tool.
 
 ## Client setup
 
-All clients use the same command: `knowlery mcp`. If `knowlery` isn't on the
-PATH the client uses, install globally (`npm install -g knowlery`) or use the
-absolute path shown by `which knowlery`.
+Per-client configuration (Claude Code, Claude Desktop, Codex & Codex CLI,
+Cursor, Antigravity Desktop/CLI/IDE) lives in
+**[Connect Your Agent](./connect-your-agent)** — one section per client,
+with the zero-install `npx` form and the GUI-PATH caveats. For what to do
+once connected, see **[Talk to Your Knowledge Base](./talk-to-your-kb)**.
 
-### Claude Code
-
-```bash
-claude mcp add knowlery -- knowlery mcp
-```
-
-### Claude Desktop
-
-Add to `claude_desktop_config.json` (Settings → Developer → Edit Config):
-
-```json
-{
-  "mcpServers": {
-    "knowlery": {
-      "command": "knowlery",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### Cursor
-
-Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
-
-```json
-{
-  "mcpServers": {
-    "knowlery": {
-      "command": "knowlery",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### gemini-cli
-
-```bash
-gemini mcp add knowlery knowlery mcp
-```
-
-Or add the same `mcpServers` block to `~/.gemini/settings.json`.
+This page is the reference underneath both: the tool contract, the conduct,
+the readable-surface boundary, and remote access.
 
 ## Tools
 
@@ -204,7 +163,7 @@ Client config for a remote server (Cursor shown; Claude Code:
 
 | Agent class | 1.0 answer |
 | --- | --- |
-| Local MCP clients (Claude Desktop/Code, Cursor, gemini-cli) | `knowlery mcp` over stdio — full support, all eight tools |
+| Local MCP clients (Claude Desktop/Code, Codex, Cursor, Antigravity) | `knowlery mcp` over stdio — full support, all nine tools |
 | Cloud agents with a shell (Cursor Cloud Agent, Codex-style) | already served: the CLI + bundle distribution |
 | Web-only cloud agents (ChatGPT connectors, Gemini web, Claude web) | out of scope for 1.0 — self-hosted remote + a tunnel works for the determined; the zero-setup answer is a hosted platform, which is a recorded trajectory, not a 1.0 deliverable |
 

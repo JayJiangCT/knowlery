@@ -95,7 +95,7 @@ knowlery bundle update some.bundle --kb research
 ## 把知识库服务给 agent
 
 ```bash
-# 本地 agent（Claude Desktop/Code、Cursor、gemini-cli）：stdio
+# 本地 agent（Claude Desktop/Code、Codex、Cursor、Antigravity）：stdio
 claude mcp add knowlery -- knowlery mcp
 
 # 另一台机器：隧道后的 HTTP

@@ -1,64 +1,22 @@
 # Agent 与 MCP
 
-任何支持 MCP 的 agent——Claude Desktop、Claude Code、Cursor、gemini-cli——都可以
-直接访问你的知识库。`knowlery mcp` 通过 stdio 运行一个 MCP 服务器：由客户端启动、
-自动发现工具，你的知识库从此常驻于每一次对话，无需逐次配置。
+任何支持 MCP 的 agent——Claude Desktop、Claude Code、Codex、Cursor、
+Antigravity 套件——都可以直接访问你的知识库。`knowlery mcp` 通过 stdio
+运行一个 MCP 服务器：由客户端启动、自动发现工具，你的知识库从此常驻于
+每一次对话，无需逐次配置。
 
-服务器通过 **注册表名称** 定位知识库——先注册：
-
-```bash
-knowlery kb add work ~/vaults/work-kb
-```
+服务器通过 **注册表名称** 定位知识库——用 `knowlery kb add work
+~/vaults/work-kb` 注册，或在对话里用 `register_kb` 工具接入。
 
 ## 客户端配置
 
-所有客户端使用同一条命令：`knowlery mcp`。如果客户端的 PATH 中没有
-`knowlery`，请全局安装（`npm install -g knowlery`），或使用 `which knowlery`
-给出的绝对路径。
+各客户端的具体配置（Claude Code、Claude Desktop、Codex 与 Codex CLI、
+Cursor、Antigravity Desktop/CLI/IDE）见
+**[接入你的 Agent](./connect-your-agent)**——每个客户端一节，含零安装的
+`npx` 形式和 GUI PATH 注意事项。接入后怎么用，见
+**[用对话使用知识库](./talk-to-your-kb)**。
 
-### Claude Code
-
-```bash
-claude mcp add knowlery -- knowlery mcp
-```
-
-### Claude Desktop
-
-在 `claude_desktop_config.json`（Settings → Developer → Edit Config）中添加：
-
-```json
-{
-  "mcpServers": {
-    "knowlery": {
-      "command": "knowlery",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### Cursor
-
-在 `~/.cursor/mcp.json`（全局）或 `.cursor/mcp.json`（项目级）中添加：
-
-```json
-{
-  "mcpServers": {
-    "knowlery": {
-      "command": "knowlery",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### gemini-cli
-
-```bash
-gemini mcp add knowlery knowlery mcp
-```
-
-或在 `~/.gemini/settings.json` 中添加同样的 `mcpServers` 配置块。
+本页是两者之下的参考层：工具契约、行为准则、可读层边界、远程访问。
 
 ## 工具
 
@@ -184,7 +142,7 @@ ssh -L 8787:127.0.0.1:8787 my-server             # 普通 SSH
 
 | Agent 类型 | 1.0 的答案 |
 | --- | --- |
-| 本地 MCP 客户端（Claude Desktop/Code、Cursor、gemini-cli） | `knowlery mcp` stdio——完整支持，全部八个工具 |
+| 本地 MCP 客户端（Claude Desktop/Code、Codex、Cursor、Antigravity） | `knowlery mcp` stdio——完整支持，全部九个工具 |
 | 有 shell 的云端 agent（Cursor Cloud Agent、Codex 类） | 已被服务：CLI + 知识包分发 |
 | 纯网页云端 agent（ChatGPT connectors、Gemini web、Claude web） | 1.0 范围之外——有决心的用户可用自托管远程 + 隧道；零配置的答案是托管平台，那是记录在案的方向，不是 1.0 的交付物 |
 
