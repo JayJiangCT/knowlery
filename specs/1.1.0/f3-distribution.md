@@ -55,13 +55,21 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
   (the documented location for a marketplace repo), listing one plugin —
   `knowlery`, source `./plugin`. Users:
   `/plugin marketplace add JayJiangCT/knowlery` → `/plugin install knowlery`.
-- **Codex**: the repo layout already satisfies `codex-marketplace add
-  <owner/repo> --plugins` conventions (plugin sources under a discoverable
-  path with `.codex-plugin/plugin.json`); the catalog metadata Codex needs
-  is in the F2 manifest's `interface` block. Documented, verified in §7.
-- Both catalog files are emitted by `build-plugin` (version-stamped from
-  `package.json`) and covered by the same drift check — a release can never
-  ship a catalog pointing at a stale version.
+- **Codex** (maintainer P2 at spec review — the contract must be executable,
+  not assumed): the verified command surface from F2 acceptance is
+  `codex plugin marketplace add <source>` followed by
+  `codex plugin add knowlery@<marketplace>`. Implementation determines, against
+  the real CLI, whether the repo needs a dedicated Codex catalog artifact or
+  whether the F2 manifest's `interface` block suffices for discovery; **if an
+  artifact is required, it is emitted by `build-plugin` under the same drift
+  rules**, and its schema is recorded in this spec at implementation (an
+  amendment, called out in review). The §7 acceptance command is pinned
+  either way: marketplace-add the repo, install, confirm enabled + skills.
+- Every catalog artifact this feature introduces is emitted by
+  `build-plugin` (version-stamped from `package.json`) and covered by the
+  same drift check — a release can never ship a catalog pointing at a stale
+  version. (As specced, that is `marketplace.json`; plus the Codex artifact
+  if implementation proves one is needed.)
 - Layout note: root-level `.claude-plugin/marketplace.json` coexists with
   `plugin/.claude-plugin/plugin.json` (marketplace-repo vs plugin-dir roles,
   per the platform's own convention) and leaves the root free for the
@@ -72,6 +80,12 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
 - `release.yml` gains a step: zip the committed `plugin/` tree and upload
   `knowlery-plugin-<version>.zip` as a release asset alongside the plugin
   bundle files — an offline/pinned install path and an audit artifact.
+- **Archive root shape, fixed** (maintainer P2 at spec review): the tree's
+  *contents* are the zip root — `.claude-plugin/plugin.json`, `skills/…`,
+  `.mcp.json`, `bin/knowlery` sit at the top level, no wrapping `plugin/`
+  folder. Unzipping into any directory yields a valid plugin dir that
+  `--plugin-dir`-style installs can point at directly. File modes are
+  preserved (the shim's executable bit survives the round trip).
 - **Lockstep bump to 1.1.0** (the 0.9/1.0 checklist): package/lock,
   `manifest.json`, `versions.json`, the `knowleryVersion` bundle stamp,
   `SERVER_INFO` (1.0.0 → 1.1.0), CHANGELOG (F1 register_kb, F2 plugin +
@@ -92,12 +106,19 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
 - Deliverable framing (honest): the *submissions* ship with F3; *listings*
   are third-party decisions with their own timelines. Docs link the
   self-hosted catalog as the always-available path.
+- **Cursor specifically** (maintainer P2 at spec review — no self-hosted
+  catalog mechanism exists there): F3's *verifiable* Cursor deliverable is
+  the submission plus the checkout/plugin-dir install path (verified in F2
+  acceptance). One-click Cursor install arrives only if/when the marketplace
+  listing lands; the docs and §7 say exactly that and claim nothing more.
 
 ### 4.4 Docs
 
-- "Install as a plugin" (agents-mcp) upgrades to the one-liner catalog
-  install per platform, keeping install-from-checkout as the development
-  path.
+- "Install as a plugin" (agents-mcp) upgrades to the honest per-platform
+  state: Claude Code gets the one-liner catalog install; Codex gets the
+  verified marketplace-add flow; **Cursor keeps the checkout/plugin-dir path
+  until its listing lands** (maintainer P2 — no equivalence claimed).
+  Install-from-checkout stays documented as the development path everywhere.
 - The paused #51 restructure is revisited *after* F3 merges (maintainer
   sequencing decision): its "coming in 1.1" callout and per-client sections
   absorb the plugin install as the primary path, and the known overlap
@@ -112,8 +133,11 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
    `source` points at `./plugin`; its version equals `package.json`'s
    (wired into version coherence).
 3. **Release asset**: the zip step is exercised in CI (build the zip in the
-   test, list its entries — must equal the committed tree's file set; no
-   hooks, the §5.8-F2 shape check applied to the shipped artifact).
+   test): entries sit at the archive root (no wrapping folder), the entry
+   set equals the committed tree's file set, the shim's executable bit
+   survives extraction, and the §5.8-F2 no-execution shape check applies to
+   the shipped artifact. An extracted copy must validate as a plugin dir
+   (structural: manifest paths resolve).
 4. **Version coherence** extends to the catalog files — a stale catalog
    version fails the contract suite.
 5. All F2 suites pass unmodified — distribution changes no plugin content.
@@ -130,13 +154,18 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
 1. From a machine (or temp HOME) with no checkout:
    `/plugin marketplace add JayJiangCT/knowlery` → `/plugin install knowlery`
    in Claude Code — tools, skills, shim all live.
-2. Codex: add the repo as a marketplace source and install; confirm enabled
-   + skills present.
-3. Download `knowlery-plugin-1.1.0.zip` from the GitHub release; unzip;
-   diff against the repo's `plugin/` — identical.
-4. Submit to the three community marketplaces; record submission links in
+2. Codex: `codex plugin marketplace add <source>` →
+   `codex plugin add knowlery@<marketplace>`; confirm enabled + skills
+   present (the F2-verified command surface).
+3. Cursor: confirm the submission is filed, and re-verify the
+   checkout/plugin-dir install path against this release — the deliverable
+   is submission + working manual path, not a listing.
+4. Download `knowlery-plugin-1.1.0.zip` from the GitHub release; unzip into
+   an empty dir; `claude plugin validate <dir>` passes and a diff against
+   the repo's `plugin/` is identical (executable bit included).
+5. Submit to the three community marketplaces; record submission links in
    the PR (listings land on their own timelines).
-5. **Post-publish (the F2 recheck)**: clear the npx cache;
+6. **Post-publish (the F2 recheck)**: clear the npx cache;
    `npx -y knowlery@^1 mcp` against the published 1.1.0 serves nine tools
    and ten prompts, `knowlery-mcp` prompt included.
-6. `npm test && npm run eval -- --assert-baseline` — green.
+7. `npm test && npm run eval -- --assert-baseline` — green.
