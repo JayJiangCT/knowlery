@@ -1,6 +1,6 @@
 # Agent 与 MCP
 
-任何支持 MCP 的 agent——Claude Desktop、Claude Code、Cursor、gemini-cli——都可以
+任何支持 MCP 的 agent——Claude Desktop、Claude Code、Codex、Cursor——都可以
 直接访问你的知识库。`knowlery mcp` 通过 stdio 运行一个 MCP 服务器：由客户端启动、
 自动发现工具，你的知识库从此常驻于每一次对话，无需逐次配置。
 
@@ -52,13 +52,15 @@ claude mcp add knowlery -- knowlery mcp
 }
 ```
 
-### gemini-cli
+### Codex（CLI 与应用）
 
-```bash
-gemini mcp add knowlery knowlery mcp
+在 `~/.codex/config.toml`（CLI 与应用共享）中添加：
+
+```toml
+[mcp_servers.knowlery]
+command = "knowlery"
+args = ["mcp"]
 ```
-
-或在 `~/.gemini/settings.json` 中添加同样的 `mcpServers` 配置块。
 
 ## 工具
 

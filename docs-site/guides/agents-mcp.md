@@ -1,6 +1,6 @@
 # Agents & MCP
 
-Any MCP-capable agent — Claude Desktop, Claude Code, Cursor, gemini-cli — can
+Any MCP-capable agent — Claude Desktop, Claude Code, Codex, Cursor — can
 talk to your knowledge bases directly. `knowlery mcp` runs an MCP server over
 stdio: the agent starts it, discovers the tools, and your knowledge becomes
 ambient in every conversation, with no per-conversation setup.
@@ -54,13 +54,15 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per-project):
 }
 ```
 
-### gemini-cli
+### Codex (CLI and app)
 
-```bash
-gemini mcp add knowlery knowlery mcp
+Add to `~/.codex/config.toml` (shared by the CLI and the app):
+
+```toml
+[mcp_servers.knowlery]
+command = "knowlery"
+args = ["mcp"]
 ```
-
-Or add the same `mcpServers` block to `~/.gemini/settings.json`.
 
 ## Tools
 
