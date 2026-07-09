@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Knowlery
-  text: Turn your vault into a personal knowledge review space.
-  tagline: "Knowlery gives Obsidian an action-first review surface for Claude Code and OpenCode workflows, with setup, diagnostics, rules, and skills maintained from settings."
+  text: The knowledge base your agents can live in.
+  tagline: "One plain-markdown workspace, three shells: an MCP server and CLI for Codex, Claude, Cursor, and Antigravity — and an Obsidian plugin as its richest human interface. Obsidian maximizes it; nothing about it requires Obsidian."
   image:
     src: /knowlery-pot.svg
     alt: Knowlery Knowledge Pot logo
@@ -13,48 +13,57 @@ hero:
       text: Get Started
       link: /getting-started/
     - theme: alt
+      text: Connect Your Agent
+      link: /guides/connect-your-agent
+    - theme: alt
       text: Learn the Concepts
       link: /concepts/
 
 features:
-  - title: Action-first dashboard
-    details: Start from today's move, suggested moves, the active note, recent activity, and the weekly summary without switching tabs.
-  - title: Current-note review
-    details: Open a Markdown note and prepare a focused prompt for connecting it to older notes, comparisons, and reusable structures.
-  - title: Freshness Review
-    details: Prepare local request JSON, import agent-written results, and approve scalar freshness metadata before anything is applied.
-  - title: Weekly summary
-    details: Generate a local HTML report from recent activity, then send a polish request when a companion agent is available.
+  - title: Ambient in every conversation
+    details: Nine MCP tools make your knowledge base present in Codex, Claude, Cursor, and Antigravity — create, register, capture, query, and maintain KBs by talking.
+  - title: Deterministic retrieval
+    details: A measured, code-guaranteed engine with citations — and an honest "no confident match" instead of noise. Quality is held by CI, not hope.
+  - title: The capture → cook → ask loop
+    details: "\"Remember this\" lands in the inbox; /cook compiles it into cited knowledge pages; questions get answers with sources."
   - title: Knowledge bundles
-    details: Share reviewed knowledge as portable bundles, install bundles from others into Library/, and let /ask retrieve them deliberately.
-  - title: Settings maintenance
-    details: Run diagnostics, manage rules and schema shortcuts, switch platforms, and inspect the Skills library from Obsidian settings.
+    details: Share reviewed slices of your knowledge as portable bundles — publish to GitHub Releases, install from URLs, subscribe to updates.
+  - title: A review UI when you want one
+    details: The Obsidian plugin adds the action-first dashboard, Knowledge health, Freshness Review, and the bundle sharing workflow on the same workspace.
+  - title: Frozen under semver
+    details: The workspace format, CLI surface, and MCP contracts are 1.0-frozen and pinned by contract tests — what you build on stays built.
 ---
 
 <section class="knowlery-panel">
 
 ## What Knowlery Is
 
-Knowlery is an Obsidian plugin for people who want a review-oriented layer on top of their vault.
+Knowlery is a knowledge base solution built for the agent era. Your
+free-form notes remain yours; agents get a structured, retrievable layer —
+`entities/`, `concepts/`, `comparisons/`, `queries/` — compiled from your
+material through a reviewed pipeline, plus the skills and conduct that make
+them good collaborators.
 
-Your free-form notes remain yours. Knowlery gives agents a structured place to work: `entities/`, `concepts/`, `comparisons/`, `queries/`, `KNOWLEDGE.md`, `SCHEMA.md`, `INDEX.base`, skills, rules, activity receipts, review requests, and platform configuration.
+Everything is plain markdown in a plain folder: served to agents over MCP
+and the CLI, and to you in Obsidian when you want the richest view.
 
 </section>
 
 <section class="knowlery-grid">
   <div class="knowlery-card">
-    <h3>For Obsidian users</h3>
-    <p>Initialize a vault, keep structure visible, and use the dashboard to review notes, active threads, freshness suggestions, and weekly output without leaving Obsidian.</p>
+    <h3>Start with your agent</h3>
+    <p>One MCP config block, then everything is conversation: "set up a knowledge base", "remember this", "what do I know about…". No Obsidian required.</p>
   </div>
   <div class="knowlery-card">
-    <h3>For agent workflows</h3>
-    <p>Give Claude Code or OpenCode durable instructions, activity receipts, and a predictable knowledge map instead of rebuilding context in every session.</p>
+    <h3>Start in Obsidian</h3>
+    <p>Install the plugin, run the wizard, and review your knowledge visually — the same workspace is automatically available to every agent by name.</p>
   </div>
 </section>
 
 ## Start Reading
 
-- New to Knowlery? Start with [Getting Started](/getting-started/).
+- New to Knowlery? Start with [Getting Started](/getting-started/) — it forks into both paths.
+- Coming from an agent? [Connect Your Agent](/guides/connect-your-agent), then [talk to your knowledge base](/guides/talk-to-your-kb).
 - Want the mental model first? Read [Core Concepts](/concepts/).
 - Something feels broken? Go to [Troubleshooting](/troubleshooting/).
-- Need exact files and command behavior? Use the [Reference](/reference/).
+- Need exact files, commands, and promises? Use the [Reference](/reference/) and the [Stability Contract](/reference/stability).
