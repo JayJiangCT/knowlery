@@ -162,7 +162,8 @@ From a checkout of this repository:
 
 - **Claude Code**: add the repo as a plugin source and install `knowlery`
   (`/plugin marketplace add <path-or-repo>` → `/plugin install knowlery`).
-  Skills appear as `/knowlery:<name>`.
+  Skills appear under the plugin's namespace (the exact slash form
+  varies by client).
 - **Codex**: add the plugin through a marketplace entry
   (`codex plugin add knowlery@<marketplace>`); skills invoke as `@knowlery`.
 - **Cursor**: install from the plugin directory; MCP tools and skills
@@ -173,7 +174,7 @@ Marketplace listings (one-click install without a checkout) land with the
 provisioning is config + npx, nothing executes at install time.
 
 **Plugin skills vs vault skills**: plugin skills are session-global and
-namespaced (`/knowlery:ask`); a Knowlery workspace also carries its own
+namespaced (exact slash form varies by client); a Knowlery workspace also carries its own
 copies (`/ask`). Both are generated from the same source at the same
 version — whichever the agent loads, the content is identical, so seeing
 both is harmless by construction.

@@ -1,6 +1,6 @@
 # F2 (1.1.0) — The Agent Plugin: Knowledge in One Install
 
-- **Status:** Accepted 2026-07-09 (two findings at spec review: Antigravity deferred from the committed artifact with layout reservation; acceptance requires all three committed platforms) — implementation in progress
+- **Status:** Done — maintainer acceptance passed 2026-07-09 (spec review: Antigravity deferral + all-three-platforms bar; implementation review: four doc-consistency rounds; §7: Claude Code live session incl. shim, Codex temp-home install, Cursor confirmed, cold npx provisioning, MCP smoke 9 tools / 10 prompts. **Post-release recheck recorded:** `npx knowlery@^1` pulls the published 1.0.0 until 1.1.0 ships — rerun §7.5 against the published package after the release)
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f2-agent-plugin-92eb`
 - **Depends on:** F1 (register_kb ships in the plugin's tool surface), 1.1
@@ -130,9 +130,11 @@ sanctioned here (the F3-1.0 precedent).
 
 ### 4.5 Skill dedupe/precedence (plan open question 1, resolved)
 
-Plugin skills are session-global and platform-namespaced
-(`/knowlery:ask`); vault-installed skills are workspace-level plain names
-(`/ask`). Both may be visible in a vault-opened session. The resolution is
+Plugin skills are session-global and platform-namespaced (the exact slash
+form varies by client — e.g. Claude exposes
+`/mcp__plugin_knowlery_knowlery__ask`); vault-installed skills are
+workspace-level plain names (`/ask`). Both may be visible in a vault-opened
+session. The resolution is
 **identity, not priority**: both copies are generated from the same
 `BUNDLED_SKILLS` at the same version, so whichever the agent loads, the
 content is the same. Version skew between plugin and vault is bounded by the
@@ -176,8 +178,10 @@ docs state this plainly; no mechanism is built.
 ## 7. Maintainer self-test checklist (acceptance round)
 
 1. Claude Code: `/plugin marketplace add <local path>` → install → new
-   session: nine tools discovered without any manual MCP config; `/knowlery:ask`
-   loads; `knowlery --version` works in the Bash tool (the shim).
+   session: nine tools discovered without any manual MCP config; the
+   plugin-provided ask skill loads (exact slash form varies by client —
+   Claude exposes it as `/mcp__plugin_knowlery_knowlery__ask`; wording fixed
+   at acceptance); `knowlery --version` works in the Bash tool (the shim).
 2. Codex: install the plugin (local marketplace entry) → `@knowlery` skills
    present; MCP tools live; ask a question against a registered KB.
 3. Cursor: install from the plugin directory → MCP tools present in the
