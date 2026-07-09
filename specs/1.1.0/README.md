@@ -103,5 +103,5 @@ distribution mechanics over F2's artifact.
   form). Recorded at 1.1 plan review: if the platform materializes, the thing
   that earns a real marketplace is **knowledge bundles** (browse / subscribe /
   paid distribution over the 0.9 publish-subscribe protocol) — not plugins.
-  Plugin distribution stays catalog-file + community-marketplace submissions
-  permanently; we never build plugin-market infrastructure for one plugin.
+  Plugin distribution stays catalog-file + community-marketplace submissions;
+  Knowlery itself will not build or operate plugin-market infrastructure.
