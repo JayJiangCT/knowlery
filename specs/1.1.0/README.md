@@ -16,7 +16,7 @@ clients first-class; `register_kb` makes them complete).
 
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
-| F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | (spec pending) | 1.0 |
+| F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | [f1-register-kb.md](./f1-register-kb.md) | 1.0 |
 | F2 | The agent plugin: one plugin tree, dual manifests (`.claude-plugin/` + `.codex-plugin/`), skills built from `BUNDLED_SKILLS`, `.mcp.json` provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | (spec pending) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
 | F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path | (spec pending) | F2 |
 
@@ -42,7 +42,9 @@ distribution mechanics over F2's artifact.
    the target is an *already initialized* workspace (KNOWLEDGE.md or
    manifest present), canonicalizes the path (the F3-1.0 discipline), and
    adds the name — the MCP twin of `kb add`, with the same name-grammar
-   rules and the same duplicate-name hard error. It does not scaffold, does
+   rules; duplicate names hard-error like `init_kb` rather than inheriting
+   `kb add`'s overwrite behavior (a conversation can ask; re-pointing a name
+   stays an explicit CLI act). It does not scaffold, does
    not touch files inside the KB. Brownfield *initialization* over MCP stays
    refused (init_kb's non-empty refusal is a 1.0-frozen safety property);
    the honest answer for "turn this messy folder into a KB" remains the CLI,
