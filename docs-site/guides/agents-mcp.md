@@ -146,6 +146,34 @@ and installed-bundle pages under `Library/`. Free-form notes (`Daily/`,
 `Projects/`, anything else) are refused — `query` may surface a raw note's
 title and path, but its content stays yours until you promote it with `/cook`.
 
+## Install as a plugin
+
+The repository ships an agent plugin (`plugin/` — generated from the same
+sources as everything else): the MCP server config (provisioned via
+`npx -y knowlery@^1 mcp`, no separate install), all fifteen skills, and on
+Claude Code a `bin/` shim that puts `knowlery` on the agent's PATH. One
+install replaces the manual MCP setup above.
+
+From a checkout of this repository:
+
+- **Claude Code**: add the repo as a plugin source and install `knowlery`
+  (`/plugin marketplace add <path-or-repo>` → `/plugin install knowlery`).
+  Skills appear as `/knowlery:<name>`.
+- **Codex**: add the plugin through a marketplace entry
+  (`codex plugin add knowlery@<marketplace>`); skills invoke as `@knowlery`.
+- **Cursor**: install from the plugin directory; MCP tools and skills
+  register for the agent.
+
+Marketplace listings (one-click install without a checkout) land with the
+1.1 distribution work. The plugin performs **no install scripts** — MCP
+provisioning is config + npx, nothing executes at install time.
+
+**Plugin skills vs vault skills**: plugin skills are session-global and
+namespaced (`/knowlery:ask`); a Knowlery workspace also carries its own
+copies (`/ask`). Both are generated from the same source at the same
+version — whichever the agent loads, the content is identical, so seeing
+both is harmless by construction.
+
 ## Remote access (self-hosted)
 
 `knowlery mcp serve` runs the same server over Streamable HTTP — for reaching
