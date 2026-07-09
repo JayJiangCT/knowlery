@@ -16,7 +16,7 @@ clients first-class; `register_kb` makes them complete).
 
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
-| F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | (spec pending) | 1.0 |
+| F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | [f1-register-kb.md](./f1-register-kb.md) | 1.0 |
 | F2 | The agent plugin: one plugin tree, dual manifests (`.claude-plugin/` + `.codex-plugin/`), skills built from `BUNDLED_SKILLS`, `.mcp.json` provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | (spec pending) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
 | F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path | (spec pending) | F2 |
 
