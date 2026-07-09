@@ -1,6 +1,6 @@
 # F1 (1.1.0) — `register_kb`: The Registry Reaches Shell-less Clients
 
-- **Status:** Accepted 2026-07-09 (spec review: plan-wording fix on the duplicate-name divergence) — implemented, awaiting maintainer acceptance (implementation review round 1: merge-race remediation, docs write-tool count, spec wording sync)
+- **Status:** Done — maintainer acceptance passed 2026-07-09 (spec review: duplicate-name wording; implementation review: merge-race remediation, docs count, dist untracking; §7 real shell-less-client round passed — register/query, both fix-it routes relayed, conflict surfaced, remote absence confirmed)
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f1-register-kb-92eb`
 - **Depends on:** 1.1 plan principle 3 (writes the registry, nothing else —
