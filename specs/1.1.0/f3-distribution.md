@@ -1,6 +1,6 @@
 # F3 (1.1.0) — Plugin Distribution: From Checkout to One Click
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-09 (three findings at spec review: Codex catalog contract made executable, Cursor deliverable honest, zip root shape fixed; P3 wording) — implementation in progress
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f3-distribution-92eb`
 - **Depends on:** F2 (the artifact being distributed), 1.1 plan (catalog-file
@@ -31,8 +31,8 @@ ten-prompt surface the plugin describes (the F2 post-release recheck).
    the Claude Code community marketplace, the Codex marketplace, and the
    Cursor marketplace — with the honest note that listing acceptance is a
    third-party decision, not a deliverable we control.
-4. **Docs** (§4.4): "Install as a plugin" upgrades from install-from-checkout
-   to the one-liner per platform.
+4. **Docs** (§4.4): "Install as a plugin" upgrades to the honest
+   per-platform install path.
 
 ## 3. Non-goals
 
