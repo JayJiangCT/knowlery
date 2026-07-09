@@ -17,7 +17,7 @@ clients first-class; `register_kb` makes them complete).
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
 | F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | (spec pending) | 1.0 |
-| F2 | The agent plugin: one plugin tree, dual manifests (`.claude-plugin/` + `.codex-plugin/`), skills built from `BUNDLED_SKILLS`, `.mcp.json` provisioning the server via `npx -y knowlery@^1 mcp` | (spec pending) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
+| F2 | The agent plugin: one plugin tree, dual manifests (`.claude-plugin/` + `.codex-plugin/`), skills built from `BUNDLED_SKILLS`, `.mcp.json` provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | (spec pending) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
 | F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path | (spec pending) | F2 |
 
 Execution order: F1 → F2 → F3. F1 is a small, contract-additive MCP tool
@@ -49,9 +49,33 @@ distribution mechanics over F2's artifact.
    and the docs say so.
 4. **Conduct carries over, and the plugin ships it.** register_kb acts on
    the user's words with the path restated first (the init_kb rule);
-   plugin-shipped skills are the same nine-plus-one the MCP prompts expose,
-   so an agent behaves identically whether skills arrived via plugin,
-   vault install, or prompt loading.
+   plugin-shipped skills are the same set the MCP prompts expose, so an
+   agent behaves identically whether skills arrived via plugin, vault
+   install, or prompt loading.
+5. **Skills close the MCP blind spot (maintainer decision at plan review).**
+   The knowledge skills predate MCP: `ask`'s retrieval ladder teaches three
+   transports (in-app command, global CLI, embedded script) a shell-less MCP
+   client cannot execute, while the one transport it *can* use — the `query`
+   tool — goes unnamed. Two moves, division of labor deliberate:
+   - **Transport-aware revisions**: `ask`'s ladder (and the `stale`
+     references in `cook`/`audit`) gain "if Knowlery MCP tools are present,
+     they are step one" — one source (`BUNDLED_SKILLS`), all surfaces fixed
+     at once.
+   - **A new `knowlery-mcp` tooling skill** (twin of `knowlery-cli`, the
+     plugin's front door): only what tool descriptions cannot carry — the
+     tool-selection map (query vs stale vs health), the capture→cook loop
+     as a cross-tool narrative, federation timing, and a readable conduct
+     digest. Deliberately *not* per-tool parameter detail — that is the
+     tool descriptions' job, and duplicating it manufactures drift.
+6. **"Installed" means: MCP usable, skills live, the agent has the CLI.**
+   The plugin performs no install scripts (the platforms' trust boundary,
+   respected): MCP provisioning rides `.mcp.json` + npx; Claude Code gets a
+   `bin/` shim putting `knowlery` on the agent's PATH while the plugin is
+   enabled; Codex agents use the `npx -y knowlery@^1 <cmd>` form the skills
+   teach. The one step left to the human — a global `npm i -g knowlery` for
+   their own terminal — is exactly the one the trust model reserves for
+   them, and the skills teach the agent to *suggest* it, never run it
+   unasked.
 5. **The contract grows additively.** New tool (`register_kb`) and new
    remote flag (`--allow-register`, if F1 lands remote exposure) are minor
    under the 1.0 freeze. The contract golden regenerates once per feature,
