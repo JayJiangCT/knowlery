@@ -2,7 +2,9 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import { buildPluginTree } from '../../scripts/build-plugin';
+import JSZip from 'jszip';
+import { buildPluginTree, buildMarketplaceCatalog } from '../../scripts/build-plugin';
+import { zipPluginTree } from '../../scripts/zip-plugin';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
 /**
@@ -85,6 +87,55 @@ describe('MCP configs and the shim (§5.4)', () => {
     const shim = readFileSync(shimPath, 'utf8');
     expect(shim).toContain('npx -y knowlery@^1');
     expect(shim.startsWith('#!/bin/sh')).toBe(true);
+  });
+});
+
+describe('the marketplace catalog (spec 1.1 f3, §5.1/§5.2)', () => {
+  const packageVersion = (JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as { version: string }).version;
+  const committedCatalog = join(repoRoot, '.claude-plugin', 'marketplace.json');
+
+  it('drift: the committed catalog equals a fresh build', () => {
+    const freshPath = join(fresh, '..', `catalog-${Date.now()}.json`);
+    buildMarketplaceCatalog(freshPath);
+    expect(readFileSync(committedCatalog, 'utf8')).toBe(readFileSync(freshPath, 'utf8'));
+    rmSync(freshPath, { force: true });
+  });
+
+  it('correctness: names knowlery, sources ./plugin, matches the package version', () => {
+    const catalog = JSON.parse(readFileSync(committedCatalog, 'utf8')) as {
+      name: string; plugins: Array<{ name: string; source: string; version: string }>;
+    };
+    expect(catalog.name).toBe('knowlery');
+    expect(catalog.plugins).toHaveLength(1);
+    expect(catalog.plugins[0].name).toBe('knowlery');
+    expect(catalog.plugins[0].source).toBe('./plugin');
+    expect(catalog.plugins[0].version).toBe(packageVersion);
+  });
+});
+
+describe('the release zip (spec 1.1 f3, §5.3)', () => {
+  it('tree contents at archive root, entry set equal, executable bit preserved', async () => {
+    const zipPath = join(fresh, '..', `plugin-${Date.now()}.zip`);
+    const entries = await zipPluginTree(committed, zipPath);
+
+    expect(entries).toEqual(walk(committed, committed));
+    // Root shape: manifest paths sit at the top level, no wrapping folder.
+    expect(entries).toContain('.claude-plugin/plugin.json');
+    expect(entries.some((entry) => entry.startsWith('plugin/'))).toBe(false);
+
+    const zip = await JSZip.loadAsync(readFileSync(zipPath));
+    const shim = zip.file('bin/knowlery');
+    expect(shim).not.toBeNull();
+    expect(((shim!.unixPermissions as number) & 0o111)).not.toBe(0); // executable survives
+
+    // Structural validation of the extracted artifact: every path the
+    // manifests reference resolves inside the archive.
+    for (const manifestPath of ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', '.cursor-plugin/plugin.json']) {
+      const manifest = JSON.parse(await zip.file(manifestPath)!.async('string')) as { mcpServers?: string; skills?: string };
+      if (manifest.mcpServers) expect(zip.file(manifest.mcpServers.replace(/^\.\//, ''))).not.toBeNull();
+      if (manifest.skills) expect(zip.file(`${manifest.skills.replace(/^\.\//, '').replace(/\/$/, '')}/ask/SKILL.md`)).not.toBeNull();
+    }
+    rmSync(zipPath, { force: true });
   });
 });
 
