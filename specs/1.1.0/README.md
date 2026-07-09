@@ -42,7 +42,9 @@ distribution mechanics over F2's artifact.
    the target is an *already initialized* workspace (KNOWLEDGE.md or
    manifest present), canonicalizes the path (the F3-1.0 discipline), and
    adds the name — the MCP twin of `kb add`, with the same name-grammar
-   rules and the same duplicate-name hard error. It does not scaffold, does
+   rules; duplicate names hard-error like `init_kb` rather than inheriting
+   `kb add`'s overwrite behavior (a conversation can ask; re-pointing a name
+   stays an explicit CLI act). It does not scaffold, does
    not touch files inside the KB. Brownfield *initialization* over MCP stays
    refused (init_kb's non-empty refusal is a 1.0-frozen safety property);
    the honest answer for "turn this messy folder into a KB" remains the CLI,
