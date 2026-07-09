@@ -158,20 +158,23 @@ sources as everything else): the MCP server config (provisioned via
 Claude Code a `bin/` shim that puts `knowlery` on the agent's PATH. One
 install replaces the manual MCP setup above.
 
-From a checkout of this repository:
+The honest per-platform install path:
 
-- **Claude Code**: add the repo as a plugin source and install `knowlery`
-  (`/plugin marketplace add <path-or-repo>` → `/plugin install knowlery`).
-  Skills appear under the plugin's namespace (the exact slash form
-  varies by client).
-- **Codex**: add the plugin through a marketplace entry
-  (`codex plugin add knowlery@<marketplace>`); skills invoke as `@knowlery`.
-- **Cursor**: install from the plugin directory; MCP tools and skills
-  register for the agent.
+- **Claude Code** (one-liner — the repo is its own marketplace):
+  `/plugin marketplace add JayJiangCT/knowlery` →
+  `/plugin install knowlery`. Skills appear under the plugin's namespace
+  (the exact slash form varies by client).
+- **Codex**: add the repo as a marketplace source
+  (`codex plugin marketplace add <source>`), then
+  `codex plugin add knowlery@<marketplace>`; skills invoke as `@knowlery`.
+- **Cursor**: install from a checkout's `plugin/` directory (or the release
+  zip) until the marketplace listing lands — MCP tools and skills register
+  for the agent either way.
 
-Marketplace listings (one-click install without a checkout) land with the
-1.1 distribution work. The plugin performs **no install scripts** — MCP
-provisioning is config + npx, nothing executes at install time.
+Each release also ships `knowlery-plugin-<version>.zip` with the plugin
+tree at the archive root — unzip anywhere and point a plugin-dir install at
+it. The plugin performs **no install scripts** — MCP provisioning is
+config + npx, nothing executes at install time.
 
 **Plugin skills vs vault skills**: plugin skills are session-global and
 namespaced (exact slash form varies by client); a Knowlery workspace also carries its own
