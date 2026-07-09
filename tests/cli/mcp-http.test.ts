@@ -155,7 +155,7 @@ describe('structural access flags (spec §5.3)', () => {
     expect(await readdir(dir)).not.toContain('inbox');
   });
 
-  it('each flag registers exactly its tool; all three make eight', async () => {
+  it('each flag registers exactly its tool; all three make eight — register_kb absent remotely under every flag (spec 1.1 f1, §4.4)', async () => {
     const kbRoot = join(workDir, 'kbs');
     await mkdir(kbRoot);
 

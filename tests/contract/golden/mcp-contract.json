@@ -366,6 +366,52 @@
       }
     },
     {
+      "name": "register_kb",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Registry name ([a-z0-9][a-z0-9-_]*)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path to an initialized Knowlery workspace (absolute or ~-relative)"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "alsoRegisteredAs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "alsoRegisteredAs"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
       "name": "stale",
       "inputSchema": {
         "type": "object",

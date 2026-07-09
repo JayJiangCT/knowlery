@@ -72,6 +72,7 @@ Or add the same `mcpServers` block to `~/.gemini/settings.json`.
 | `health` | `kb` | Workspace integrity check |
 | `list_bundles` | `kb` | Installed knowledge bundles with provenance |
 | `init_kb` | `name`, `path`, `platform?` | Create and register a new KB — cold start from a conversation |
+| `register_kb` | `name`, `path` | Bring an already-initialized KB into the registry (local stdio only) |
 | `capture` | `kb`, `content`, `title?` | Save conversation content as a new note in the KB's `inbox/` |
 | `sync` | `kb` | Refresh built-in skills and instruction files to the installed version |
 
@@ -91,12 +92,19 @@ names, malformed input, unreadable disks.
 
 ## The write path
 
-Exactly three tools write, and each is structurally bounded:
+Four tools write, and each is structurally bounded:
 
 - **`init_kb`** creates at most one new directory (its parent must already
   exist), refuses non-empty targets, and registers the result. A failed init
   cleans up after itself — a directory that existed before init is never
   deleted.
+- **`register_kb`** brings an *existing, already-initialized* KB into the
+  registry — it writes the registry file and nothing else, and a taken name
+  is a hard error, not an auto-rename. It is not offered by `mcp serve`: the
+  registry is machine-global state, so editing it stays a local act. Honest
+  note: turning a folder of existing notes *into* a KB still needs the CLI
+  (`knowlery init` works brownfield; MCP's `init_kb` deliberately refuses
+  non-empty directories) — register it afterwards from the conversation.
 - **`capture`** appends one new note to `inbox/` — filenames are constructed
   from a timestamp and a slug, never taken from the caller, and nothing is
   ever overwritten. Captures show up as *uncooked notes* in `stale` and are

@@ -1,6 +1,6 @@
 # F1 (1.1.0) — `register_kb`: The Registry Reaches Shell-less Clients
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Done — maintainer acceptance passed 2026-07-09 (spec review: duplicate-name wording; implementation review: merge-race remediation, docs count, dist untracking; §7 real shell-less-client round passed — register/query, both fix-it routes relayed, conflict surfaced, remote absence confirmed)
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f1-register-kb-92eb`
 - **Depends on:** 1.1 plan principle 3 (writes the registry, nothing else —
@@ -25,8 +25,10 @@ register_kb({ name, path })
 ```
 
 Registers an **already initialized** Knowlery workspace under a name. The
-MCP twin of `kb add`: same name grammar, same duplicate-name hard error, same
-canonicalization, same registry file.
+MCP twin of `kb add`: same name grammar, same canonicalization, same registry
+file — with one deliberate divergence: duplicate names **hard-error like
+`init_kb`** rather than inheriting `kb add`'s overwrite semantics (a
+conversation can ask; re-pointing a name stays an explicit CLI act; §4.1.4).
 
 ## 3. Non-goals
 

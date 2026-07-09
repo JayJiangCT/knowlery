@@ -52,6 +52,9 @@ export function startMcpHttpServer(options: McpHttpOptions): Promise<Server> {
       capture: options.access.capture ?? false,
       sync: options.access.sync ?? false,
       init: options.access.init ?? false,
+      // No flag exists: register_kb is local-stdio-only (spec 1.1 f1, §4.4) —
+      // the registry is machine-global state, not one KB's.
+      register: false,
     },
   };
   const httpServer = createServer((req, res) => {

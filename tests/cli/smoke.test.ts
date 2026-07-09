@@ -214,8 +214,19 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       try {
         const mcpTools = await mcpClient.listTools();
         expect(mcpTools.tools.map((tool) => tool.name).sort()).toEqual(
-          ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'stale', 'sync'],
+          ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'register_kb', 'stale', 'sync'],
         );
+
+        // register_kb over real stdio (spec 1.1 f1, §5.6): register the
+        // pre-initialized vaultDir under a second name, query it immediately.
+        const mcpRegister = await mcpClient.callTool({
+          name: 'register_kb',
+          arguments: { name: 'smoke-reg', path: vaultDir },
+        });
+        expect(mcpRegister.isError).toBeFalsy();
+        const regQuery = await mcpClient.callTool({ name: 'query', arguments: { kb: 'smoke-reg', question: 'widget design' } });
+        expect((regQuery.structuredContent as { candidates: Array<{ path: string }> }).candidates[0].path)
+          .toBe('concepts/widget-design.md');
         const mcpQuery = await mcpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
         const mcpData = mcpQuery.structuredContent as { candidates: Array<{ path: string }> };
         expect(mcpData.candidates[0].path).toBe('concepts/widget-design.md');

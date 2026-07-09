@@ -13,7 +13,7 @@ import { InstalledBundleEntrySchema } from '../../types';
 import { loggingVaultFs } from '../vault-fs';
 import { isVaultInitialized } from '../setup-executor';
 import { runVaultSync } from '../vault-sync';
-import { runCapture, runInitKb } from './write-tools';
+import { runCapture, runInitKb, runRegisterKb } from './write-tools';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
 import { resolvePlatform } from '../../cli/commands/shared';
@@ -97,6 +97,11 @@ export interface McpAccess {
   sync?: boolean;
   /** true = unconfined (stdio); { kbRoot } = confined (remote); false = absent. */
   init?: boolean | { kbRoot: string };
+  /** register_kb is local-stdio-only (spec 1.1 f1, §4.4): the registry is
+   * machine-global state — a remote caller editing the address book reshapes
+   * what every other tool on the machine can reach. The HTTP shell has no
+   * flag for this; it normalizes register to false unconditionally. */
+  register?: boolean;
 }
 
 export interface McpServerOptions {
@@ -105,7 +110,7 @@ export interface McpServerOptions {
   access?: McpAccess;
 }
 
-const STDIO_ACCESS: Required<McpAccess> = { capture: true, sync: true, init: true };
+const STDIO_ACCESS: Required<McpAccess> = { capture: true, sync: true, init: true, register: true };
 
 export function buildMcpServer(options: McpServerOptions = {}): McpServer {
   const server = new McpServer(SERVER_INFO);
@@ -272,6 +277,44 @@ function registerWriteTools(server: McpServer, access: Required<McpAccess>, opti
   if (access.init !== false) registerInitKb(server, access.init === true ? undefined : access.init.kbRoot);
   if (access.capture) registerCapture(server);
   if (access.sync) registerSync(server, options);
+  if (access.register) registerRegisterKb(server);
+}
+
+function registerRegisterKb(server: McpServer): void {
+  defineTool(server, 'register_kb', {
+    title: 'Register an existing knowledge base',
+    description: 'Add an already-initialized Knowlery workspace to the registry under a name, so every tool can '
+      + 'address it. Writes the registry file only — never touches files inside the KB. '
+      + 'Only call on the user\'s explicit request, and restate the resolved path in conversation before calling. '
+      + 'A taken name is a hard error — surface the conflict, do not pick another name.',
+    inputSchema: {
+      name: z.string().describe('Registry name ([a-z0-9][a-z0-9-_]*)'),
+      path: z.string().describe('Path to an initialized Knowlery workspace (absolute or ~-relative)'),
+    },
+    outputSchema: {
+      name: z.string(),
+      path: z.string(),
+      alsoRegisteredAs: z.array(z.string()),
+    },
+  }, async ({ name, path }) => {
+    const result = await runRegisterKbOrThrow(name, path);
+    const alias = result.alsoRegisteredAs.length > 0
+      ? ` (this path is also registered as: ${result.alsoRegisteredAs.join(', ')})`
+      : '';
+    return ok(
+      { name: result.name, path: result.path, alsoRegisteredAs: result.alsoRegisteredAs },
+      `Registered "${result.name}" → ${result.path}${alias}. It is immediately queryable by name.`,
+    );
+  });
+}
+
+async function runRegisterKbOrThrow(name: string, path: string) {
+  try {
+    return await runRegisterKb(name, path);
+  } catch (error) {
+    if (error instanceof KbRegistryError) throw new Error(error.message);
+    throw error;
+  }
 }
 
 function registerInitKb(server: McpServer, kbRoot: string | undefined): void {

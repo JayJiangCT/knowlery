@@ -132,7 +132,10 @@ export async function listKbs(): Promise<KbListing[]> {
   return listings.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-async function kbState(path: string): Promise<KbState> {
+/** Exported since 1.1 f1: register_kb's initialized-check is this exact
+ * logic — the MCP tool and `kb list` can never disagree about what
+ * "initialized" means. */
+export async function kbState(path: string): Promise<KbState> {
   try {
     if (!(await stat(path)).isDirectory()) return 'missing';
   } catch {

@@ -70,6 +70,7 @@ gemini mcp add knowlery knowlery mcp
 | `health` | `kb` | 工作区完整性检查 |
 | `list_bundles` | `kb` | 已安装的知识包及其来源信息 |
 | `init_kb` | `name`、`path`、`platform?` | 创建并注册一个新知识库——从对话中冷启动 |
+| `register_kb` | `name`、`path` | 把已初始化的知识库加入注册表（仅本地 stdio） |
 | `capture` | `kb`、`content`、`title?` | 把对话内容存为知识库 `inbox/` 下的新笔记 |
 | `sync` | `kb` | 把内置技能和指令文件刷新到当前安装的版本 |
 
@@ -85,10 +86,15 @@ gemini mcp add knowlery knowlery mcp
 
 ## 写路径
 
-只有三个工具会写入，每个都有结构性边界：
+只有四个工具会写入，每个都有结构性边界：
 
 - **`init_kb`** 最多创建一层新目录（父目录必须已存在）、拒绝非空目标，然后注册。
   失败的 init 会清理干净——init 之前就存在的目录永远不会被删除。
+- **`register_kb`** 把*已存在且已初始化*的知识库加入注册表——只写注册表文件，
+  不碰其他任何东西；重名是硬报错，不会自动改名。`mcp serve` 不提供此工具：
+  注册表是机器级全局状态，编辑它只能是本地动作。诚实说明：把一个已有笔记的
+  文件夹*变成*知识库仍需 CLI（`knowlery init` 支持 brownfield；MCP 的
+  `init_kb` 刻意拒绝非空目录）——初始化后再从对话里注册即可。
 - **`capture`** 只向 `inbox/` 追加一条新笔记——文件名由时间戳和 slug 构造，
   从不来自调用方，也从不覆盖任何已有文件。捕获的笔记会立刻出现在 `stale` 的
   *uncooked notes* 里、可被 `query` 检索；`/cook` 把 `inbox/` 视为最优先的
