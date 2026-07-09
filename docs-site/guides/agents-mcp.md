@@ -92,7 +92,7 @@ names, malformed input, unreadable disks.
 
 ## The write path
 
-Exactly three tools write, and each is structurally bounded:
+Four tools write, and each is structurally bounded:
 
 - **`init_kb`** creates at most one new directory (its parent must already
   exist), refuses non-empty targets, and registers the result. A failed init
