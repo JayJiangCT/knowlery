@@ -76,7 +76,7 @@ distribution mechanics over F2's artifact.
    their own terminal — is exactly the one the trust model reserves for
    them, and the skills teach the agent to *suggest* it, never run it
    unasked.
-5. **The contract grows additively.** New tool (`register_kb`) and new
+7. **The contract grows additively.** New tool (`register_kb`) and new
    remote flag (`--allow-register`, if F1 lands remote exposure) are minor
    under the 1.0 freeze. The contract golden regenerates once per feature,
    deliberately, with the diff called out in review. Nothing existing
