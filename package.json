@@ -27,7 +27,8 @@
     "test": "vitest run --dir tests",
     "test:watch": "vitest --dir tests",
     "eval": "tsx evals/src/run.ts",
-    "contract:regen": "tsx tests/contract/regen.ts"
+    "contract:regen": "tsx tests/contract/regen.ts",
+    "build:plugin": "tsx scripts/build-plugin.ts"
   },
   "keywords": [
     "obsidian",

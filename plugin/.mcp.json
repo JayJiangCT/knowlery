@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "knowlery": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "knowlery@^1",
+        "mcp"
+      ]
+    }
+  }
+}
