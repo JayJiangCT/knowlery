@@ -100,4 +100,8 @@ distribution mechanics over F2's artifact.
 - `no-explicit-any` tightening (0.8 F4).
 - Ranking misses q-016 / q-020; all-latin exactly-half collision.
 - Beyond 1.1: the hosted platform (the remote MCP endpoint as its product
-  form).
+  form). Recorded at 1.1 plan review: if the platform materializes, the thing
+  that earns a real marketplace is **knowledge bundles** (browse / subscribe /
+  paid distribution over the 0.9 publish-subscribe protocol) — not plugins.
+  Plugin distribution stays catalog-file + community-marketplace submissions
+  permanently; we never build plugin-market infrastructure for one plugin.
