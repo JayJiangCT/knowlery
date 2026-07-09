@@ -99,7 +99,7 @@ refuse (with the file list) unless you pass `--force`.
 ## Serve your KBs to agents
 
 ```bash
-# Local agents (Claude Desktop/Code, Cursor, gemini-cli): stdio
+# Local agents (Claude Desktop/Code, Codex, Cursor, Antigravity): stdio
 claude mcp add knowlery -- knowlery mcp
 
 # Another machine: HTTP behind a tunnel
