@@ -18,7 +18,7 @@ clients first-class; `register_kb` makes them complete).
 |---|---------|------|------------|
 | F1 | `register_kb` MCP tool: bring an existing initialized KB into the registry from a conversation; the shell-less brownfield story documented honestly | [f1-register-kb.md](./f1-register-kb.md) | 1.0 |
 | F2 | The agent plugin: one plugin tree, manifests for **Claude Code + Codex + Cursor** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`), skills built from `BUNDLED_SKILLS`, MCP config provisioning the server via `npx -y knowlery@^1 mcp`; a new `knowlery-mcp` front-door skill + transport-aware revisions to existing skills | [f2-agent-plugin.md](./f2-agent-plugin.md) | 1.0 (F1 desirable first — ships in the plugin's tool surface) |
-| F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path | (spec pending) | F2 |
+| F3 | Plugin distribution: release-workflow plugin assets, self-hosted `marketplace.json`, community-marketplace submissions, the "Install as a plugin" docs path; carries the 1.1.0 release | [f3-distribution.md](./f3-distribution.md) | F2 |
 | F4 | The orientation map (the Karpathy Index.md insight, done as a *view*): a live-computed KB index — virtual MCP resource `knowlery://<kb>/index` + `knowlery index` CLI command — compiled layer grouped by type/domain plus an installed-bundles section; never persisted, so no drift and no conflict with the no-retrieval-index principle. INDEX.base stays as the Obsidian rendering of the same job (frozen surface, real plugin value) | (spec pending) | 1.0 |
 
 Execution order: F1 → F2 → F3. F1 is a small, contract-additive MCP tool
