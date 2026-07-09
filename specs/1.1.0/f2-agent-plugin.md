@@ -1,6 +1,6 @@
 # F2 (1.1.0) — The Agent Plugin: Knowledge in One Install
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-09 (two findings at spec review: Antigravity deferred from the committed artifact with layout reservation; acceptance requires all three committed platforms) — implementation in progress
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f2-agent-plugin-92eb`
 - **Depends on:** F1 (register_kb ships in the plugin's tool surface), 1.1
