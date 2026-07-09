@@ -171,7 +171,7 @@ docs state this plainly; no mechanism is built.
    gemini-cli references replaced per the plan amendment; the
    dedupe-precedence statement included.
 3. `npm test`, lint, build, `docs:build`, eval `--assert-baseline` green.
-4. Manual §7 on at least two of the three platforms.
+4. Manual §7 green on all three committed platforms: Claude Code, Codex, and Cursor.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
