@@ -70,14 +70,15 @@ plugin/
   files are generated from one template — they cannot diverge.
 - The shim is POSIX shell, two lines, executable bit set; Codex/Cursor agents
   reach the CLI through the `npx` form the skills teach.
-- **Decision point (Antigravity):** Google's Antigravity suite (which
-  replaced gemini-cli) uses the same bundle shape with `plugin.json` at the
-  plugin *root* and `mcp_config.json`. A fourth target is structurally cheap,
-  but its root-level `plugin.json` would sit beside our dotted manifests —
-  harmless to the other three (they only read their own dotdirs). Proposal:
-  **include it** (root `plugin.json` + `mcp_config.json`), marked
-  experimental in docs since its install flow (copy into
-  `~/.gemini/config/plugins/`) is the least mature of the four.
+- **Decision point resolved (Antigravity — maintainer decision at spec
+  review):** Defer Antigravity from the F2 committed artifact. Its bundle
+  shape appears compatible, so the `plugin/` layout must not preclude a
+  later root `plugin.json` + `mcp_config.json`, but F2 only ships the
+  accepted target set: Claude Code, Codex, and Cursor. Antigravity remains
+  a follow-up/F3 candidate once its install flow and manifest schema are
+  manually verified (real install path, manifest fields, `mcp_config.json`
+  shape, one clean install) — "one install, verified platform" stays the
+  promise; three-stable-plus-one-experimental would dilute it.
 
 ### 4.2 Generation and the drift guard
 
@@ -146,7 +147,7 @@ docs state this plainly; no mechanism is built.
 2. **Parity**: every `plugin/skills/<name>/SKILL.md` equals the
    corresponding `BUNDLED_SKILLS` content exactly; the set of directories
    equals the set of skill names — no extras, none missing.
-3. **Manifests**: all three (four, if Antigravity is accepted) parse as
+3. **Manifests**: all three parse as
    JSON, carry `name: "knowlery"`, and their `version` equals
    `package.json`'s (wired into the version-coherence contract test).
 4. **MCP configs**: `.mcp.json` and `mcp.json` are content-identical and
