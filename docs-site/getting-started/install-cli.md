@@ -94,5 +94,5 @@ knowlery index --kb main
 ```
 
 Then [connect your agent](../guides/connect-your-agent) — or if you came
-from Obsidian, your existing vault is already compatible: `knowlery kb add
-<name> <vault-path>` and every command works against it.
+from Obsidian, your existing vault is already compatible:
+`knowlery kb add <name> <vault-path>` and every command works against it.
