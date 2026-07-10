@@ -1,3 +1,4 @@
+import matter from 'gray-matter';
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 import { generateKnowledgeMd, generateSchemaMd } from '../../src/assets/templates';
@@ -13,6 +14,19 @@ function skill(name: string): string {
   if (!found) throw new Error(`missing bundled skill: ${name}`);
   return found.content;
 }
+
+describe('frontmatter identity', () => {
+  it.each(BUNDLED_SKILLS.map((entry) => entry.name))(
+    '%s: frontmatter name matches the bundled (directory) name',
+    (name) => {
+      expect(matter(skill(name)).data.name).toBe(name);
+    },
+  );
+
+  it('vault-conventions keeps the legacy BYOAO pointer so old vaults still activate it', () => {
+    expect(matter(skill('vault-conventions')).data.description).toContain('formerly BYOAO');
+  });
+});
 
 describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   it('/ask lists all three transports in order', () => {
