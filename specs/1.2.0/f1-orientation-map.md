@@ -49,13 +49,34 @@ Both call one pure core function over a fresh `scanVault` snapshot.
 
 ### 4.1 The map, as data
 
-`buildOrientationMap(snapshot, bundles)` in `src/core/query/orientation.ts`
-(pure — snapshot in, map out):
+`buildOrientationMap(inputs)` in `src/core/query/orientation.ts` — pure in
+the strict sense (maintainer P1 at spec review): **every input is injected,
+including the timestamp**. `inputs = { snapshot, bundles, kbName?,
+generatedAt }` — the function reads no clock, no file, no env, so the same
+inputs always yield the same map, and CLI/MCP parity is provable by
+construction (both shells call it with the same injected values in the
+parity test).
+
+**Input provenance, stated precisely** (maintainer P2 — the declared inputs
+must suffice to produce the output):
+
+- `snapshot`: `scanVault` output. `title`/`description`/`updated` already
+  exist on `ScannedPage`; **`domain` is an additive scanner field** this
+  feature adds (frontmatter passthrough, optional — absent stays absent).
+- `kbName`: injected by the caller (each shell reads the first heading of
+  `KNOWLEDGE.md` if it cares to; optional — the map renders without it).
+- `bundles`: the installed-bundle registry **joined with each bundle's own
+  manifest** (`Library/<id>/knowlery-bundle.json`) for `entrypoint`. The
+  join is tolerant: a missing/unreadable manifest (old installs, hand-pruned
+  libraries) falls back to `entrypoint: "index.md"` — an entry never blocks
+  the map.
+- `generatedAt`: the caller's clock, formatted ISO — an honesty stamp
+  ("this is a view, dated"), not data.
 
 ```ts
 interface OrientationMap {
-  kbName?: string;            // from KNOWLEDGE.md's title when present
-  generatedAt: string;        // honesty stamp: this is a view, dated
+  kbName?: string;            // injected; from KNOWLEDGE.md's title when the caller provides it
+  generatedAt: string;        // injected honesty stamp: this is a view, dated
   compiled: Array<{           // one group per type present, in canonical order
     type: 'entity' | 'concept' | 'comparison' | 'query';
     pages: Array<{ path: string; title: string; description?: string; domain?: string; updated?: string }>;
@@ -95,10 +116,13 @@ interface OrientationMap {
   entries per KB.
 - Reading it returns the map as markdown (a rendered document, easier for
   agents to consume as a resource than raw JSON), generated live per read.
-  `index` joins the resource router *before* the allowlisted file-read path;
-  a real file named `index.md` at the vault root remains reachable — the
-  virtual name wins only for the exact path `index` (no `.md`), which cannot
-  collide with a markdown file.
+  `index` joins the resource router *before* the allowlisted file-read path
+  and matches only the exact path `index` (no `.md`). **A real root-level
+  `index.md` file remains refused for reading** (maintainer P1 at spec
+  review): the frozen read allowlist admits only `KNOWLEDGE.md` at the
+  root, and this feature does not widen it — a root `index.md` is a
+  user-tier note like any other. No collision is possible and no boundary
+  moves.
 - The `knowlery-mcp` skill's tool-selection map gains one row: "get the lay
   of the land → read the `index` resource — browse first, query second."
 
@@ -114,8 +138,11 @@ change; the count assertions in resource tests update, sanctioned here).
 1. **Purity**: `buildOrientationMap` is pure (snapshot in, map out);
    `core/query/orientation.ts` joins the purity guard.
 2. **View semantics**: calling the CLI/resource twice with a page added
-   between calls reflects the addition with **no state written anywhere**
-   (workspace file set identical before/after both reads).
+   between calls reflects the addition with **no state written anywhere** —
+   asserted by recursive **content hashes** of every workspace file before
+   and after both reads (maintainer P2: a path-set comparison would miss
+   overwrites of existing files), identical except the deliberately added
+   page.
 3. **The boundary**: user-tier notes appear only in the `uncooked` count —
    never listed; a fixture with `Daily/` and `Projects/` notes proves it.
 4. **Bundles section**: installed fixture bundle appears with id/version/
@@ -124,8 +151,8 @@ change; the count assertions in resource tests update, sanctioned here).
    from the same map for the same fixture (structural equality of the
    underlying data).
 6. **Resource routing**: `knowlery://<kb>/index` serves the map; a real
-   root-level `index.md` file still serves its file content; two entries per
-   KB in `resources/list`.
+   root-level `index.md` file **remains refused** (the frozen allowlist,
+   unchanged — asserted); two entries per KB in `resources/list`.
 7. **Contract**: the new `--json` keys pinned in the CLI contract suite;
    resource-count assertions updated (sanctioned).
 8. **Smoke**: the built artifact prints the map for the fixture workspace

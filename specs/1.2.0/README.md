@@ -8,7 +8,7 @@ stability contract — this is why it is not 1.1.1).
 
 | # | Feature | Spec | Depends on |
 |---|---------|------|------------|
-| F1 | The orientation map: a live-computed KB index — virtual MCP resource `knowlery://<kb>/index` + `knowlery index` CLI command — compiled layer grouped by type/domain plus an installed-bundles section; never persisted | [f1-orientation-map.md](./f1-orientation-map.md) | 1.1 |
+| F1 | The orientation map: a live-computed KB index — virtual MCP resource `knowlery://<kb>/index` + `knowlery index` CLI command — compiled layer grouped by type (domain carried per page) plus an installed-bundles section; never persisted | [f1-orientation-map.md](./f1-orientation-map.md) | 1.1 |
 
 ## Design principles (binding)
 
