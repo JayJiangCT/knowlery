@@ -14,6 +14,8 @@ import { loggingVaultFs } from '../vault-fs';
 import { isVaultInitialized } from '../setup-executor';
 import { runVaultSync } from '../vault-sync';
 import { runCapture, runInitKb, runRegisterKb } from './write-tools';
+import { collectOrientationMap } from '../orientation-source';
+import { renderOrientationMap } from '../query/orientation';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
 import { resolvePlatform } from '../../cli/commands/shared';
@@ -428,15 +430,25 @@ function registerResources(server: McpServer): void {
   server.registerResource('knowledge-entrypoints', new ResourceTemplate('knowlery://{kb}/{+path}', {
     list: async () => {
       const kbs = await listKbs();
+      // Two bounded entries per KB (spec 1.2 f1, §4.3): the operating guide
+      // and the live orientation map.
       return {
         resources: kbs
           .filter((kb) => kb.state === 'ok')
-          .map((kb) => ({
-            uri: `knowlery://${kb.name}/KNOWLEDGE.md`,
-            name: `${kb.name} — KNOWLEDGE.md`,
-            description: `Entry point of the "${kb.name}" knowledge base`,
-            mimeType: 'text/markdown',
-          })),
+          .flatMap((kb) => [
+            {
+              uri: `knowlery://${kb.name}/KNOWLEDGE.md`,
+              name: `${kb.name} — KNOWLEDGE.md`,
+              description: `Entry point of the "${kb.name}" knowledge base`,
+              mimeType: 'text/markdown',
+            },
+            {
+              uri: `knowlery://${kb.name}/index`,
+              name: `${kb.name} — orientation map`,
+              description: `What the "${kb.name}" knowledge base contains — a live view, computed on read`,
+              mimeType: 'text/markdown',
+            },
+          ]),
       };
     },
   }), {
@@ -447,6 +459,15 @@ function registerResources(server: McpServer): void {
   }, async (uri, variables) => {
     const kb = String(variables.kb ?? '');
     const rawPath = String(variables.path ?? '');
+    // The virtual orientation map routes before the allowlisted file-read
+    // path and matches only the exact path `index` — no `.md`, so a real
+    // root-level index.md is a user-tier note and stays refused (spec 1.2
+    // f1, §4.3: the frozen boundary does not move).
+    if (rawPath === 'index') {
+      const root = await resolveKbOrThrow(kb);
+      const map = await collectOrientationMap(root, new Date().toISOString());
+      return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: renderOrientationMap(map, { markdown: true }) }] };
+    }
     const content = await readKnowledgePage(kb, rawPath);
     return { contents: [{ uri: uri.href, mimeType: 'text/markdown', text: content }] };
   });

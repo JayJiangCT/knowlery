@@ -35,6 +35,8 @@ export interface ScannedPage {
   status?: string;
   updated?: string;
   description?: string;
+  /** Frontmatter passthrough for the orientation map (spec 1.2 f1, §4.1). */
+  domain?: string;
   sources: string[];
   /** File modification time in ms; drives the mechanical staleness tier (spec f3, §4.1). */
   mtimeMs: number;
@@ -114,6 +116,7 @@ export function buildPageFromContent(path: string, rawContent: string, mtimeMs: 
     type: typeof fm.type === 'string' ? fm.type : undefined,
     status: typeof fm.status === 'string' ? fm.status : undefined,
     updated: scalarDate(fm.updated),
+    domain: typeof fm.domain === 'string' ? fm.domain : undefined,
     description,
     sources: stringArray(fm.sources),
     mtimeMs,

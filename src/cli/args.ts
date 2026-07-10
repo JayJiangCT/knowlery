@@ -19,6 +19,7 @@ Usage:
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path> | --kb <name> | --kb '*'] [--k <n>] [--json]
   knowlery stale  [--dir <path>] [--json]
+  knowlery index  [--dir <path> | --kb <name>] [--json]   # orientation map (live view)
   knowlery bundle install <zip-or-folder-or-url> [--dir <path>] [--verify <sha256>]
                           [--force] [--skip-conformance]
   knowlery bundle list      [--dir <path>] [--json]
@@ -80,6 +81,7 @@ export const POSITIONAL_LIMITS: Record<string, number> = {
   health: 0,
   query: 1,
   stale: 0,
+  index: 0,
   bundle: 2,
 };
 
