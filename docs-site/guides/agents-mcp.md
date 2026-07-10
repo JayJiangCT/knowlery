@@ -88,7 +88,9 @@ file list after running it.
 
 The knowledge-workflow skills are exposed as MCP prompts, loadable from the
 client's prompt picker: `ask`, `cook`, `explore`, `challenge`, `ideas`,
-`audit`, `organize`, `vault-conventions`, `knowlery-cli`. Each returns the
+`audit`, `organize`, `vault-conventions`, `knowlery-cli`, `knowlery-mcp`
+(the front-door skill: tool selection, the capture→cook loop, and conduct —
+load it first in a new MCP session). Each returns the
 skill body verbatim — the same craft the Obsidian plugin installs, now
 machine-loadable anywhere.
 
@@ -104,6 +106,38 @@ compiled directories (`entities/`, `concepts/`, `comparisons/`, `queries/`),
 and installed-bundle pages under `Library/`. Free-form notes (`Daily/`,
 `Projects/`, anything else) are refused — `query` may surface a raw note's
 title and path, but its content stays yours until you promote it with `/cook`.
+
+## Install as a plugin
+
+The repository ships an agent plugin (`plugin/` — generated from the same
+sources as everything else): the MCP server config (provisioned via
+`npx -y knowlery@^1 mcp`, no separate install), all fifteen skills, and on
+Claude Code a `bin/` shim that puts `knowlery` on the agent's PATH. One
+install replaces the manual MCP setup above.
+
+The honest per-platform install path:
+
+- **Claude Code** (one-liner — the repo is its own marketplace):
+  `/plugin marketplace add JayJiangCT/knowlery` →
+  `/plugin install knowlery`. Skills appear under the plugin's namespace
+  (the exact slash form varies by client).
+- **Codex**: add the repo as a marketplace source
+  (`codex plugin marketplace add <source>`), then
+  `codex plugin add knowlery@<marketplace>`; skills invoke as `@knowlery`.
+- **Cursor**: install from a checkout's `plugin/` directory (or the release
+  zip) until the marketplace listing lands — MCP tools and skills register
+  for the agent either way.
+
+Each release also ships `knowlery-plugin-<version>.zip` with the plugin
+tree at the archive root — unzip anywhere and point a plugin-dir install at
+it. The plugin performs **no install scripts** — MCP provisioning is
+config + npx, nothing executes at install time.
+
+**Plugin skills vs vault skills**: plugin skills are session-global and
+namespaced (exact slash form varies by client); a Knowlery workspace also carries its own
+copies (`/ask`). Both are generated from the same source at the same
+version — whichever the agent loads, the content is identical, so seeing
+both is harmless by construction.
 
 ## Remote access (self-hosted)
 

@@ -1,6 +1,6 @@
 {
   "name": "knowlery",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A warm personal knowledge review space for your vault.",
   "repository": {
     "type": "git",
@@ -27,7 +27,9 @@
     "test": "vitest run --dir tests",
     "test:watch": "vitest --dir tests",
     "eval": "tsx evals/src/run.ts",
-    "contract:regen": "tsx tests/contract/regen.ts"
+    "contract:regen": "tsx tests/contract/regen.ts",
+    "build:plugin": "tsx scripts/build-plugin.ts",
+    "plugin:zip": "tsx scripts/zip-plugin.ts"
   },
   "keywords": [
     "obsidian",

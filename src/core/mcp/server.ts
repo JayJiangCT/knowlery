@@ -34,12 +34,13 @@ import { BUNDLED_SKILLS } from '../../assets/skills';
  */
 
 /** Exported for the version-coherence contract test (spec 1.0 f5, §5.3). */
-export const SERVER_INFO = { name: 'knowlery', version: '1.0.0' };
+export const SERVER_INFO = { name: 'knowlery', version: '1.1.0' };
 
-/** Skills whose content stands without Obsidian (spec §4.3, curated set). */
+/** Skills whose content stands without Obsidian (spec 1.0 f2 §4.3, curated
+ * set; knowlery-mcp added by spec 1.1 f2 §4.3 — the front-door skill). */
 export const MCP_PROMPT_SKILLS = [
   'ask', 'cook', 'explore', 'challenge', 'ideas', 'audit', 'organize',
-  'vault-conventions', 'knowlery-cli',
+  'vault-conventions', 'knowlery-cli', 'knowlery-mcp',
 ] as const;
 
 /** The curated knowledge surface readable over MCP (spec §4.4 — the product

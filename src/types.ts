@@ -391,7 +391,7 @@ export type KbRegistry = z.infer<typeof KbRegistrySchema>;
 
 export const BUILTIN_SKILL_NAMES = [
   'cook', 'ask', 'explore', 'challenge', 'ideas', 'audit', 'organize',
-  'obsidian-cli', 'knowlery-cli', 'obsidian-markdown', 'obsidian-bases',
+  'obsidian-cli', 'knowlery-cli', 'knowlery-mcp', 'obsidian-markdown', 'obsidian-bases',
   'json-canvas', 'defuddle', 'vault-conventions',
 ] as const;
 

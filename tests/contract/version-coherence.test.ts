@@ -36,4 +36,16 @@ describe('one version everywhere', () => {
     const stamp = compile.match(/knowleryVersion: '([^']+)'/)?.[1];
     expect(stamp).toBe(packageVersion);
   });
+
+  it('the plugin manifests and the marketplace catalog agree (spec 1.1 f3, §5.4)', () => {
+    for (const path of [
+      'plugin/.claude-plugin/plugin.json',
+      'plugin/.codex-plugin/plugin.json',
+      'plugin/.cursor-plugin/plugin.json',
+    ]) {
+      expect((readJson(path) as { version: string }).version, path).toBe(packageVersion);
+    }
+    const catalog = readJson('.claude-plugin/marketplace.json') as { plugins: Array<{ version: string }> };
+    expect(catalog.plugins[0].version).toBe(packageVersion);
+  });
 });

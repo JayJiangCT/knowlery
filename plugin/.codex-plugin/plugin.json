@@ -1,0 +1,31 @@
+{
+  "name": "knowlery",
+  "version": "1.1.0",
+  "description": "Knowlery: the knowledge base your agents can live in — query, capture, and maintain plain-markdown knowledge bases by conversation.",
+  "author": {
+    "name": "Jay Jiang",
+    "url": "https://github.com/JayJiangCT/knowlery"
+  },
+  "homepage": "https://jayjiangct.github.io/knowlery/",
+  "repository": "https://github.com/JayJiangCT/knowlery",
+  "license": "MIT",
+  "keywords": [
+    "knowledge-base",
+    "mcp",
+    "notes",
+    "retrieval",
+    "obsidian"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Knowlery",
+    "shortDescription": "The knowledge base your agents can live in.",
+    "developerName": "Jay Jiang",
+    "category": "Productivity",
+    "defaultPrompt": [
+      "List my knowledge bases",
+      "Set up a knowledge base for me"
+    ]
+  }
+}
