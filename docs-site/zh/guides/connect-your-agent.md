@@ -45,6 +45,7 @@ npx 绝对路径。
 | Claude Desktop | `claude_desktop_config.json` | 无 shell：已有知识库靠 `register_kb` 接入 |
 | Codex CLI | `~/.codex/config.toml` | 与 Codex 应用共享配置 |
 | Codex（应用 / IDE 扩展） | 同一份 `config.toml`，或插件 | 有 shell：CLI 也可用 |
+| OpenCode | `~/.config/opencode/opencode.json` | Knowlery 一等平台——见配置归属提示 |
 | Cursor | `~/.cursor/mcp.json` 或 deeplink | 也支持项目级 `.cursor/mcp.json` |
 | Antigravity Desktop / CLI / IDE | `~/.gemini/config/mcp_config.json` | 一份配置服务三个表面 |
 
@@ -98,6 +99,39 @@ args = ["-y", "knowlery@^1", "mcp"]
 应用与 CLI 共享 `~/.codex/config.toml`——上面那段两边通用。等 Knowlery
 插件发布（1.1）后，`/plugins` 浏览器将成为一键路径，技能可以用
 `@knowlery` 调用。
+
+## OpenCode
+
+OpenCode 的配置形状与 Claude 系不同——顶层键是 `mcp`（不是 `mcpServers`）、
+每个条目声明 `"type": "local"`、`command` 是**单个数组**（可执行文件和参数
+放在一起，没有独立的 `args` 字段）：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "knowlery": {
+      "type": "local",
+      "command": ["npx", "-y", "knowlery@^1", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+加到**全局**配置 `~/.config/opencode/opencode.json`（或用交互式的
+`opencode mcp add`）。用 `opencode mcp list` 验证连接状态。
+
+::: warning MCP 配置放全局，不要放 vault 里的那份
+OpenCode 是 Knowlery 的一等平台：`knowlery init --platform opencode` 会生成
+工作区自己的 `opencode.json`（以及 `.agents/rules/` 下的规则），且 Knowlery
+在"重新生成 agent 配置"和平台切换时会**重写这个文件**。加在 vault 级
+`opencode.json` 里的 MCP 配置会被覆盖——全局配置才是持久的家，而且一份
+配置服务所有项目。
+:::
+
+OpenCode 的 agent 有 shell，所以 `knowlery` CLI 与 MCP 工具并存；vault 里
+由 `init`/`sync` 安装的 `.agents/rules/` 和技能已经在教检索行为准则。
 
 ## Cursor
 

@@ -1,7 +1,7 @@
 # Agents & MCP
 
-Any MCP-capable agent — Claude Desktop, Claude Code, Codex, Cursor, the
-Antigravity suite — can talk to your knowledge bases directly. `knowlery mcp`
+Any MCP-capable agent — Claude Desktop, Claude Code, Codex, OpenCode,
+Cursor, the Antigravity suite — can talk to your knowledge bases directly. `knowlery mcp`
 runs an MCP server over stdio: the agent starts it, discovers the tools, and
 your knowledge becomes ambient in every conversation, with no
 per-conversation setup.
@@ -200,7 +200,7 @@ Client config for a remote server (Cursor shown; Claude Code:
 
 | Agent class | 1.0 answer |
 | --- | --- |
-| Local MCP clients (Claude Desktop/Code, Codex, Cursor, Antigravity) | `knowlery mcp` over stdio — full support, all nine tools |
+| Local MCP clients (Claude Desktop/Code, Codex, OpenCode, Cursor, Antigravity) | `knowlery mcp` over stdio — full support, all nine tools |
 | Cloud agents with a shell (Cursor Cloud Agent, Codex-style) | already served: the CLI + bundle distribution |
 | Web-only cloud agents (ChatGPT connectors, Gemini web, Claude web) | out of scope for 1.0 — self-hosted remote + a tunnel works for the determined; the zero-setup answer is a hosted platform, which is a recorded trajectory, not a 1.0 deliverable |
 
