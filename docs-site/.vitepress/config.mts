@@ -12,13 +12,26 @@ const englishSidebar = [
     ],
   },
   {
-    text: 'Use Knowlery',
+    text: 'With Your Agent',
     items: [
-      { text: 'Guides', link: '/guides/' },
-      { text: 'Best Practices', link: '/guides/best-practices' },
+      { text: 'Connect Your Agent', link: '/guides/connect-your-agent' },
+      { text: 'Talk to Your Knowledge Base', link: '/guides/talk-to-your-kb' },
       { text: 'CLI Workflows', link: '/guides/cli-workflows' },
+      { text: 'Agents & MCP Reference', link: '/guides/agents-mcp' },
+    ],
+  },
+  {
+    text: 'In Obsidian',
+    items: [
+      { text: 'Start in Obsidian', link: '/getting-started/obsidian' },
+      { text: 'Obsidian Plugin Guide', link: '/guides/' },
+    ],
+  },
+  {
+    text: 'Every Surface',
+    items: [
+      { text: 'Best Practices', link: '/guides/best-practices' },
       { text: 'Multiple Knowledge Bases', link: '/guides/multiple-knowledge-bases' },
-      { text: 'Agents & MCP', link: '/guides/agents-mcp' },
       {
         text: 'Sharing Knowledge',
         link: '/sharing/',
@@ -54,13 +67,26 @@ const chineseSidebar = [
     ],
   },
   {
-    text: '使用 Knowlery',
+    text: '与你的 Agent',
     items: [
-      { text: '使用指南', link: '/zh/guides/' },
-      { text: '最佳实践', link: '/zh/guides/best-practices' },
+      { text: '接入你的 Agent', link: '/zh/guides/connect-your-agent' },
+      { text: '用对话使用知识库', link: '/zh/guides/talk-to-your-kb' },
       { text: 'CLI 工作流', link: '/zh/guides/cli-workflows' },
+      { text: 'Agent 与 MCP 参考', link: '/zh/guides/agents-mcp' },
+    ],
+  },
+  {
+    text: '在 Obsidian 中',
+    items: [
+      { text: '从 Obsidian 开始', link: '/zh/getting-started/obsidian' },
+      { text: 'Obsidian 插件指南', link: '/zh/guides/' },
+    ],
+  },
+  {
+    text: '所有表面通用',
+    items: [
+      { text: '最佳实践', link: '/zh/guides/best-practices' },
       { text: '使用多个知识库', link: '/zh/guides/multiple-knowledge-bases' },
-      { text: 'Agent 与 MCP', link: '/zh/guides/agents-mcp' },
       {
         text: '分享知识',
         link: '/zh/sharing/',
@@ -102,7 +128,7 @@ export default defineConfig({
       label: 'English',
       lang: 'en-US',
       title: 'Knowlery',
-      description: 'Official documentation for Knowlery, the AI knowledge base control panel for Obsidian.',
+      description: 'Official documentation for Knowlery, the knowledge base built for agents — MCP, CLI, and an Obsidian plugin over one plain-markdown workspace.',
       themeConfig: {
         nav: [
           { text: 'Guide', link: '/getting-started/' },
@@ -118,7 +144,7 @@ export default defineConfig({
       lang: 'zh-CN',
       link: '/zh/',
       title: 'Knowlery',
-      description: 'Knowlery 官方文档：面向 Obsidian 的 AI 知识库控制台。',
+      description: 'Knowlery 官方文档：为 agent 构建的知识库——MCP、CLI 与 Obsidian 插件，共享一种纯 markdown 工作区。',
       themeConfig: {
         nav: [
           { text: '指南', link: '/zh/getting-started/' },

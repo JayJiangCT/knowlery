@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Knowlery
-  text: 把你的 vault 变成一个以 review 为中心的知识空间。
-  tagline: "Knowlery 为 Claude Code 和 OpenCode 提供一个行动优先的 review surface，并把 setup、diagnostics、rules、skills 维护放在 settings 中。"
+  text: 让你的 agent 住进知识库。
+  tagline: "一种纯 markdown 工作区，三个壳层：MCP 服务器和 CLI 面向 Codex、Claude、Cursor、Antigravity——Obsidian 插件是它最丰富的人类界面。Obsidian 让它能力最大化，但它不依赖 Obsidian。"
   image:
     src: /knowlery-pot.svg
     alt: Knowlery Knowledge Pot logo
@@ -13,48 +13,56 @@ hero:
       text: 快速开始
       link: /zh/getting-started/
     - theme: alt
+      text: 接入你的 Agent
+      link: /zh/guides/connect-your-agent
+    - theme: alt
       text: 理解核心概念
       link: /zh/concepts/
 
 features:
-  - title: 行动优先的 Dashboard
-    details: 在一个页面里查看 Today's move、Suggested moves、当前笔记、最近活动和 weekly summary。
-  - title: 当前笔记 Review
-    details: 打开一篇 Markdown 笔记后，准备一个用于连接旧笔记、comparisons 和可复用结构的专注 prompt。
-  - title: Freshness Review
-    details: 准备本地 request JSON，导入 agent 写出的结果，并在批准后才应用 scalar freshness metadata。
-  - title: Weekly Summary
-    details: 基于最近活动生成本地 HTML 报告，必要时再交给 companion agent 打磨。
-  - title: Knowledge Bundles
-    details: 把 review 过的知识作为便携 bundle 分享，把别人的 bundle 安装到 Library/，让 /ask 显式检索它们。
-  - title: Settings 维护
-    details: 在 Obsidian settings 中运行诊断、维护 rules/schema、切换平台并管理 Skills library。
+  - title: 常驻每一次对话
+    details: 九个 MCP 工具让知识库在 Codex、Claude、Cursor、Antigravity 里随手可及——建库、注册、捕获、查询、维护，全部用对话完成。
+  - title: 确定性检索
+    details: 质量可测量、代码保证的检索引擎，回答带引用——没有可信匹配时诚实弃答，而不是排列噪音。质量由 CI 守护，不靠运气。
+  - title: capture → cook → ask 循环
+    details: "\"记住这个\"落进 inbox；/cook 把它编译成带引用的知识页面；提问得到带来源的回答。"
+  - title: 知识包
+    details: 把评审过的知识切片作为便携 bundle 分享——发布到 GitHub Releases、从 URL 安装、订阅更新。
+  - title: 想要时就有的评审 UI
+    details: Obsidian 插件在同一工作区上提供行动优先的 dashboard、Knowledge health、Freshness Review 和知识包分享流程。
+  - title: semver 之下冻结
+    details: 工作区格式、CLI 表面和 MCP 契约已 1.0 冻结并由契约测试钉住——你搭在上面的东西不会塌。
 ---
 
 <section class="knowlery-panel">
 
 ## Knowlery 是什么
 
-Knowlery 是一个 Obsidian 插件，适合那些希望在 vault 上叠一层 review 导向工作面的人。
+Knowlery 是为 agent 时代构建的知识库方案。你的自由笔记仍然属于你；agent
+获得一个结构化、可检索的层——`entities/`、`concepts/`、`comparisons/`、
+`queries/`——由评审管线从你的材料编译而来，外加让它们成为好协作者的技能
+与行为准则。
 
-你的自由笔记仍然属于你。Knowlery 给 agent 一个结构化工作区：`entities/`、`concepts/`、`comparisons/`、`queries/`、`KNOWLEDGE.md`、`SCHEMA.md`、`INDEX.base`、skills、rules、activity receipts、review requests 和平台配置。
+一切都是普通文件夹里的纯 markdown：通过 MCP 和 CLI 服务给 agent，想要最
+丰富的视图时用 Obsidian 打开。
 
 </section>
 
 <section class="knowlery-grid">
   <div class="knowlery-card">
-    <h3>面向 Obsidian 用户</h3>
-    <p>初始化 vault，保持结构可见，并通过 dashboard review 笔记、活跃线程、freshness suggestions 和 weekly 输出。</p>
+    <h3>从你的 agent 开始</h3>
+    <p>一段 MCP 配置之后，一切都是对话："帮我建个知识库"、"记住这个"、"我知道些什么关于……"。不需要 Obsidian。</p>
   </div>
   <div class="knowlery-card">
-    <h3>面向 agent 工作流</h3>
-    <p>为 Claude Code 或 OpenCode 提供持久说明、activity receipts 和稳定的知识地图，而不是每次会话都重新堆上下文。</p>
+    <h3>从 Obsidian 开始</h3>
+    <p>安装插件、跑设置向导、可视化地评审你的知识——同一个工作区自动对所有 agent 按名字可用。</p>
   </div>
 </section>
 
 ## 从哪里开始
 
-- 第一次使用 Knowlery？从 [快速开始](/zh/getting-started/) 开始。
+- 第一次使用 Knowlery？从 [快速开始](/zh/getting-started/) 开始——它分叉到两条路。
+- 从 agent 生态过来？先[接入你的 Agent](/zh/guides/connect-your-agent)，然后[用对话使用知识库](/zh/guides/talk-to-your-kb)。
 - 想先理解模型？阅读 [核心概念](/zh/concepts/)。
 - 遇到问题？打开 [故障排查](/zh/troubleshooting/)。
-- 需要精确文件路径和行为？查看 [参考](/zh/reference/)。
+- 需要精确文件、命令和承诺？查看 [参考](/zh/reference/) 与 [稳定性契约](/zh/reference/stability)。
