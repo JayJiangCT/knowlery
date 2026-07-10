@@ -1,6 +1,6 @@
 # F1 (1.2.0) — The Orientation Map: Index.md as a View
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-10 (two review rounds: privacy boundary, injected purity, input provenance, content-hash zero-writes, total grouping rule) — implementation in progress
 - **Target release:** 1.2.0
 - **Branch:** `cursor/12-f1-orientation-map-92eb`
 - **Depends on:** 1.2 plan principles 1–4 (view-not-file, mutability rule,
@@ -96,8 +96,7 @@ interface OrientationMap {
   Every agent-tier page therefore lands in exactly one group regardless of a
   missing, invalid, or directory-inconsistent frontmatter `type` — nothing
   is excluded, `counts.compiled` equals the sum of the groups, and the
-  frontmatter `type` is not consulted for grouping (it may still render as
-  page data where present).
+  frontmatter `type` is not consulted for grouping.
 - Groups sorted canonically (entities, concepts, comparisons, queries);
   pages sorted by path within a group. `domain` and `updated` come from
   frontmatter when present.
