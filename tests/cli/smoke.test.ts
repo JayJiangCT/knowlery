@@ -66,6 +66,11 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       const embeddedStale = await run('node', [join(vaultDir, '.knowlery', 'bin', 'query.mjs'), '--stale']);
       expect(cliStale.stdout.trim()).toBe(embeddedStale.stdout.trim());
 
+      // Orientation map (spec 1.2 f1, §5.8): live view on the built artifact.
+      const indexOut = await run('node', [cliPath, 'index', '--dir', vaultDir]);
+      expect(indexOut.stdout).toContain('orientation map');
+      expect(indexOut.stdout).toContain('concepts/widget-design.md');
+
       // EPIPE (spec 0.8 f3, §4.4): the agent-pipes-to-head shape. pipefail makes the
       // pipeline report node's exit status, not head's — without it this assertion
       // would be falsely green while node dies of EPIPE.
@@ -231,6 +236,10 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
         const mcpQuery = await mcpClient.callTool({ name: 'query', arguments: { kb: 'smoke', question: 'widget design' } });
         const mcpData = mcpQuery.structuredContent as { candidates: Array<{ path: string }> };
         expect(mcpData.candidates[0].path).toBe('concepts/widget-design.md');
+
+        // The index resource over real stdio (spec 1.2 f1, §5.8).
+        const mcpIndex = await mcpClient.readResource({ uri: 'knowlery://smoke/index' });
+        expect((mcpIndex.contents[0] as { text: string }).text).toContain('orientation map');
 
         // The write path on the built artifact (spec 1.0 f3, §5.8):
         // init_kb → capture → query finds the capture → sync.

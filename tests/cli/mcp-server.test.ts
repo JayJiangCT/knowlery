@@ -410,7 +410,10 @@ describe('mcp resources (spec 1.0 f2, §5.3)', () => {
     client = await connect();
 
     const resources = await client.listResources();
-    expect(resources.resources.map((resource) => resource.uri)).toEqual(['knowlery://work/KNOWLEDGE.md']);
+    // Two bounded entries per KB since 1.2 f1 — the sanctioned count update (spec 1.2 f1, §4.4).
+    expect(resources.resources.map((resource) => resource.uri)).toEqual(
+      ['knowlery://work/KNOWLEDGE.md', 'knowlery://work/index'],
+    );
 
     const templates = await client.listResourceTemplates();
     expect(templates.resourceTemplates).toHaveLength(1);
