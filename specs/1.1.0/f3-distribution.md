@@ -1,6 +1,6 @@
 # F3 (1.1.0) — Plugin Distribution: From Checkout to One Click
 
-- **Status:** Accepted 2026-07-09 (three findings at spec review: Codex catalog contract made executable, Cursor deliverable honest, zip root shape fixed; P3 wording) — implementation in progress
+- **Status:** Implementation accepted 2026-07-10 (spec review: Codex contract executable, Cursor honest, zip root shape; implementation acceptance: Codex CLI real marketplace-add + install verified, Claude isolated install verified, zip byte-identical, catalog --strict fix) — **release gates open**: Cursor submission + manual re-verify, submission links recorded, post-merge no-checkout Claude install, post-tag zip download + published-npx recheck (9 tools / 10 prompts). Tag after #51 revisit.
 - **Target release:** 1.1.0
 - **Branch:** `cursor/11-f3-distribution-92eb`
 - **Depends on:** F2 (the artifact being distributed), 1.1 plan (catalog-file
