@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.1] — 2026-07-10
+
+### Fixes
+
+- **The `vault-conventions` skill sheds its legacy BYOAO branding.** Its
+  frontmatter `name` now matches the directory name (`vault-conventions`), so
+  plugin skill lists no longer show a confusing "Byoao Conventions" entry, and
+  its title becomes "Vault Document Conventions". The description keeps a
+  deliberate "(formerly BYOAO)" pointer so agents in legacy BYOAO vaults still
+  activate the skill. Existing vaults pick up the new content in place on the
+  next sync — the directory name, `skills-lock.json` key, and MCP prompt name
+  are unchanged, and forked or custom copies are never touched. A new
+  regression test pins every bundled skill's frontmatter name to its directory
+  name.
+
 ## [1.2.0] — 2026-07-10
 
 Theme: the orientation map — Karpathy's Index.md insight delivered as a live
