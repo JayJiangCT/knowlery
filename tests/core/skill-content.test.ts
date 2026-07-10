@@ -205,6 +205,11 @@ describe('the graph half of the wiki is taught (spec 1.2 f1 amendment)', () => {
     expect(mcp.replace(/\s+/g, ' ')).toContain('raw source content stays out of bounds over MCP');
   });
 
+  it('aggregate counts are quoted from map.counts, never recomputed (acceptance follow-up)', () => {
+    expect(skill('ask').replace(/\s+/g, ' ')).toContain('quote `counts` from the map verbatim');
+    expect(skill('knowlery-mcp').replace(/\s+/g, ' ')).toContain('quote aggregate numbers directly from `counts`');
+  });
+
   it('organize and ideas start their vault-mapping from the orientation map', () => {
     expect(skill('organize')).toContain('knowlery index');
     expect(skill('ideas')).toContain('knowlery index');

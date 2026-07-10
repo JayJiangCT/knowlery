@@ -50,6 +50,11 @@ resource, enter a page, walk one or two hops — the wiki is a graph, not a
 pile of files. A page's `sources:` are visible as query evidence, but raw
 source content stays out of bounds over MCP until /cook compiles it.
 
+When summarizing the map, **quote aggregate numbers directly from
+`counts`** (compiled / bundles / uncooked / stale) — never recompute a
+total from the group sections you happened to read; partial re-addition
+misreports the vault.
+
 ## Federation timing
 
 Use a named KB when the user names one or context makes it obvious. Use

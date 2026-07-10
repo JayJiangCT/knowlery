@@ -1,6 +1,6 @@
 # F1 (1.2.0) — The Orientation Map: Index.md as a View
 
-- **Status:** Accepted 2026-07-10 (two review rounds: privacy boundary, injected purity, input provenance, content-hash zero-writes, total grouping rule) — implementation in progress
+- **Status:** Done — maintainer acceptance passed 2026-07-10 (spec review: boundary/purity/provenance/hashes/grouping; implementation review: generated-artifact drift + uncooked-equals-stale-semantics; LLM-wiki amendment: counts.stale + graph teaching; §7: real-vault map 160 compiled / 706 uncooked / 11 stale, Claude Code browse-first session, zero writes across 33,577 hashed files. Acceptance follow-up folded in: aggregate counts quoted verbatim from map.counts, never recomputed — the 99-vs-160 model summarization error, closed at the skill layer)
 - **Target release:** 1.2.0
 - **Branch:** `cursor/12-f1-orientation-map-92eb`
 - **Depends on:** 1.2 plan principles 1–4 (view-not-file, mutability rule,

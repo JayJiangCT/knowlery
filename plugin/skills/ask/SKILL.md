@@ -30,6 +30,9 @@ requests, not retrieval questions — start from the orientation map
 (the MCP `knowlery://<kb>/index` resource, or `knowlery index`) to see
 what exists, then run targeted queries on the threads that matter. Forcing
 a single query on an overview question returns a keyhole, not a landscape.
+When restating totals, **quote `counts` from the map verbatim** — never
+recompute or infer aggregates from the listed sections (partial re-addition
+is how a 160-page vault gets reported as 99).
 
 ### Step 2: Locate Relevant Pages
 
