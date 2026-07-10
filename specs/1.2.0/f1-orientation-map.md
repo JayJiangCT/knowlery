@@ -77,8 +77,8 @@ must suffice to produce the output):
 interface OrientationMap {
   kbName?: string;            // injected; from KNOWLEDGE.md's title when the caller provides it
   generatedAt: string;        // injected honesty stamp: this is a view, dated
-  compiled: Array<{           // one group per type present, in canonical order
-    type: 'entity' | 'concept' | 'comparison' | 'query';
+  compiled: Array<{           // one group per compiled directory present, canonical order
+    group: 'entities' | 'concepts' | 'comparisons' | 'queries';
     pages: Array<{ path: string; title: string; description?: string; domain?: string; updated?: string }>;
   }>;
   bundles: Array<{ id: string; title: string; version: string; entrypoint: string }>;
@@ -90,11 +90,20 @@ interface OrientationMap {
   same boundary as MCP resource reads. `uncooked` appears as a *count* (an
   honest "there is more, not yet compiled" signal), never as a listing —
   free-form notes stay yours.
+- **Grouping is by directory, not frontmatter** (maintainer P2 at spec
+  review — the rule must be total): the four groups map 1:1 onto the four
+  compiled directories, which is also how the agent tier itself is decided.
+  Every agent-tier page therefore lands in exactly one group regardless of a
+  missing, invalid, or directory-inconsistent frontmatter `type` — nothing
+  is excluded, `counts.compiled` equals the sum of the groups, and the
+  frontmatter `type` is not consulted for grouping (it may still render as
+  page data where present).
 - Groups sorted canonically (entities, concepts, comparisons, queries);
   pages sorted by path within a group. `domain` and `updated` come from
   frontmatter when present.
-- Bundle entries come from `bundles.json`; deeper navigation is delegated to
-  each bundle's own `index.md` (the mutability rule, applied).
+- Bundle entries come from the installed-bundle registry joined with each
+  bundle's own manifest (§ provenance above); deeper navigation is delegated
+  to each bundle's own `index.md` (the mutability rule, applied).
 
 ### 4.2 CLI rendering
 
@@ -135,7 +144,7 @@ change; the count assertions in resource tests update, sanctioned here).
 
 ## 5. Safety properties, restated as tests
 
-1. **Purity**: `buildOrientationMap` is pure (snapshot in, map out);
+1. **Purity**: `buildOrientationMap` is pure (inputs in, map out);
    `core/query/orientation.ts` joins the purity guard.
 2. **View semantics**: calling the CLI/resource twice with a page added
    between calls reflects the addition with **no state written anywhere** —
