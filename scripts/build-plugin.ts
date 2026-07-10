@@ -44,6 +44,7 @@ export function buildMarketplaceCatalog(outPath: string): void {
   const version = readPackageVersion();
   const catalog = {
     name: 'knowlery',
+    description: DESCRIPTION,
     owner: { name: 'Jay Jiang', url: 'https://github.com/JayJiangCT' },
     plugins: [
       {

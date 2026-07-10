@@ -1,5 +1,6 @@
 {
   "name": "knowlery",
+  "description": "Knowlery: the knowledge base your agents can live in — query, capture, and maintain plain-markdown knowledge bases by conversation.",
   "owner": {
     "name": "Jay Jiang",
     "url": "https://github.com/JayJiangCT"
