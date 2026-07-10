@@ -70,6 +70,7 @@ describe('the pure core (§5.1)', () => {
     expect(groups).toEqual({ entities: 1, concepts: 1 });
     expect(first.counts.compiled).toBe(2); // equals the sum of the groups
     expect(first.counts.uncooked).toBe(2); // Projects/raw.md + Daily note — counted, never listed
+    expect(first.counts.stale).toBe(0);    // nothing cites a changed source yet
     expect(JSON.stringify(first.compiled)).not.toContain('Projects/');
 
     const concept = first.compiled.find((group) => group.group === 'concepts')!.pages[0];
@@ -88,6 +89,15 @@ describe('the pure core (§5.1)', () => {
       snapshot: scanVault(dir), bundles: [], generatedAt: '2026-07-10T00:00:00.000Z',
     });
     expect(map.counts.uncooked).toBe(1); // only the Daily note remains uncooked
+
+    // Stale rides the same staleness computation: touch the cited source
+    // after the compiled page was written — the map reports the staleness.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await writeFile(join(dir, 'Projects', 'raw.md'), '---\ntitle: Raw\n---\n\nUser note, edited later.\n');
+    const after = buildOrientationMap({
+      snapshot: scanVault(dir), bundles: [], generatedAt: '2026-07-10T00:00:00.000Z',
+    });
+    expect(after.counts.stale).toBe(1);
   });
 });
 

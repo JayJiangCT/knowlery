@@ -82,7 +82,7 @@ interface OrientationMap {
     pages: Array<{ path: string; title: string; description?: string; domain?: string; updated?: string }>;
   }>;
   bundles: Array<{ id: string; title: string; version: string; entrypoint: string }>;
-  counts: { compiled: number; bundles: number; uncooked: number };
+  counts: { compiled: number; bundles: number; uncooked: number; stale: number };
 }
 ```
 
@@ -133,6 +133,17 @@ interface OrientationMap {
   moves.
 - The `knowlery-mcp` skill's tool-selection map gains one row: "get the lay
   of the land → read the `index` resource — browse first, query second."
+- **Amendment at implementation (maintainer decision, the LLM-wiki
+  re-examination):** (a) `counts` gains `stale` — the maintenance signal
+  ("how current is the map you are reading"), riding the same
+  `computeStaleness` call; (b) the *graph half* of the wiki gets taught —
+  `knowlery-mcp` and `ask` gain graph-navigation guidance (follow
+  `[[wikilinks]]`; resolve link text via `query` — title/alias matching is
+  the resolver — then read the resource at the returned path), `ask` gains
+  an overview-question branch (browsing requests start from the map, not a
+  single query), and the vault-mapping steps of `/organize` and `/ideas`
+  start from `knowlery index`. Editorial-index directions (hubs, curated start-here,
+  per-page links) are recorded in the plan's deferred ledger, not built.
 
 ### 4.4 Contract impact
 

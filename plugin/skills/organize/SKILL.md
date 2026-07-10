@@ -21,7 +21,11 @@ You are a librarian. Your job is to ensure every note lives in the right place b
 
 ### Step 1: Scan Current Structure
 
+Start from the orientation map — the compiled layer, bundles, and
+stale/uncooked counts, precomputed:
+
 ```bash
+knowlery index    # or read the MCP knowlery://<kb>/index resource
 obsidian list
 ```
 

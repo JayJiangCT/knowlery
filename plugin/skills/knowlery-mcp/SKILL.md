@@ -40,6 +40,16 @@ Abstentions from `query` accumulating around a topic are the natural signal
 to suggest a cook session — the knowledge exists in captures but hasn't been
 compiled yet.
 
+## The wiki is a graph — navigate it
+
+Compiled pages interlink with `[[wikilinks]]`. After reading a page as a
+resource, follow the links that bear on the task: resolve a link's text with
+the `query` tool (title/alias matching is the resolver — it returns the
+path), then read `knowlery://<kb>/<path>`. Browse from the `index`
+resource, enter a page, walk one or two hops — the wiki is a graph, not a
+pile of files. A page's `sources:` are visible as query evidence, but raw
+source content stays out of bounds over MCP until /cook compiles it.
+
 ## Federation timing
 
 Use a named KB when the user names one or context makes it obvious. Use

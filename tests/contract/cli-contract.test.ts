@@ -114,7 +114,7 @@ describe('--json key sets are 1.0-frozen', () => {
     await runIndexCommand(root, { json: true, log: (l) => lines.push(l) });
     const map = jsonOf(lines);
     expect(Object.keys(map).sort()).toEqual(['bundles', 'compiled', 'counts', 'generatedAt', 'kbName']);
-    expect(Object.keys(map.counts as object).sort()).toEqual(['bundles', 'compiled', 'uncooked']);
+    expect(Object.keys(map.counts as object).sort()).toEqual(['bundles', 'compiled', 'stale', 'uncooked']);
   });
 
   it('stale / health / kb list / bundle list', async () => {

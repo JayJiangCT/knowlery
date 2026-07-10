@@ -35,4 +35,10 @@ stability contract — this is why it is not 1.1.1).
   install flow, manifest schema, `mcp_config.json` shape, one clean install.
 - Community-marketplace listings from 1.1 F3 land on their own timelines;
   submission links tracked on PR #52.
+- **Editorial index (deferred, recorded at the LLM-wiki re-examination)**:
+  the computed map is a mechanical inventory; Karpathy's Index.md also
+  carries editorial judgment. Candidate directions for future specs — hub
+  signals (most-linked pages), a curated "start here" section (sourced from
+  KNOWLEDGE.md), per-page `links` in the map. Each wants its own spec; none
+  blocks v1.
 - Backlog otherwise carried from 1.1 unchanged.

@@ -37,7 +37,7 @@ export interface OrientationMap {
   generatedAt: string;
   compiled: OrientationGroup[];
   bundles: OrientationBundleEntry[];
-  counts: { compiled: number; bundles: number; uncooked: number };
+  counts: { compiled: number; bundles: number; uncooked: number; stale: number };
 }
 
 export interface OrientationInputs {
@@ -70,15 +70,20 @@ export function buildOrientationMap(inputs: OrientationInputs): OrientationMap {
   // Same semantics as `knowlery stale` (maintainer P1 at implementation
   // review): a raw note already cited by a compiled page is folded in, not
   // uncooked — the two surfaces must report the same number. computeStaleness
-  // is pure over the snapshot, so purity is preserved.
-  const uncooked = computeStaleness(snapshot).uncookedNotes.length;
+  // is pure over the snapshot, so purity is preserved. `stale` rides the same
+  // call (the LLM-wiki maintenance signal: how current is the map you are
+  // reading) — the wiki is *kept* current, and orientation says how much
+  // keeping is due.
+  const staleness = computeStaleness(snapshot);
+  const uncooked = staleness.uncookedNotes.length;
+  const stale = staleness.stalePages.length;
 
   return {
     ...(kbName !== undefined ? { kbName } : {}),
     generatedAt,
     compiled,
     bundles: [...bundles].sort((a, b) => a.id.localeCompare(b.id)),
-    counts: { compiled: compiledCount, bundles: bundles.length, uncooked },
+    counts: { compiled: compiledCount, bundles: bundles.length, uncooked, stale },
   };
 }
 
@@ -114,6 +119,8 @@ export function renderOrientationMap(map: OrientationMap, options: { markdown?: 
     lines.push('');
   }
 
-  lines.push(`${map.counts.uncooked} user note(s) not yet compiled — \`knowlery stale\` lists them.`);
+  lines.push(
+    `${map.counts.stale} compiled page(s) stale, ${map.counts.uncooked} user note(s) not yet compiled — \`knowlery stale\` lists both.`,
+  );
   return `${lines.join('\n')}\n`;
 }

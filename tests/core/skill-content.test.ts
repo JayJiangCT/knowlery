@@ -189,6 +189,28 @@ describe('transport-aware revisions (spec 1.1 f2, §4.4)', () => {
   });
 });
 
+describe('the graph half of the wiki is taught (spec 1.2 f1 amendment)', () => {
+  it('ask: overview questions start from the map; reading follows wikilinks', () => {
+    const ask = skill('ask');
+    expect(ask).toContain('Overview questions take a different door');
+    expect(ask).toContain('orientation map');
+    expect(ask).toContain('The wiki is a graph — follow it');
+    expect(ask.replace(/\s+/g, ' ')).toContain('title/alias matching is the resolver');
+  });
+
+  it('knowlery-mcp: graph navigation with the MCP-specific source boundary', () => {
+    const mcp = skill('knowlery-mcp');
+    expect(mcp).toContain('The wiki is a graph — navigate it');
+    expect(mcp.replace(/\s+/g, ' ')).toContain('a graph, not a pile of files');
+    expect(mcp.replace(/\s+/g, ' ')).toContain('raw source content stays out of bounds over MCP');
+  });
+
+  it('organize and ideas start their vault-mapping from the orientation map', () => {
+    expect(skill('organize')).toContain('knowlery index');
+    expect(skill('ideas')).toContain('knowlery index');
+  });
+});
+
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
   it('names the deterministic tools and the dangling-sources category', () => {
     const audit = skill('audit');
