@@ -1669,11 +1669,11 @@ formulas:
     emoji: '\u{1F4D0}',
     description: 'Vault-specific note-writing conventions',
     content: `---
-name: byoao-conventions
-description: Use when creating or modifying notes in a BYOAO-structured vault. Enforces frontmatter requirements, wikilinks, and naming conventions.
+name: vault-conventions
+description: Use when creating or modifying notes in a Knowlery-structured vault (formerly BYOAO). Enforces frontmatter requirements, wikilinks, and naming conventions.
 ---
 
-# BYOAO Document Conventions
+# Vault Document Conventions
 
 You MUST follow these conventions when creating or modifying any note in this vault.
 
