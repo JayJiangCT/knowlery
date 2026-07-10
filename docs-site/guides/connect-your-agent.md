@@ -30,9 +30,16 @@ either:
 // A. Zero-install (recommended): npx fetches the package on first run
 { "command": "npx", "args": ["-y", "knowlery@^1", "mcp"] }
 
-// B. Global install: npm i -g knowlery, then
+// B. Installed CLI: one line, PATH handled with your consent
+//    curl -fsSL https://jayjiangct.github.io/knowlery/install.sh | sh
 { "command": "knowlery", "args": ["mcp"] }
 ```
+
+The installer puts the CLI in an isolated prefix (`~/.knowlery/cli`, no
+sudo, no global npm), links it into `~/.local/bin`, and — only if that
+directory isn't on your PATH — shows the exact line and **asks** before
+touching any shell config. Re-running it upgrades in place.
+(`npm i -g knowlery` works too, with the usual global-prefix PATH caveats.)
 
 One caveat worth knowing for **GUI clients** (Claude Desktop, IDEs): they
 often don't inherit your shell's PATH, so `npx`/`knowlery` may not resolve

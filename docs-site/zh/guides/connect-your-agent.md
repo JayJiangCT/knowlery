@@ -27,9 +27,15 @@ Knowlery **agent 插件**把下面的配置收敛成一次安装动作——MCP 
 // A. 零安装（推荐）：npx 首次运行时自动拉取
 { "command": "npx", "args": ["-y", "knowlery@^1", "mcp"] }
 
-// B. 全局安装：npm i -g knowlery 之后
+// B. 已安装的 CLI：一行命令，PATH 在征询后处理
+//    curl -fsSL https://jayjiangct.github.io/knowlery/install.sh | sh
 { "command": "knowlery", "args": ["mcp"] }
 ```
+
+安装脚本把 CLI 装进隔离前缀（`~/.knowlery/cli`，无 sudo、不碰全局 npm），
+链接到 `~/.local/bin`，并且——仅当该目录不在你的 PATH 上时——展示确切的
+配置行并**征询同意**后才碰任何 shell 配置。重复运行即原地升级。
+（`npm i -g knowlery` 也可以，但有常见的全局前缀 PATH 问题。）
 
 **GUI 客户端**（Claude Desktop、各 IDE）有个值得知道的坑：它们通常不继承
 你 shell 的 PATH，如果 node 是 nvm/homebrew 装的，`npx`/`knowlery` 可能
