@@ -31,6 +31,9 @@ drop raw notes anywhere in the folder and let an agent `/cook` them.
 ## The daily loop, headless
 
 ```bash
+# The lay of the land — a live orientation map, computed on read
+knowlery index --kb research
+
 # What's waiting?
 knowlery stale --kb research
 

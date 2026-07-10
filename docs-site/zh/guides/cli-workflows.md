@@ -30,6 +30,9 @@ knowlery health --kb research
 ## 每日循环，无头模式
 
 ```bash
+# 全貌一览——实时计算的定位地图
+knowlery index --kb research
+
 # 有什么在等着？
 knowlery stale --kb research
 
