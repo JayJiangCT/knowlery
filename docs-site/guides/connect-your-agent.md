@@ -49,6 +49,7 @@ path to `npx` (`which npx`).
 | Claude Desktop | `claude_desktop_config.json` | shell-less: `register_kb` is how existing KBs join |
 | Codex CLI | `~/.codex/config.toml` | config shared with the Codex app |
 | Codex (app / IDE extension) | same `config.toml`, or Plugins | shell-having: CLI also works |
+| OpenCode | `~/.config/opencode/opencode.json` | first-class Knowlery platform — see the config-ownership note |
 | Cursor | `~/.cursor/mcp.json` or deeplink | project-level `.cursor/mcp.json` also supported |
 | Antigravity Desktop / CLI / IDE | `~/.gemini/config/mcp_config.json` | one config serves all three |
 
@@ -104,6 +105,42 @@ the MCP tools — the `knowlery-cli` skill teaches the command surface.
 The app shares `~/.codex/config.toml` with the CLI — the block above serves
 both. Once the Knowlery plugin ships (1.1), the `/plugins` browser becomes
 the one-click path; skills will be invocable as `@knowlery`.
+
+## OpenCode
+
+OpenCode's config shape differs from the Claude family — the top-level key
+is `mcp` (not `mcpServers`), each entry declares `"type": "local"`, and
+`command` is a **single array** carrying the binary and its arguments
+together (there is no separate `args` field):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "knowlery": {
+      "type": "local",
+      "command": ["npx", "-y", "knowlery@^1", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+Add this to the **global** config at `~/.config/opencode/opencode.json`
+(or run the interactive `opencode mcp add`). Verify with `opencode mcp list`.
+
+::: warning Put the MCP block in the global config, not the vault's
+OpenCode is a first-class Knowlery platform: `knowlery init --platform
+opencode` generates the workspace's own `opencode.json` (plus rules under
+`.agents/rules/`), and Knowlery **regenerates that file** on "Regenerate
+agent config" and platform switches. An MCP block added to the vault-level
+`opencode.json` would be overwritten — the global config is the durable
+home, and it serves every project at once.
+:::
+
+OpenCode agents have a shell, so the `knowlery` CLI works alongside the MCP
+tools; the vault's `.agents/rules/` and skills (installed by
+`init`/`sync`) already teach the retrieval conduct.
 
 ## Cursor
 

@@ -1,7 +1,7 @@
 # Agent 与 MCP
 
-任何支持 MCP 的 agent——Claude Desktop、Claude Code、Codex、Cursor、
-Antigravity 套件——都可以直接访问你的知识库。`knowlery mcp` 通过 stdio
+任何支持 MCP 的 agent——Claude Desktop、Claude Code、Codex、OpenCode、
+Cursor、Antigravity 套件——都可以直接访问你的知识库。`knowlery mcp` 通过 stdio
 运行一个 MCP 服务器：由客户端启动、自动发现工具，你的知识库从此常驻于
 每一次对话，无需逐次配置。
 
@@ -175,7 +175,7 @@ ssh -L 8787:127.0.0.1:8787 my-server             # 普通 SSH
 
 | Agent 类型 | 1.0 的答案 |
 | --- | --- |
-| 本地 MCP 客户端（Claude Desktop/Code、Codex、Cursor、Antigravity） | `knowlery mcp` stdio——完整支持，全部九个工具 |
+| 本地 MCP 客户端（Claude Desktop/Code、Codex、OpenCode、Cursor、Antigravity） | `knowlery mcp` stdio——完整支持，全部九个工具 |
 | 有 shell 的云端 agent（Cursor Cloud Agent、Codex 类） | 已被服务：CLI + 知识包分发 |
 | 纯网页云端 agent（ChatGPT connectors、Gemini web、Claude web） | 1.0 范围之外——有决心的用户可用自托管远程 + 隧道；零配置的答案是托管平台，那是记录在案的方向，不是 1.0 的交付物 |
 
