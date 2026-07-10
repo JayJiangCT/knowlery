@@ -1,5 +1,6 @@
 import type { VaultSnapshot } from './scan';
 import { AGENT_DIRS } from './scan';
+import { computeStaleness } from './staleness';
 
 /**
  * The orientation map (spec 1.2 f1): Karpathy's Index.md insight, done as a
@@ -66,9 +67,11 @@ export function buildOrientationMap(inputs: OrientationInputs): OrientationMap {
     if (pages.length > 0) compiled.push({ group: dir, pages });
   }
 
-  const uncooked = snapshot.pages.filter(
-    (page) => page.tier === 'user' && !page.path.startsWith('Library/'),
-  ).length;
+  // Same semantics as `knowlery stale` (maintainer P1 at implementation
+  // review): a raw note already cited by a compiled page is folded in, not
+  // uncooked — the two surfaces must report the same number. computeStaleness
+  // is pure over the snapshot, so purity is preserved.
+  const uncooked = computeStaleness(snapshot).uncookedNotes.length;
 
   return {
     ...(kbName !== undefined ? { kbName } : {}),

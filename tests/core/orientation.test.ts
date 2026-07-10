@@ -78,6 +78,17 @@ describe('the pure core (§5.1)', () => {
       description: 'Queues protect ingest', domain: 'infra', updated: '2026-06-01',
     });
   });
+
+  it('uncooked matches stale semantics: a cited raw note is folded in, not uncooked (§5 — implementation-review P1)', async () => {
+    const dir = await makeKb('work');
+    // Cite Projects/raw.md from a compiled page — stale stops counting it.
+    await writeFile(join(dir, 'concepts', 'derived.md'),
+      '---\ntitle: Derived\ntype: concept\ncreated: 2026-01-02\nsources:\n  - Projects/raw.md\n---\n\nCompiled from raw.\n');
+    const map = buildOrientationMap({
+      snapshot: scanVault(dir), bundles: [], generatedAt: '2026-07-10T00:00:00.000Z',
+    });
+    expect(map.counts.uncooked).toBe(1); // only the Daily note remains uncooked
+  });
 });
 
 describe('view semantics and zero writes (§5.2)', () => {
