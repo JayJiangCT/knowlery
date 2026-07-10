@@ -47,6 +47,9 @@ Knowledge health、Freshness Review 和知识包分享 UI——完整演练见
 这条路建的 vault 也自动对 agent 可用：插件会把它注册进 KB 注册表，MCP 工具
 和 CLI 在任何地方都能按名字访问它。
 
+想在终端里直接用 `knowlery` 命令？分系统安装教程（macOS 一行脚本、
+Windows npm/winget、WSL）：[安装 CLI](./install-cli)。
+
 ## 无论哪条路，接下来读
 
 - [核心概念](../concepts/)——双层模型（你的笔记 vs 编译知识）、检索、技能；

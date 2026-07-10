@@ -53,6 +53,10 @@ A vault set up this way is automatically available to your agents too: the
 plugin registers it in the KB registry, so the MCP tools and CLI address it
 by name from anywhere.
 
+Prefer the bare `knowlery` command in your terminal? Per-OS install
+tutorials (macOS one-liner, Windows npm/winget, WSL):
+[Install the CLI](./install-cli).
+
 ## Either way, read next
 
 - [Core Concepts](../concepts/) — the two-layer model (your notes vs

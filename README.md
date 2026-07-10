@@ -79,7 +79,13 @@ Knowlery operationalizes that maintenance story: the layout (`KNOWLEDGE.md`, `SC
 
 ## The CLI and MCP server
 
-`npm i -g knowlery` (or zero-install via `npx -y knowlery@^1 <command>`):
+One-line install (isolated prefix, PATH handled with consent — never silently):
+
+```bash
+curl -fsSL https://jayjiangct.github.io/knowlery/install.sh | sh
+```
+
+(Or `npm i -g knowlery`, or zero-install via `npx -y knowlery@^1 <command>`.)
 
 ```bash
 knowlery init     # scaffold a workspace (works brownfield — never touches your notes)
