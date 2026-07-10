@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.2.0] — 2026-07-10
+
+Theme: the orientation map — Karpathy's Index.md insight delivered as a live
+view rather than another file that can drift. Agents can now browse what a
+knowledge base contains before they search it. Developed spec-first; the
+accepted spec lives in `specs/1.2.0/`.
+
+### New features
+
+- **A live orientation map.** `knowlery index --kb <name> [--json]` and the
+  virtual MCP resource `knowlery://<kb>/index` render the same fresh vault
+  snapshot: compiled pages grouped by directory, installed bundles, and
+  `compiled`, `bundles`, `uncooked`, and `stale` counts. The map is read-only
+  and never creates or updates an `index.md`; `INDEX.base` remains the Obsidian
+  rendering.
+- **Browse-first agent navigation.** Overview questions such as "give me the
+  lay of the land" start from the map rather than forcing a narrow retrieval
+  query. The `ask` and `knowlery-mcp` skills teach agents to follow
+  `[[wikilinks]]` through title/alias resolution; `organize` and `ideas` begin
+  vault mapping from the same live index. Aggregate counts are quoted directly
+  from `map.counts`, never recomputed from rendered sections.
+
+### Documentation
+
+- Added OpenCode to the agent integration guides in English and Chinese,
+  including its `mcp` / `type: "local"` / command-array schema, interactive
+  `opencode mcp add` and `list` commands, and the warning to keep MCP config in
+  `~/.config/opencode/opencode.json` because Knowlery owns and regenerates the
+  vault-level `opencode.json`.
+
 ## [1.1.0] — 2026-07-09
 
 Theme: knowledge in one install — Knowlery becomes an agent plugin. Installing
