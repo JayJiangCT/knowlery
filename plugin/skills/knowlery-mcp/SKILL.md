@@ -19,6 +19,7 @@ loops, and the conduct that keeps you trustworthy.
 | Before proposing or starting a cook session | `stale` | The exact work list: stale pages first, then uncooked notes — scope from this, not from guessing |
 | After bulk changes, or when tools behave oddly | `health` | Integrity check; unhealthy is a finding to relay with a suggested `sync` |
 | "What knowledge bases do I have?" | `list_kbs` | The registry with live states — also your first move in a fresh session if the user references a KB you haven't seen |
+| "Give me the lay of the land" / browsing, not searching | the `knowlery://<kb>/index` resource | A live orientation map of the compiled layer + installed bundles — browse first, query second |
 | "Where did this shared knowledge come from?" | `list_bundles` | Installed bundles with version and provenance |
 | "Set up a knowledge base" (new, empty) | `init_kb` | Creates and registers in one step |
 | "Register my existing KB" | `register_kb` | Address-book entry only — never touches files inside |
