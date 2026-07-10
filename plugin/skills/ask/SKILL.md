@@ -24,6 +24,16 @@ You are a knowledge assistant. Your job is to answer questions by navigating the
 
 Identify the key concepts, entities, and intent in the user's question.
 
+**Overview questions take a different door.** "What do I know about X?",
+"summarize my knowledge", "give me the lay of the land" are browsing
+requests, not retrieval questions — start from the orientation map
+(the MCP `knowlery://<kb>/index` resource, or `knowlery index`) to see
+what exists, then run targeted queries on the threads that matter. Forcing
+a single query on an overview question returns a keyhole, not a landscape.
+When restating totals, **quote `counts` from the map verbatim** — never
+recompute or infer aggregates from the listed sections (partial re-addition
+is how a 160-page vault gets reported as 99).
+
 ### Step 2: Locate Relevant Pages
 
 Run the deterministic retrieval command **once**, using the first transport available:
@@ -87,6 +97,13 @@ Prioritize:
 - Source notes flagged with `evidence via source:` — they carry the original context
 - Pages with `status: reviewed` (over `draft`)
 - Recent pages (higher `updated` date)
+
+**The wiki is a graph — follow it.** Compiled pages interlink with
+`[[wikilinks]]`; a relevant page's links usually lead to the surrounding
+context the answer needs. To follow a link, resolve its text with the
+retrieval command (title/alias matching is the resolver: it returns the
+path), then read that page. One or two hops is normally enough — follow
+links that bear on the question, not the whole neighborhood.
 
 Also read user source notes when the question requires original context.
 

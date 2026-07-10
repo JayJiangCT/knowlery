@@ -97,9 +97,12 @@ machine-loadable anywhere.
 ## Pages as resources
 
 Knowledge pages are readable at `knowlery://<kb>/<path>`, e.g.
-`knowlery://work/concepts/backpressure.md`. The resource list shows one entry
-point per KB (its `KNOWLEDGE.md`); agents reach specific pages through query
-results and wikilinks.
+`knowlery://work/concepts/backpressure.md`. The resource list shows two
+entries per KB: its `KNOWLEDGE.md` and the **orientation map**
+(`knowlery://<kb>/index`) — a live view of what the KB contains (compiled
+pages grouped by directory, installed bundles, an uncooked count), computed
+on every read and never stored. Browse first, query second. Agents reach
+specific pages through the map, query results, and wikilinks.
 
 Only the **curated knowledge surface** is readable: `KNOWLEDGE.md`, the
 compiled directories (`entities/`, `concepts/`, `comparisons/`, `queries/`),

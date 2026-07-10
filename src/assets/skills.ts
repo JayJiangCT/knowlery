@@ -264,6 +264,16 @@ You are a knowledge assistant. Your job is to answer questions by navigating the
 
 Identify the key concepts, entities, and intent in the user's question.
 
+**Overview questions take a different door.** "What do I know about X?",
+"summarize my knowledge", "give me the lay of the land" are browsing
+requests, not retrieval questions — start from the orientation map
+(the MCP \`knowlery://<kb>/index\` resource, or \`knowlery index\`) to see
+what exists, then run targeted queries on the threads that matter. Forcing
+a single query on an overview question returns a keyhole, not a landscape.
+When restating totals, **quote \`counts\` from the map verbatim** — never
+recompute or infer aggregates from the listed sections (partial re-addition
+is how a 160-page vault gets reported as 99).
+
 ### Step 2: Locate Relevant Pages
 
 Run the deterministic retrieval command **once**, using the first transport available:
@@ -327,6 +337,13 @@ Prioritize:
 - Source notes flagged with \`evidence via source:\` — they carry the original context
 - Pages with \`status: reviewed\` (over \`draft\`)
 - Recent pages (higher \`updated\` date)
+
+**The wiki is a graph — follow it.** Compiled pages interlink with
+\`[[wikilinks]]\`; a relevant page's links usually lead to the surrounding
+context the answer needs. To follow a link, resolve its text with the
+retrieval command (title/alias matching is the resolver: it returns the
+path), then read that page. One or two hops is normally enough — follow
+links that bear on the question, not the whole neighborhood.
 
 Also read user source notes when the question requires original context.
 
@@ -568,6 +585,14 @@ If a domain or search returns more than 30 notes, prioritize: (1) most recent 10
 
 ### Step 1: Map the Vault
 
+Start from the orientation map — it is exactly this step, precomputed:
+
+\`\`\`bash
+knowlery index    # compiled pages by directory, domains, bundles, stale/uncooked counts
+\`\`\`
+
+(Or read the MCP \`knowlery://<kb>/index\` resource.) Then deepen with:
+
 \`\`\`bash
 obsidian list
 obsidian properties sort=count counts
@@ -735,7 +760,11 @@ You are a librarian. Your job is to ensure every note lives in the right place b
 
 ### Step 1: Scan Current Structure
 
+Start from the orientation map — the compiled layer, bundles, and
+stale/uncooked counts, precomputed:
+
 \`\`\`bash
+knowlery index    # or read the MCP knowlery://<kb>/index resource
 obsidian list
 \`\`\`
 
@@ -1318,6 +1347,7 @@ loops, and the conduct that keeps you trustworthy.
 | Before proposing or starting a cook session | \`stale\` | The exact work list: stale pages first, then uncooked notes — scope from this, not from guessing |
 | After bulk changes, or when tools behave oddly | \`health\` | Integrity check; unhealthy is a finding to relay with a suggested \`sync\` |
 | "What knowledge bases do I have?" | \`list_kbs\` | The registry with live states — also your first move in a fresh session if the user references a KB you haven't seen |
+| "Give me the lay of the land" / browsing, not searching | the \`knowlery://<kb>/index\` resource | A live orientation map of the compiled layer + installed bundles — browse first, query second |
 | "Where did this shared knowledge come from?" | \`list_bundles\` | Installed bundles with version and provenance |
 | "Set up a knowledge base" (new, empty) | \`init_kb\` | Creates and registers in one step |
 | "Register my existing KB" | \`register_kb\` | Address-book entry only — never touches files inside |
@@ -1337,6 +1367,21 @@ loops, and the conduct that keeps you trustworthy.
 Abstentions from \`query\` accumulating around a topic are the natural signal
 to suggest a cook session — the knowledge exists in captures but hasn't been
 compiled yet.
+
+## The wiki is a graph — navigate it
+
+Compiled pages interlink with \`[[wikilinks]]\`. After reading a page as a
+resource, follow the links that bear on the task: resolve a link's text with
+the \`query\` tool (title/alias matching is the resolver — it returns the
+path), then read \`knowlery://<kb>/<path>\`. Browse from the \`index\`
+resource, enter a page, walk one or two hops — the wiki is a graph, not a
+pile of files. A page's \`sources:\` are visible as query evidence, but raw
+source content stays out of bounds over MCP until /cook compiles it.
+
+When summarizing the map, **quote aggregate numbers directly from
+\`counts\`** (compiled / bundles / uncooked / stale) — never recompute a
+total from the group sections you happened to read; partial re-addition
+misreports the vault.
 
 ## Federation timing
 

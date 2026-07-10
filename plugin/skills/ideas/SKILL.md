@@ -26,6 +26,14 @@ If a domain or search returns more than 30 notes, prioritize: (1) most recent 10
 
 ### Step 1: Map the Vault
 
+Start from the orientation map — it is exactly this step, precomputed:
+
+```bash
+knowlery index    # compiled pages by directory, domains, bundles, stale/uncooked counts
+```
+
+(Or read the MCP `knowlery://<kb>/index` resource.) Then deepen with:
+
 ```bash
 obsidian list
 obsidian properties sort=count counts

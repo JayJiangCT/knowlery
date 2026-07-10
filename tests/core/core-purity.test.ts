@@ -58,6 +58,9 @@ const INVERTED_MODULES = [
   'core/query/tokenize.ts',
   'core/query/format.ts',
   'core/query/staleness.ts',
+  'core/query/orientation.ts',
+  'core/orientation-source.ts',
+  'cli/commands/index-map.ts',
 ];
 
 describe('core purity (spec 0.7 f1, §4.4)', () => {

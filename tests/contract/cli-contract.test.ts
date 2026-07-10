@@ -30,6 +30,7 @@ describe('commands and arities are 1.0-frozen', () => {
       health: 0,
       query: 1,
       stale: 0,
+      index: 0,  // added 1.2.0 — additive, sanctioned (spec 1.2 f1, §4.4)
       bundle: 2,
     });
   });
@@ -105,6 +106,15 @@ describe('--json key sets are 1.0-frozen', () => {
     const federated: string[] = [];
     await runFederatedQueryCommand({ question: 'signal', json: true, log: (l) => federated.push(l) });
     expect(Object.keys(jsonOf(federated)).sort()).toEqual(['candidates', 'question', 'verdictByKb']);
+  });
+
+  it('index (added 1.2.0)', async () => {
+    const { runIndexCommand } = await import('../../src/cli/commands/index-map');
+    const lines: string[] = [];
+    await runIndexCommand(root, { json: true, log: (l) => lines.push(l) });
+    const map = jsonOf(lines);
+    expect(Object.keys(map).sort()).toEqual(['bundles', 'compiled', 'counts', 'generatedAt', 'kbName']);
+    expect(Object.keys(map.counts as object).sort()).toEqual(['bundles', 'compiled', 'stale', 'uncooked']);
   });
 
   it('stale / health / kb list / bundle list', async () => {
