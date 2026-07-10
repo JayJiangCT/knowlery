@@ -99,13 +99,16 @@ if [ "$ASSUME_YES" = "1" ]; then
 fi
 
 # stdin is the pipe under `curl | sh` — prompt via the terminal when there is one.
-if [ -r /dev/tty ]; then
+# -r /dev/tty can be true even with no controlling terminal (setsid, some CI):
+# probe by actually opening it before prompting.
+if ( : < /dev/tty ) 2>/dev/null; then
   printf 'Append it to %s now? [y/N] ' "$RC_FILE"
-  read -r ANSWER < /dev/tty || ANSWER=""
+  read -r ANSWER < /dev/tty 2>/dev/null || ANSWER=""
   case "$ANSWER" in
     y|Y|yes|YES) do_append ;;
     *)           manual_note ;;
   esac
 else
+  say "(no interactive terminal — leaving your shell config untouched)"
   manual_note
 fi

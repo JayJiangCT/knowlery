@@ -1,7 +1,12 @@
 # F1 (1.3.0) — The One-Line Installer
 
-- **Status:** Accepted 2026-07-10 (maintainer requested directly; spec written
-  alongside implementation, review on the PR)
+- **Status:** Done — acceptance passed 2026-07-10, performed by the cloud
+  agent per maintainer delegation (pty-driven interactive rounds: consent-yes
+  appends once and a fresh shell resolves `knowlery`; consent-no modifies
+  nothing, exits 0, install intact; no-tty defaults to untouched — one
+  finding fixed at acceptance: `-r /dev/tty` is true without a controlling
+  terminal, probe by opening; idempotence marker count stays 1; CI
+  installer-smoke green)
 - **Branch:** `cursor/13-f1-installer-92eb`
 - **Depends on:** published `knowlery@^1` on npm; the docs site (hosting)
 
