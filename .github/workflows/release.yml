@@ -96,7 +96,11 @@ jobs:
 
       - name: Publish CLI to npm (OIDC trusted publishing)
         run: |
-          npm install -g npm@latest
+          # Do NOT overlay npm@latest over the runner's bundled npm: the in-place
+          # global install leaves libnpmpublish with missing deps (sigstore) — it
+          # broke the 1.1.0 publish. Node 24's bundled npm is >= 11.5.1, which is
+          # all OIDC trusted publishing requires.
+          npm --version
           VERSION=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json','utf8')).version")
           # Idempotent re-run guard (spec 0.8 f3, §4.2): a workflow re-run on an
           # already-published tag is a green no-op, not a version-conflict failure.
