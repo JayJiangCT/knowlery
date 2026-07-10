@@ -38,5 +38,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:plugin
-      - name: Fail if the committed plugin tree is stale (spec 1.1 f2, §4.2)
-        run: git diff --exit-code plugin/ && test -z "$(git status --porcelain plugin/)"
+      - name: Fail if the committed plugin tree or catalog is stale (spec 1.1 f2 §4.2, f3 §5.1)
+        run: git diff --exit-code plugin/ .claude-plugin/ && test -z "$(git status --porcelain plugin/ .claude-plugin/)"

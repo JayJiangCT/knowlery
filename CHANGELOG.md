@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.1.0] — 2026-07-09
+
+Theme: knowledge in one install — Knowlery becomes an agent plugin. Installing
+it in Claude Code, Codex, or Cursor wires up everything at once: the MCP
+server (provisioned via npx, no separate install), the skills, and the
+conduct. Developed spec-first; the accepted specs live in `specs/1.1.0/`.
+
+### New features
+
+- **`register_kb` MCP tool.** Shell-less clients (Claude Desktop and friends)
+  can bring an *existing* initialized knowledge base into the registry from a
+  conversation — the MCP twin of `kb add`. It writes the registry file and
+  nothing else; duplicate names hard-error (a conversation can ask;
+  re-pointing a name stays a CLI act); an uninitialized folder is refused
+  with both fix-it routes. Local stdio only — the registry is machine-global
+  state, so `mcp serve` never offers it.
+- **The agent plugin.** One committed `plugin/` tree serves three platforms
+  (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`): all fifteen
+  skills generated from the single source, MCP configs provisioning the
+  server via `npx -y knowlery@^1 mcp` (zero-install), and a Claude Code
+  `bin/` shim putting `knowlery` on the agent's PATH. The plugin runs no
+  install scripts; a CI drift check holds the committed tree to its
+  generator. The repo itself is a marketplace:
+  `/plugin marketplace add JayJiangCT/knowlery` → `/plugin install knowlery`.
+- **The `knowlery-mcp` front-door skill** (15th builtin, 10th MCP prompt):
+  the workflow layer tool descriptions can't carry — a tool-selection map for
+  all nine tools, the capture→cook loop as a cross-tool narrative, federation
+  timing, and a conduct digest. Existing skills became transport-aware:
+  `ask`'s retrieval ladder gains Transport 0 ("if the MCP query tool is
+  present, it *is* the ladder"), `cook`/`audit` name the MCP `stale` tool
+  first.
+- **Plugin release asset.** Releases ship `knowlery-plugin-<version>.zip`
+  with the tree's contents at the archive root — unzip anywhere and point a
+  plugin-dir install at it; the shim's executable bit survives.
+
+### Docs
+
+- New guides: Connect Your Agent (per-client setup: Claude Code/Desktop,
+  Codex, Cursor, Antigravity), Talk to Your Knowledge Base
+  (conversation-driven use cases). Agent-first entry funnel; gemini-cli
+  retired in favor of the Antigravity suite.
+
 ## [1.0.0] — 2026-07-08
 
 Theme: the memory layer — `knowlery mcp` makes every knowledge base something
