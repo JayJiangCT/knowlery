@@ -13,8 +13,10 @@ plain-markdown knowledge base that every surface can serve.
 *~5 minutes. No Obsidian required. Best if you live in Codex, Claude,
 Cursor, or Antigravity.*
 
-1. **Connect** — add one MCP config block to your client
-   ([per-client guide](../guides/connect-your-agent)). Zero-install form:
+1. **Connect** — install the plugin (one action on Claude Code / Codex:
+   `/plugin marketplace add JayJiangCT/knowlery` → `/plugin install
+   knowlery`), or add one MCP config block to any client
+   ([per-client guide](../guides/connect-your-agent)):
 
 ```json
 { "command": "npx", "args": ["-y", "knowlery@^1", "mcp"] }

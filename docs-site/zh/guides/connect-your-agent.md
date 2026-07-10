@@ -4,9 +4,19 @@
 MCP 的 agent 都能接入你的知识库。本页按客户端分节。接入之后的用法在哪都
 一样——见[用对话使用知识库](./talk-to-your-kb)。
 
-::: tip 1.1 即将到来
-Knowlery **agent 插件**会把下面的步骤收敛成一次安装动作（插件 = MCP 配置 +
-技能，自动供给）。在那之前，手动 MCP 配置是每个客户端一次性的两分钟工作。
+::: tip 最快路径：安装插件
+Knowlery **agent 插件**把下面的配置收敛成一次安装动作——MCP 服务器（npx
+自动供给）加全部十五个技能：
+
+- **Claude Code**：`/plugin marketplace add JayJiangCT/knowlery` →
+  `/plugin install knowlery`
+- **Codex**：`codex plugin marketplace add <source>` →
+  `codex plugin add knowlery@<marketplace>`
+- **Cursor**：从 checkout 的 `plugin/` 目录或 release zip 安装（marketplace
+  上架之前）
+
+详见[作为插件安装](./agents-mcp#作为插件安装)。下面的手动 MCP 配置仍完整
+支持——想只要服务器不要技能、或客户端没有插件体系时用它。
 :::
 
 ## 开始之前

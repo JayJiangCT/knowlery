@@ -5,10 +5,20 @@ MCP-capable agent can host your knowledge base. This page has a section per
 client. Everything after connection is the same everywhere — see
 [Talk to Your Knowledge Base](./talk-to-your-kb).
 
-::: tip Coming in 1.1
-The Knowlery **agent plugin** will collapse the steps below into one install
-action (plugin = MCP config + skills, auto-provisioned). Until then, manual
-MCP config is a one-time, two-minute task per client.
+::: tip The fastest path: install the plugin
+The Knowlery **agent plugin** collapses the setup below into one install
+action — MCP server (auto-provisioned via npx) plus all fifteen skills:
+
+- **Claude Code**: `/plugin marketplace add JayJiangCT/knowlery` →
+  `/plugin install knowlery`
+- **Codex**: `codex plugin marketplace add <source>` →
+  `codex plugin add knowlery@<marketplace>`
+- **Cursor**: install from a checkout's `plugin/` dir or the release zip
+  (until the marketplace listing lands)
+
+Details in [Install as a plugin](./agents-mcp#install-as-a-plugin). The
+manual MCP config below remains fully supported — use it when you want the
+server without the skills, or on clients without a plugin system.
 :::
 
 ## Before you start
