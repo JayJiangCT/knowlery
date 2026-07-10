@@ -8,6 +8,7 @@ const englishSidebar = [
     text: 'Start Here',
     items: [
       { text: 'Getting Started', link: '/getting-started/' },
+      { text: 'Install the CLI', link: '/getting-started/install-cli' },
       { text: 'Core Concepts', link: '/concepts/' },
     ],
   },
@@ -63,6 +64,7 @@ const chineseSidebar = [
     text: '开始',
     items: [
       { text: '快速开始', link: '/zh/getting-started/' },
+      { text: '安装 CLI', link: '/zh/getting-started/install-cli' },
       { text: '核心概念', link: '/zh/concepts/' },
     ],
   },
