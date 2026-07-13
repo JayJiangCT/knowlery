@@ -7,17 +7,16 @@ import { isVaultInitialized } from '../core/setup-executor';
 import { SetupWizardModal } from '../modals/setup-wizard';
 import { DashboardHome } from './DashboardHome';
 import { DashboardScreens } from './DashboardScreens';
+import { t } from '../i18n';
 
 function formatRelativeTime(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return 'just now';
+  if (seconds < 60) return t('dashboard.justNow');
   const minutes = Math.floor(seconds / 60);
-  if (minutes === 1) return '1 min ago';
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes === 1) return t('dashboard.oneMinAgo');
+  if (minutes < 60) return t('dashboard.minutesAgo', { minutes });
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-const BRAND_SUBTITLE = 'Personal knowledge review space';
 
 function ObsidianIcon({ icon, size = 16, className }: { icon: string; size?: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -122,7 +121,7 @@ export function DashboardApp() {
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
-            <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
+            <span className="knowlery-brand-header__subtitle">{t('dashboard.subtitle')}</span>
           </div>
         </div>
       </div>
@@ -138,7 +137,7 @@ export function DashboardApp() {
           </div>
           <div className="knowlery-brand-header__meta">
             <span className="knowlery-brand-header__title">Knowlery</span>
-            <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
+            <span className="knowlery-brand-header__subtitle">{t('dashboard.subtitle')}</span>
           </div>
         </div>
 
@@ -146,17 +145,13 @@ export function DashboardApp() {
           <div className="knowlery-setup-prompt__icon">
             <ObsidianIcon icon="package" size={32} />
           </div>
-          <h3 className="knowlery-setup-prompt__title">Vault not set up</h3>
-          <p className="knowlery-setup-prompt__desc">
-            This vault has not been prepared for Knowlery yet. Run the setup
-            wizard to create knowledge directories, install review recipes, and prepare
-            agent configuration.
-          </p>
+          <h3 className="knowlery-setup-prompt__title">{t('dashboard.setup.title')}</h3>
+          <p className="knowlery-setup-prompt__desc">{t('dashboard.setup.desc')}</p>
           <button
             className="mod-cta knowlery-setup-prompt__btn"
             onClick={openSetupWizard}
           >
-            Initialize vault
+            {t('dashboard.setup.button')}
           </button>
         </div>
       </div>
@@ -171,13 +166,13 @@ export function DashboardApp() {
         </div>
         <div className="knowlery-brand-header__meta">
           <span className="knowlery-brand-header__title">Knowlery</span>
-          <span className="knowlery-brand-header__subtitle">{BRAND_SUBTITLE}</span>
+          <span className="knowlery-brand-header__subtitle">{t('dashboard.subtitle')}</span>
         </div>
         {screen === 'home' && (
           <div className="knowlery-brand-header__actions">
             {lastRefreshed && (
               <span className="knowlery-brand-header__timestamp">
-                Checked {formatRelativeTime(lastRefreshed)}
+                {t('dashboard.checked', { time: formatRelativeTime(lastRefreshed) })}
               </span>
             )}
             <button
@@ -190,7 +185,7 @@ export function DashboardApp() {
                 size={14}
                 className={refreshing ? 'knowlery-spin' : undefined}
               />
-              {refreshing ? 'Refreshing…' : 'Refresh'}
+              {refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}
             </button>
           </div>
         )}
@@ -200,13 +195,12 @@ export function DashboardApp() {
         {!settings.onboardingDismissed && (
           <div className="knowlery-banner">
             <div className="knowlery-banner__text">
-              <strong>Welcome to Knowlery!</strong> Your vault is ready for
-              personal knowledge review.
+              <strong>{t('dashboard.welcome.strong')}</strong> {t('dashboard.welcome.body')}
             </div>
             <button
               className="knowlery-banner__close"
               onClick={() => void dismissBanner()}
-              aria-label="Dismiss"
+              aria-label={t('dashboard.welcome.dismiss')}
             >
               <IconX size={14} />
             </button>

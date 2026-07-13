@@ -1,4 +1,4 @@
-import { Events, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { Events, Notice, Plugin, TFile, WorkspaceLeaf, getLanguage } from 'obsidian';
 import { DEFAULT_SETTINGS, KNOWLEDGE_DIRS, VIEW_TYPE_DASHBOARD, type KnowlerySettings } from './types';
 import { DashboardView } from './views/dashboard-view';
 import { ensureVaultRegistered, unregisterOwnedVault } from './core/kb-registry';
@@ -27,6 +27,7 @@ import {
 import { getReleaseNote } from './assets/release-notes';
 import { conceptIdFromPath, isKnowledgePath } from './core/okf/shared';
 import { forkPageFromBundle, parseLibraryPath } from './core/okf/fork';
+import { resolveLocale, setLocale, t } from './i18n';
 
 interface SettingApp {
   setting: {
@@ -51,6 +52,8 @@ export default class KnowleryPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    // Locale must be resolved before any command/ribbon registration below.
+    setLocale(resolveLocale(this.settings.language, getLanguage()));
 
     this.fs = obsidianVaultFs(this.app);
     this.liveSnapshot = new LiveQuerySnapshot(this.app);
@@ -59,19 +62,19 @@ export default class KnowleryPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE_DASHBOARD, (leaf) => new DashboardView(leaf, this));
 
-    this.addRibbonIcon('chef-hat', 'Open knowlery dashboard', () => {
+    this.addRibbonIcon('chef-hat', t('main.ribbon.openDashboard'), () => {
       void this.activateDashboard();
     });
 
     this.addCommand({
       id: 'open-dashboard',
-      name: 'Open dashboard',
+      name: t('main.command.openDashboard'),
       callback: () => this.activateDashboard(),
     });
 
     this.addCommand({
       id: 'initialize-vault',
-      name: 'Initialize vault',
+      name: t('main.command.initializeVault'),
       callback: () => {
         new SetupWizardModal(this.app, this, () => this.onSetupComplete()).open();
       },
@@ -79,7 +82,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'run-vault-diagnosis',
-      name: 'Open diagnostics (settings)',
+      name: t('main.command.openDiagnostics'),
       callback: () => {
         const appWithSettings = this.app as typeof this.app & SettingApp;
         appWithSettings.setting.open();
@@ -89,7 +92,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'add-reflection',
-      name: 'Add reflection',
+      name: t('main.command.addReflection'),
       callback: () => {
         new ReflectionCaptureModal(
           this.app,
@@ -101,7 +104,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'share-knowledge-bundle',
-      name: 'Share knowledge bundle...',
+      name: t('main.command.shareBundle'),
       callback: () => {
         new ExportBundleModal(this.app, this).open();
       },
@@ -109,7 +112,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'install-knowledge-bundle',
-      name: 'Install knowledge bundle...',
+      name: t('main.command.installBundle'),
       callback: () => {
         new InstallBundleModal(this.app, this).open();
       },
@@ -117,7 +120,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.addCommand({
       id: 'switch-platform',
-      name: 'Switch platform',
+      name: t('main.command.switchPlatform'),
       callback: () => {
         const appWithSettings = this.app as typeof this.app & SettingApp;
         appWithSettings.setting.open();
@@ -131,7 +134,7 @@ export default class KnowleryPlugin extends Plugin {
       if (!(file instanceof TFile) || file.extension !== 'md' || !isKnowledgePath(file.path)) return;
       menu.addItem((item) => {
         item
-          .setTitle('Share this topic...')
+          .setTitle(t('main.menu.shareTopic'))
           .setIcon('share-2')
           .onClick(() => {
             new ExportBundleModal(this.app, this, conceptIdFromPath(file.path)).open();
@@ -147,7 +150,7 @@ export default class KnowleryPlugin extends Plugin {
       if (!(KNOWLEDGE_DIRS as readonly string[]).includes(topSegment)) return;
       menu.addItem((item) => {
         item
-          .setTitle('Fork to my knowledge...')
+          .setTitle(t('main.menu.forkToKnowledge'))
           .setIcon('git-fork')
           .onClick(async () => {
             try {
@@ -157,7 +160,7 @@ export default class KnowleryPlugin extends Plugin {
                 targetPath: parsed.relativePath,
                 bundleId: parsed.bundleId,
               });
-              new Notice(`Forked to ${parsed.relativePath}`);
+              new Notice(t('main.notice.forked', { path: parsed.relativePath }));
               this.events.trigger('dashboard-refresh');
             } catch (error) {
               new Notice(error instanceof Error ? error.message : String(error));
@@ -168,10 +171,7 @@ export default class KnowleryPlugin extends Plugin {
 
     this.app.workspace.onLayoutReady(async () => {
       if (!(await isVaultInitialized(this.fs))) {
-        new Notice(
-          'Knowlery: This vault isn\'t set up for AI yet. Use the command palette to initialize.',
-          10000,
-        );
+        new Notice(t('main.notice.notSetUp'), 10000);
       } else {
         const pluginVersion = this.manifest.version;
         const previousSyncedVersion = this.settings.lastSyncedVersion;
@@ -183,10 +183,7 @@ export default class KnowleryPlugin extends Plugin {
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           const syncResult = await runVaultSync(this.fs, this.settings.platform, pluginVersion);
           if (syncResult.skipped === 'newer-shell') {
-            new Notice(
-              `Knowlery: this vault was last synced by a newer Knowlery (${syncResult.lastSyncedBy}). Update the plugin before it can sync again.`,
-              10000,
-            );
+            new Notice(t('main.notice.newerShell', { version: syncResult.lastSyncedBy ?? '' }), 10000);
           } else {
             this.settings.lastSyncedVersion = pluginVersion;
             await this.saveSettings();

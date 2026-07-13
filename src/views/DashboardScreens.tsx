@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { usePlugin } from '../context';
 import type { ActivityRecord, DashboardMove, DashboardScreen } from '../types';
-import { RECIPE_BOOK } from '../core/moves';
+import { getRecipeBook } from '../core/moves';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { buildRecookPrompt, computeStaleness, type StalenessReport } from '../core/query/staleness';
 import { sendPromptToAgent, copyPrompt } from './request-actions';
 import { IconChevronLeft, IconChevronRight, IconClipboard } from './Icons';
+import { t } from '../i18n';
 
 function Back(props: { navigate: (s: DashboardScreen, payload?: unknown) => void; label: string; ariaDestination?: string }) {
   return (
@@ -13,7 +14,7 @@ function Back(props: { navigate: (s: DashboardScreen, payload?: unknown) => void
       type="button"
       className="knowlery-screen__back"
       onClick={() => props.navigate('home')}
-      aria-label={`Back to ${props.ariaDestination ?? props.label}`}
+      aria-label={t('screens.backTo', { destination: props.ariaDestination ?? props.label })}
     >
       <IconChevronLeft size={16} />
       {props.label}
@@ -24,9 +25,9 @@ function Back(props: { navigate: (s: DashboardScreen, payload?: unknown) => void
 function AllMovesScreen(props: { navigate: (s: DashboardScreen, payload?: unknown) => void }) {
   return (
     <div className="knowlery-screen">
-      <Back navigate={props.navigate} label="Suggested moves" />
+      <Back navigate={props.navigate} label={t('home.suggestedMoves')} />
       <section className="knowlery-home__moves">
-        {RECIPE_BOOK.map((move) => (
+        {getRecipeBook().map((move) => (
           <button
             key={move.id}
             type="button"
@@ -57,10 +58,10 @@ function AllActivityScreen(props: { navigate: (s: DashboardScreen, payload?: unk
 
   return (
     <div className="knowlery-screen">
-      <Back navigate={props.navigate} label="Recent activity" />
+      <Back navigate={props.navigate} label={t('home.recentActivity')} />
       <section className="knowlery-home__activity">
         {records.length === 0 ? (
-          <p className="knowlery-screen__empty">No activity recorded yet.</p>
+          <p className="knowlery-screen__empty">{t('screens.noActivity')}</p>
         ) : (
           records.map((record, index) => (
             <div key={`${record.time}-${index}`} className="knowlery-home__act">
@@ -93,7 +94,7 @@ function MoveDetailScreen(props: {
 
   return (
     <div className="knowlery-screen">
-      <Back navigate={props.navigate} label="Back" ariaDestination="home" />
+      <Back navigate={props.navigate} label={t('common.back')} ariaDestination={t('screens.home')} />
       <section className="knowlery-screen__detail">
         <h2 className="knowlery-screen__detail-title">{move.title}</h2>
         {move.skillTag && (
@@ -107,7 +108,7 @@ function MoveDetailScreen(props: {
             className="knowlery-btn knowlery-btn--primary"
             onClick={() => { void handleSend(); }}
           >
-            <span>Send to agent</span>
+            <span>{t('common.sendToAgent')}</span>
           </button>
           <button
             type="button"
@@ -115,7 +116,7 @@ function MoveDetailScreen(props: {
             onClick={() => { void handleCopy(); }}
           >
             <IconClipboard size={14} />
-            <span>Copy prompt</span>
+            <span>{t('common.copyPrompt')}</span>
           </button>
         </div>
       </section>
@@ -130,15 +131,15 @@ function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?:
 
   return (
     <div className="knowlery-screen">
-      <Back navigate={props.navigate} label="Knowledge health" />
+      <Back navigate={props.navigate} label={t('home.knowledgeHealth')} />
       {!report ? (
-        <p className="knowlery-screen__empty">Vault snapshot is still warming up — try again in a moment.</p>
+        <p className="knowlery-screen__empty">{t('screens.snapshotWarming')}</p>
       ) : (
         <>
-          <section className="knowlery-home__activity" aria-label="Stale pages">
-            <div className="knowlery-section-label">Stale pages ({report.stalePages.length})</div>
+          <section className="knowlery-home__activity" aria-label={t('screens.stalePages', { count: report.stalePages.length })}>
+            <div className="knowlery-section-label">{t('screens.stalePages', { count: report.stalePages.length })}</div>
             {report.stalePages.length === 0 ? (
-              <p className="knowlery-screen__empty">No compiled page has changed sources.</p>
+              <p className="knowlery-screen__empty">{t('screens.noStalePages')}</p>
             ) : (
               <>
                 {report.stalePages.map((finding) => (
@@ -157,15 +158,15 @@ function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?:
                   onClick={() => { void copyPrompt(buildRecookPrompt(report)); }}
                 >
                   <IconClipboard size={14} />
-                  <span>Copy re-cook prompt</span>
+                  <span>{t('home.health.copyRecook')}</span>
                 </button>
               </>
             )}
           </section>
-          <section className="knowlery-home__activity" aria-label="Uncooked notes">
-            <div className="knowlery-section-label">Notes never compiled ({report.uncookedNotes.length})</div>
+          <section className="knowlery-home__activity" aria-label={t('screens.uncookedNotes', { count: report.uncookedNotes.length })}>
+            <div className="knowlery-section-label">{t('screens.uncookedNotes', { count: report.uncookedNotes.length })}</div>
             {report.uncookedNotes.length === 0 ? (
-              <p className="knowlery-screen__empty">Every user note is cited by a compiled page.</p>
+              <p className="knowlery-screen__empty">{t('screens.allCited')}</p>
             ) : (
               report.uncookedNotes.map((note) => (
                 <div key={note.path} className="knowlery-home__act">
@@ -176,12 +177,12 @@ function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?:
             )}
           </section>
           {report.danglingSources.length > 0 && (
-            <section className="knowlery-home__activity" aria-label="Dangling sources">
-              <div className="knowlery-section-label">Dangling sources ({report.danglingSources.length})</div>
+            <section className="knowlery-home__activity" aria-label={t('screens.danglingSources', { count: report.danglingSources.length })}>
+              <div className="knowlery-section-label">{t('screens.danglingSources', { count: report.danglingSources.length })}</div>
               {report.danglingSources.map((dangling) => (
                 <div key={`${dangling.page}-${dangling.source}`} className="knowlery-home__act">
                   <span className="knowlery-home__act-summary">{dangling.page}</span>
-                  <span className="knowlery-home__act-meta">cites missing note: {dangling.source}</span>
+                  <span className="knowlery-home__act-meta">{t('screens.citesMissing', { path: dangling.source })}</span>
                 </div>
               ))}
             </section>

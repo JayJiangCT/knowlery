@@ -1,5 +1,6 @@
 import type { ActivityRecord, CounterSummary, VaultStats } from '../types';
 import { buildCounterSummary } from './activity-model';
+import { t, type TranslationKey } from '../i18n';
 
 export type TodayStage = 'empty-vault' | 'first-maintenance' | 'returning';
 
@@ -29,16 +30,16 @@ export function buildTodayModel(stats: VaultStats, records: ActivityRecord[]): T
   if (knowledgeNotes === 0 && stats.notesCount <= 3) {
     return {
       stage: 'empty-vault',
-      title: 'Start with one note.',
-      body: 'Add one idea, article, question, or conversation worth keeping. Knowlery becomes useful after there is a first piece of material on the counter.',
-      primaryAction: { label: 'Add first note', kind: 'local' },
+      title: t('today.empty.title'),
+      body: t('today.empty.body'),
+      primaryAction: { label: t('today.empty.primary'), kind: 'local' },
       secondaryActions: [
-        { label: 'Add reflection', kind: 'local' },
-        { label: 'Import one source', kind: 'agent-request' },
+        { label: t('today.empty.addReflection'), kind: 'local' },
+        { label: t('today.empty.importSource'), kind: 'agent-request' },
       ],
       stats: [
-        { label: 'knowledge notes', value: String(knowledgeNotes) },
-        { label: 'activity records', value: '0' },
+        { label: t('today.stat.knowledgeNotes'), value: String(knowledgeNotes) },
+        { label: t('today.stat.activityRecords'), value: '0' },
       ],
       summary,
     };
@@ -46,21 +47,21 @@ export function buildTodayModel(stats: VaultStats, records: ActivityRecord[]): T
 
   return {
     stage: 'first-maintenance',
-    title: 'Your vault already has material. Let’s do the first pass.',
-    body: 'Pick existing notes and turn them into a more reusable knowledge structure. Knowlery will start with a gentle baseline instead of asking you to rebuild everything.',
+    title: t('today.first.title'),
+    body: t('today.first.body'),
     primaryAction: {
-      label: 'Prepare first pass',
+      label: t('today.first.primary'),
       kind: 'agent-request',
       request: buildFirstCookRequest(),
     },
     secondaryActions: [
-      { label: 'Scan vault health', kind: 'local' },
-      { label: 'Open moves', kind: 'local' },
+      { label: t('today.first.scanHealth'), kind: 'local' },
+      { label: t('today.first.openMoves'), kind: 'local' },
     ],
     stats: [
-      { label: 'markdown notes', value: String(stats.notesCount) },
-      { label: 'knowledge notes', value: String(knowledgeNotes) },
-      { label: 'wikilinks', value: String(stats.wikilinksCount) },
+      { label: t('today.stat.markdownNotes'), value: String(stats.notesCount) },
+      { label: t('today.stat.knowledgeNotes'), value: String(knowledgeNotes) },
+      { label: t('today.stat.wikilinks'), value: String(stats.wikilinksCount) },
     ],
     summary,
   };
@@ -92,32 +93,40 @@ function buildReturningModel(summary: CounterSummary): TodayModel {
   const firstTheme = summary.recurringThemes[0]?.name;
   const secondTheme = summary.recurringThemes[1]?.name;
   const topicPhrase = firstTheme && secondTheme
-    ? `「${firstTheme}」 and 「${secondTheme}」`
+    ? t('today.returning.topicsTwo', { first: firstTheme, second: secondTheme })
     : firstTheme
-      ? `「${firstTheme}」`
-      : 'recent knowledge work';
+      ? t('today.returning.topicsOne', { topic: firstTheme })
+      : t('today.returning.fallbackTopic');
   return {
     stage: 'returning',
-    title: `Recently you have been shaping ${topicPhrase}.`,
+    title: t('today.returning.title', { topics: topicPhrase }),
     body: thread
-      ? `${thread.nextMoveReason} A small next move is enough: ${thread.nextMove.toLowerCase()} this thread before adding more material.`
-      : 'Your recent activity is ready for a quiet review. Look for one note or thread worth turning into a reusable shape.',
+      ? t('today.returning.threadBody', { reason: thread.nextMoveReason, move: localizedMove(thread.nextMove) })
+      : t('today.returning.fallbackBody'),
     primaryAction: {
-      label: thread ? 'Prepare next move' : 'Review recent work',
+      label: thread ? t('today.returning.primaryThread') : t('today.returning.primaryReview'),
       kind: 'agent-request',
       request: thread?.suggestedRequest,
     },
     secondaryActions: [
-      { label: 'Generate summary', kind: 'report' },
-      { label: 'Open review menu', kind: 'local' },
+      { label: t('today.returning.generateSummary'), kind: 'report' },
+      { label: t('today.returning.openReviewMenu'), kind: 'local' },
     ],
     stats: [
-      { label: 'activity records', value: String(summary.coverage.recordsLogged) },
-      { label: 'active threads', value: String(summary.knowledgeThreads.length) },
-      { label: 'unprocessed notes', value: String(summary.unbakedNotes.length) },
+      { label: t('today.stat.activityRecords'), value: String(summary.coverage.recordsLogged) },
+      { label: t('today.stat.activeThreads'), value: String(summary.knowledgeThreads.length) },
+      { label: t('today.stat.unprocessedNotes'), value: String(summary.unbakedNotes.length) },
     ],
     summary,
   };
+}
+
+/** The thread-stage verb, rendered in the current UI language ('connect this
+ * thread' / '连接这条线索'). Stage values themselves stay English — they are
+ * logic values, not copy. */
+function localizedMove(stage: string): string {
+  const key = `today.move.${stage.toLowerCase()}` as TranslationKey;
+  return t(key);
 }
 
 function buildSystemActivityModel(summary: CounterSummary, record: ActivityRecord): TodayModel {
@@ -125,23 +134,23 @@ function buildSystemActivityModel(summary: CounterSummary, record: ActivityRecor
   return {
     stage: 'returning',
     title: record.type === 'maintenance'
-      ? 'Latest maintenance pass completed.'
-      : 'Latest agent output is ready for review.',
+      ? t('today.system.maintenanceTitle')
+      : t('today.system.outputTitle'),
     body: followup
       ? `${record.summary} ${followup}`
-      : `${record.summary} Review it before turning any findings into knowledge pages.`,
+      : `${record.summary} ${t('today.system.reviewSuffix')}`,
     primaryAction: {
-      label: 'Open review menu',
+      label: t('today.returning.openReviewMenu'),
       kind: 'local',
     },
     secondaryActions: [
-      { label: 'Generate summary', kind: 'report' },
-      { label: 'Open review menu', kind: 'local' },
+      { label: t('today.returning.generateSummary'), kind: 'report' },
+      { label: t('today.returning.openReviewMenu'), kind: 'local' },
     ],
     stats: [
-      { label: 'activity records', value: String(summary.coverage.recordsLogged) },
-      { label: 'active threads', value: String(summary.knowledgeThreads.length) },
-      { label: 'unprocessed notes', value: String(summary.unbakedNotes.length) },
+      { label: t('today.stat.activityRecords'), value: String(summary.coverage.recordsLogged) },
+      { label: t('today.stat.activeThreads'), value: String(summary.knowledgeThreads.length) },
+      { label: t('today.stat.unprocessedNotes'), value: String(summary.unbakedNotes.length) },
     ],
     summary,
   };

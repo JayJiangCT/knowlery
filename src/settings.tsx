@@ -1,4 +1,4 @@
-import { App, Modal, Notice, PluginSettingTab, Setting, type SettingDefinition, type SettingDefinitionItem } from 'obsidian';
+import { App, Modal, Notice, PluginSettingTab, Setting, getLanguage, type SettingDefinition, type SettingDefinitionItem } from 'obsidian';
 import { StrictMode } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from './main';
@@ -12,6 +12,7 @@ import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/se
 import { SetupWizardModal } from './modals/setup-wizard';
 import { installActivityLedgerRule } from './core/rule-manager';
 import { ACTIVITY_DIR, setActivityLoggingEnabled } from './core/activity-ledger';
+import { resolveLocale, setLocale, t, type LanguageSetting } from './i18n';
 
 class ConfirmModal extends Modal {
   private confirmed = false;
@@ -31,10 +32,10 @@ class ConfirmModal extends Modal {
 
     const btnContainer = this.contentEl.createDiv({ cls: 'modal-button-container' });
     btnContainer
-      .createEl('button', { text: 'Cancel' })
+      .createEl('button', { text: t('common.cancel') })
       .addEventListener('click', () => this.close());
     const confirmBtn = btnContainer.createEl('button', {
-      text: 'Confirm',
+      text: t('common.confirm'),
       cls: 'mod-warning',
     });
     confirmBtn.addEventListener('click', () => {
@@ -157,27 +158,28 @@ export class KnowlerySettingTab extends PluginSettingTab {
     return [
       this.setupBannerItem(),
       this.kbNameItem(),
+      this.languageItem(),
       this.nodePathItem(),
       {
-        name: 'Register vault for CLI/agent access',
-        desc: 'Keep this vault in the global KB registry so knowlery --kb and agents can find it by name.',
+        name: t('settings.registerVault.name'),
+        desc: t('settings.registerVault.desc'),
         visible: () => this.initialized === true,
         control: { type: 'toggle', key: 'registerVaultGlobally', defaultValue: true },
       },
       {
         type: 'group',
-        heading: 'Platform',
+        heading: t('settings.heading.platform'),
         visible: () => this.initialized === true,
         items: [this.platformSwitchItem()],
       },
       {
         type: 'group',
-        heading: 'Activity',
+        heading: t('settings.heading.activity'),
         visible: () => this.initialized === true,
         items: [
           {
-            name: 'Activity logging',
-            desc: `Store private activity summaries in ${ACTIVITY_DIR}. Agents should write summaries only, not full conversations.`,
+            name: t('settings.activityLogging.name'),
+            desc: t('settings.activityLogging.desc', { dir: ACTIVITY_DIR }),
             control: { type: 'toggle', key: 'activityLoggingEnabled', defaultValue: true },
           },
           this.activityRuleItem(),
@@ -185,34 +187,62 @@ export class KnowlerySettingTab extends PluginSettingTab {
       },
       {
         type: 'group',
-        heading: 'Knowledge bundle defaults',
+        heading: t('settings.heading.bundleDefaults'),
         visible: () => this.initialized === true,
         items: [
           {
-            name: 'Creator name',
-            desc: 'Used as the default creator in exported knowledge bundle manifests.',
+            name: t('settings.creatorName.name'),
+            desc: t('settings.creatorName.desc'),
             control: { type: 'text', key: 'bundleCreatorName' },
           },
           {
-            name: 'Creator URL',
-            desc: 'Optional URL included in exported bundle metadata.',
+            name: t('settings.creatorUrl.name'),
+            desc: t('settings.creatorUrl.desc'),
             control: { type: 'text', key: 'bundleCreatorUrl' },
           },
           {
-            name: 'Default license',
-            desc: 'Prefilled when sharing a knowledge bundle.',
+            name: t('settings.defaultLicense.name'),
+            desc: t('settings.defaultLicense.desc'),
             control: { type: 'text', key: 'bundleDefaultLicense', defaultValue: 'personal' },
           },
         ],
       },
       {
         type: 'group',
-        heading: 'Maintenance',
+        heading: t('settings.heading.maintenance'),
         visible: () => this.initialized === true,
         items: [this.regenerateConfigItem(), this.reinitializeItem()],
       },
       this.advancedSectionItem(),
     ];
+  }
+
+  private languageItem(): SettingDefinition {
+    return {
+      name: t('settings.language.name'),
+      desc: t('settings.language.desc'),
+      aliases: ['language', '语言', 'locale', 'chinese', '中文'],
+      render: (setting) => {
+        setting.addDropdown((dropdown) =>
+          dropdown
+            .addOption('auto', t('settings.language.auto'))
+            .addOption('en', 'English')
+            .addOption('zh', '中文')
+            .setValue(this.plugin.settings.language)
+            .onChange((value) => {
+              void (async () => {
+                this.plugin.settings.language = value as LanguageSetting;
+                setLocale(resolveLocale(this.plugin.settings.language, getLanguage()));
+                await this.plugin.saveSettings();
+                // Rebuild dashboard models so today/moves copy re-renders in
+                // the new language; the settings tab re-renders itself.
+                this.plugin.events.trigger('dashboard-refresh');
+                this.requestRender();
+              })();
+            }),
+        );
+      },
+    };
   }
 
   getControlValue(key: string): unknown {
@@ -265,15 +295,15 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private setupBannerItem(): SettingDefinition {
     return {
-      name: 'Vault not set up',
-      desc: 'This vault hasn\'t been configured for AI yet. Run the setup wizard to create knowledge directories, install skills, and generate agent configuration.',
+      name: t('settings.banner.name'),
+      desc: t('settings.banner.desc'),
       visible: () => this.initialized === false,
       searchable: false,
       render: (setting) => {
         setting.settingEl.addClass('knowlery-settings-banner');
         setting.addButton((btn) =>
           btn
-            .setButtonText('Initialize vault')
+            .setButtonText(t('settings.banner.initialize'))
             .setCta()
             .onClick(() => {
               new SetupWizardModal(this.plugin.app, this.plugin, () => {
@@ -288,8 +318,8 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private kbNameItem(): SettingDefinition {
     return {
-      name: 'Knowledge base name',
-      desc: 'Updates KNOWLEDGE.md and regenerates agent config when saved.',
+      name: t('settings.kbName.name'),
+      desc: t('settings.kbName.desc'),
       visible: () => this.initialized === true,
       render: (setting) => {
         setting
@@ -299,11 +329,11 @@ export class KnowlerySettingTab extends PluginSettingTab {
             }),
           )
           .addButton((btn) =>
-            btn.setButtonText('Save').onClick(() => {
+            btn.setButtonText(t('settings.kbName.save')).onClick(() => {
               void (async () => {
                 await this.plugin.saveSettings();
                 await this.updateKbName();
-                new Notice('Knowledge base name updated');
+                new Notice(t('settings.kbName.updated'));
               })();
             }),
           );
@@ -313,8 +343,8 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private nodePathItem(): SettingDefinition {
     return {
-      name: 'Node.js path',
-      desc: 'Path to Node.js. Usually leave blank. Only needed if node is in a non-standard location (enter absolute path, e.g. /usr/local/bin/node).',
+      name: t('settings.nodePath.name'),
+      desc: t('settings.nodePath.desc'),
       aliases: ['node'],
       render: (setting) => {
         setting.addText((text) =>
@@ -330,8 +360,8 @@ export class KnowlerySettingTab extends PluginSettingTab {
           cls: 'knowlery-settings__node-message',
         }) ?? null;
         setting.addButton((btn) =>
-          btn.setButtonText('Auto-detect').onClick(() => {
-            btn.setButtonText('Detecting…').setDisabled(true);
+          btn.setButtonText(t('settings.nodePath.autoDetect')).onClick(() => {
+            btn.setButtonText(t('settings.nodePath.detecting')).setDisabled(true);
             const report = (message: string) => {
               if (messageEl) messageEl.setText(message);
               new Notice(message);
@@ -342,14 +372,14 @@ export class KnowlerySettingTab extends PluginSettingTab {
                 if (result.detected && result.path) {
                   this.plugin.settings.nodePath = result.path;
                   await this.plugin.saveSettings();
-                  report(`Detected Node.js ${result.version ?? ''} at ${result.path}`.trim());
+                  report(t('settings.nodePath.detected', { version: result.version ?? '', path: result.path }).trim());
                 } else {
-                  report('Node.js not found. Install Node.js or enter the path manually.');
+                  report(t('settings.nodePath.notFound'));
                 }
               } catch (error) {
-                report(`Could not detect Node.js: ${formatSettingError(error)}`);
+                report(t('settings.nodePath.detectFailed', { error: formatSettingError(error) }));
               } finally {
-                btn.setButtonText('Auto-detect').setDisabled(false);
+                btn.setButtonText(t('settings.nodePath.autoDetect')).setDisabled(false);
               }
             })();
           }),
@@ -367,16 +397,16 @@ export class KnowlerySettingTab extends PluginSettingTab {
     const otherLabel = otherPlatform === 'claude-code' ? 'Claude Code' : 'OpenCode';
 
     return {
-      name: 'Current platform',
+      name: t('settings.platform.current'),
       desc: currentLabel,
       aliases: ['claude code', 'opencode'],
       render: (setting) => {
         setting.addButton((btn) =>
-          btn.setButtonText(`Switch to ${otherLabel}`).onClick(() => {
+          btn.setButtonText(t('settings.platform.switchTo', { platform: otherLabel })).onClick(() => {
             new ConfirmModal(
               this.plugin.app,
-              'Switch platform',
-              `Switch to ${otherLabel}? New config files will be generated. Existing config files are kept as backup.`,
+              t('settings.platform.confirmTitle'),
+              t('settings.platform.confirmMessage', { platform: otherLabel }),
               async () => {
                 await migratePlatform(
                   this.plugin.fs,
@@ -387,7 +417,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
                 );
                 this.plugin.settings.platform = otherPlatform;
                 await this.plugin.saveSettings();
-                new Notice(`Switched to ${otherLabel}`);
+                new Notice(t('settings.platform.switched', { platform: otherLabel }));
                 this.requestRender();
               },
             ).open();
@@ -399,14 +429,14 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private activityRuleItem(): SettingDefinition {
     return {
-      name: 'Activity ledger rule',
-      desc: 'Install or refresh the agent rule that asks agents to leave private session receipts.',
+      name: t('settings.activityRule.name'),
+      desc: t('settings.activityRule.desc'),
       render: (setting) => {
         setting.addButton((button) =>
-          button.setButtonText('Refresh rule').onClick(() => {
+          button.setButtonText(t('settings.activityRule.refresh')).onClick(() => {
             void (async () => {
               await installActivityLedgerRule(this.plugin.fs, this.plugin.settings.platform);
-              new Notice('Activity ledger rule refreshed.');
+              new Notice(t('settings.activityRule.refreshed'));
             })();
           }),
         );
@@ -416,21 +446,21 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private regenerateConfigItem(): SettingDefinition {
     return {
-      name: 'Regenerate agent config',
+      name: t('settings.regenerate.name'),
       desc:
         this.plugin.settings.platform === 'claude-code'
-          ? 'Recreate .claude/CLAUDE.md from current settings.'
-          : 'Recreate opencode.json from current settings.',
+          ? t('settings.regenerate.descClaude')
+          : t('settings.regenerate.descOpencode'),
       render: (setting) => {
         setting.addButton((btn) =>
-          btn.setButtonText('Regenerate').onClick(() => {
+          btn.setButtonText(t('settings.regenerate.button')).onClick(() => {
             void (async () => {
               await generatePlatformConfig(
                 this.plugin.fs,
                 this.plugin.settings.platform,
                 this.plugin.settings.kbName,
               );
-              new Notice('Agent config regenerated');
+              new Notice(t('settings.regenerate.done'));
             })();
           }),
         );
@@ -440,18 +470,18 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private reinitializeItem(): SettingDefinition {
     return {
-      name: 'Re-initialize vault',
-      desc: 'Re-run the full setup. Overwrites built-in skills and agent config. Custom skills are preserved.',
+      name: t('settings.reinitialize.name'),
+      desc: t('settings.reinitialize.desc'),
       render: (setting) => {
         setting.addButton((btn) =>
           btn
-            .setButtonText('Re-initialize')
+            .setButtonText(t('settings.reinitialize.button'))
             .setCta()
             .onClick(() => {
               new ConfirmModal(
                 this.plugin.app,
-                'Re-initialize vault',
-                'This will overwrite all built-in skills and regenerate agent config. Custom skills and your knowledge files are preserved. Continue?',
+                t('settings.reinitialize.name'),
+                t('settings.reinitialize.confirmMessage'),
                 async () => {
                   await executeSetup(
                     this.plugin.fs,
@@ -459,7 +489,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
                     this.plugin.settings.kbName,
                     () => {},
                   );
-                  new Notice('Vault re-initialized');
+                  new Notice(t('settings.reinitialize.done'));
                 },
               ).open();
             }),
@@ -470,7 +500,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
 
   private advancedSectionItem(): SettingDefinition {
     return {
-      name: 'Advanced',
+      name: t('settings.heading.advanced'),
       searchable: false,
       visible: () => this.initialized === true,
       render: (setting) => {

@@ -100,6 +100,8 @@ export interface KnowlerySettings {
   kbName: string;
   platform: Platform;
   nodePath: string;
+  /** Dashboard/settings display language; 'auto' follows Obsidian's language. */
+  language: 'auto' | 'en' | 'zh';
   onboardingDismissed: boolean;
   activityLoggingEnabled: boolean;
   /** Register this vault in the global KB registry for CLI/agent access (spec 1.0 f1, §4.5). */
@@ -164,6 +166,7 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   kbName: 'My Knowledge Base',
   platform: 'claude-code',
   nodePath: '',
+  language: 'auto',
   onboardingDismissed: false,
   activityLoggingEnabled: true,
   registerVaultGlobally: true,

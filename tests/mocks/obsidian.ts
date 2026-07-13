@@ -34,3 +34,7 @@ export class Setting {
 
 export const Platform = { isMacOS: false, isWin: false, isLinux: true, isMobile: false };
 
+export function getLanguage(): string {
+  return 'en';
+}
+

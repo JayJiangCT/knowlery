@@ -5,6 +5,7 @@ import type { RuleInfo, DashboardRefreshPayload } from '../types';
 import { listRules, deleteRule } from '../core/rule-manager';
 import { RuleEditorModal } from '../modals/rule-editor';
 import { IconFileText, IconPlus, IconArrowRight, IconMoreVertical, IconChevronRight } from './Icons';
+import { t } from '../i18n';
 
 /* ------------------------------------------------------------------ */
 /*  RuleCard                                                           */
@@ -57,7 +58,7 @@ function RuleCard(props: {
         type="button"
         className="knowlery-config__rule-main"
         onClick={onView}
-        aria-label={`View rule ${rule.name}`}
+        aria-label={t('config.viewRule', { name: rule.name })}
       >
         <span className="knowlery-config__rule-icon" aria-hidden="true">
           <IconFileText size={16} />
@@ -77,7 +78,7 @@ function RuleCard(props: {
         <button
           type="button"
           className="knowlery-config__rule-menu"
-          aria-label={`More options for rule ${rule.name}`}
+          aria-label={t('config.moreOptions', { name: rule.name })}
           onClick={() => { setMenuOpen((v) => !v); setConfirmDelete(false); }}
         >
           <IconMoreVertical size={16} />
@@ -85,16 +86,16 @@ function RuleCard(props: {
         {menuOpen && (
           <div className="knowlery-config__rule-dropdown">
             <button onClick={() => { setMenuOpen(false); onView(); }}>
-              View
+              {t('config.view')}
             </button>
             <button onClick={() => { setMenuOpen(false); onEdit(); }}>
-              Edit
+              {t('config.edit')}
             </button>
             <button
               className={confirmDelete ? 'is-danger' : ''}
               onClick={handleDeleteClick}
             >
-              {confirmDelete ? 'Confirm delete' : 'Delete'}
+              {confirmDelete ? t('config.confirmDelete') : t('config.delete')}
             </button>
           </div>
         )}
@@ -131,7 +132,7 @@ export function ConfigTab() {
     if (file) {
       void plugin.app.workspace.getLeaf(false).openFile(file);
     } else {
-      new Notice(`File not found: ${path}`);
+      new Notice(t('config.fileNotFound', { path }));
     }
   };
 
@@ -145,7 +146,7 @@ export function ConfigTab() {
 
   const handleDelete = async (rule: RuleInfo) => {
     await deleteRule(plugin.fs, settings.platform, rule.filename);
-    new Notice(`Deleted rule "${rule.name}"`);
+    new Notice(t('config.ruleDeleted', { name: rule.name }));
     void refreshRules();
   };
 
@@ -157,7 +158,7 @@ export function ConfigTab() {
     <div className="knowlery-config">
       {/* Schema & Guidance section */}
       <div className="knowlery-section-label">
-        <span>Schema &amp; Guidance</span>
+        <span>{t('config.schemaGuidance')}</span>
       </div>
 
       <div className="knowlery-config__files">
@@ -191,10 +192,10 @@ export function ConfigTab() {
 
       {/* Agent Rules section */}
       <div className="knowlery-section-label">
-        <span>Agent Rules ({rules.length})</span>
+        <span>{t('config.agentRules', { count: rules.length })}</span>
         <button
           className="knowlery-section-label__action"
-          aria-label="Add rule"
+          aria-label={t('config.addRule')}
           onClick={handleAdd}
         >
           <IconPlus size={14} />
@@ -213,7 +214,7 @@ export function ConfigTab() {
         ))}
 
         {rules.length === 0 && (
-          <p className="knowlery-config__empty">No rules configured yet.</p>
+          <p className="knowlery-config__empty">{t('config.noRules')}</p>
         )}
       </div>
     </div>
