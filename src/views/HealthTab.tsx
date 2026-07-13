@@ -9,6 +9,7 @@ import {
   IconAlertCircle,
   IconPlay,
 } from './Icons';
+import { t } from '../i18n';
 
 interface SettingApp {
   setting?: {
@@ -56,7 +57,7 @@ function ExpandableList(props: {
               ))}
             </ul>
           ) : (
-            <p className="knowlery-health__empty">None found</p>
+            <p className="knowlery-health__empty">{t('health.noneFound')}</p>
           )}
         </div>
       )}
@@ -169,7 +170,7 @@ export function HealthTab() {
     <div className="knowlery-health">
       {/* 1. Configuration Integrity — FIRST */}
       <div className="knowlery-section-label">
-        <span>Configuration</span>
+        <span>{t('health.configuration')}</span>
       </div>
       {!integrity && <IntegritySkeleton />}
       {integrity && (
@@ -177,76 +178,76 @@ export function HealthTab() {
           <IntegrityRow
             state={integrity.knowledgeMdExists ? 'ok' : 'fail'}
             label="KNOWLEDGE.md"
-            detail={integrity.knowledgeMdExists ? undefined : 'Missing'}
+            detail={integrity.knowledgeMdExists ? undefined : t('health.missing')}
             onClick={integrity.knowledgeMdExists ? undefined : openSettings}
           />
           <IntegrityRow
             state={integrity.schemaMdExists ? 'ok' : 'fail'}
             label="SCHEMA.md"
-            detail={integrity.schemaMdExists ? undefined : 'Missing'}
+            detail={integrity.schemaMdExists ? undefined : t('health.missing')}
             onClick={integrity.schemaMdExists ? undefined : openSettings}
           />
           <IntegrityRow
             state={integrity.indexBaseExists ? 'ok' : 'fail'}
             label="INDEX.base"
-            detail={integrity.indexBaseExists ? undefined : 'Missing'}
+            detail={integrity.indexBaseExists ? undefined : t('health.missing')}
             onClick={integrity.indexBaseExists ? undefined : openSettings}
           />
           <IntegrityRow
             state={integrity.queryScriptExists ? 'ok' : 'fail'}
-            label="Retrieval script (.knowlery/bin/query.mjs)"
-            detail={integrity.queryScriptExists ? undefined : 'Missing — reload the plugin to install it'}
+            label={t('health.queryScript')}
+            detail={integrity.queryScriptExists ? undefined : t('health.queryScriptMissing')}
           />
           <IntegrityRow
             state={integrity.knowledgeDirsComplete.missing.length === 0 ? 'ok' : 'fail'}
-            label="Knowledge directories"
+            label={t('health.knowledgeDirs')}
             detail={
               integrity.knowledgeDirsComplete.missing.length === 0
                 ? undefined
-                : `Missing: ${integrity.knowledgeDirsComplete.missing.join(', ')}`
+                : t('health.missingList', { list: integrity.knowledgeDirsComplete.missing.join(', ') })
             }
           />
           <IntegrityRow
             state={integrity.agentConfigExists ? 'ok' : 'fail'}
-            label="Agent configuration"
-            detail={integrity.agentConfigExists ? undefined : 'Missing'}
+            label={t('health.agentConfig')}
+            detail={integrity.agentConfigExists ? undefined : t('health.missing')}
             onClick={integrity.agentConfigExists ? undefined : openSettings}
           />
           <IntegrityRow
             state={integrity.rulesConfigured ? 'ok' : 'fail'}
-            label="Rules configured"
-            detail={integrity.rulesConfigured ? undefined : 'None found'}
+            label={t('health.rulesConfigured')}
+            detail={integrity.rulesConfigured ? undefined : t('health.noneFound')}
           />
           <IntegrityRow
             state={integrity.skillsComplete.missing.length === 0 ? 'ok' : 'fail'}
-            label="Skills installed"
+            label={t('health.skillsInstalled')}
             detail={
               integrity.skillsComplete.missing.length === 0
-                ? `${integrity.skillsComplete.present.length} installed`
-                : `${integrity.skillsComplete.missing.length} missing`
+                ? t('health.skillsPresent', { count: integrity.skillsComplete.present.length })
+                : t('health.skillsMissing', { count: integrity.skillsComplete.missing.length })
             }
           />
           <IntegrityRow
             state={integrity.obsidianCli ? 'ok' : 'warn'}
-            label="Obsidian CLI"
-            detail={integrity.obsidianCli ? 'Enabled' : 'Not enabled'}
+            label={t('health.obsidianCli')}
+            detail={integrity.obsidianCli ? t('health.enabled') : t('health.notEnabled')}
           />
           {settings.platform === 'claude-code' ? (
             <IntegrityRow
               state={integrity.claudeCodeCli ? 'ok' : 'warn'}
-              label="Claude Code CLI detected"
-              detail={integrity.claudeCodeCli ? 'Found' : 'Not found'}
+              label={t('health.claudeCodeCli')}
+              detail={integrity.claudeCodeCli ? t('health.found') : t('health.notFound')}
             />
           ) : (
             <IntegrityRow
               state={integrity.opencodeCli ? 'ok' : 'warn'}
-              label="OpenCode CLI detected"
-              detail={integrity.opencodeCli ? 'Found' : 'Not found'}
+              label={t('health.opencodeCli')}
+              detail={integrity.opencodeCli ? t('health.found') : t('health.notFound')}
             />
           )}
           <IntegrityRow
             state="ok"
-            label="Platform"
+            label={t('health.platform')}
             detail={settings.platform === 'claude-code' ? 'Claude Code' : 'OpenCode'}
           />
         </div>
@@ -254,22 +255,22 @@ export function HealthTab() {
 
       {/* 2. Content Stats */}
       <div className="knowlery-section-label">
-        <span>Content</span>
+        <span>{t('health.content')}</span>
       </div>
       {stats && (
         <div className="knowlery-stat-grid">
-          <StatCard label="Notes" value={stats.notesCount} />
-          <StatCard label="Wikilinks" value={stats.wikilinksCount} />
-          <StatCard label="Entities" value={stats.entitiesCount} />
-          <StatCard label="Concepts" value={stats.conceptsCount} />
-          <StatCard label="Comparisons" value={stats.comparisonsCount} />
-          <StatCard label="Queries" value={stats.queriesCount} />
+          <StatCard label={t('health.stat.notes')} value={stats.notesCount} />
+          <StatCard label={t('health.stat.wikilinks')} value={stats.wikilinksCount} />
+          <StatCard label={t('health.stat.entities')} value={stats.entitiesCount} />
+          <StatCard label={t('health.stat.concepts')} value={stats.conceptsCount} />
+          <StatCard label={t('health.stat.comparisons')} value={stats.comparisonsCount} />
+          <StatCard label={t('health.stat.queries')} value={stats.queriesCount} />
         </div>
       )}
 
       {/* 3. Structure */}
       <div className="knowlery-section-label">
-        <span>Structure</span>
+        <span>{t('health.structure')}</span>
       </div>
 
       {!diagnosis && !diagnosisRunning && (
@@ -278,33 +279,33 @@ export function HealthTab() {
           onClick={() => void handleRunDiagnosis()}
         >
           <IconPlay size={14} />
-          Run diagnosis
+          {t('health.runDiagnosis')}
         </button>
       )}
 
       {diagnosisRunning && (
-        <div className="knowlery-loading">Running diagnosis…</div>
+        <div className="knowlery-loading">{t('health.runningDiagnosis')}</div>
       )}
 
       {diagnosis && (
         <>
           {diagnosisTime && (
             <div className="knowlery-health__diagnosis-time">
-              Last run: {formatTime(diagnosisTime)}
+              {t('health.lastRun', { time: formatTime(diagnosisTime) })}
             </div>
           )}
           <ExpandableList
-            title="Orphan notes"
+            title={t('health.orphanNotes')}
             items={diagnosis.orphanNotes}
           />
           <ExpandableList
-            title="Broken wikilinks"
+            title={t('health.brokenWikilinks')}
             items={diagnosis.brokenWikilinks.map(
               (b) => `${b.file} \u2192 [[${b.link}]]`,
             )}
           />
           <ExpandableList
-            title="Missing frontmatter"
+            title={t('health.missingFrontmatter')}
             items={diagnosis.missingFrontmatter.map(
               (m) => `${m.file}: ${m.missingFields.join(', ')}`,
             )}

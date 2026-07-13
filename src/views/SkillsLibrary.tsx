@@ -15,6 +15,7 @@ import {
   IconDownload,
   SkillIcon,
 } from './Icons';
+import { t, tCount } from '../i18n';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -27,32 +28,35 @@ interface GroupConfig {
   Icon: React.ComponentType<{ size?: number }>;
 }
 
-const GROUPS: GroupConfig[] = [
-  {
-    id: 'knowledge',
-    title: 'Knowledge',
-    subtitle: 'Vault management & content workflows',
-    Icon: IconBookOpen,
-  },
-  {
-    id: 'tooling',
-    title: 'Tooling',
-    subtitle: 'Obsidian integrations & format references',
-    Icon: IconWrench,
-  },
-  {
-    id: 'registry',
-    title: 'Installed',
-    subtitle: 'Skills added from the browser registry',
-    Icon: IconDownload,
-  },
-  {
-    id: 'custom',
-    title: 'Custom',
-    subtitle: 'User-defined capabilities for this vault',
-    Icon: IconPlus,
-  },
-];
+/** Built per render so a language switch re-resolves the copy. */
+function getGroups(): GroupConfig[] {
+  return [
+    {
+      id: 'knowledge',
+      title: t('skills.group.knowledge.title'),
+      subtitle: t('skills.group.knowledge.subtitle'),
+      Icon: IconBookOpen,
+    },
+    {
+      id: 'tooling',
+      title: t('skills.group.tooling.title'),
+      subtitle: t('skills.group.tooling.subtitle'),
+      Icon: IconWrench,
+    },
+    {
+      id: 'registry',
+      title: t('skills.group.registry.title'),
+      subtitle: t('skills.group.registry.subtitle'),
+      Icon: IconDownload,
+    },
+    {
+      id: 'custom',
+      title: t('skills.group.custom.title'),
+      subtitle: t('skills.group.custom.subtitle'),
+      Icon: IconPlus,
+    },
+  ];
+}
 
 /* ------------------------------------------------------------------ */
 /*  SkillRow                                                           */
@@ -62,13 +66,20 @@ function SkillRow(props: { skill: SkillInfo; onRefresh: () => void }) {
   const { skill, onRefresh } = props;
   const plugin = usePlugin();
 
-  const badge = skill.disabled
+  const badgeClass = skill.disabled
     ? 'disabled'
     : skill.source === 'builtin'
       ? 'built-in'
       : skill.source === 'registry'
         ? 'installed'
         : 'custom';
+  const badgeLabel = skill.disabled
+    ? t('skills.badge.disabled')
+    : skill.source === 'builtin'
+      ? t('skills.badge.builtin')
+      : skill.source === 'registry'
+        ? t('skills.badge.installed')
+        : t('skills.badge.custom');
 
   const open = () => {
     new SkillDetailModal(plugin.app, plugin, skill, false, onRefresh).open();
@@ -79,7 +90,7 @@ function SkillRow(props: { skill: SkillInfo; onRefresh: () => void }) {
       type="button"
       className={`knowlery-skill-row-item knowlery-skill-row-item--${skill.kind}${skill.disabled ? ' is-disabled' : ''}`}
       onClick={open}
-      aria-label={`Open ${skill.name} details`}
+      aria-label={t('skills.openDetails', { name: skill.name })}
     >
       <span className="knowlery-skill-row-item__icon" aria-hidden="true">
         <SkillIcon name={skill.name} size={18} />
@@ -90,7 +101,7 @@ function SkillRow(props: { skill: SkillInfo; onRefresh: () => void }) {
           <span className="knowlery-skill-row-item__desc">{skill.description}</span>
         )}
       </div>
-      <span className={`knowlery-badge knowlery-badge--${badge}`}>{badge}</span>
+      <span className={`knowlery-badge knowlery-badge--${badgeClass}`}>{badgeLabel}</span>
       <span className="knowlery-skill-row-item__chevron" aria-hidden="true">
         <IconChevronRight size={14} />
       </span>
@@ -120,7 +131,7 @@ function SkillGroup(props: {
           <div className="knowlery-skill-group__subtitle">{config.subtitle}</div>
         </div>
         <span className="knowlery-skill-group__count">
-          {skills.length} {skills.length === 1 ? 'skill' : 'skills'}
+          {tCount('skills.count', skills.length)}
         </span>
       </header>
       <div className="knowlery-skill-list">
@@ -144,7 +155,7 @@ export function SkillsLibrary() {
     try {
       setSkills(await listSkills(plugin.fs));
     } catch {
-      new Notice('Failed to load skills.');
+      new Notice(t('skills.loadFailed'));
     }
   }, [plugin]);
 
@@ -160,7 +171,7 @@ export function SkillsLibrary() {
     const enabled = skills.filter((s) => !s.disabled);
     const disabled = skills.filter((s) => s.disabled);
     return {
-      byKind: GROUPS.map((g) => ({
+      byKind: getGroups().map((g) => ({
         config: g,
         items: g.id === 'custom'
           ? enabled.filter((s) => s.source === 'custom')
@@ -176,8 +187,8 @@ export function SkillsLibrary() {
     <div className="knowlery-skills-library">
       <div className="knowlery-skills__source-toolbar">
         <div>
-          <div className="knowlery-section-label">Skill source library</div>
-          <div className="knowlery-skills__toolbar-desc">Create, browse, and inspect the canonical skill prompts.</div>
+          <div className="knowlery-section-label">{t('skills.sourceLibrary')}</div>
+          <div className="knowlery-skills__toolbar-desc">{t('skills.sourceLibraryDesc')}</div>
         </div>
         <div className="knowlery-skills__actions">
           <button
@@ -185,14 +196,14 @@ export function SkillsLibrary() {
             onClick={() => new SkillEditorModal(plugin.app, plugin, 'create', null, () => void refresh()).open()}
           >
             <IconPlus size={14} />
-            <span>Create</span>
+            <span>{t('skills.create')}</span>
           </button>
           <button
             className="knowlery-btn knowlery-btn--outline"
             onClick={() => new SkillBrowserModal(plugin.app, plugin, () => void refresh()).open()}
           >
             <IconPlus size={14} />
-            <span>Browse</span>
+            <span>{t('skills.browse')}</span>
           </button>
         </div>
       </div>
@@ -200,8 +211,8 @@ export function SkillsLibrary() {
       {skills.length === 0 && (
         <div className="knowlery-empty-state">
           <IconInbox size={32} className="knowlery-empty-state__icon" />
-          <p className="knowlery-empty-state__text">No skills found</p>
-          <p className="knowlery-empty-state__hint">Run the setup wizard to install built-in skills.</p>
+          <p className="knowlery-empty-state__text">{t('skills.noneFound')}</p>
+          <p className="knowlery-empty-state__hint">{t('skills.noneFoundHint')}</p>
         </div>
       )}
 
@@ -218,11 +229,11 @@ export function SkillsLibrary() {
         <section className="knowlery-skill-group knowlery-skill-group--disabled">
           <header className="knowlery-skill-group__header">
             <div className="knowlery-skill-group__meta">
-              <div className="knowlery-skill-group__title">Disabled</div>
-              <div className="knowlery-skill-group__subtitle">Hidden from the agent until re-enabled</div>
+              <div className="knowlery-skill-group__title">{t('skills.group.disabled.title')}</div>
+              <div className="knowlery-skill-group__subtitle">{t('skills.group.disabled.subtitle')}</div>
             </div>
             <span className="knowlery-skill-group__count">
-              {grouped.disabled.length} {grouped.disabled.length === 1 ? 'skill' : 'skills'}
+              {tCount('skills.count', grouped.disabled.length)}
             </span>
           </header>
           <div className="knowlery-skill-list">

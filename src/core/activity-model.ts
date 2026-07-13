@@ -8,6 +8,7 @@ import type {
   KnowledgeThreadSummary,
 } from '../types';
 import { ActivityRecordSchema } from '../types';
+import { t } from '../i18n';
 
 const DIMENSIONS: ActivityDimension[] = [
   'analysis',
@@ -234,7 +235,7 @@ function chooseThreadTitle(records: ActivityRecord[]): string {
   return [...topicCounts.values()]
     .sort((a, b) => b.count - a.count || b.lastSeen.localeCompare(a.lastSeen))[0]?.title
     ?? records[0]?.summary
-    ?? 'Untitled thread';
+    ?? t('activity.untitledThread');
 }
 
 function inferStage(records: ActivityRecord[]): KnowledgeThreadStage {
@@ -260,15 +261,15 @@ function inferNextMove(stage: KnowledgeThreadStage, records: ActivityRecord[]): 
 
 function explainNextMove(stage: KnowledgeThreadStage, nextMove: KnowledgeThreadStage): string {
   if (stage === 'Capture' && nextMove === 'Connect') {
-    return 'This thread has useful material, but it will become more reusable once it is linked to older notes and patterns.';
+    return t('activity.reason.captureToConnect');
   }
   if (nextMove === 'Question') {
-    return 'This thread has enough reflection to start checking assumptions, evidence, and gaps.';
+    return t('activity.reason.question');
   }
   if (nextMove === 'Create') {
-    return 'This thread has enough structure to turn into an output, template, or decision artifact.';
+    return t('activity.reason.create');
   }
-  return 'This thread has recent activity and can benefit from one focused follow-up move.';
+  return t('activity.reason.default');
 }
 
 function buildSuggestedRequest(title: string, nextMove: KnowledgeThreadStage): string {

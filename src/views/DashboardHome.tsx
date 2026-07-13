@@ -12,7 +12,7 @@ import { sendPromptToAgent, copyPrompt } from './request-actions';
 import type { DailyReviewParseResult, DailyReviewRequest } from '../core/agent-review';
 import { buildDailyReviewRequest, readDailyReviewResult, writeDailyReviewRequest } from '../core/agent-review';
 import { buildWeeklyBakeModel, REPORT_DIR, writeWeeklyBakeReport } from '../core/weekly-bake';
-import { RECIPE_BOOK } from '../core/moves';
+import { getRecipeBook } from '../core/moves';
 import { buildRecookPrompt, computeStaleness, type StalenessReport } from '../core/query/staleness';
 import { ReflectionCaptureModal } from '../modals/reflection-capture';
 import { ExportBundleModal } from '../modals/export-bundle';
@@ -53,6 +53,7 @@ import type { InstalledBundlesFile } from '../types';
 import { readInstalledBundles } from '../core/okf/registry';
 import { uninstallBundle } from '../core/okf/uninstall';
 import { IconBookOpen, IconChevronRight, IconClipboard, IconDownload, IconExternalLink, IconPlay, IconPlus, IconRefresh } from './Icons';
+import { t, tCount } from '../i18n';
 
 const LATEST_REPORT_PATH = `${REPORT_DIR}/latest.html`;
 
@@ -154,7 +155,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const copyRequest = async (request?: string) => {
     if (!request) {
-      new Notice('No agent request prepared yet.');
+      new Notice(t('home.noRequest'));
       return;
     }
     await copyPrompt(request);
@@ -162,7 +163,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
   const sendRequest = async (request?: string) => {
     if (!request) {
-      new Notice('No agent request prepared yet.');
+      new Notice(t('home.noRequest'));
       return;
     }
     await sendPromptToAgent(plugin.app, request);
@@ -174,7 +175,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       const result = await readRecentActivityRecords(plugin.fs, 7);
       const written = await writeWeeklyBakeReport(plugin.app, buildWeeklyBakeModel(result.records));
       setLatestReportExists(true);
-      new Notice(`Weekly summary generated: ${written.latestPath}`);
+      new Notice(t('home.week.generated', { path: written.latestPath }));
       await refresh();
     } finally {
       setGenerating(false);
@@ -185,13 +186,13 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     const path = normalizePath(LATEST_REPORT_PATH);
     const adapter = plugin.app.vault.adapter;
     if (!(await adapter.exists(path))) {
-      new Notice('No weekly summary has been generated yet.');
+      new Notice(t('home.week.noneYet'));
       setLatestReportExists(false);
       return;
     }
     const fullPath = (adapter as typeof adapter & FullPathAdapter).getFullPath(path);
     if (!fullPath) {
-      new Notice(`Weekly summary is at ${path}`);
+      new Notice(t('home.week.reportAt', { path }));
       return;
     }
     const { shell } = (window as Window & ElectronWindow).require('electron');
@@ -212,14 +213,14 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
         result: await readDailyReviewResult(plugin.app, request.resultPath, request.id),
       });
       if (sent) {
-        new Notice('Review polish request sent to claudian.');
+        new Notice(t('home.week.polishSent'));
         return;
       }
       try {
         await navigator.clipboard.writeText(request.prompt);
-        new Notice('Claudian is not available. Review request copied.');
+        new Notice(t('home.week.polishCopied'));
       } catch {
-        new Notice('Claudian is not available, and the request could not be copied.');
+        new Notice(t('home.week.polishFailed'));
       }
     } finally {
       setPolishing(false);
@@ -239,7 +240,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     <div className="knowlery-home">
       <section className="knowlery-home__today">
         <div className="knowlery-home__today-copy">
-          <div className="knowlery-section-label">Today's move</div>
+          <div className="knowlery-section-label">{t('home.todaysMove')}</div>
           <h2>{model.title}</h2>
           <p>{model.body}</p>
         </div>
@@ -253,13 +254,13 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       </section>
 
       <SuggestedMovesSection
-        moves={RECIPE_BOOK}
+        moves={getRecipeBook()}
         onMoveClick={(move) => props.navigate('move-detail', move)}
         onViewAll={() => props.navigate('all-moves')}
       />
 
       <section className="knowlery-home__note">
-        <div className="knowlery-section-label">This note</div>
+        <div className="knowlery-section-label">{t('home.thisNote')}</div>
         {file ? (
           <article className="knowlery-home__note-card">
             <div className="knowlery-home__note-header">
@@ -273,7 +274,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
                 className="knowlery-btn knowlery-btn--primary"
                 onClick={() => void sendRequest(noteRequest ?? undefined)}
               >
-                <span>Send to agent</span>
+                <span>{t('common.sendToAgent')}</span>
               </button>
               <button
                 type="button"
@@ -281,7 +282,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
                 onClick={() => void copyRequest(noteRequest ?? undefined)}
               >
                 <IconClipboard size={14} />
-                <span>Copy prompt</span>
+                <span>{t('common.copyPrompt')}</span>
               </button>
               {currentConceptId && (
                 <button
@@ -290,13 +291,13 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
                   onClick={() => openShareModal(currentConceptId)}
                 >
                   <IconExternalLink size={14} />
-                  <span>Share this topic…</span>
+                  <span>{t('home.shareTopic')}</span>
                 </button>
               )}
             </div>
           </article>
         ) : (
-          <p className="knowlery-home__note-empty">Open a Markdown note and Knowlery will suggest one small maintenance move for it.</p>
+          <p className="knowlery-home__note-empty">{t('home.noteEmpty')}</p>
         )}
       </section>
 
@@ -311,11 +312,11 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       />
 
       <section className="knowlery-home__week">
-        <div className="knowlery-section-label">This week</div>
+        <div className="knowlery-section-label">{t('home.thisWeek')}</div>
         <article className="knowlery-home__week-card">
           <div className="knowlery-home__week-header">
-            <h3>Weekly summary</h3>
-            <span className="knowlery-home__week-count">{recordCount} records</span>
+            <h3>{t('home.week.title')}</h3>
+            <span className="knowlery-home__week-count">{t('home.week.records', { count: recordCount })}</span>
           </div>
           <div className="knowlery-home__week-actions">
             <button
@@ -325,7 +326,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               disabled={generating}
             >
               {generating ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconBookOpen size={14} />}
-              <span>{generating ? 'Generating…' : 'Generate summary'}</span>
+              <span>{generating ? t('home.week.generating') : t('home.week.generate')}</span>
             </button>
             <button
               type="button"
@@ -334,7 +335,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               disabled={!latestReportExists}
             >
               <IconExternalLink size={14} />
-              <span>Open last report</span>
+              <span>{t('home.week.openLast')}</span>
             </button>
             <button
               type="button"
@@ -343,7 +344,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
               disabled={polishing}
             >
               {polishing ? <span className="knowlery-spin"><IconRefresh size={14} /></span> : <IconPlay size={14} />}
-              <span>{polishing ? 'Preparing…' : 'Send for review'}</span>
+              <span>{polishing ? t('home.week.preparing') : t('home.week.sendForReview')}</span>
             </button>
           </div>
           <WeeklyReviewStatus dailyReview={dailyReview} onCheckResult={() => void refresh()} />
@@ -351,14 +352,14 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
       </section>
 
       <section className="knowlery-home__bundle">
-        <div className="knowlery-section-label">Bundles</div>
+        <div className="knowlery-section-label">{t('home.bundles')}</div>
         <article className="knowlery-home__bundle-card">
           <div className="knowlery-home__bundle-copy">
-            <h3>{bundleSummary && bundleSummary.seeds > 0 ? 'Knowledge bundle review' : 'Pick a topic to share'}</h3>
+            <h3>{bundleSummary && bundleSummary.seeds > 0 ? t('home.bundles.reviewTitle') : t('home.bundles.pickTitle')}</h3>
             <span>
               {bundleSummary && bundleSummary.seeds > 0
-                ? `${bundleSummary.approved} approved · ${bundleSummary.unreviewed} need review`
-                : 'Create a reviewed bundle from selected knowledge pages.'}
+                ? t('home.bundles.reviewSummary', { approved: bundleSummary.approved, unreviewed: bundleSummary.unreviewed })
+                : t('home.bundles.pickSummary')}
             </span>
           </div>
           <button
@@ -367,13 +368,13 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             onClick={() => openShareModal()}
           >
             <IconExternalLink size={14} />
-            <span>{bundleSummary && bundleSummary.seeds > 0 ? 'Continue review' : 'Share knowledge…'}</span>
+            <span>{bundleSummary && bundleSummary.seeds > 0 ? t('home.bundles.continueReview') : t('home.bundles.share')}</span>
           </button>
         </article>
         <article className="knowlery-home__bundle-card">
           <div className="knowlery-home__bundle-copy">
-            <h3>Install a knowledge bundle</h3>
-            <span>Add someone else's exported knowledge bundle to this vault.</span>
+            <h3>{t('home.bundles.installTitle')}</h3>
+            <span>{t('home.bundles.installDesc')}</span>
           </div>
           <button
             type="button"
@@ -381,14 +382,14 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
             onClick={openInstallModal}
           >
             <IconDownload size={14} />
-            <span>Install bundle…</span>
+            <span>{t('home.bundles.installButton')}</span>
           </button>
         </article>
       </section>
 
       <InstalledBundlesSection registry={installedBundles} onUninstall={(bundleId) => void removeBundle(bundleId)} />
 
-      <section className="knowlery-home__stats" aria-label="Vault stats">
+      <section className="knowlery-home__stats" aria-label={t('home.vaultStats')}>
         {model.stats.map((stat) => (
           <div key={stat.label} className="knowlery-home__stat">
             <strong>{stat.value}</strong>
@@ -436,12 +437,8 @@ function InstalledBundlesSection(props: {
       const changed = await modifiedFiles(plugin.fs, entry);
       if (changed.length > 0) {
         const preview = changed.slice(0, 3).join('\n');
-        const more = changed.length > 3 ? `\n…and ${changed.length - 3} more` : '';
-        new Notice(
-          `${id} was modified locally — updating would overwrite these edits:\n${preview}${more}\n`
-          + 'Move your notes into your own pages, or run `knowlery bundle update '
-          + `${id} --force\` from the CLI to overwrite.`,
-        );
+        const more = changed.length > 3 ? `\n${t('home.bundles.andMore', { count: changed.length - 3 })}` : '';
+        new Notice(t('home.bundles.modifiedLocally', { id, files: `${preview}${more}` }));
         return;
       }
       const downloaded = await downloadRemoteBundle(url, { fetchImpl: obsidianRemoteFetch });
@@ -451,11 +448,11 @@ function InstalledBundlesSection(props: {
       } finally {
         await downloaded.cleanup();
       }
-      new Notice(`${id} updated.`);
+      new Notice(t('home.bundles.updated', { id }));
       setStatuses(null);
       plugin.events.trigger('dashboard-refresh');
     } catch (error) {
-      new Notice(`Update failed — the installed version is untouched. ${error instanceof Error ? error.message : String(error)}`);
+      new Notice(t('home.bundles.updateFailed', { error: error instanceof Error ? error.message : String(error) }));
     } finally {
       setUpdating(null);
     }
@@ -464,14 +461,14 @@ function InstalledBundlesSection(props: {
   return (
     <section className="knowlery-home__installed">
       <div className="knowlery-section-label">
-        Installed bundles
+        {t('home.installedBundles')}
         <button
           type="button"
           className="knowlery-btn knowlery-btn--outline knowlery-home__installed-check"
           disabled={checking}
           onClick={() => void checkUpdates()}
         >
-          {checking ? 'Checking…' : 'Check updates'}
+          {checking ? t('home.bundles.checking') : t('home.bundles.checkUpdates')}
         </button>
       </div>
       {entries.map(([id, entry]) => {
@@ -482,7 +479,7 @@ function InstalledBundlesSection(props: {
               <span className="knowlery-home__installed-title">{entry.title}</span>
               <span className="knowlery-home__installed-meta">
                 v{entry.version}
-                {status?.kind === 'current' && ' · up to date'}
+                {status?.kind === 'current' && ` · ${t('home.bundles.upToDate')}`}
                 {(status?.kind === 'unchecked' || status?.kind === 'skipped' || status?.kind === 'unreachable') && ` · ${status.reason}`}
               </span>
             </div>
@@ -493,7 +490,7 @@ function InstalledBundlesSection(props: {
                 disabled={updating !== null}
                 onClick={() => void updateBundle(id, status.url)}
               >
-                {updating === id ? 'Updating…' : `Update to v${status.latest}`}
+                {updating === id ? t('home.bundles.updating') : t('home.bundles.updateTo', { version: status.latest })}
               </button>
             )}
             <span className={`knowlery-badge knowlery-badge--${entry.conformance === 'passed' ? 'success' : 'warning'}`}>
@@ -504,7 +501,7 @@ function InstalledBundlesSection(props: {
               className="knowlery-btn knowlery-btn--outline"
               onClick={() => props.onUninstall(id)}
             >
-              <span>Uninstall</span>
+              <span>{t('home.bundles.uninstall')}</span>
             </button>
           </div>
         );
@@ -549,7 +546,7 @@ function TodayMoveActions(props: {
       >
         <span>{model.primaryAction.label}</span>
       </button>
-      <IconActionButton label="Copy prompt" onClick={() => props.onCopyRequest(model.primaryAction.request)}>
+      <IconActionButton label={t('common.copyPrompt')} onClick={() => props.onCopyRequest(model.primaryAction.request)}>
         <IconClipboard size={14} />
       </IconActionButton>
     </div>
@@ -594,22 +591,22 @@ function WeeklyReviewStatus(props: {
       <article className="knowlery-home__week-result">
         <h3>{result.result.title}</h3>
         <p>{result.result.summary}</p>
-        <span>Next move: {result.result.nextRecipe}</span>
+        <span>{t('home.week.nextMove', { move: result.result.nextRecipe })}</span>
       </article>
     );
   }
 
   if (result && !result.ok) {
-    return <p className="knowlery-home__week-state">Result file exists, but the JSON is malformed: {result.error}</p>;
+    return <p className="knowlery-home__week-state">{t('home.week.malformed', { error: result.error ?? '' })}</p>;
   }
 
   if (requestExists) {
     return (
       <div className="knowlery-home__week-pending">
-        <p className="knowlery-home__week-state">Request created. Waiting for agent result at {request.resultPath}.</p>
+        <p className="knowlery-home__week-state">{t('home.week.waiting', { path: request.resultPath })}</p>
         <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={props.onCheckResult}>
           <IconRefresh size={14} />
-          <span>Check result</span>
+          <span>{t('home.week.checkResult')}</span>
         </button>
       </div>
     );
@@ -629,7 +626,7 @@ function SuggestedMovesSection(props: {
   const shown = moves.slice(0, MOVES_CAP);
   return (
     <section className="knowlery-home__moves">
-      <div className="knowlery-section-label">Suggested moves</div>
+      <div className="knowlery-section-label">{t('home.suggestedMoves')}</div>
       {shown.map((move) => (
         <button
           key={move.id}
@@ -650,7 +647,7 @@ function SuggestedMovesSection(props: {
           className="knowlery-home__viewall"
           onClick={props.onViewAll}
         >
-          View all ({moves.length}) →
+          {t('common.viewAllCount', { count: moves.length })}
         </button>
       )}
     </section>
@@ -672,15 +669,15 @@ function KnowledgeHealthSection(props: {
   const uncooked = report.uncookedNotes;
   const shown = stale.slice(0, STALE_CAP);
   const summary = [
-    stale.length > 0 ? `${stale.length} ${stale.length === 1 ? 'page has' : 'pages have'} changed sources` : null,
-    uncooked.length > 0 ? `${uncooked.length} ${uncooked.length === 1 ? 'note' : 'notes'} never compiled` : null,
+    stale.length > 0 ? tCount('home.health.stalePages', stale.length) : null,
+    uncooked.length > 0 ? tCount('home.health.uncooked', uncooked.length) : null,
   ].filter(Boolean).join(' · ');
 
   return (
-    <section className="knowlery-home__activity" aria-label="Knowledge health">
-      <div className="knowlery-section-label">Knowledge health</div>
+    <section className="knowlery-home__activity" aria-label={t('home.knowledgeHealth')}>
+      <div className="knowlery-section-label">{t('home.knowledgeHealth')}</div>
       {stale.length === 0 && uncooked.length === 0 ? (
-        <p className="knowlery-home__note-empty">Compiled pages are up to date with their sources.</p>
+        <p className="knowlery-home__note-empty">{t('home.health.upToDate')}</p>
       ) : (
         <>
           <div className="knowlery-home__act">
@@ -690,7 +687,7 @@ function KnowledgeHealthSection(props: {
             <div key={finding.path} className="knowlery-home__act">
               <span className="knowlery-home__act-summary">{finding.path}</span>
               <span className="knowlery-home__act-meta">
-                {finding.changedSources.length} {finding.changedSources.length === 1 ? 'source' : 'sources'} changed
+                {tCount('home.health.sourcesChanged', finding.changedSources.length)}
               </span>
             </div>
           ))}
@@ -702,7 +699,7 @@ function KnowledgeHealthSection(props: {
                 onClick={() => { void copyPrompt(buildRecookPrompt(report)); }}
               >
                 <IconClipboard size={14} />
-                <span>Copy re-cook prompt</span>
+                <span>{t('home.health.copyRecook')}</span>
               </button>
             )}
             <button
@@ -710,7 +707,7 @@ function KnowledgeHealthSection(props: {
               className="knowlery-home__viewall"
               onClick={props.onViewAll}
             >
-              View all →
+              {t('common.viewAll')}
             </button>
           </div>
         </>
@@ -728,7 +725,7 @@ function RecentActivitySection(props: {
   const shown = records.slice(0, ACTIVITY_CAP);
   return (
     <section className="knowlery-home__activity">
-      <div className="knowlery-section-label">Recent activity</div>
+      <div className="knowlery-section-label">{t('home.recentActivity')}</div>
       {shown.map((record, index) => (
         <div key={`${record.time}-${index}`} className="knowlery-home__act">
           <span className="knowlery-home__act-summary">{record.summary}</span>
@@ -741,7 +738,7 @@ function RecentActivitySection(props: {
           className="knowlery-home__viewall"
           onClick={props.onViewAll}
         >
-          View all ({records.length}) →
+          {t('common.viewAllCount', { count: records.length })}
         </button>
       )}
     </section>
