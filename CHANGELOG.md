@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.2] — 2026-07-13
+
+### New features
+
+- **Simplified Chinese UI.** The Obsidian dashboard and the plugin settings
+  tab are now internationalized, with Simplified Chinese as the first
+  localized language. A new **Language** setting offers `Follow Obsidian`
+  (default — resolves via Obsidian's own language selection), `English`, and
+  `中文`. Localized surfaces include every dashboard screen (today card,
+  suggested moves, knowledge health, weekly summary, bundles), the full
+  settings tab with diagnostics, rules, and the skills library, command
+  palette entries, file-menu items, and notices. Translation catalogs are
+  typed so English/Chinese key parity is enforced at compile time.
+- Deliberately unchanged: agent-facing prompts stay English (they cooperate
+  with the English skill set), skill names and descriptions are content
+  rather than UI copy, and the weekly report already renders bilingual
+  panels. Modal dialogs (setup wizard, bundle export/install, skill and rule
+  editors) remain English in this release and are the planned follow-up.
+
 ## [1.2.1] — 2026-07-10
 
 ### Fixes
