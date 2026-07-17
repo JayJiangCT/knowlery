@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.3] — 2026-07-17
+
+### Fixes
+
+- **Skills: the write path is chosen by operation, not environment.** Full
+  knowledge pages are written directly to their exact path (Obsidian indexes
+  new files automatically); `obsidian create`/`append` remain for short
+  content, now always taught with `path=`; `obsidian rename` stays mandatory
+  for renames/moves, where wikilink rewriting is the real benefit. An explicit
+  failure branch ends the escaping fights agents used to lose: if `create`
+  fails once on content escaping, write the file directly and verify with
+  `obsidian read` or `knowlery health`. The obsidian-cli skill gains a
+  "Writing long or complex content" section naming the bash hazards
+  (backticks, `$`, nested quotes).
+- **Skills: reference hygiene.** Phantom references to skills removed in
+  v0.3.4 are gone (`/trace` → `/explore`, `/connect` → `/challenge`
+  suggestions, `/wiki` → "edit INDEX.base per the obsidian-bases skill");
+  invalid CLI syntax fixed (`search query=`, no OR operator, `tags` misuse →
+  `search:context`); naming conventions unified to SCHEMA.md's
+  lowercase-hyphen for agent pages with user notes explicitly hands-off.
+  All of it content-asserted in CI.
+- **Docs: Freshness Review retired.** README and the docs site (en+zh)
+  described a Freshness Review workflow that does not exist in the shipped
+  plugin; those sections now describe the real staleness-report workflow.
+  The reference gains the missing `knowlery-mcp` skill row (15 total) and
+  current settings sections including the 1.2.2 Language setting.
+
 ## [1.2.2] — 2026-07-13
 
 ### New features

@@ -10,7 +10,7 @@
       "name": "knowlery",
       "source": "./plugin",
       "description": "Knowlery: the knowledge base your agents can live in — query, capture, and maintain plain-markdown knowledge bases by conversation.",
-      "version": "1.2.2"
+      "version": "1.2.3"
     }
   ]
 }
