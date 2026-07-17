@@ -79,7 +79,7 @@ the question — read those source notes too.
 
 **Fallback (degraded mode).** Only if no transport is available: enumerate
 compiled pages with `obsidian properties type=entity` (and `concept`, `comparison`,
-`query`), run `obsidian search "<key concept>"` per key concept, merge and deduplicate
+`query`), run `obsidian search query="<key concept>"` per key concept, merge and deduplicate
 the results — and say in your answer that retrieval ran in degraded mode without the
 retrieval engine.
 
@@ -142,8 +142,8 @@ Every claim must be backed by at least one vault note. Do not use general knowle
 ## Related Questions
 
 - Consider exploring: "..."
-- Run `/trace topic="X"` to see how this evolved
-- Run `/connect from="A" to="B"` to understand the relationship
+- Run `/explore topic="X"` to see how this evolved
+- Run `/challenge "<claim>"` to pressure-test a conclusion the answer rests on
 - If the vault lacks pages for key entities or concepts, run `/cook` to compile knowledge from source notes
 ```
 
@@ -163,7 +163,10 @@ tags: [qa, <topic>]
 ---
 ```
 
-Use `obsidian create` to save. Ask the user where they'd like it saved.
+Ask the user where they'd like it saved, then write the note there. A saved
+answer is a full page — write the `.md` file directly (Obsidian indexes new
+files automatically); `obsidian create path="..."` is fine for short answers.
+See **vault-conventions** for the writing-tool rules and frontmatter.
 
 ## Key Principles
 

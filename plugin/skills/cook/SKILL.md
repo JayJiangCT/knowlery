@@ -112,10 +112,16 @@ is written down. On every page you create or update, record into `aliases` front
 - Appears in 2+ notes, OR is central subject of one note
 - Do NOT create for: passing mentions, minor details, out-of-domain topics
 
-**Writing tool:** prefer `obsidian create` when Obsidian is running (it keeps the
-wikilink graph consistent). In headless environments, write the files directly with
-identical frontmatter and naming conventions, and run `knowlery health` (or
-`node .knowlery/bin/query.mjs --stale`) after bulk changes to verify the result.
+**Writing tool (by operation, not by environment):** full knowledge pages are long
+and carry code blocks and quotes — write the `.md` file directly at its exact path
+(`entities/<name>.md`, …); Obsidian indexes new files automatically. Use
+`obsidian append` / `obsidian property:set` for small additions to existing pages,
+and `obsidian rename` for renames/moves (it rewrites wikilinks across the vault).
+If you use `obsidian create` for a short page, pass `path=` (not just `name=`) so
+it lands in the right directory — and if it fails on content escaping, write the
+file directly instead of fighting the shell. In headless environments, write files
+directly. Either way, run `knowlery health` (or `node .knowlery/bin/query.mjs
+--stale`) after bulk changes to verify the result.
 
 ### Step 4: Cross-Reference
 - Ensure every new/updated page has at least 2 outbound wikilinks
@@ -125,13 +131,13 @@ identical frontmatter and naming conventions, and run `knowlery health` (or
 After Step 3–4, reconcile agent pages touched this cycle with `SCHEMA.md`:
 
 - Re-read `SCHEMA.md` if you have not just read it.
-- If **any** new or updated agent page uses a `tag` not listed under **Current Tags** (or **Domain Taxonomy** / **Knowledge Domains** for a new `domain` value), **update `SCHEMA.md`** via Obsidian CLI: add the missing tag(s) or domain line(s), keep lists alphabetically sorted where the file already uses lists, and **preserve** unrelated sections and the user's prose.
+- If **any** new or updated agent page uses a `tag` not listed under **Current Tags** (or **Domain Taxonomy** / **Knowledge Domains** for a new `domain` value), **update `SCHEMA.md`** (a small structured edit — edit the file directly or via Obsidian CLI): add the missing tag(s) or domain line(s), keep lists alphabetically sorted where the file already uses lists, and **preserve** unrelated sections and the user's prose.
 - If every tag and domain on those pages already appears in `SCHEMA.md`, **do not** rewrite the file.
 - Do **not** remove tags or domains from `SCHEMA.md` during /cook unless the user explicitly asked to prune taxonomy.
 - Stay consistent with SCHEMA rules: singular tags, 2–5 tags per page on agent pages, new tags documented here before (or as soon as) use.
 
 ### Step 6: Update Navigation
-- `INDEX.base` stays current in Obsidian via its Base query — suggest **`/wiki`** if views, filters, or columns need tuning after large cooks
+- `INDEX.base` stays current in Obsidian via its Base query — if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
 - Append entry to `log.md` (human-readable history only — incremental scope comes from the staleness report, never from this file)
 
 ### Step 7: Report

@@ -128,10 +128,16 @@ is written down. On every page you create or update, record into \`aliases\` fro
 - Appears in 2+ notes, OR is central subject of one note
 - Do NOT create for: passing mentions, minor details, out-of-domain topics
 
-**Writing tool:** prefer \`obsidian create\` when Obsidian is running (it keeps the
-wikilink graph consistent). In headless environments, write the files directly with
-identical frontmatter and naming conventions, and run \`knowlery health\` (or
-\`node .knowlery/bin/query.mjs --stale\`) after bulk changes to verify the result.
+**Writing tool (by operation, not by environment):** full knowledge pages are long
+and carry code blocks and quotes — write the \`.md\` file directly at its exact path
+(\`entities/<name>.md\`, …); Obsidian indexes new files automatically. Use
+\`obsidian append\` / \`obsidian property:set\` for small additions to existing pages,
+and \`obsidian rename\` for renames/moves (it rewrites wikilinks across the vault).
+If you use \`obsidian create\` for a short page, pass \`path=\` (not just \`name=\`) so
+it lands in the right directory — and if it fails on content escaping, write the
+file directly instead of fighting the shell. In headless environments, write files
+directly. Either way, run \`knowlery health\` (or \`node .knowlery/bin/query.mjs
+--stale\`) after bulk changes to verify the result.
 
 ### Step 4: Cross-Reference
 - Ensure every new/updated page has at least 2 outbound wikilinks
@@ -141,13 +147,13 @@ identical frontmatter and naming conventions, and run \`knowlery health\` (or
 After Step 3–4, reconcile agent pages touched this cycle with \`SCHEMA.md\`:
 
 - Re-read \`SCHEMA.md\` if you have not just read it.
-- If **any** new or updated agent page uses a \`tag\` not listed under **Current Tags** (or **Domain Taxonomy** / **Knowledge Domains** for a new \`domain\` value), **update \`SCHEMA.md\`** via Obsidian CLI: add the missing tag(s) or domain line(s), keep lists alphabetically sorted where the file already uses lists, and **preserve** unrelated sections and the user's prose.
+- If **any** new or updated agent page uses a \`tag\` not listed under **Current Tags** (or **Domain Taxonomy** / **Knowledge Domains** for a new \`domain\` value), **update \`SCHEMA.md\`** (a small structured edit — edit the file directly or via Obsidian CLI): add the missing tag(s) or domain line(s), keep lists alphabetically sorted where the file already uses lists, and **preserve** unrelated sections and the user's prose.
 - If every tag and domain on those pages already appears in \`SCHEMA.md\`, **do not** rewrite the file.
 - Do **not** remove tags or domains from \`SCHEMA.md\` during /cook unless the user explicitly asked to prune taxonomy.
 - Stay consistent with SCHEMA rules: singular tags, 2–5 tags per page on agent pages, new tags documented here before (or as soon as) use.
 
 ### Step 6: Update Navigation
-- \`INDEX.base\` stays current in Obsidian via its Base query — suggest **\`/wiki\`** if views, filters, or columns need tuning after large cooks
+- \`INDEX.base\` stays current in Obsidian via its Base query — if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
 - Append entry to \`log.md\` (human-readable history only — incremental scope comes from the staleness report, never from this file)
 
 ### Step 7: Report
@@ -319,7 +325,7 @@ the question — read those source notes too.
 
 **Fallback (degraded mode).** Only if no transport is available: enumerate
 compiled pages with \`obsidian properties type=entity\` (and \`concept\`, \`comparison\`,
-\`query\`), run \`obsidian search "<key concept>"\` per key concept, merge and deduplicate
+\`query\`), run \`obsidian search query="<key concept>"\` per key concept, merge and deduplicate
 the results — and say in your answer that retrieval ran in degraded mode without the
 retrieval engine.
 
@@ -382,8 +388,8 @@ Every claim must be backed by at least one vault note. Do not use general knowle
 ## Related Questions
 
 - Consider exploring: "..."
-- Run \`/trace topic="X"\` to see how this evolved
-- Run \`/connect from="A" to="B"\` to understand the relationship
+- Run \`/explore topic="X"\` to see how this evolved
+- Run \`/challenge "<claim>"\` to pressure-test a conclusion the answer rests on
 - If the vault lacks pages for key entities or concepts, run \`/cook\` to compile knowledge from source notes
 \`\`\`
 
@@ -403,7 +409,10 @@ tags: [qa, <topic>]
 ---
 \`\`\`
 
-Use \`obsidian create\` to save. Ask the user where they'd like it saved.
+Ask the user where they'd like it saved, then write the note there. A saved
+answer is a full page — write the \`.md\` file directly (Obsidian indexes new
+files automatically); \`obsidian create path="..."\` is fine for short answers.
+See **vault-conventions** for the writing-tool rules and frontmatter.
 
 ## Key Principles
 
@@ -457,7 +466,7 @@ If the claim is ambiguous, ask the user to clarify before proceeding.
 ### Step 2: Find Supporting Evidence
 
 \`\`\`bash
-obsidian search "<key terms from claim>"
+obsidian search query="<key terms from claim>"
 \`\`\`
 
 Read relevant notes and agent pages. Identify:
@@ -469,9 +478,12 @@ Read relevant notes and agent pages. Identify:
 
 This is the core of /challenge. Search for:
 
-1. **Direct contradictions** — Notes that explicitly state the opposite
+1. **Direct contradictions** — Notes that explicitly state the opposite.
+   The CLI has no OR operator — run one search per phrasing:
    \`\`\`bash
-   obsidian search "not <term>" OR "instead of <term>" OR "changed from <term>"
+   obsidian search query="not <term>"
+   obsidian search query="instead of <term>"
+   obsidian search query="changed from <term>"
    \`\`\`
 
 2. **Implicit contradictions** — Notes that describe a situation incompatible with the claim
@@ -479,8 +491,12 @@ This is the core of /challenge. Search for:
    - On related \`entities/\` and \`concepts/\` pages, check optional \`contradictions\` frontmatter (v2: YAML list of other agent page names documenting conflicting claims — see \`/cook\` Contradiction Handling)
 
 3. **Position changes over time** — Notes that show the user changed their mind
+   (one search per marker word):
    \`\`\`bash
-   obsidian search "actually" OR "turns out" OR "reconsidered" OR "reversed"
+   obsidian search query="actually"
+   obsidian search query="turns out"
+   obsidian search query="reconsidered"
+   obsidian search query="reversed"
    \`\`\`
 
 4. **Weasel words** — Notes that express uncertainty about aspects the claim treats as certain
@@ -549,7 +565,9 @@ Rate the overall case:
 - **Respectful opposition.** The goal is to strengthen thinking, not to tear it down. Frame challenges as "here's what to consider" not "you're wrong."
 - **Evidence only.** Every challenge must cite specific vault notes. Don't invent external counterarguments.
 - **Surface uncertainty.** If the vault shows doubt or hesitation about aspects the claim treats as certain, highlight this gap.
-- **Obsidian is first workbench.** All note operations go through Obsidian CLI.
+- **Obsidian is the reading workbench.** Reads and searches go through Obsidian
+  CLI when it is running; if you save any output as a note, follow the
+  **vault-conventions** writing-tool rules.
 `,
   },
   {
@@ -674,7 +692,7 @@ Generated from {N} notes across {M} domains.
 - [[Note B]]: "{relevant quote}"
 - [[Note C]]: "{relevant quote}"
 
-**Concrete next step**: {exactly what to do — write a note, schedule a meeting, create a project, run /trace on a topic}
+**Concrete next step**: {exactly what to do — write a note, schedule a meeting, create a project, run /explore on a topic}
 
 **Impact**: {why this matters — what it could unlock or prevent}
 
@@ -699,8 +717,8 @@ Rank the three highest-impact, most immediately actionable ideas:
 
 ## Suggested Follow-ups
 
-- Run \`/trace topic="X"\` to explore Idea 1 further
-- Run \`/connect from="A" to="B"\` to validate Idea 3
+- Run \`/explore topic="X"\` to explore Idea 1 further
+- Run \`/challenge "<claim>"\` to pressure-test Idea 3
 - Run \`/cook\` to compile or refresh \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\` pages when an idea exposes a knowledge gap
 - Add or extend a page under \`queries/\` for Idea 5 if it is question-shaped knowledge worth keeping
 \`\`\`
@@ -721,7 +739,10 @@ tags: [ideas, proactive]
 ---
 \`\`\`
 
-Use \`obsidian create\` to save. Ask the user where they'd like it saved.
+Ask the user where they'd like it saved, then write the note there. A saved
+answer is a full page — write the \`.md\` file directly (Obsidian indexes new
+files automatically); \`obsidian create path="..."\` is fine for short answers.
+See **vault-conventions** for the writing-tool rules and frontmatter.
 
 ## Key Principles
 
@@ -797,12 +818,13 @@ User notes should **remain** in their existing directories (\`Projects/\`, \`Dai
 
 ### Step 4: Check Naming Conventions
 
-Per SCHEMA.md conventions:
+Per SCHEMA.md conventions — these apply to **agent pages** (user notes keep the
+user's own naming):
 - File names should be lowercase with hyphens, no spaces
 - Names should match the page title (abbreviated, hyphenated)
 - No duplicate names with different suffixes (e.g., \`feature-a.md\` and \`feature-a-1.md\`)
 
-Flag any naming violations.
+Flag naming violations on agent pages only.
 
 ### Step 5: Suggest Moves
 
@@ -879,9 +901,12 @@ You are a historical detective. Your job is to trace how a specific idea, decisi
 Search for the topic across all notes:
 
 \`\`\`bash
-obsidian search "<topic>"
-obsidian tags "<topic>"
+obsidian search query="<topic>"
+obsidian search:context query="<topic>"
 \`\`\`
+
+(\`search\` returns matching paths; \`search:context\` adds grep-style matching
+lines — useful for dating each mention.)
 
 Also search agent-maintained pages under \`entities/\`, \`concepts/\`, \`comparisons/\`, and \`queries/\`:
 
@@ -987,7 +1012,9 @@ Traced across {N} notes spanning {start date} to {end date}.
 - **Evidence-based.** Every claim in the timeline must cite a specific note.
 - **Show the messiness.** Ideas rarely evolve linearly. Show the false starts, reversals, and parallel tracks.
 - **Flag contradictions.** Don't resolve them — present both sides and let the user decide.
-- **Obsidian is first workbench.** All note operations go through Obsidian CLI.
+- **Obsidian is the reading workbench.** Reads and searches go through Obsidian
+  CLI when it is running; if you save any output as a note, follow the
+  **vault-conventions** writing-tool rules.
 `,
   },
   {
@@ -1108,6 +1135,23 @@ obsidian create name="My Note" silent overwrite
 \`\`\`
 
 For multiline content use \`\\n\` for newline and \`\\t\` for tab.
+
+## Writing long or complex content
+
+\`content=\` is a **single shell-quoted argument**, and three bash hazards apply
+inside it: backticks run as command substitution, \`$\` expands variables, and
+nested double quotes end the argument. Any page carrying a code fence, LaTeX,
+or quoted prose will usually break the command or corrupt the written content —
+on top of the \`\\n\` escaping that multiline content already needs.
+
+- **Short content** (a heading, a line or two): \`obsidian create\` / \`obsidian append\` are fine.
+- **Full pages** (frontmatter + body, code blocks): write the \`.md\` file directly
+  with your file tools — Obsidian indexes new files automatically — then verify
+  with \`obsidian read path="..."\`.
+- Always pass \`path="dir/note.md"\` when the note must land in a specific folder;
+  \`name=\` resolves like a wikilink and uses the default new-note location.
+- If \`create\` fails once on escaping, switch to a direct file write; do not retry
+  with more escaping.
 
 ## File targeting
 
@@ -1428,7 +1472,7 @@ Create and edit valid Obsidian Flavored Markdown. Obsidian extends CommonMark an
 3. **Link related notes** using wikilinks (\`[[Note]]\`) for internal vault connections, or standard Markdown links for external URLs.
 4. **Embed content** from other notes, images, or PDFs using the \`![[embed]]\` syntax.
 5. **Add callouts** for highlighted information using \`> [!type]\` syntax.
-6. **Verify** the note renders correctly in Obsidian's reading view.
+6. **Verify** by reading the note back (\`obsidian read path="..."\`) — confirm the frontmatter parsed and links resolve.
 
 > When choosing between wikilinks and Markdown links: use \`[[wikilinks]]\` for notes within the vault (Obsidian tracks renames automatically) and \`[text](url)\` for external URLs only.
 
@@ -1683,22 +1727,32 @@ Before creating any note:
 
 1. Read \`AGENTS.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. \`Projects/\`, \`Daily/\`); **agent knowledge pages** live only under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`
-3. Prefer \`obsidian create\` when Obsidian is running; in headless environments write the file directly, following every convention below
+3. Pick the writing tool by the operation (see Creating Notes below), following every convention in this skill
 
 ## Creating Notes
 
-Prefer \`obsidian create\` when Obsidian is running (it keeps the wikilink graph
-consistent):
+Choose the writing tool **by the operation, not by whether Obsidian is running**:
 
-\`\`\`
-obsidian create name="Note Title" content="<frontmatter + content>" silent
-\`\`\`
+| Operation | Preferred tool | Why |
+|-----------|----------------|-----|
+| New page with long or complex content (frontmatter + body, code blocks, quotes) | Write the \`.md\` file directly at the exact path | Obsidian indexes new files automatically; no shell escaping can corrupt content |
+| Short new note, or appending a line or two | \`obsidian create path="dir/note.md" content="..."\` / \`obsidian append\` | Cheap when the content is small; \`\\n\` escapes newlines |
+| Rename / move an existing note | \`obsidian rename\` (Obsidian running) | The CLI rewrites wikilinks across the vault — the real graph-consistency win |
 
-For multiline content use \`\\n\` for newline and \`\\t\` for tab.
+\`obsidian create\` passes content as **one shell-quoted argument**. Inside a
+bash double-quoted string, backticks run as command substitution, \`$\` expands,
+and nested quotes end the argument — so a page containing a code fence or
+quoted prose will usually break the command or corrupt the content. **If
+\`create\` fails once on content escaping, do not fight the shell: write the
+file directly** with identical frontmatter and naming conventions, then verify
+with \`obsidian read\` (or \`knowlery health\` after bulk changes).
 
-In headless environments (Obsidian closed, CLI-initialized workspaces), write the
-\`.md\` file directly with identical frontmatter and naming conventions, and run
-\`knowlery health\` after bulk changes.
+When you do use \`obsidian create\`, pass \`path="dir/note.md"\` — \`name=\`
+resolves like a wikilink and lands in the default new-note location, not
+necessarily the directory the page belongs in.
+
+In headless environments (Obsidian closed, CLI-initialized workspaces), write
+\`.md\` files directly, and run \`knowlery health\` after bulk changes.
 
 ## Required Frontmatter
 
@@ -1738,10 +1792,12 @@ Rules:
 
 ## File Naming
 
-- Use Title Case or kebab-case for file names
+- **Agent knowledge pages** (per \`SCHEMA.md\`): lowercase with hyphens, no spaces
+  (\`response-time-metrics.md\`); one topic per file under \`entities/\`, \`concepts/\`,
+  \`comparisons/\`, or \`queries/\`
+- **User notes** keep the user's own naming — never rename them to match agent conventions
 - No special characters, no leading/trailing spaces
 - Daily notes: \`YYYY-MM-DD\` format where applicable
-- Agent knowledge pages: one topic per file under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`
 
 ## Post-Creation Verification
 
