@@ -1,54 +1,69 @@
+/**
+ * Knowlery docs theme — the Atlas Fold brand system
+ * (design/brand/brand-guide.html).
+ *
+ * Palette: Graphite #151713 · Paper #F4F5F0 · Slate #636A60 ·
+ * Contour #C9CEC3 · Knowledge Lime #B7E34A.
+ * Rules carried from the guide: graphite and paper do the work; lime appears
+ * only where a route, action, or selected state needs attention; structure
+ * over spectacle (flat surfaces, no glow, no decorative gradients).
+ * `--knowlery-lime-ink` is an accessibility shade of Knowledge Lime for
+ * text-sized accents on light surfaces.
+ */
+
 :root {
-  --vp-c-brand-1: #c6652e;
-  --vp-c-brand-2: #df7333;
-  --vp-c-brand-3: #f3b85f;
-  --vp-c-brand-soft: rgba(223, 115, 51, 0.14);
-  --vp-c-bg: #fffaf0;
-  --vp-c-bg-alt: #f6e7c9;
-  --vp-c-bg-soft: #fff3d8;
-  --vp-c-text-1: #3f2b20;
-  --vp-c-text-2: rgba(63, 43, 32, 0.72);
-  --vp-c-text-3: rgba(63, 43, 32, 0.56);
-  --vp-c-divider: rgba(83, 55, 34, 0.18);
-  --vp-c-gutter: rgba(83, 55, 34, 0.14);
-  --vp-font-family-base: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --vp-font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  --knowlery-serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
-  --knowlery-shadow: 0 28px 90px rgba(63, 43, 32, 0.14);
+  --knowlery-graphite: #151713;
+  --knowlery-paper: #f4f5f0;
+  --knowlery-slate: #636a60;
+  --knowlery-contour: #c9cec3;
+  --knowlery-lime: #b7e34a;
+  --knowlery-lime-ink: #4c6a11;
+  --knowlery-lime-soft: #e5f5bd;
+
+  --vp-c-brand-1: var(--knowlery-lime-ink);
+  --vp-c-brand-2: #5f8517;
+  --vp-c-brand-3: var(--knowlery-lime);
+  --vp-c-brand-soft: rgba(183, 227, 74, 0.18);
+  --vp-c-bg: var(--knowlery-paper);
+  --vp-c-bg-alt: #eaede5;
+  --vp-c-bg-soft: #ffffff;
+  --vp-c-text-1: var(--knowlery-graphite);
+  --vp-c-text-2: var(--knowlery-slate);
+  --vp-c-text-3: #91988e;
+  --vp-c-divider: var(--knowlery-contour);
+  --vp-c-gutter: var(--knowlery-contour);
+  --vp-font-family-base: "Avenir Next", "Segoe UI Variable Text", "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --vp-font-family-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --knowlery-display: "Avenir Next", "Arial Nova", "Segoe UI Variable Display", "Helvetica Neue", Arial, sans-serif;
+  --knowlery-radius: 16px;
+  --knowlery-radius-small: 10px;
+  --knowlery-shadow: 0 24px 70px rgba(34, 40, 30, 0.12);
 }
 
 .dark {
-  --vp-c-brand-1: #f3b85f;
-  --vp-c-brand-2: #df8b48;
-  --vp-c-brand-3: #c6652e;
-  --vp-c-brand-soft: rgba(243, 184, 95, 0.18);
-  --vp-c-bg: #1f1813;
-  --vp-c-bg-alt: #2a2019;
-  --vp-c-bg-soft: #34261d;
-  --vp-c-text-1: #fff1d7;
-  --vp-c-text-2: rgba(255, 241, 215, 0.74);
-  --vp-c-text-3: rgba(255, 241, 215, 0.55);
-  --vp-c-divider: rgba(255, 241, 215, 0.15);
-  --vp-c-gutter: rgba(255, 241, 215, 0.1);
+  --vp-c-brand-1: var(--knowlery-lime);
+  --vp-c-brand-2: #cbee74;
+  --vp-c-brand-3: var(--knowlery-lime);
+  --vp-c-brand-soft: rgba(183, 227, 74, 0.16);
+  --vp-c-bg: #0f110e;
+  --vp-c-bg-alt: #151713;
+  --vp-c-bg-soft: #1b1e19;
+  --vp-c-text-1: #f4f5f0;
+  --vp-c-text-2: #aab1a6;
+  --vp-c-text-3: #737b70;
+  --vp-c-divider: #373d33;
+  --vp-c-gutter: #373d33;
+  --knowlery-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
+/* Structure over spectacle: flat canvas, no ambient gradients. */
 body {
-  background:
-    radial-gradient(circle at 12% 8%, rgba(243, 184, 95, 0.28), transparent 26rem),
-    radial-gradient(circle at 92% 12%, rgba(119, 141, 97, 0.16), transparent 24rem),
-    var(--vp-c-bg);
-}
-
-.dark body {
-  background:
-    radial-gradient(circle at 12% 8%, rgba(198, 101, 46, 0.2), transparent 26rem),
-    radial-gradient(circle at 92% 12%, rgba(119, 141, 97, 0.12), transparent 24rem),
-    var(--vp-c-bg);
+  background: var(--vp-c-bg);
 }
 
 .VPNavBarTitle .logo {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
 }
 
 .VPHome {
@@ -58,14 +73,16 @@ body {
 .VPHero .name,
 .VPHero .text {
   max-width: 780px;
-  font-family: var(--knowlery-serif);
-  letter-spacing: -0.06em;
+  font-family: var(--knowlery-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 .VPHero .name {
   color: var(--vp-c-text-1);
 }
 
+/* The slogan line is the one live signal on the hero. */
 .VPHero .text {
   color: var(--vp-c-brand-1);
 }
@@ -73,71 +90,72 @@ body {
 .VPHero .tagline {
   max-width: 620px;
   color: var(--vp-c-text-2);
-  font-size: 20px;
+  font-size: 19px;
   line-height: 1.7;
 }
 
+/* No glow behind the mark — the guide forbids halos on the logo. */
 .VPHero .image-bg {
-  background:
-    radial-gradient(circle, rgba(243, 184, 95, 0.34), transparent 62%),
-    radial-gradient(circle, rgba(119, 141, 97, 0.2), transparent 58%);
-  filter: blur(24px);
+  background: none;
+  filter: none;
 }
 
 .VPHero .image-src {
-  width: min(300px, 70vw);
-  max-height: 300px;
-  filter: drop-shadow(0 28px 44px rgba(63, 43, 32, 0.18));
+  width: min(240px, 60vw);
+  max-height: 240px;
+  border-radius: 26%;
+  box-shadow: var(--knowlery-shadow);
 }
 
+/* Actions: lime is the action color; ink stays graphite. */
 .VPButton.brand {
-  border-color: #3f2b20;
-  color: #fff8ea;
-  background: #3f2b20;
+  border-color: var(--knowlery-graphite);
+  color: var(--knowlery-graphite);
+  background: var(--knowlery-lime);
 }
 
 .VPButton.brand:hover {
-  border-color: #c6652e;
-  background: #c6652e;
+  border-color: var(--knowlery-graphite);
+  color: var(--knowlery-paper);
+  background: var(--knowlery-graphite);
+}
+
+.dark .VPButton.brand:hover {
+  color: var(--knowlery-graphite);
+  background: #cbee74;
+  border-color: #cbee74;
 }
 
 .VPButton.alt {
-  border-color: rgba(83, 55, 34, 0.18);
+  border-color: var(--vp-c-divider);
   color: var(--vp-c-text-1);
-  background: rgba(255, 248, 234, 0.72);
+  background: var(--vp-c-bg-soft);
 }
 
 .dark .VPButton.alt {
-  background: rgba(255, 241, 215, 0.08);
+  background: rgba(244, 245, 240, 0.06);
 }
 
 .VPFeature {
   border: 1px solid var(--vp-c-divider);
-  border-radius: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 250, 240, 0.72), rgba(246, 231, 201, 0.46)),
-    var(--vp-c-bg-soft);
-  box-shadow: 0 18px 54px rgba(63, 43, 32, 0.08);
-}
-
-.dark .VPFeature {
-  background:
-    linear-gradient(180deg, rgba(255, 241, 215, 0.06), rgba(255, 241, 215, 0.02)),
-    var(--vp-c-bg-soft);
+  border-radius: var(--knowlery-radius);
+  background: var(--vp-c-bg-soft);
+  box-shadow: none;
 }
 
 .VPFeature .title {
+  font-family: var(--knowlery-display);
   color: var(--vp-c-text-1);
 }
 
 .vp-doc h1,
 .vp-doc h2 {
-  font-family: var(--knowlery-serif);
-  letter-spacing: -0.045em;
+  font-family: var(--knowlery-display);
+  letter-spacing: -0.03em;
 }
 
 .vp-doc h1 {
-  font-size: 44px;
+  font-size: 40px;
 }
 
 .vp-doc h2 {
@@ -165,27 +183,25 @@ body {
   border-color: var(--vp-c-divider);
 }
 
+/* Blockquotes read as a route marker: one lime edge, quiet surface. */
 .vp-doc blockquote {
-  border-left: 4px solid var(--vp-c-brand-2);
-  border-radius: 0 18px 18px 0;
+  border-left: 3px solid var(--knowlery-lime);
+  border-radius: 0 var(--knowlery-radius-small) var(--knowlery-radius-small) 0;
   padding: 14px 18px;
-  background: var(--vp-c-brand-soft);
+  background: var(--vp-c-bg-soft);
   color: var(--vp-c-text-2);
 }
 
 .vp-doc .custom-block {
-  border-radius: 18px;
+  border-radius: var(--knowlery-radius-small);
 }
 
 .knowlery-panel {
   margin: 28px 0;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 28px;
+  border-radius: var(--knowlery-radius);
   padding: 24px;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(243, 184, 95, 0.2), transparent 16rem),
-    var(--vp-c-bg-soft);
-  box-shadow: 0 18px 54px rgba(63, 43, 32, 0.08);
+  background: var(--vp-c-bg-soft);
 }
 
 .knowlery-panel h2,
@@ -204,19 +220,15 @@ body {
 
 .knowlery-card {
   border: 1px solid var(--vp-c-divider);
-  border-radius: 22px;
+  border-radius: var(--knowlery-radius);
   padding: 18px;
-  background: rgba(255, 250, 240, 0.54);
-}
-
-.dark .knowlery-card {
-  background: rgba(255, 241, 215, 0.05);
+  background: var(--vp-c-bg-soft);
 }
 
 .knowlery-card h3 {
   margin: 0 0 8px;
-  font-family: var(--knowlery-serif);
-  letter-spacing: -0.03em;
+  font-family: var(--knowlery-display);
+  letter-spacing: -0.02em;
 }
 
 .knowlery-card p {
@@ -226,7 +238,7 @@ body {
 
 @media (max-width: 720px) {
   .vp-doc h1 {
-    font-size: 34px;
+    font-size: 32px;
   }
 
   .knowlery-grid {

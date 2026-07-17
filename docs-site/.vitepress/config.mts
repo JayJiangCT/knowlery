@@ -120,10 +120,10 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ['link', { rel: 'icon', href: `${base}knowlery-pot.svg`, type: 'image/svg+xml' }],
-    ['meta', { name: 'theme-color', content: '#f5e4c6' }],
+    ['link', { rel: 'icon', href: `${base}knowlery-app-icon.svg`, type: 'image/svg+xml' }],
+    ['meta', { name: 'theme-color', content: '#151713' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:image', content: `${base}knowlery-pot.svg` }],
+    ['meta', { property: 'og:image', content: `${base}knowlery-app-icon.svg` }],
   ],
   locales: {
     root: {
@@ -173,7 +173,7 @@ export default defineConfig({
     },
   },
   themeConfig: {
-    logo: '/knowlery-pot.svg',
+    logo: { light: '/knowlery-mark.svg', dark: '/knowlery-mark-dark.svg', alt: 'Knowlery Atlas Fold mark' },
     siteTitle: 'Knowlery',
     socialLinks: [
       { icon: 'github', link: repo },

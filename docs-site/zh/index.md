@@ -6,8 +6,8 @@ hero:
   text: 让你的 agent 住进知识库。
   tagline: "一种纯 markdown 工作区，三个壳层：MCP 服务器和 CLI 面向 Codex、Claude、Cursor、Antigravity——Obsidian 插件是它最丰富的人类界面。Obsidian 让它能力最大化，但它不依赖 Obsidian。"
   image:
-    src: /knowlery-pot.svg
-    alt: Knowlery Knowledge Pot logo
+    src: /knowlery-app-icon.svg
+    alt: Knowlery Atlas Fold mark
   actions:
     - theme: brand
       text: 快速开始
