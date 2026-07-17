@@ -1,0 +1,4 @@
+name: collision
+exercises: near-identical topics under two names must merge into one aliased page and cross-link — not fork into near-duplicates
+cook_invocation: "/cook --all, cook skill @ 1.2.0, performed by the implementing cloud agent 2026-07-17"
+must_not_compile: []

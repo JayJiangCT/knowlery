@@ -28,6 +28,36 @@ jobs:
       - name: Fail if the committed query-script bundle is stale
         run: git diff --exit-code src/assets/query-script.generated.ts
 
+  cook-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run eval:cook -- --assert-baseline
+      - name: Cook-skill drift guard (spec 1.3 f2, §4.3 — no silent golden staleness)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          BASE_SHA=$(git merge-base origin/${{ github.base_ref }} HEAD)
+          CHANGED=$(git diff --name-only "$BASE_SHA" HEAD)
+          if echo "$CHANGED" | grep -q '^plugin/skills/cook/SKILL.md$' \
+             && ! echo "$CHANGED" | grep -q '^evals/cook/' ; then
+            if echo "$PR_BODY" | grep -q 'cook-eval-waiver'; then
+              echo "cook skill changed without eval regen — waived via cook-eval-waiver in the PR body."
+            else
+              echo "::error::The cook skill changed but evals/cook/ was not touched."
+              echo "Re-cook the fixtures per evals/cook/README.md, or add 'cook-eval-waiver' to the PR body for prose-only edits."
+              exit 1
+            fi
+          fi
+
   plugin-drift:
     runs-on: ubuntu-latest
     steps:

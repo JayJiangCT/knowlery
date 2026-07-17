@@ -1,0 +1,6 @@
+name: greenfield
+exercises: cold start over mixed raw material (meetings, a clipping, a CJK topic, an inbox capture) with two must-not-compile decoys
+cook_invocation: "/cook --all, cook skill @ 1.2.0, performed by the implementing cloud agent 2026-07-17; maintainer re-cook per the regeneration protocol supersedes"
+must_not_compile:
+  - Daily/2026-07-13.md
+  - Projects/todo-scratch.md

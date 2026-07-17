@@ -29,7 +29,8 @@
     "eval": "tsx evals/src/run.ts",
     "contract:regen": "tsx tests/contract/regen.ts",
     "build:plugin": "tsx scripts/build-plugin.ts",
-    "plugin:zip": "tsx scripts/zip-plugin.ts"
+    "plugin:zip": "tsx scripts/zip-plugin.ts",
+    "eval:cook": "tsx evals/src/cook/run.ts"
   },
   "keywords": [
     "obsidian",
