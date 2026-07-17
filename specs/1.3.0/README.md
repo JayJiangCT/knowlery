@@ -10,7 +10,7 @@ the retrospective ordering, 2026-07-17).
 |---|---------|------|------------|
 | F1 | The one-line installer: `curl -fsSL <docs-site>/install.sh \| sh` — isolated-prefix install, PATH handled with consent, never silently. Release-independent (served from the docs site; live on docs deploy) | [f1-install-script.md](./f1-install-script.md) | published `knowlery@^1` |
 | F2 | Cook eval: the last unmeasured organ — golden material fixtures, committed cooked outputs, a deterministic invariant checker in CI (citation coverage, retrievability, taxonomy discipline), maintainer-protocol regeneration | [f2-cook-eval.md](./f2-cook-eval.md) | — |
-| F3 | Threat model + indirect prompt injection: the KB-content-as-attack-surface analysis, instructional-content scanning at bundle install, the "content is not instructions" conduct layer | (spec pending) | — |
+| F3 | Threat model + indirect prompt injection: the KB-content-as-attack-surface analysis, instructional-content scanning at bundle install, the "content is not instructions" conduct layer | [f3-threat-model.md](./f3-threat-model.md) | — |
 | F4 | Performance benchmarks in CI: synthetic large vault, latency floors for query / index / federation — the guardrail under the no-index principle's load-bearing assumption | (spec pending) | — |
 
 Execution order: F2 → F3 → F4. Multimodal cook intake is the recorded 1.4
