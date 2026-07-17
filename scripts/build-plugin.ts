@@ -1,4 +1,4 @@
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BUNDLED_SKILLS } from '../src/assets/skills';
 
@@ -33,6 +33,19 @@ const SHIM = `#!/bin/sh
 # Knowlery CLI shim (spec 1.1 f2): on the agent's PATH while the plugin is enabled.
 exec npx -y knowlery@^1 "$@"
 `;
+
+/**
+ * Atlas Fold brand assets (design/brand): copied verbatim into the tree so
+ * the Codex install surface can render them — its manifest requires visual
+ * fields to point at real files inside the plugin folder. Source PNGs are
+ * committed (rendered from the brand SVGs), so the copy is byte-deterministic
+ * and the plugin-drift check stays meaningful.
+ */
+const BRAND_ASSETS: Array<{ source: string; target: string }> = [
+  { source: 'design/brand/assets/png/app-icon-512.png', target: 'assets/icon.png' },
+  { source: 'design/brand/assets/png/mark-512.png', target: 'assets/logo.png' },
+  { source: 'design/brand/assets/png/mark-reverse-512.png', target: 'assets/logo-dark.png' },
+];
 
 /**
  * The repo-root marketplace catalog (spec 1.1 f3, §4.1): makes the repository
@@ -94,6 +107,12 @@ export function buildPluginTree(outDir: string): void {
         developerName: 'Jay Jiang',
         category: 'Productivity',
         defaultPrompt: ['List my knowledge bases', 'Set up a knowledge base for me'],
+        // Atlas Fold brand (design/brand): Knowledge Lime accent; asset paths
+        // must reference real files inside the plugin folder.
+        brandColor: '#B7E34A',
+        composerIcon: './assets/icon.png',
+        logo: './assets/logo.png',
+        logoDark: './assets/logo-dark.png',
       },
     },
     '.cursor-plugin/plugin.json': {
@@ -120,6 +139,11 @@ export function buildPluginTree(outDir: string): void {
   mkdirSync(join(outDir, 'bin'), { recursive: true });
   writeFileSync(join(outDir, 'bin', 'knowlery'), SHIM);
   chmodSync(join(outDir, 'bin', 'knowlery'), 0o755);
+
+  mkdirSync(join(outDir, 'assets'), { recursive: true });
+  for (const asset of BRAND_ASSETS) {
+    copyFileSync(join(__dirname, '..', asset.source), join(outDir, asset.target));
+  }
 }
 
 if (process.argv[1]?.endsWith('build-plugin.ts')) {

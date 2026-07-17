@@ -26,6 +26,10 @@
     "defaultPrompt": [
       "List my knowledge bases",
       "Set up a knowledge base for me"
-    ]
+    ],
+    "brandColor": "#B7E34A",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo-dark.png"
   }
 }
