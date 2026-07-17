@@ -58,12 +58,13 @@ User notes should **remain** in their existing directories (`Projects/`, `Daily/
 
 ### Step 4: Check Naming Conventions
 
-Per SCHEMA.md conventions:
+Per SCHEMA.md conventions — these apply to **agent pages** (user notes keep the
+user's own naming):
 - File names should be lowercase with hyphens, no spaces
 - Names should match the page title (abbreviated, hyphenated)
 - No duplicate names with different suffixes (e.g., `feature-a.md` and `feature-a-1.md`)
 
-Flag any naming violations.
+Flag naming violations on agent pages only.
 
 ### Step 5: Suggest Moves
 

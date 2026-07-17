@@ -45,7 +45,7 @@ install the plugin whenever you want the review dashboard.
 day one.*
 
 Install the plugin from Community plugins, run the setup wizard, and get the
-action-first dashboard, Knowledge health, Freshness Review, and the bundle
+action-first dashboard, Knowledge health, and the bundle
 sharing UI — the full walkthrough is at
 [Start in Obsidian](./obsidian).
 

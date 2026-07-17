@@ -27,6 +27,23 @@ obsidian create name="My Note" silent overwrite
 
 For multiline content use `\n` for newline and `\t` for tab.
 
+## Writing long or complex content
+
+`content=` is a **single shell-quoted argument**, and three bash hazards apply
+inside it: backticks run as command substitution, `$` expands variables, and
+nested double quotes end the argument. Any page carrying a code fence, LaTeX,
+or quoted prose will usually break the command or corrupt the written content —
+on top of the `\n` escaping that multiline content already needs.
+
+- **Short content** (a heading, a line or two): `obsidian create` / `obsidian append` are fine.
+- **Full pages** (frontmatter + body, code blocks): write the `.md` file directly
+  with your file tools — Obsidian indexes new files automatically — then verify
+  with `obsidian read path="..."`.
+- Always pass `path="dir/note.md"` when the note must land in a specific folder;
+  `name=` resolves like a wikilink and uses the default new-note location.
+- If `create` fails once on escaping, switch to a direct file write; do not retry
+  with more escaping.
+
 ## File targeting
 
 Many commands accept `file` or `path` to target a file. Without either, the active file is used.
@@ -48,7 +65,9 @@ obsidian vault="My Vault" search query="test"
 obsidian read file="My Note"
 obsidian create name="New Note" content="# Hello" template="Template" silent
 obsidian append file="My Note" content="New line"
+obsidian rename file="old-path.md" new_name="new-path.md"
 obsidian search query="search term" limit=10
+obsidian search:context query="search term"
 obsidian daily:read
 obsidian daily:append content="- [ ] New task"
 obsidian property:set name="status" value="done" file="My Note"

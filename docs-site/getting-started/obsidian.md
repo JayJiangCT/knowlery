@@ -77,7 +77,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `opencode.json` | OpenCode configuration |
 | `skills-lock.json` | Skill source, version, and disabled-state metadata |
 
-Normal use can also create private activity receipts, weekly summary reports, daily review request/result files, and Freshness Review request/result/sidecar files under `.knowlery/`.
+Normal use can also create private activity receipts, weekly summary reports, and daily review request/result files under `.knowlery/`.
 
 ## Optional Tool Preparation
 
@@ -93,13 +93,13 @@ After setup, open the Knowlery dashboard. It is a single scrolling review surfac
 | --- | --- |
 | Today's move | Start from the current activity context and choose the next small move |
 | Suggested moves | Use reusable review prompts such as Process new material or Challenge an idea |
-| Knowledge health | Review pending Freshness Review suggestions when they exist |
+| Knowledge health | See stale pages and never-compiled notes; copy a re-cook prompt |
 | This note | Review the active Markdown note and prepare a focused prompt |
 | Recent activity | Scan private activity receipts and open the full activity list |
 | This week | Generate a weekly summary, open the last report, or send it for review |
 | Bundles | Share a reviewed knowledge bundle or install one shared with you |
 
-Open **Settings -> Knowlery** for diagnostics, rules and schema shortcuts, the Skills library, platform switching, activity logging, and maintenance actions.
+Open **Settings -> Knowlery** for diagnostics, rules and schema shortcuts, the Skills library, platform switching, activity logging, and maintenance actions. A **Language** setting controls the dashboard and settings display language — `Follow Obsidian` (default), `English`, or `中文`.
 
 ## Recommended First Session
 

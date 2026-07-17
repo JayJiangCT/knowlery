@@ -29,7 +29,7 @@ features:
   - title: 知识包
     details: 把评审过的知识切片作为便携 bundle 分享——发布到 GitHub Releases、从 URL 安装、订阅更新。
   - title: 想要时就有的评审 UI
-    details: Obsidian 插件在同一工作区上提供行动优先的 dashboard、Knowledge health、Freshness Review 和知识包分享流程。
+    details: Obsidian 插件在同一工作区上提供行动优先的 dashboard、Knowledge health 和知识包分享流程。
   - title: semver 之下冻结
     details: 工作区格式、CLI 表面和 MCP 契约已 1.0 冻结并由契约测试钉住——你搭在上面的东西不会塌。
 ---

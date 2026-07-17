@@ -230,6 +230,80 @@ describe('the graph half of the wiki is taught (spec 1.2 f1 amendment)', () => {
   });
 });
 
+describe('write path chosen by operation, with the escaping failure branch (1.2.3 skills review)', () => {
+  it('vault-conventions: the decision table, path= teaching, and the do-not-fight-the-shell branch', () => {
+    const content = skill('vault-conventions').replace(/\s+/g, ' ');
+    expect(content).toContain('by the operation, not by whether Obsidian is running');
+    expect(content).toContain('path="dir/note.md"');
+    expect(content).toContain('do not fight the shell');
+    expect(content).toContain('command substitution');
+  });
+
+  it('cook: direct write for full pages, path= for create, no shell fighting', () => {
+    const content = skill('cook').replace(/\s+/g, ' ');
+    expect(content).toContain('by operation, not by environment');
+    expect(content).toContain('write the `.md` file directly at its exact path');
+    expect(content).toContain('fighting the shell');
+  });
+
+  it('obsidian-cli: the long-content section names the three bash hazards and the switch-over rule', () => {
+    const content = skill('obsidian-cli').replace(/\s+/g, ' ');
+    expect(content).toContain('Writing long or complex content');
+    expect(content).toContain('command substitution');
+    expect(content).toContain('path="dir/note.md"');
+    expect(content).toContain('do not retry with more escaping');
+  });
+
+  it('ask and ideas save via the vault-conventions rules, not an unconditional obsidian create', () => {
+    for (const name of ['ask', 'ideas']) {
+      const content = skill(name).replace(/\s+/g, ' ');
+      expect(content, name).toContain('vault-conventions');
+      expect(content, name).not.toContain('Use `obsidian create` to save');
+    }
+  });
+
+  it('explore and challenge scope the CLI principle to reading and defer writes to vault-conventions', () => {
+    for (const name of ['explore', 'challenge']) {
+      const content = skill(name).replace(/\s+/g, ' ');
+      expect(content, name).toContain('reading workbench');
+      expect(content, name).toContain('vault-conventions');
+      expect(content, name).not.toContain('All note operations go through Obsidian CLI');
+    }
+  });
+});
+
+describe('reference hygiene: no phantom skills, no invalid CLI syntax (1.2.3 skills review)', () => {
+  it.each(BUNDLED_SKILLS.map((entry) => entry.name))('%s references no removed skill (/trace, /connect, /wiki)', (name) => {
+    const content = skill(name);
+    expect(content).not.toContain('/trace');
+    expect(content).not.toContain('/connect');
+    expect(content).not.toContain('/wiki');
+  });
+
+  it.each(BUNDLED_SKILLS.map((entry) => entry.name))('%s uses no OR search operator', (name) => {
+    expect(skill(name)).not.toContain('" OR "');
+  });
+
+  it('search commands pass query= (the documented CLI signature)', () => {
+    expect(skill('explore')).toContain('obsidian search query=');
+    expect(skill('explore')).toContain('obsidian search:context query=');
+    expect(skill('explore')).not.toContain('obsidian tags "');
+    expect(skill('challenge')).toContain('obsidian search query=');
+    expect(skill('ask')).toContain('obsidian search query=');
+  });
+});
+
+describe('naming conventions agree across skills (1.2.3 skills review)', () => {
+  it('vault-conventions and organize both state lowercase-hyphen for agent pages and hands-off for user notes', () => {
+    const conventions = skill('vault-conventions').replace(/\s+/g, ' ');
+    expect(conventions).toContain('lowercase with hyphens');
+    expect(conventions).not.toContain('Title Case or kebab-case');
+    const organize = skill('organize').replace(/\s+/g, ' ');
+    expect(organize).toContain('lowercase with hyphens');
+    expect(organize).toContain("user notes keep the user's own naming");
+  });
+});
+
 describe('/audit on CLI primitives (spec 0.7 f5, §4.4)', () => {
   it('names the deterministic tools and the dangling-sources category', () => {
     const audit = skill('audit');

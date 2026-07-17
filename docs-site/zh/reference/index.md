@@ -21,7 +21,7 @@
 | Install knowledge bundle | Manifest 和 conformance 预览、安装和已安装 bundle 列表 |
 | Move drill-ins | 完整 suggested-move 列表和单个 move prompt |
 | Activity drill-in | 完整 recent activity 列表 |
-| Freshness Review | request 准备、result 导入、suggestion decisions、apply 和 undo |
+| Knowledge health drill-in | 过期页面、从未编译的笔记、悬空来源和 re-cook prompt |
 | Settings: Diagnostics | Vault health、content stats、configuration integrity 和 diagnosis |
 | Settings: Rules & schema | Agent rules、schema shortcuts 和 config maintenance |
 | Settings: Skills | Built-in、registry、custom 和 disabled skill 管理 |
@@ -49,7 +49,6 @@
 | `.knowlery/reports/` | Weekly summary | 本地 HTML report 输出 |
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
-| `.knowlery/freshness/` | Freshness Review | Request、result、log、queue 和 sidecar 文件 |
 | `.knowlery/exports/` | Share knowledge bundle | 编译后的 bundle 输出（可选打成 zip） |
 | `.knowlery/export-scope.json` | Share knowledge bundle | 按主题保存的 review scope |
 | `Library/<bundle-id>/` | Install knowledge bundle | 已安装 bundle 的内容 |
@@ -73,15 +72,18 @@
 | `defuddle` | tooling | 从网页提取干净 markdown |
 | `vault-conventions` | tooling | 执行 vault naming conventions |
 | `knowlery-cli` | tooling | 用独立的 `knowlery` CLI 操作知识库 |
+| `knowlery-mcp` | tooling | 通过 Knowlery MCP tools 操作知识库 |
 
 ## Settings Sections
 
 | Section | 控制内容 |
 | --- | --- |
-| General | 知识库名称和 Node.js 路径 |
+| General | 知识库名称、显示语言（跟随 Obsidian / English / 中文）、Node.js 路径和 KB 注册开关 |
 | Platform | Claude Code / OpenCode 切换 |
 | Activity | Activity logging 和 activity ledger rule |
+| Knowledge bundle defaults | 导出 bundle 的创建者名称、URL 和默认许可协议 |
 | Maintenance | 重新生成 agent config 和重新初始化 vault |
+| Advanced | 诊断、规则与结构、技能库 |
 
 ## 默认 Rule Templates
 
@@ -117,23 +119,11 @@ Daily review polish 使用：
 - `.knowlery/requests/daily-review-YYYY-MM-DD.json`
 - `.knowlery/reviews/daily-review-YYYY-MM-DD.json`
 
-## Freshness Review Files
-
-Freshness Review 使用：
-
-- `.knowlery/freshness/requests/freshness-review-<timestamp>.json`
-- `.knowlery/freshness/results/freshness-review-<timestamp>.json`
-- `.knowlery/freshness/logs/freshness-review-<timestamp>.jsonl`
-- `.knowlery/freshness/queue.json`
-- `.knowlery/freshness/notes/*.json`
-
-Candidate pages 会从 `entities/`、`concepts/`、`comparisons/` 和 `queries/` 收集，并受当前 candidate limit 限制。Suggestions 只能 patch 这些知识页面上的 scalar freshness frontmatter。
-
 ## Network Use
 
 Knowlery 不收集 telemetry。
 
-当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。Freshness Review 不会调用 model API；它只准备本地 request files，并导入你单独运行的 agent 写出的 result files。
+当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。
 
 ## Local Command Use
 

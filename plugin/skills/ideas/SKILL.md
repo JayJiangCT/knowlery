@@ -115,7 +115,7 @@ Generated from {N} notes across {M} domains.
 - [[Note B]]: "{relevant quote}"
 - [[Note C]]: "{relevant quote}"
 
-**Concrete next step**: {exactly what to do — write a note, schedule a meeting, create a project, run /trace on a topic}
+**Concrete next step**: {exactly what to do — write a note, schedule a meeting, create a project, run /explore on a topic}
 
 **Impact**: {why this matters — what it could unlock or prevent}
 
@@ -140,8 +140,8 @@ Rank the three highest-impact, most immediately actionable ideas:
 
 ## Suggested Follow-ups
 
-- Run `/trace topic="X"` to explore Idea 1 further
-- Run `/connect from="A" to="B"` to validate Idea 3
+- Run `/explore topic="X"` to explore Idea 1 further
+- Run `/challenge "<claim>"` to pressure-test Idea 3
 - Run `/cook` to compile or refresh `entities/`, `concepts/`, `comparisons/`, or `queries/` pages when an idea exposes a knowledge gap
 - Add or extend a page under `queries/` for Idea 5 if it is question-shaped knowledge worth keeping
 ```
@@ -162,7 +162,10 @@ tags: [ideas, proactive]
 ---
 ```
 
-Use `obsidian create` to save. Ask the user where they'd like it saved.
+Ask the user where they'd like it saved, then write the note there. A saved
+answer is a full page — write the `.md` file directly (Obsidian indexes new
+files automatically); `obsidian create path="..."` is fine for short answers.
+See **vault-conventions** for the writing-tool rules and frontmatter.
 
 ## Key Principles
 

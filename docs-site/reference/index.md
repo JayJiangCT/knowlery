@@ -21,7 +21,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Install knowledge bundle | Manifest and conformance preview, install, and installed-bundle list |
 | Move drill-ins | Full suggested-move list and individual move prompts |
 | Activity drill-in | Full recent activity list |
-| Freshness Review | Request preparation, result import, suggestion decisions, apply, and undo |
+| Knowledge health drill-in | Stale pages, never-compiled notes, dangling sources, and the re-cook prompt |
 | Settings: Diagnostics | Vault health, content stats, configuration integrity, and diagnosis |
 | Settings: Rules & schema | Agent rules, schema shortcuts, and config maintenance |
 | Settings: Skills | Built-in, registry, custom, and disabled skill management |
@@ -49,7 +49,6 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.knowlery/reports/` | Weekly summary | Local HTML report output |
 | `.knowlery/requests/` | Daily polish | Daily review requests |
 | `.knowlery/reviews/` | Daily polish | Daily review results |
-| `.knowlery/freshness/` | Freshness Review | Request, result, log, queue, and sidecar files |
 | `.knowlery/exports/` | Share knowledge bundle | Compiled bundle output (optionally zipped) |
 | `.knowlery/export-scope.json` | Share knowledge bundle | Saved per-topic review scope |
 | `Library/<bundle-id>/` | Install knowledge bundle | Installed bundle contents |
@@ -73,15 +72,18 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `defuddle` | tooling | Extract clean markdown from web pages |
 | `vault-conventions` | tooling | Enforce vault naming conventions |
 | `knowlery-cli` | tooling | Operate the knowledge base with the standalone `knowlery` CLI |
+| `knowlery-mcp` | tooling | Work the knowledge base through the Knowlery MCP tools |
 
 ## Settings Sections
 
 | Section | What it controls |
 | --- | --- |
-| General | Knowledge base name and Node.js path |
+| General | Knowledge base name, display language (Follow Obsidian / English / 中文), Node.js path, and the KB-registry toggle |
 | Platform | Claude Code / OpenCode switching |
 | Activity | Activity logging and activity ledger rule |
+| Knowledge bundle defaults | Creator name, creator URL, and default license for exported bundles |
 | Maintenance | Regenerate agent config and re-initialize vault |
+| Advanced | Diagnostics, rules & schema, and the skills library |
 
 ## Default Rule Templates
 
@@ -125,23 +127,11 @@ Daily review polish uses:
 - `.knowlery/requests/daily-review-YYYY-MM-DD.json`
 - `.knowlery/reviews/daily-review-YYYY-MM-DD.json`
 
-## Freshness Review Files
-
-Freshness Review uses:
-
-- `.knowlery/freshness/requests/freshness-review-<timestamp>.json`
-- `.knowlery/freshness/results/freshness-review-<timestamp>.json`
-- `.knowlery/freshness/logs/freshness-review-<timestamp>.jsonl`
-- `.knowlery/freshness/queue.json`
-- `.knowlery/freshness/notes/*.json`
-
-Candidate pages are collected from `entities/`, `concepts/`, `comparisons/`, and `queries/`, capped by the current candidate limit. Suggestions can only patch scalar freshness frontmatter on those knowledge pages.
-
 ## Network Use
 
 Knowlery does not collect telemetry.
 
-Network access can happen when you explicitly use skill registry features through `npx skills ...`. That command may contact services used by the external skills tooling. Freshness Review does not call a model API; it prepares local request files and imports result files written by an agent you run separately.
+Network access can happen when you explicitly use skill registry features through `npx skills ...`. That command may contact services used by the external skills tooling.
 
 ## Local Command Use
 

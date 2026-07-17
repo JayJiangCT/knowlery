@@ -22,7 +22,7 @@ Knowlery 现在围绕一个行动优先的 dashboard 组织：
 | --- | --- |
 | Today's move | 从当前活动状态开始，选择一个小的下一步 |
 | Suggested moves | 复制或发送 Process new material、Connect related notes、Challenge an idea、Fix note metadata、Draft an output 等可复用 prompts |
-| Knowledge health | 有 suggestions 等待处理时打开 Freshness Review |
+| Knowledge health | 查看过期页面与从未编译的笔记；复制 re-cook prompt |
 | This note | review 当前 Markdown 笔记并寻找关联上下文 |
 | Recent activity | 查看最近的私有 activity receipts |
 | This week | 生成 weekly summary，或发送 polish request |
@@ -149,17 +149,15 @@ Knowlery 会检查：
 
 Health output 是建议性质。对真实 vault 做结构调整前，请先 review 诊断结果。
 
-## 运行 Freshness Review
+## 检查 Knowledge Health
 
-当你想让 agent 检查 compiled knowledge pages 是否过期或被新材料取代时，可以使用 Freshness Review。
+Dashboard 的 Knowledge health 区块由 staleness report 驱动：已编译页面的引用来源在页面写成之后又发生了变化，以及从未被编译进任何页面的用户笔记。
 
-1. 从 dashboard 打开 Knowledge health。
-2. 使用 **Prepare request** 在 `.knowlery/freshness/requests/` 下写入 request JSON。
-3. 复制 prompt，并单独运行 agent。
-4. 按 request 要求放好 result JSON，然后使用 **Import results**。
-5. 在应用、dismiss 或标记 incorrect 前，逐条 review suggestion。
+1. 打开 dashboard，查看 Knowledge health 区块。
+2. 使用 **Copy re-cook prompt** 把过期页面清单作为 `/cook` 请求交给 agent。
+3. 使用 **View all** 查看完整明细：过期页面、从未编译的笔记和悬空来源。
 
-Knowlery 只会在你批准后 patch scalar freshness frontmatter。这个流程不会直接调用 model API。
+同一份报告在 Obsidian 之外也能获取：`knowlery stale`、`obsidian knowlery:stale`，或 MCP 的 `stale` 工具。
 
 ## 记录 Reflection
 

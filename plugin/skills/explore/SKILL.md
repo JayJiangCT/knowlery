@@ -24,9 +24,12 @@ You are a historical detective. Your job is to trace how a specific idea, decisi
 Search for the topic across all notes:
 
 ```bash
-obsidian search "<topic>"
-obsidian tags "<topic>"
+obsidian search query="<topic>"
+obsidian search:context query="<topic>"
 ```
+
+(`search` returns matching paths; `search:context` adds grep-style matching
+lines — useful for dating each mention.)
 
 Also search agent-maintained pages under `entities/`, `concepts/`, `comparisons/`, and `queries/`:
 
@@ -132,4 +135,6 @@ Traced across {N} notes spanning {start date} to {end date}.
 - **Evidence-based.** Every claim in the timeline must cite a specific note.
 - **Show the messiness.** Ideas rarely evolve linearly. Show the false starts, reversals, and parallel tracks.
 - **Flag contradictions.** Don't resolve them — present both sides and let the user decide.
-- **Obsidian is first workbench.** All note operations go through Obsidian CLI.
+- **Obsidian is the reading workbench.** Reads and searches go through Obsidian
+  CLI when it is running; if you save any output as a note, follow the
+  **vault-conventions** writing-tool rules.

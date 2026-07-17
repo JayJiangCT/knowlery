@@ -141,11 +141,9 @@ Dashboard 会优先展示自然语言 moves；Settings tab 中的 Skills library
 - Weekly summary 报告，位置在 `.knowlery/reports/latest.html` 和 `.knowlery/reports/weekly/<week-label>.html`。
 - 可选的 daily review request 与结果文件，位置在 `.knowlery/requests/` 和 `.knowlery/reviews/`。
 
-## Freshness Review
+## Knowledge Health 与 Staleness
 
-Freshness Review 是本地、approval-gated 的流程。Knowlery 可以从 `entities/`、`concepts/`、`comparisons/` 和 `queries/` 收集候选页面，准备 request JSON，并复制 prompt 给你单独运行的 agent。
-
-导入 result JSON 后，Knowlery 会把合法 findings 转成 suggestions。应用 suggestion 只会 patch scalar frontmatter 字段，例如 `retrieval_priority`、`freshness_status`、`freshness_reviewed`、`superseded_by` 和 `freshness_sidecar`。证据和之前的 frontmatter snapshot 会保存在 `.knowlery/freshness/notes/` sidecars 中，因此已应用的 suggestion 可以恢复。
+Staleness 是机械计算出来的，从不靠猜：当已编译页面引用的来源在页面写成之后又发生变化，该页面即为 stale；当没有任何已编译页面引用某篇用户笔记，该笔记即为 uncooked。Dashboard 的 Knowledge health 区块、`knowlery stale`、`obsidian knowlery:stale` 和 MCP 的 `stale` 工具渲染的是同一份确定性报告——它正是 `/cook` 会话应当据以确定范围的工作清单。
 
 ## Knowledge Bundles
 

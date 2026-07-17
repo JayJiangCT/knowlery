@@ -31,7 +31,7 @@ If the claim is ambiguous, ask the user to clarify before proceeding.
 ### Step 2: Find Supporting Evidence
 
 ```bash
-obsidian search "<key terms from claim>"
+obsidian search query="<key terms from claim>"
 ```
 
 Read relevant notes and agent pages. Identify:
@@ -43,9 +43,12 @@ Read relevant notes and agent pages. Identify:
 
 This is the core of /challenge. Search for:
 
-1. **Direct contradictions** — Notes that explicitly state the opposite
+1. **Direct contradictions** — Notes that explicitly state the opposite.
+   The CLI has no OR operator — run one search per phrasing:
    ```bash
-   obsidian search "not <term>" OR "instead of <term>" OR "changed from <term>"
+   obsidian search query="not <term>"
+   obsidian search query="instead of <term>"
+   obsidian search query="changed from <term>"
    ```
 
 2. **Implicit contradictions** — Notes that describe a situation incompatible with the claim
@@ -53,8 +56,12 @@ This is the core of /challenge. Search for:
    - On related `entities/` and `concepts/` pages, check optional `contradictions` frontmatter (v2: YAML list of other agent page names documenting conflicting claims — see `/cook` Contradiction Handling)
 
 3. **Position changes over time** — Notes that show the user changed their mind
+   (one search per marker word):
    ```bash
-   obsidian search "actually" OR "turns out" OR "reconsidered" OR "reversed"
+   obsidian search query="actually"
+   obsidian search query="turns out"
+   obsidian search query="reconsidered"
+   obsidian search query="reversed"
    ```
 
 4. **Weasel words** — Notes that express uncertainty about aspects the claim treats as certain
@@ -123,4 +130,6 @@ Rate the overall case:
 - **Respectful opposition.** The goal is to strengthen thinking, not to tear it down. Frame challenges as "here's what to consider" not "you're wrong."
 - **Evidence only.** Every challenge must cite specific vault notes. Don't invent external counterarguments.
 - **Surface uncertainty.** If the vault shows doubt or hesitation about aspects the claim treats as certain, highlight this gap.
-- **Obsidian is first workbench.** All note operations go through Obsidian CLI.
+- **Obsidian is the reading workbench.** Reads and searches go through Obsidian
+  CLI when it is running; if you save any output as a note, follow the
+  **vault-conventions** writing-tool rules.

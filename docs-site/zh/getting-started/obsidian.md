@@ -78,7 +78,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `opencode.json` | OpenCode 配置 |
 | `skills-lock.json` | skill 来源、版本、禁用状态 |
 
-正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports、daily review request/result 文件，以及 Freshness Review 的 request/result/sidecar 文件。
+正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports 和 daily review request/result 文件。
 
 ## 可选工具准备
 
@@ -94,13 +94,13 @@ Setup 完成后，打开 Knowlery dashboard。它是一个单页滚动的 review
 | --- | --- |
 | Today's move | 从当前活动上下文开始，选择一个小的下一步 |
 | Suggested moves | 使用 Process new material 或 Challenge an idea 等可复用 review prompts |
-| Knowledge health | 有 Freshness Review suggestions 时进行 review |
+| Knowledge health | 查看过期页面与从未编译的笔记；复制 re-cook prompt |
 | This note | review 当前 Markdown 笔记并准备专注的 prompt |
 | Recent activity | 查看私有 activity receipts，并打开完整 activity 列表 |
 | This week | 生成 weekly summary、打开上次报告，或发送给 agent review |
 | Bundles | 分享 review 过的 knowledge bundle，或安装别人分享给你的 bundle |
 
-打开 **Settings -> Knowlery** 可以进行 diagnostics、rules/schema shortcuts、Skills library、平台切换、activity logging 和 maintenance actions。
+打开 **Settings -> Knowlery** 可以进行 diagnostics、rules/schema shortcuts、Skills library、平台切换、activity logging 和 maintenance actions。其中 **Language** 设置控制 dashboard 与设置页的显示语言——`跟随 Obsidian`（默认）、`English` 或 `中文`。
 
 ## 推荐的第一次使用方式
 

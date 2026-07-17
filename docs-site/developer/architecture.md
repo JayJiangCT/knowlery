@@ -26,7 +26,7 @@ and a workspace format on plain markdown that all of them share.
   (`tests/core/core-purity.test.ts`) enumerates the inverted modules and fails
   on any `import ... from 'obsidian'` that isn't type-only.
 - **The Obsidian plugin** (`src/main.ts`, views, modals) adds the review UI:
-  dashboard, export/install modals, settings, Freshness Review.
+  dashboard, export/install modals, settings.
 - **The CLI** (`src/cli/`) is a thin argv/prompt/output layer. Commands parse
   flags and delegate; no lifecycle logic lives in the shell.
 - **The MCP server** (`src/core/mcp/`) exposes the same operations as tools,

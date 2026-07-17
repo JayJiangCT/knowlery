@@ -13,22 +13,32 @@ Before creating any note:
 
 1. Read `AGENTS.md` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. `Projects/`, `Daily/`); **agent knowledge pages** live only under `entities/`, `concepts/`, `comparisons/`, or `queries/`
-3. Prefer `obsidian create` when Obsidian is running; in headless environments write the file directly, following every convention below
+3. Pick the writing tool by the operation (see Creating Notes below), following every convention in this skill
 
 ## Creating Notes
 
-Prefer `obsidian create` when Obsidian is running (it keeps the wikilink graph
-consistent):
+Choose the writing tool **by the operation, not by whether Obsidian is running**:
 
-```
-obsidian create name="Note Title" content="<frontmatter + content>" silent
-```
+| Operation | Preferred tool | Why |
+|-----------|----------------|-----|
+| New page with long or complex content (frontmatter + body, code blocks, quotes) | Write the `.md` file directly at the exact path | Obsidian indexes new files automatically; no shell escaping can corrupt content |
+| Short new note, or appending a line or two | `obsidian create path="dir/note.md" content="..."` / `obsidian append` | Cheap when the content is small; `\n` escapes newlines |
+| Rename / move an existing note | `obsidian rename` (Obsidian running) | The CLI rewrites wikilinks across the vault — the real graph-consistency win |
 
-For multiline content use `\n` for newline and `\t` for tab.
+`obsidian create` passes content as **one shell-quoted argument**. Inside a
+bash double-quoted string, backticks run as command substitution, `$` expands,
+and nested quotes end the argument — so a page containing a code fence or
+quoted prose will usually break the command or corrupt the content. **If
+`create` fails once on content escaping, do not fight the shell: write the
+file directly** with identical frontmatter and naming conventions, then verify
+with `obsidian read` (or `knowlery health` after bulk changes).
 
-In headless environments (Obsidian closed, CLI-initialized workspaces), write the
-`.md` file directly with identical frontmatter and naming conventions, and run
-`knowlery health` after bulk changes.
+When you do use `obsidian create`, pass `path="dir/note.md"` — `name=`
+resolves like a wikilink and lands in the default new-note location, not
+necessarily the directory the page belongs in.
+
+In headless environments (Obsidian closed, CLI-initialized workspaces), write
+`.md` files directly, and run `knowlery health` after bulk changes.
 
 ## Required Frontmatter
 
@@ -68,10 +78,12 @@ Rules:
 
 ## File Naming
 
-- Use Title Case or kebab-case for file names
+- **Agent knowledge pages** (per `SCHEMA.md`): lowercase with hyphens, no spaces
+  (`response-time-metrics.md`); one topic per file under `entities/`, `concepts/`,
+  `comparisons/`, or `queries/`
+- **User notes** keep the user's own naming — never rename them to match agent conventions
 - No special characters, no leading/trailing spaces
 - Daily notes: `YYYY-MM-DD` format where applicable
-- Agent knowledge pages: one topic per file under `entities/`, `concepts/`, `comparisons/`, or `queries/`
 
 ## Post-Creation Verification
 

@@ -58,7 +58,7 @@ This is not decoration — it is what makes the whole system mechanical:
   without citations can never be flagged stale.
 - Retrieval credits a compiled page when a raw note it cites matches the
   question — cross-language questions reach compiled answers through this.
-- `/challenge` and Freshness Review walk citations to check claims.
+- `/challenge` walks citations to pressure-test claims; the staleness report flags pages whose sources moved on.
 
 If you ever accept an agent-written page without citations, you've created a
 page the machinery can't see. The "Citation required" rule exists for this.

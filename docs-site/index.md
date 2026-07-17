@@ -29,7 +29,7 @@ features:
   - title: Knowledge bundles
     details: Share reviewed slices of your knowledge as portable bundles — publish to GitHub Releases, install from URLs, subscribe to updates.
   - title: A review UI when you want one
-    details: The Obsidian plugin adds the action-first dashboard, Knowledge health, Freshness Review, and the bundle sharing workflow on the same workspace.
+    details: The Obsidian plugin adds the action-first dashboard, Knowledge health, and the bundle sharing workflow on the same workspace.
   - title: Frozen under semver
     details: The workspace format, CLI surface, and MCP contracts are 1.0-frozen and pinned by contract tests — what you build on stays built.
 ---
