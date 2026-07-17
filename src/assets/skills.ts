@@ -131,7 +131,8 @@ is written down. On every page you create or update, record into \`aliases\` fro
 **Writing tool (by operation, not by environment):** full knowledge pages are long
 and carry code blocks and quotes — write the \`.md\` file directly at its exact path
 (\`entities/<name>.md\`, …); Obsidian indexes new files automatically. Use
-\`obsidian append\` / \`obsidian property:set\` for small additions to existing pages,
+\`obsidian append\` for small content additions, \`obsidian property:set\` for
+frontmatter field updates on existing pages,
 and \`obsidian rename\` for renames/moves (it rewrites wikilinks across the vault).
 If you use \`obsidian create\` for a short page, pass \`path=\` (not just \`name=\`) so
 it lands in the right directory — and if it fails on content escaping, write the
@@ -1174,7 +1175,9 @@ obsidian vault="My Vault" search query="test"
 obsidian read file="My Note"
 obsidian create name="New Note" content="# Hello" template="Template" silent
 obsidian append file="My Note" content="New line"
+obsidian rename file="old-path.md" new_name="new-path.md"
 obsidian search query="search term" limit=10
+obsidian search:context query="search term"
 obsidian daily:read
 obsidian daily:append content="- [ ] New task"
 obsidian property:set name="status" value="done" file="My Note"

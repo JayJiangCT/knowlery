@@ -115,7 +115,8 @@ is written down. On every page you create or update, record into `aliases` front
 **Writing tool (by operation, not by environment):** full knowledge pages are long
 and carry code blocks and quotes — write the `.md` file directly at its exact path
 (`entities/<name>.md`, …); Obsidian indexes new files automatically. Use
-`obsidian append` / `obsidian property:set` for small additions to existing pages,
+`obsidian append` for small content additions, `obsidian property:set` for
+frontmatter field updates on existing pages,
 and `obsidian rename` for renames/moves (it rewrites wikilinks across the vault).
 If you use `obsidian create` for a short page, pass `path=` (not just `name=`) so
 it lands in the right directory — and if it fails on content escaping, write the

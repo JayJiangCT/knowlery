@@ -65,7 +65,9 @@ obsidian vault="My Vault" search query="test"
 obsidian read file="My Note"
 obsidian create name="New Note" content="# Hello" template="Template" silent
 obsidian append file="My Note" content="New line"
+obsidian rename file="old-path.md" new_name="new-path.md"
 obsidian search query="search term" limit=10
+obsidian search:context query="search term"
 obsidian daily:read
 obsidian daily:append content="- [ ] New task"
 obsidian property:set name="status" value="done" file="My Note"
