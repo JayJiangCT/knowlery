@@ -21,7 +21,7 @@ Usage:
   knowlery stale  [--dir <path>] [--json]
   knowlery index  [--dir <path> | --kb <name>] [--json]   # orientation map (live view)
   knowlery bundle install <zip-or-folder-or-url> [--dir <path>] [--verify <sha256>]
-                          [--force] [--skip-conformance]
+                          [--force] [--skip-conformance] [--acknowledge-risks]
   knowlery bundle list      [--dir <path>] [--json]
   knowlery bundle uninstall <bundle-id> [--dir <path>]
   knowlery bundle export <seed-concept-id> [--dir <path>] [--hops <n>] [--zip] [--json]
@@ -30,7 +30,7 @@ Usage:
   knowlery bundle publish <seed-concept-id> [--dir <path>] [--repo <owner/name>]
                           [--public] [--acknowledge-risks] [--force]
   knowlery bundle check-updates [--dir <path>] [--json]
-  knowlery bundle update <bundle-id> | --all  [--dir <path>] [--force]
+  knowlery bundle update <bundle-id> | --all  [--dir <path>] [--force] [--acknowledge-risks]
   knowlery --version | --help
 
 The same workspace format as the Knowlery Obsidian plugin — a folder initialized here

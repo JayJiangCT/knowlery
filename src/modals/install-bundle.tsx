@@ -21,8 +21,9 @@ async function obsidianFetch(url: string): Promise<RemoteFetchResult> {
   };
 }
 import { previewInstall } from '../core/okf/install-scan';
-import { installBundle, InstallBlockedError } from '../core/okf/install';
+import { installBundle, InstallBlockedError, scanIncomingBundleRisks } from '../core/okf/install';
 import { readInstalledBundles, resolveInstallAction } from '../core/okf/registry';
+import type { RiskHint } from '../types';
 
 interface ElectronDialog {
   showOpenDialog: (options: { properties: string[] }) => Promise<{ canceled: boolean; filePaths: string[] }>;
@@ -70,7 +71,7 @@ export class InstallBundleModal extends Modal {
 
 type Stage =
   | { kind: 'pick' }
-  | { kind: 'preview'; path: string; source: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; blockedInstalledVersion: string | null }
+  | { kind: 'preview'; path: string; source: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; riskHints: RiskHint[]; blockedInstalledVersion: string | null }
   | { kind: 'result'; conformance: 'passed' | 'failed' | 'skipped' };
 
 function InstallBundleContent(props: { onClose: () => void }) {
@@ -81,6 +82,9 @@ function InstallBundleContent(props: { onClose: () => void }) {
   const [downloading, setDownloading] = useState(false);
   const [url, setUrl] = useState('');
   const [acknowledgeConformanceIssues, setAcknowledgeConformanceIssues] = useState(false);
+  // Independent from the conformance checkbox (spec 1.3 f3, §4.2): structural
+  // defects and content warnings are separate consents.
+  const [acknowledgeRiskHints, setAcknowledgeRiskHints] = useState(false);
 
   const pickSource = async () => {
     const dialog = getElectronDialog();
@@ -122,6 +126,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
   const loadPreview = async (path: string, recordedSource = path) => {
     setError(null);
     setAcknowledgeConformanceIssues(false);
+    setAcknowledgeRiskHints(false);
     try {
       const entries = await readBundleEntries(path);
       const { manifest, conformance } = previewInstall(entries);
@@ -136,6 +141,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
         manifestVersion: manifest.version,
         title: manifest.title,
         conformance,
+        riskHints: scanIncomingBundleRisks(entries),
         blockedInstalledVersion: action.kind === 'blocked' ? action.installedVersion : null,
       });
     } catch (err) {
@@ -143,7 +149,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     }
   };
 
-  const confirmInstall = async (force: boolean, skipConformanceGate: boolean) => {
+  const confirmInstall = async (force: boolean, skipConformanceGate: boolean, acknowledgeRisks: boolean) => {
     if (stage.kind !== 'preview') return;
     setInstalling(true);
     setError(null);
@@ -152,6 +158,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
         source: stage.source,
         force,
         skipConformanceGate,
+        acknowledgeRisks,
       });
       plugin.events.trigger('dashboard-refresh');
       setStage({ kind: 'result', conformance: result.conformance });
@@ -204,6 +211,31 @@ function InstallBundleContent(props: { onClose: () => void }) {
             <span>Install anyway despite these conformance errors</span>
           </label>
         )}
+        {stage.riskHints.length > 0 && (
+          <div className="knowlery-install__warning">
+            <div>
+              This bundle contains instruction-like content — text that reads as directives to an agent (a known
+              prompt-injection shape). Review before installing:
+            </div>
+            <ul>
+              {stage.riskHints.map((hint) => (
+                <li key={`${hint.itemId}:${hint.evidence}`}>
+                  <b>{hint.itemId}</b>: {hint.evidence}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {stage.riskHints.length > 0 && (
+          <label className="knowlery-install__ack">
+            <input
+              type="checkbox"
+              checked={acknowledgeRiskHints}
+              onChange={(event) => setAcknowledgeRiskHints(event.currentTarget.checked)}
+            />
+            <span>I reviewed the flagged content</span>
+          </label>
+        )}
         {stage.blockedInstalledVersion && (
           <div className="knowlery-install__warning">
             v{stage.blockedInstalledVersion} is already installed. Installing v{stage.manifestVersion} will replace it.
@@ -218,9 +250,13 @@ function InstallBundleContent(props: { onClose: () => void }) {
           <button
             type="button"
             className="knowlery-btn knowlery-btn--primary"
-            disabled={installing || (!stage.conformance.conformant && !acknowledgeConformanceIssues)}
+            disabled={
+              installing
+              || (!stage.conformance.conformant && !acknowledgeConformanceIssues)
+              || (stage.riskHints.length > 0 && !acknowledgeRiskHints)
+            }
             onClick={() =>
-              void confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues)
+              void confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues, acknowledgeRiskHints)
             }
           >
             {installing ? 'Installing…' : 'Install'}

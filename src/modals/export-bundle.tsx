@@ -60,6 +60,7 @@ const RISK_LABEL: Record<RiskHint['kind'], string> = {
   credential: 'credential/secret',
   'private-ip': 'private IP address',
   'phone-number': 'phone number',
+  'instruction-like': 'instruction-like content (prompt-injection shape)',
 };
 
 interface PickerEntry {

@@ -347,6 +347,9 @@ export const RiskHintSchema = z.object({
     'email', 'sensitive-url', 'person-page', 'meeting-like-path',
     // 0.9 f2 §4.4 — highest-cost-if-public patterns.
     'credential', 'private-ip', 'phone-number',
+    // 1.3 f3 §4.2 — indirect-prompt-injection shapes, flagged at both trust
+    // boundaries (export review and bundle install).
+    'instruction-like',
   ]),
   evidence: z.string(),
 });
