@@ -1,6 +1,6 @@
 # F3 (1.3.0) — Threat Model: Knowledge-Base Content as an Attack Surface
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Implemented — awaiting maintainer acceptance (§7)
 - **Target release:** 1.3.0
 - **Branch:** `cursor/13-f3-threat-model-92eb`
 - **Depends on:** the risk scanner (0.8/0.9 — the enforcement point being
@@ -185,6 +185,29 @@ full analysis.
 1. §5 green; `npm test`, lint, build, `docs:build`, both evals green.
 2. The threat-model document reads as an honest map (§7.1 is the test).
 3. Maintainer §7 passes.
+
+## Implementation findings
+
+1. **The mention-vs-use heuristic got concrete** (§5.1's near-miss
+   requirement forced it): a match inside an inline code span or quotation
+   marks (straight, curly, or CJK corner brackets) on the same line is
+   suppressed as *prose about* an injection — the standard convention for
+   quoting an attack in a security note. Deterministic, documented in the
+   pattern module; an attacker who quotes their own payload has at least
+   made it legible as a quotation.
+2. **No golden regen was needed after all**: the MCP contract golden pins
+   tool *schemas*, not description text, so the sanctioned regen (§5.5)
+   produced a byte-identical file. The description rule is pinned by a live
+   listTools/listResourceTemplates assertion instead.
+3. **`InstallResult` gained `riskHints`** (internal TS interface, not a
+   contract surface) so acknowledged installs still print the warnings —
+   consent to install is not consent to forget. The registry entry schema
+   is untouched (no shape change, per §5.5).
+4. The export modal's `RISK_LABEL` map is exhaustively typed over
+   `RiskHint['kind']`, so the compiler forced the new kind's label — the
+   kind of drift the type system catches for free.
+5. Skill edits regenerate the plugin tree (`npm run build:plugin`), caught
+   by the drift test as designed.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
