@@ -1,6 +1,6 @@
 # F2 (1.3.0) — Cook Eval: Measuring the Last Unmeasured Organ
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Accepted 2026-07-17 (one review round: retrievability pinned, taxonomy static predicate, regen drift guard + metric-delta, two invariants added) — implementation in progress
 - **Target release:** 1.3.0
 - **Branch:** `cursor/13-f2-cook-eval-92eb`
 - **Depends on:** the retrieval engine (retrievability is judged by it), the
