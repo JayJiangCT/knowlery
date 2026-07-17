@@ -1,0 +1,4 @@
+name: incremental
+exercises: changed source contradicting a compiled claim — the update lands in the existing page (superseded position recorded), no fork
+cook_invocation: "/cook (incremental), cook skill @ 1.2.0, performed by the implementing cloud agent 2026-07-17"
+must_not_compile: []

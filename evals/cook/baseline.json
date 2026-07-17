@@ -1,0 +1,35 @@
+{
+  "tolerance": 0.01,
+  "cases": [
+    {
+      "case": "collision",
+      "metrics": {
+        "citationCoverage": 1,
+        "retrievability": 1,
+        "frontmatterCompleteness": 1,
+        "taxonomyCompliance": 1,
+        "connectivity": 1
+      }
+    },
+    {
+      "case": "greenfield",
+      "metrics": {
+        "citationCoverage": 1,
+        "retrievability": 1,
+        "frontmatterCompleteness": 1,
+        "taxonomyCompliance": 1,
+        "connectivity": 1
+      }
+    },
+    {
+      "case": "incremental",
+      "metrics": {
+        "citationCoverage": 1,
+        "retrievability": 1,
+        "frontmatterCompleteness": 1,
+        "taxonomyCompliance": 1,
+        "connectivity": 1
+      }
+    }
+  ]
+}
