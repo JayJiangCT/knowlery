@@ -36,7 +36,7 @@ import { BUNDLED_SKILLS } from '../../assets/skills';
  */
 
 /** Exported for the version-coherence contract test (spec 1.0 f5, §5.3). */
-export const SERVER_INFO = { name: 'knowlery', version: '1.2.3' };
+export const SERVER_INFO = { name: 'knowlery', version: '1.2.4' };
 
 /** Skills whose content stands without Obsidian (spec 1.0 f2 §4.3, curated
  * set; knowlery-mcp added by spec 1.1 f2 §4.3 — the front-door skill). */

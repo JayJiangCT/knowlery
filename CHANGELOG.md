@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.4] — 2026-07-17
+
+### Brand
+
+- **The Atlas Fold identity ships.** Knowlery's new brand system — a K-shaped
+  route connecting source, structure, and retrieval, drawn in graphite and
+  paper with a single Knowledge Lime signal — now carries the public surfaces:
+  - **README**: light/dark lockup header, the brand voice lines, and a Brand
+    section with the position/character/difference pillars; the full guide
+    and assets live under `design/brand/`.
+  - **Docs site (en+zh)**: full retheme from the warm chef-pot palette to
+    graphite/paper with Knowledge Lime as the only live signal; flat
+    structure-over-spectacle surfaces; light/dark Atlas Fold marks for the
+    nav and favicon; the pot logo retired.
+  - **Codex install surface**: the plugin manifest's `interface` gains
+    `brandColor`, `composerIcon`, `logo`, and `logoDark`, with 512px PNGs
+    rendered from the brand SVGs shipped in `plugin/assets/` (drift-guarded,
+    byte-equality asserted).
+  - The Obsidian community directory and Claude Code marketplaces carry no
+    logo mechanism today (verified against both manifest schemas) — nothing
+    to upload there yet.
+
+### Internal
+
+- 1.3.0 F2 groundwork: the cook-eval spec and its deterministic checker with
+  golden fixtures land in the eval harness (no runtime changes).
+
 ## [1.2.3] — 2026-07-17
 
 ### Fixes
