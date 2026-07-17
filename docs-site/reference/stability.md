@@ -83,7 +83,7 @@ Stated just as plainly, so absence of a promise is never mistaken for one:
 - **Plugin UI** (dashboard layout, modals, settings organization), **docs**,
   and **eval thresholds**.
 - Private state under `.knowlery/` not listed above (activity receipts,
-  reports, freshness files).
+  reports).
 - TypeScript internals: `src/` is not a public API; importing from the
   package is unsupported.
 

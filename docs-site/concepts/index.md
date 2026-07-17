@@ -140,11 +140,9 @@ Those receipts feed:
 - Weekly summary reports in `.knowlery/reports/latest.html` and `.knowlery/reports/weekly/<week-label>.html`.
 - Optional daily review requests and results in `.knowlery/requests/` and `.knowlery/reviews/`.
 
-## Freshness Review
+## Knowledge Health and Staleness
 
-Freshness Review is local and approval-gated. Knowlery can collect candidate pages from `entities/`, `concepts/`, `comparisons/`, and `queries/`, prepare a request JSON file, and copy a prompt for an agent you run separately.
-
-When you import the result JSON, Knowlery turns valid findings into suggestions. Applying a suggestion only patches scalar frontmatter fields such as `retrieval_priority`, `freshness_status`, `freshness_reviewed`, `superseded_by`, and `freshness_sidecar`. Evidence and previous frontmatter snapshots live in `.knowlery/freshness/notes/` sidecars so applied suggestions can be restored.
+Staleness is computed mechanically, never guessed: a compiled page is stale when a source it cites changed after the page was last written, and a user note is uncooked when no compiled page cites it. The dashboard's Knowledge health section, `knowlery stale`, `obsidian knowlery:stale`, and the MCP `stale` tool all render the same deterministic report — it is the exact work list a `/cook` session should scope from.
 
 ## Knowledge Bundles
 

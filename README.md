@@ -51,9 +51,8 @@ usage by conversation: [Talk to Your Knowledge Base](https://jayjiangct.github.i
 
 Install **Knowlery** from Obsidian's community plugin directory
 (Settings → Community plugins → Browse) and run the setup wizard. You get the
-action-first dashboard, Knowledge health, Freshness Review, and the bundle
-sharing UI — and the vault registers itself so every agent can address it by
-name. Full walkthrough: [Start in Obsidian](https://jayjiangct.github.io/knowlery/getting-started/obsidian).
+action-first dashboard, Knowledge health, and the bundle sharing UI — and the
+vault registers itself so every agent can address it by name. Full walkthrough: [Start in Obsidian](https://jayjiangct.github.io/knowlery/getting-started/obsidian).
 
 Either way it's the same plain folder: a KB born in a conversation opens in
 Obsidian with zero migration, and an Obsidian vault is automatically
@@ -148,7 +147,6 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `.knowlery/activity/`, when activity logging is enabled
 - `.knowlery/reports/`, when Weekly summary generates an HTML report
 - `.knowlery/requests/` and `.knowlery/reviews/`, when daily review polish is used
-- `.knowlery/freshness/`, when Freshness Review prepares request, result, log, queue, and sidecar files
 - `.knowlery/exports/`, when Share knowledge bundle compiles a bundle (plus an optional `.zip` next to it)
 - `Library/<bundle-id>/` and `.knowlery/bundles.json`, when Install knowledge bundle installs a shared bundle
 - `.knowlery/bin/query.mjs`, the local retrieval script (written on setup and refreshed on upgrades)
@@ -169,8 +167,6 @@ Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`,
 The MCP server (`knowlery mcp`) runs locally over stdio and serves only the knowledge bases you registered; resource reads are allowlisted to the curated knowledge surface — free-form notes are not readable over MCP. Remote mode (`knowlery mcp serve`) requires an explicit port and a bearer token you generate, is read-only unless each write is individually enabled by flag, and never logs or stores the token. The agent plugin performs no install scripts: MCP provisioning is configuration plus npx.
 
 On Obsidian 1.12.2+ with the command line interface enabled, Knowlery registers two read-only CLI commands, `knowlery:query` and `knowlery:stale`, which search and inspect vault content locally when you (or an agent you run) invoke them. The bundled `.knowlery/bin/query.mjs` script does the same offline with plain Node; neither makes network requests.
-
-Freshness Review is a local, approval-gated workflow. Knowlery prepares request JSON files, imports result JSON files written by an agent you run separately, and applies scalar freshness metadata only after you approve a suggestion. Knowlery does not include a Freshness runner and does not call a model API for this workflow.
 
 Some companion tools or services used with Knowlery, including Claude Code, OpenCode, registry skills, or model providers configured outside Knowlery, may require separate accounts or paid usage. Knowlery itself is free and does not process payments.
 

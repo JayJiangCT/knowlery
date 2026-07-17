@@ -22,7 +22,7 @@ Knowlery now centers on one action-first dashboard:
 | --- | --- |
 | Today's move | Start with the current activity state and pick one small next move |
 | Suggested moves | Copy or send reusable prompts such as Process new material, Connect related notes, Challenge an idea, Fix note metadata, or Draft an output |
-| Knowledge health | Open Freshness Review when suggestions are waiting |
+| Knowledge health | See stale pages and never-compiled notes; copy a re-cook prompt |
 | This note | Review the active Markdown note and ask for related connections |
 | Recent activity | Inspect recent private activity receipts |
 | This week | Generate a weekly summary or send a polish request |
@@ -149,17 +149,15 @@ Knowlery checks:
 
 Health output is advisory. Review findings before restructuring a real vault.
 
-## Run Freshness Review
+## Review Knowledge Health
 
-Use Freshness Review when you want an agent to check whether compiled knowledge pages are outdated or superseded.
+The dashboard's Knowledge health section is driven by the staleness report: compiled pages whose cited sources changed after the page was last written, and user notes never compiled into any page.
 
-1. Open Knowledge health from the dashboard.
-2. Use **Prepare request** to write a request JSON file under `.knowlery/freshness/requests/`.
-3. Copy the prompt and run the agent separately.
-4. Put the result JSON where the request asks, then use **Import results**.
-5. Review each suggestion before applying, dismissing, or marking it incorrect.
+1. Open the dashboard and check the Knowledge health section.
+2. Use **Copy re-cook prompt** to hand the stale list to your agent as a `/cook` request.
+3. Use **View all** for the full breakdown: stale pages, never-compiled notes, and dangling sources.
 
-Knowlery only patches scalar freshness frontmatter after approval. It does not call a model API for this workflow.
+The same report is available without Obsidian: `knowlery stale`, `obsidian knowlery:stale`, or the MCP `stale` tool.
 
 ## Capture Reflection
 
