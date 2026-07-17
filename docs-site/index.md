@@ -6,8 +6,8 @@ hero:
   text: The knowledge base your agents can live in.
   tagline: "One plain-markdown workspace, three shells: an MCP server and CLI for Codex, Claude, Cursor, and Antigravity — and an Obsidian plugin as its richest human interface. Obsidian maximizes it; nothing about it requires Obsidian."
   image:
-    src: /knowlery-pot.svg
-    alt: Knowlery Knowledge Pot logo
+    src: /knowlery-app-icon.svg
+    alt: Knowlery Atlas Fold mark
   actions:
     - theme: brand
       text: Get Started

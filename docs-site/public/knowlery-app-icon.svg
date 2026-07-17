@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Knowlery app icon</title>
+  <desc id="desc">The Atlas Fold mark on a graphite rounded tile.</desc>
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="#151713"/>
+  <g transform="translate(26 24) scale(1.2)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 9v46M12 32h13L49 9M25 32l24 23" stroke="#F4F5F0" stroke-width="7"/>
+    <path d="M12 32h13l16-15" stroke="#B7E34A" stroke-width="3.5"/>
+    <circle cx="12" cy="32" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+    <circle cx="25" cy="32" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+    <circle cx="41" cy="17" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+  </g>
+</svg>

@@ -1,11 +1,23 @@
-# Knowlery
+<div align="center">
 
-[![Release](https://img.shields.io/github/v/release/jayjiangct/knowlery?label=release&style=flat-square)](https://github.com/JayJiangCT/knowlery/releases)
-[![npm](https://img.shields.io/npm/v/knowlery?style=flat-square)](https://www.npmjs.com/package/knowlery)
-[![Docs](https://img.shields.io/badge/docs-official-blue?style=flat-square)](https://jayjiangct.github.io/knowlery/)
-[![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square)](LICENSE)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="design/brand/assets/knowlery-lockup-dark.svg">
+  <img src="design/brand/assets/knowlery-lockup-light.svg" alt="Knowlery" width="340">
+</picture>
 
-**The knowledge base your agents can live in.** One plain-markdown workspace,
+**The knowledge base your agents can live in.**
+
+A local-first knowledge system for people and agents.<br>
+Plain Markdown in. Traceable knowledge out.
+
+[![Release](https://img.shields.io/github/v/release/jayjiangct/knowlery?label=release&style=flat-square&color=151713)](https://github.com/JayJiangCT/knowlery/releases)
+[![npm](https://img.shields.io/npm/v/knowlery?style=flat-square&color=151713)](https://www.npmjs.com/package/knowlery)
+[![Docs](https://img.shields.io/badge/docs-official-B7E34A?style=flat-square&labelColor=151713)](https://jayjiangct.github.io/knowlery/)
+[![License: MIT](https://img.shields.io/github/license/jayjiangct/knowlery?style=flat-square&color=151713)](LICENSE)
+
+</div>
+
+One plain-markdown workspace,
 served by three shells: an **MCP server** and **CLI** for Codex, Claude,
 Cursor, and Antigravity — and an **Obsidian plugin** as its richest human
 interface. Obsidian maximizes Knowlery; nothing about it requires Obsidian.
@@ -57,6 +69,25 @@ vault registers itself so every agent can address it by name. Full walkthrough: 
 Either way it's the same plain folder: a KB born in a conversation opens in
 Obsidian with zero migration, and an Obsidian vault is automatically
 available to your agents.
+
+## Brand
+
+Knowlery's identity is the **Atlas Fold** system — a K-shaped route connecting
+source, structure, and retrieval, drawn in graphite and paper with a single
+**Knowledge Lime** signal. The metaphor is deliberate: **a map you can trust,
+not a mind you have to believe.**
+
+| | |
+|---|---|
+| **Position** | Local-first knowledge infrastructure — your notes remain plain Markdown; Knowlery adds structure, retrieval, and agent access without taking ownership of the source. |
+| **Character** | Exact, calm, and quietly alive — technical enough to earn developer trust, warm enough to feel like a place where knowledge accumulates. |
+| **Difference** | Structure over spectacle — no chatbot face, neural cloud, or AI glow. The visual language is navigation through a maintained body of knowledge. |
+
+The full brand system — logo construction, palette, typography, voice, and
+usage rules — lives in [`design/brand/`](design/brand/) (open
+[`brand-guide.html`](design/brand/brand-guide.html) in a browser). Marks,
+lockups, and the app icon are under
+[`design/brand/assets/`](design/brand/assets/).
 
 ## Inspiration: LLM Wiki & BYOAO
 

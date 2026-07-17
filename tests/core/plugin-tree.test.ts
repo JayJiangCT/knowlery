@@ -72,6 +72,24 @@ describe('manifests (§5.3)', () => {
   });
 });
 
+describe('brand assets (Atlas Fold, design/brand)', () => {
+  it('the codex manifest visual fields point at real files, byte-equal to the brand sources', () => {
+    const manifest = JSON.parse(readFileSync(join(committed, '.codex-plugin', 'plugin.json'), 'utf8')) as {
+      interface: { brandColor: string; composerIcon: string; logo: string; logoDark: string };
+    };
+    expect(manifest.interface.brandColor).toBe('#B7E34A');
+    const pairs: Array<[string, string]> = [
+      [manifest.interface.composerIcon, 'design/brand/assets/png/app-icon-512.png'],
+      [manifest.interface.logo, 'design/brand/assets/png/mark-512.png'],
+      [manifest.interface.logoDark, 'design/brand/assets/png/mark-reverse-512.png'],
+    ];
+    for (const [treePath, sourcePath] of pairs) {
+      const inTree = readFileSync(join(committed, treePath.replace(/^\.\//, '')));
+      expect(inTree.equals(readFileSync(join(repoRoot, sourcePath))), treePath).toBe(true);
+    }
+  });
+});
+
 describe('MCP configs and the shim (§5.4)', () => {
   it('.mcp.json and mcp.json are identical and pin exactly npx -y knowlery@^1 mcp', () => {
     const dotted = readFileSync(join(committed, '.mcp.json'), 'utf8');
@@ -148,7 +166,8 @@ describe('no execution surface (§5.8)', () => {
         || file.endsWith('plugin.json')
         || file === '.mcp.json'
         || file === 'mcp.json'
-        || file === 'bin/knowlery';
+        || file === 'bin/knowlery'
+        || (file.startsWith('assets/') && file.endsWith('.png'));
       expect(allowed, file).toBe(true);
     }
   });

@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Knowlery Brand System</title>
+  <style>
+    :root {
+      --ink: #151713;
+      --paper: #f4f5f0;
+      --canvas: #eaede5;
+      --surface: #ffffff;
+      --surface-2: #e1e5dc;
+      --line: #c9cec3;
+      --muted: #636a60;
+      --faint: #91988e;
+      --accent: #b7e34a;
+      --accent-ink: #1b2507;
+      --accent-soft: #e5f5bd;
+      --shadow: 0 24px 70px rgb(34 40 30 / 0.12);
+      --radius: 16px;
+      --radius-small: 10px;
+      --max: 1400px;
+      --font-display: "Avenir Next", "Arial Nova", "Segoe UI Variable Display", "Helvetica Neue", Arial, sans-serif;
+      --font-body: "Avenir Next", "Segoe UI Variable Text", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    }
+
+    html[data-theme="dark"] {
+      --ink: #f4f5f0;
+      --paper: #151713;
+      --canvas: #0f110e;
+      --surface: #1b1e19;
+      --surface-2: #242820;
+      --line: #373d33;
+      --muted: #aab1a6;
+      --faint: #737b70;
+      --accent-soft: #2b3717;
+      --accent-ink: #151713;
+      --shadow: 0 24px 70px rgb(0 0 0 / 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--canvas);
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a { color: inherit; }
+
+    img { display: block; max-width: 100%; }
+
+    .shell {
+      width: min(var(--max), calc(100% - 48px));
+      margin-inline: auto;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 72px;
+      border-bottom: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+
+    .nav-brand img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      white-space: nowrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .theme-toggle,
+    .copy-button,
+    .asset-link,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    }
+
+    .theme-toggle {
+      padding: 8px 13px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .theme-toggle:hover,
+    .copy-button:hover,
+    .asset-link:hover,
+    .button:hover {
+      border-color: var(--accent);
+    }
+
+    .theme-toggle:active,
+    .copy-button:active,
+    .asset-link:active,
+    .button:active {
+      transform: scale(0.98);
+    }
+
+    .hero {
+      min-height: calc(100dvh - 72px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+      gap: clamp(36px, 7vw, 108px);
+      align-items: center;
+      padding-block: clamp(44px, 8vh, 88px);
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      max-width: 760px;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(3.35rem, 6.4vw, 6.7rem);
+      font-weight: 690;
+      letter-spacing: -0.075em;
+      line-height: 0.94;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero-copy {
+      max-width: 560px;
+      margin: 26px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.4vw, 1.25rem);
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding-inline: 20px;
+      font-size: 0.88rem;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 580px;
+      overflow: hidden;
+      border: 1px solid #31352e;
+      border-radius: var(--radius);
+      background: #111310;
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+
+    .hero-visual > img.texture {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.83;
+    }
+
+    .hero-mark {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(to top, rgb(17 19 16 / 0.38), transparent 50%);
+    }
+
+    .hero-mark img {
+      width: clamp(150px, 18vw, 260px);
+      filter: drop-shadow(0 20px 42px rgb(0 0 0 / 0.32));
+    }
+
+    .hero-caption {
+      position: absolute;
+      inset-inline: 24px;
+      inset-block-end: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: #c9cec3;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    main { overflow: clip; }
+
+    .section {
+      padding-block: clamp(86px, 12vw, 164px);
+      border-top: 1px solid var(--line);
+    }
+
+    .section h2 {
+      max-width: 920px;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(2.35rem, 4.5vw, 5rem);
+      font-weight: 660;
+      letter-spacing: -0.06em;
+      line-height: 0.98;
+    }
+
+    .section-intro {
+      max-width: 660px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 1.06rem;
+      line-height: 1.65;
+    }
+
+    .platform-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+      gap: clamp(44px, 8vw, 120px);
+      margin-top: 68px;
+      align-items: start;
+    }
+
+    .platform-statement {
+      position: sticky;
+      top: 112px;
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 3.2rem);
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+
+    .principles { border-top: 1px solid var(--line); }
+
+    .principle {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 26px;
+      padding-block: 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .principle strong {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .principle h3 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+    }
+
+    .principle p { margin: 0; color: var(--muted); }
+
+    .concepts {
+      display: grid;
+      grid-template-columns: 1.35fr 0.8fr 0.8fr;
+      gap: 16px;
+      margin-top: 64px;
+    }
+
+    .concept {
+      min-height: 460px;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .concept.recommended {
+      min-height: 520px;
+      border-color: var(--accent);
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    html[data-theme="dark"] .concept.recommended {
+      background: #0f110e;
+    }
+
+    .concept-art {
+      display: grid;
+      place-items: center;
+      min-height: 280px;
+    }
+
+    .concept-art img { width: min(48%, 220px); }
+
+    .concept-art svg { width: min(48%, 190px); }
+
+    .concept.recommended .concept-art img { width: min(54%, 250px); }
+
+    .concept-meta {
+      padding-top: 20px;
+      border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    }
+
+    .concept-meta small {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .recommended .concept-meta small { color: #aeb5a9; }
+
+    .concept-meta h3 { margin: 0; font-size: 1.35rem; }
+
+    .concept-meta p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .recommended .concept-meta p { color: #aeb5a9; }
+
+    .logo-stage {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 64px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .logo-specimen {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      padding: 36px;
+    }
+
+    .logo-specimen.light { background: #f4f5f0; }
+    .logo-specimen.dark { background: #151713; }
+    .logo-specimen img { width: min(78%, 420px); }
+
+    .logo-rules {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .rule-card {
+      min-height: 178px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .rule-card strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.96rem;
+    }
+
+    .rule-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+    .token-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+      gap: 54px;
+      margin-top: 66px;
+    }
+
+    .swatches { display: grid; gap: 10px; }
+
+    .swatch {
+      min-height: 84px;
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      align-items: center;
+      gap: 18px;
+      padding: 10px 14px 10px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+    }
+
+    .swatch-color {
+      align-self: stretch;
+      border: 1px solid rgb(130 138 126 / 0.28);
+      border-radius: 7px;
+    }
+
+    .swatch-meta strong { display: block; font-size: 0.9rem; }
+
+    .swatch-meta code,
+    .copy-button,
+    .type-meta,
+    .asset-type {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .swatch-meta code { color: var(--muted); }
+
+    .copy-button { padding: 7px 10px; }
+
+    .type-system {
+      display: grid;
+      gap: 16px;
+    }
+
+    .type-card {
+      min-height: 214px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .type-display {
+      margin: 16px 0 0;
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 4.3vw, 4.4rem);
+      font-weight: 680;
+      letter-spacing: -0.065em;
+      line-height: 0.94;
+    }
+
+    .type-mono {
+      margin: 22px 0 0;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 1.02rem;
+      line-height: 1.7;
+    }
+
+    .copy-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 16px;
+      margin-top: 64px;
+    }
+
+    .copy-hero,
+    .copy-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .copy-hero {
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(28px, 5vw, 62px);
+    }
+
+    .copy-hero blockquote {
+      max-width: 760px;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 5.3rem);
+      font-weight: 650;
+      letter-spacing: -0.065em;
+      line-height: 0.98;
+    }
+
+    .copy-hero footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-top: 40px;
+      color: var(--muted);
+    }
+
+    .copy-stack { display: grid; gap: 16px; }
+
+    .copy-panel { padding: 24px; }
+
+    .copy-panel h3 { margin: 0 0 14px; font-size: 1rem; }
+
+    .copy-panel p { margin: 0; color: var(--muted); }
+
+    .voice-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .voice {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .voice strong { display: block; margin-bottom: 8px; }
+    .voice p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+    .graphic-field {
+      position: relative;
+      min-height: 600px;
+      margin-top: 64px;
+      overflow: hidden;
+      border: 1px solid #31352e;
+      border-radius: var(--radius);
+      background: #10120f;
+    }
+
+    .graphic-field > img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.76;
+    }
+
+    .graphic-rules {
+      position: absolute;
+      inset-inline: 28px;
+      inset-block-end: 28px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .graphic-rule {
+      min-height: 120px;
+      padding: 18px;
+      border: 1px solid rgb(244 245 240 / 0.16);
+      border-radius: var(--radius-small);
+      background: rgb(15 17 14 / 0.78);
+      color: #f4f5f0;
+      backdrop-filter: blur(12px);
+    }
+
+    .graphic-rule strong { display: block; margin-bottom: 8px; }
+    .graphic-rule p { margin: 0; color: #aeb5a9; font-size: 0.86rem; }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 64px;
+    }
+
+    .component-panel {
+      min-height: 340px;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .component-panel.wide { grid-column: 1 / -1; }
+
+    .component-panel h3 { margin: 0 0 28px; font-size: 1rem; }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .field-demo {
+      display: grid;
+      gap: 9px;
+      max-width: 480px;
+    }
+
+    .field-demo label { font-size: 0.84rem; font-weight: 650; }
+
+    .field-demo input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--paper);
+      color: var(--ink);
+      padding-inline: 14px;
+      outline: none;
+    }
+
+    .field-demo input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .field-demo small { color: var(--muted); }
+
+    .state-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .state {
+      min-height: 190px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--paper);
+    }
+
+    .state strong { display: block; margin-bottom: 10px; }
+    .state p { margin: 0; color: var(--muted); font-size: 0.86rem; }
+
+    .skeleton {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .skeleton span {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+
+    .skeleton span:nth-child(2) { width: 78%; }
+    .skeleton span:nth-child(3) { width: 52%; }
+
+    .applications {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      margin-top: 64px;
+    }
+
+    .app-frame {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .app-frame figcaption {
+      padding: 14px 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+
+    .social-card {
+      position: relative;
+      min-height: 480px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(26px, 5vw, 58px);
+      background: #111310;
+      color: #f4f5f0;
+      isolation: isolate;
+    }
+
+    .social-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: url("assets/knowlery-atlas-texture.png") center / cover;
+      opacity: 0.48;
+    }
+
+    .social-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(90deg, #111310 0%, rgb(17 19 16 / 0.91) 50%, rgb(17 19 16 / 0.16));
+    }
+
+    .social-card img { width: 150px; }
+
+    .social-card h3 {
+      max-width: 620px;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 5.2rem);
+      letter-spacing: -0.065em;
+      line-height: 0.96;
+    }
+
+    .social-card p { margin: 16px 0 0; color: #b7beb2; }
+
+    .application-stack { display: grid; gap: 16px; }
+
+    .plugin-header {
+      min-height: 228px;
+      padding: 24px;
+      background: var(--paper);
+    }
+
+    .plugin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 34px;
+    }
+
+    .plugin-brand img { width: 42px; }
+
+    .plugin-brand strong { display: block; }
+    .plugin-brand span { color: var(--muted); font-size: 0.8rem; }
+
+    .plugin-tabs {
+      display: flex;
+      gap: 22px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .plugin-tabs .active { color: var(--ink); box-shadow: 0 2px 0 var(--accent); }
+
+    .terminal {
+      min-height: 232px;
+      padding: 26px;
+      background: #111310;
+      color: #d9ddd5;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.8;
+    }
+
+    .terminal .accent { color: var(--accent); }
+
+    .asset-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 58px;
+    }
+
+    .asset-row {
+      display: grid;
+      grid-template-columns: 54px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      min-height: 86px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--surface);
+    }
+
+    .asset-row img { width: 42px; max-height: 42px; }
+    .asset-name { font-weight: 650; }
+    .asset-type { display: block; color: var(--muted); margin-top: 3px; }
+    .asset-link { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
+
+    .page-footer {
+      padding-block: 52px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .hero > * {
+      animation: hero-in 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .hero > :last-child { animation-delay: 90ms; }
+
+    .asset-row img[src*="reverse"],
+    .asset-row img[src*="lockup-dark"] {
+      padding: 6px;
+      border-radius: 7px;
+      background: #151713;
+    }
+
+    .asset-row img[src*="mark-primary"],
+    .asset-row img[src*="lockup-light"] {
+      padding: 6px;
+      border-radius: 7px;
+      background: #f4f5f0;
+    }
+
+    @keyframes hero-in {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1000px) {
+      .nav-links a { display: none; }
+      .hero,
+      .platform-grid,
+      .token-layout,
+      .copy-grid,
+      .applications {
+        grid-template-columns: 1fr;
+      }
+      .hero { min-height: auto; }
+      .hero-visual { min-height: 520px; }
+      .platform-statement { position: static; }
+      .concepts { grid-template-columns: 1fr 1fr; }
+      .concept.recommended { grid-column: 1 / -1; }
+      .logo-rules { grid-template-columns: 1fr 1fr; }
+      .application-stack { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 32px, var(--max)); }
+      .site-nav { height: 64px; }
+      .nav-brand span { display: none; }
+      .nav-links { gap: 8px; }
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 34px;
+        padding-block: 46px 64px;
+      }
+      .hero h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+      .hero-visual { min-height: 240px; }
+      .hero-mark img { width: 130px; }
+      .section { padding-block: 82px; }
+      .platform-grid { margin-top: 46px; }
+      .principle { grid-template-columns: 1fr; gap: 10px; }
+      .concepts,
+      .logo-stage,
+      .component-grid,
+      .voice-list,
+      .state-list,
+      .asset-list,
+      .application-stack {
+        grid-template-columns: 1fr;
+      }
+      .concept.recommended,
+      .component-panel.wide { grid-column: auto; }
+      .concept,
+      .concept.recommended { min-height: 420px; }
+      .logo-specimen { min-height: 260px; }
+      .logo-rules { grid-template-columns: 1fr; }
+      .graphic-field { min-height: 720px; }
+      .graphic-rules { grid-template-columns: 1fr; }
+      .copy-hero footer,
+      .footer-inner { align-items: start; flex-direction: column; }
+      .social-card { min-height: 420px; }
+      .asset-row { grid-template-columns: 46px 1fr; }
+      .asset-link { grid-column: 2; justify-self: start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .hero > * { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Brand guide navigation">
+    <div class="shell nav-inner">
+      <a class="nav-brand" href="#top">
+        <img src="assets/knowlery-app-icon.svg" alt="Knowlery">
+        <span>Knowlery Brand System</span>
+      </a>
+      <div class="nav-links">
+        <a href="#strategy">Strategy</a>
+        <a href="#logo">Logo</a>
+        <a href="#voice">Voice</a>
+        <a href="#applications">Applications</a>
+        <button class="theme-toggle" type="button" aria-label="Change page theme">Theme: Auto</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="shell hero" id="top">
+    <div>
+      <p class="eyebrow">Brand identity system</p>
+      <h1>Knowledge that stays <span>legible.</span></h1>
+      <p class="hero-copy">A local-first knowledge system for people and agents, expressed as a living atlas instead of another AI assistant.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#logo">Explore the logo</a>
+        <a class="button" href="#assets">Download assets</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-label="Knowlery living atlas visual">
+      <img class="texture" src="assets/knowlery-atlas-texture.png" alt="Abstract topographic knowledge map with connected index nodes">
+      <div class="hero-mark"><img src="assets/knowlery-mark-reverse.svg" alt="Knowlery Atlas Fold mark"></div>
+      <div class="hero-caption"><span>Atlas Fold</span><span>Traceable by design</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="strategy">
+      <div class="shell reveal">
+        <h2>From warm utility to trusted infrastructure.</h2>
+        <p class="section-intro">The existing chef-and-pot mark communicates care, but not the product's strongest qualities: deterministic retrieval, inspectable structure, and one knowledge layer shared across agents.</p>
+        <div class="platform-grid">
+          <div class="platform-statement">Knowlery should feel like a map you can trust, not a mind you have to believe.</div>
+          <div class="principles">
+            <article class="principle">
+              <strong>Position</strong>
+              <div><h3>Local-first knowledge infrastructure</h3><p>Your notes remain plain Markdown. Knowlery adds structure, retrieval, and agent access without taking ownership of the source.</p></div>
+            </article>
+            <article class="principle">
+              <strong>Character</strong>
+              <div><h3>Exact, calm, and quietly alive</h3><p>Technical enough to earn developer trust, warm enough to feel like a place where knowledge accumulates over time.</p></div>
+            </article>
+            <article class="principle">
+              <strong>Difference</strong>
+              <div><h3>Structure over spectacle</h3><p>No chatbot face, neural cloud, sparkle, or AI glow. The visual metaphor is navigation through a maintained body of knowledge.</p></div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="directions">
+      <div class="shell reveal">
+        <h2>Three directions. One clear recommendation.</h2>
+        <p class="section-intro">Each route begins with the same product truth, but only Atlas Fold balances small-size recognition, developer credibility, and a broader story.</p>
+        <div class="concepts">
+          <article class="concept recommended">
+            <div class="concept-art"><img src="assets/knowlery-mark-reverse.svg" alt="Atlas Fold K-shaped route logo"></div>
+            <div class="concept-meta"><small>Recommended</small><h3>Atlas Fold</h3><p>A K-shaped route connects source, structure, and retrieval. Strong at favicon size and expressive at campaign scale.</p></div>
+          </article>
+          <article class="concept">
+            <div class="concept-art">
+              <svg viewBox="0 0 160 160" role="img" aria-label="Living Index logo direction">
+                <g fill="none" stroke="currentColor" stroke-width="9">
+                  <rect x="24" y="24" width="38" height="38" rx="8"/>
+                  <rect x="98" y="24" width="38" height="38" rx="8"/>
+                  <rect x="24" y="98" width="38" height="38" rx="8"/>
+                  <rect x="98" y="98" width="38" height="38" rx="8"/>
+                  <path d="M43 80h74" stroke="#B7E34A"/>
+                </g>
+                <circle cx="80" cy="80" r="12" fill="#B7E34A"/>
+              </svg>
+            </div>
+            <div class="concept-meta"><small>Alternative</small><h3>Living Index</h3><p>A modular grid for collections and bundles. Systematic, but less ownable at small sizes.</p></div>
+          </article>
+          <article class="concept">
+            <div class="concept-art">
+              <svg viewBox="0 0 160 160" role="img" aria-label="Knowledge Vessel logo direction">
+                <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M34 48h92l-12 68c-2 12-11 20-23 20H69c-12 0-21-8-23-20L34 48Z"/>
+                  <path d="M56 26v22M80 18v30M104 26v22" stroke="#B7E34A"/>
+                </g>
+              </svg>
+            </div>
+            <div class="concept-meta"><small>Continuity route</small><h3>Knowledge Vessel</h3><p>An abstract evolution of the original pot. Friendly and familiar, but still tied to the old cooking metaphor.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="logo">
+      <div class="shell reveal">
+        <p class="eyebrow">Logo system</p>
+        <h2>One route, built for every surface.</h2>
+        <p class="section-intro">Use the horizontal lockup for owned brand surfaces and the mark alone for app icons, favicons, avatars, and compact product chrome.</p>
+        <div class="logo-stage">
+          <div class="logo-specimen light"><img src="assets/knowlery-lockup-light.svg" alt="Knowlery logo on light background"></div>
+          <div class="logo-specimen dark"><img src="assets/knowlery-lockup-dark.svg" alt="Knowlery logo on dark background"></div>
+        </div>
+        <div class="logo-rules">
+          <article class="rule-card"><strong>Clear space</strong><p>Keep one node diameter around the mark and one mark width around the full lockup.</p></article>
+          <article class="rule-card"><strong>Minimum size</strong><p>Use the mark at 16 px and above. Use the lockup at 112 px wide and above.</p></article>
+          <article class="rule-card"><strong>Accent rule</strong><p>The route may use Knowledge Lime. Every remaining stroke stays graphite or paper.</p></article>
+          <article class="rule-card"><strong>Never alter</strong><p>Do not rotate, outline, glow, add gradients, or place the mark inside an extra badge.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tokens">
+      <div class="shell reveal">
+        <h2>A restrained palette with one live signal.</h2>
+        <p class="section-intro">Graphite and paper carry the system. Knowledge Lime appears only where a route, action, or selected state needs attention.</p>
+        <div class="token-layout">
+          <div class="swatches">
+            <div class="swatch"><span class="swatch-color" style="background:#151713"></span><span class="swatch-meta"><strong>Graphite</strong><code>#151713</code></span><button class="copy-button" data-copy="#151713">Copy</button></div>
+            <div class="swatch"><span class="swatch-color" style="background:#F4F5F0"></span><span class="swatch-meta"><strong>Paper</strong><code>#F4F5F0</code></span><button class="copy-button" data-copy="#F4F5F0">Copy</button></div>
+            <div class="swatch"><span class="swatch-color" style="background:#636A60"></span><span class="swatch-meta"><strong>Slate</strong><code>#636A60</code></span><button class="copy-button" data-copy="#636A60">Copy</button></div>
+            <div class="swatch"><span class="swatch-color" style="background:#C9CEC3"></span><span class="swatch-meta"><strong>Contour</strong><code>#C9CEC3</code></span><button class="copy-button" data-copy="#C9CEC3">Copy</button></div>
+            <div class="swatch"><span class="swatch-color" style="background:#B7E34A"></span><span class="swatch-meta"><strong>Knowledge Lime</strong><code>#B7E34A</code></span><button class="copy-button" data-copy="#B7E34A">Copy</button></div>
+          </div>
+          <div class="type-system">
+            <article class="type-card"><span class="type-meta">DISPLAY / AVENIR NEXT</span><p class="type-display">Knowledge stays legible.</p></article>
+            <article class="type-card"><span class="type-meta">MONO / IBM PLEX MONO</span><p class="type-mono">source: plain-markdown<br>retrieval: deterministic<br>verdict: no-confident-match</p></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="voice">
+      <div class="shell reveal">
+        <h2>Say exactly what the system makes possible.</h2>
+        <p class="section-intro">The voice is confident because the product is inspectable. It avoids inflated intelligence claims and makes ownership, boundaries, and outcomes explicit.</p>
+        <div class="copy-grid">
+          <article class="copy-hero">
+            <blockquote>The knowledge base your agents can live in.</blockquote>
+            <footer><span>Primary brand slogan</span><button class="copy-button" data-copy="The knowledge base your agents can live in.">Copy slogan</button></footer>
+          </article>
+          <div class="copy-stack">
+            <article class="copy-panel"><h3>Product descriptor</h3><p>A local-first knowledge system for people and agents.</p></article>
+            <article class="copy-panel"><h3>Short pitch</h3><p>Keep your notes yours. Give every agent a structured place to remember, retrieve, and act.</p></article>
+            <article class="copy-panel"><h3>Functional line</h3><p>Plain Markdown in. Traceable knowledge out.</p></article>
+          </div>
+        </div>
+        <div class="voice-list">
+          <article class="voice"><strong>Exact</strong><p>Name the action, the boundary, and the result. Prefer “searches locally” to “private by design.”</p></article>
+          <article class="voice"><strong>Calm</strong><p>Never manufacture urgency. Let reliability, citations, and explicit review gates carry trust.</p></article>
+          <article class="voice"><strong>Human</strong><p>Agents are collaborators, not magic. Write for the person who remains responsible for the knowledge.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="graphics">
+      <div class="shell reveal">
+        <h2>The visual language behaves like a map.</h2>
+        <p class="section-intro">Contours show context, routes show retrieval, and indexed folios show durable knowledge. Each element has a job.</p>
+        <div class="graphic-field">
+          <img src="assets/knowlery-atlas-texture.png" alt="Knowlery atlas texture showing contours, folders, and a highlighted retrieval route">
+          <div class="graphic-rules">
+            <article class="graphic-rule"><strong>Contours</strong><p>Use thin neutral lines to imply the shape of a larger knowledge space.</p></article>
+            <article class="graphic-rule"><strong>Routes</strong><p>Use one lime path to show an active query, connection, or decision.</p></article>
+            <article class="graphic-rule"><strong>Folios</strong><p>Use stacked rectangular outlines for compiled pages, bundles, and source history.</p></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="components">
+      <div class="shell reveal">
+        <h2>Brand components stay useful first.</h2>
+        <p class="section-intro">The lime accent communicates action or selection. It never becomes decoration, and every interaction remains legible without color alone.</p>
+        <div class="component-grid">
+          <article class="component-panel"><h3>Actions</h3><div class="button-row"><button class="button primary" type="button">Connect knowledge base</button><button class="button" type="button">Open documentation</button></div></article>
+          <article class="component-panel"><h3>Input</h3><div class="field-demo"><label for="query">Ask your knowledge base</label><input id="query" value="What do I know about retrieval confidence?" aria-describedby="query-help"><small id="query-help">Searches the structured layer and returns citations.</small></div></article>
+          <article class="component-panel wide"><h3>System states</h3><div class="state-list">
+            <div class="state"><div class="skeleton"><span></span><span></span><span></span></div><strong>Reading the map</strong><p>Skeletons match the final content shape. No generic spinner.</p></div>
+            <div class="state"><strong>No confident match</strong><p>This is an honest retrieval verdict. Offer nearby pages without inventing an answer.</p></div>
+            <div class="state"><strong>Source changed</strong><p>Explain which compiled page is stale and provide the exact review action.</p></div>
+          </div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="applications">
+      <div class="shell reveal">
+        <p class="eyebrow">Brand applications</p>
+        <h2>A single system across repository, docs, product, and CLI.</h2>
+        <p class="section-intro">Every surface changes density, but the same mark, typography, palette, and language keep Knowlery recognizable.</p>
+        <div class="applications">
+          <figure class="app-frame">
+            <div class="social-card">
+              <img src="assets/knowlery-lockup-dark.svg" alt="Knowlery">
+              <div><h3>The knowledge base your agents can live in.</h3><p>Local-first. Plain Markdown. Built for every agent.</p></div>
+            </div>
+            <figcaption>Repository and social card / 16:10</figcaption>
+          </figure>
+          <div class="application-stack">
+            <figure class="app-frame">
+              <div class="plugin-header">
+                <div class="plugin-brand"><img src="assets/knowlery-app-icon.svg" alt=""><div><strong>Knowlery</strong><span>Knowledge base control panel</span></div></div>
+                <div class="plugin-tabs"><span class="active">Today</span><span>Knowledge</span><span>Bundles</span><span>Health</span></div>
+              </div>
+              <figcaption>Obsidian plugin header</figcaption>
+            </figure>
+            <figure class="app-frame">
+              <div class="terminal"><span class="accent">knowlery</span> query "retrieval confidence"<br><br>2 cited pages found<br>confidence&nbsp;&nbsp;high<br>source&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;concepts/retrieval.md<br><br><span class="accent">Knowledge stays traceable.</span></div>
+              <figcaption>CLI identity</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="assets">
+      <div class="shell reveal">
+        <h2>Ready-to-review brand assets.</h2>
+        <p class="section-intro">These SVG files are design drafts. Convert the approved wordmark to outlines before production distribution.</p>
+        <div class="asset-list">
+          <div class="asset-row"><img src="assets/knowlery-mark-primary.svg" alt=""><span><span class="asset-name">Primary mark</span><span class="asset-type">SVG / light surfaces</span></span><a class="asset-link" href="assets/knowlery-mark-primary.svg" download>Download</a></div>
+          <div class="asset-row"><img src="assets/knowlery-mark-reverse.svg" alt=""><span><span class="asset-name">Reverse mark</span><span class="asset-type">SVG / dark surfaces</span></span><a class="asset-link" href="assets/knowlery-mark-reverse.svg" download>Download</a></div>
+          <div class="asset-row"><img src="assets/knowlery-lockup-light.svg" alt=""><span><span class="asset-name">Light lockup</span><span class="asset-type">SVG / horizontal</span></span><a class="asset-link" href="assets/knowlery-lockup-light.svg" download>Download</a></div>
+          <div class="asset-row"><img src="assets/knowlery-lockup-dark.svg" alt=""><span><span class="asset-name">Dark lockup</span><span class="asset-type">SVG / horizontal</span></span><a class="asset-link" href="assets/knowlery-lockup-dark.svg" download>Download</a></div>
+          <div class="asset-row"><img src="assets/knowlery-app-icon.svg" alt=""><span><span class="asset-name">App icon</span><span class="asset-type">SVG / rounded tile</span></span><a class="asset-link" href="assets/knowlery-app-icon.svg" download>Download</a></div>
+          <div class="asset-row"><img src="assets/knowlery-atlas-texture.png" alt=""><span><span class="asset-name">Atlas texture</span><span class="asset-type">PNG / 16:10</span></span><a class="asset-link" href="assets/knowlery-atlas-texture.png" download>Download</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <div class="shell footer-inner"><span>Knowlery Brand System</span><span>Concept direction: Atlas Fold</span></div>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const themeButton = document.querySelector('.theme-toggle');
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    let theme = localStorage.getItem('knowlery-brand-theme') || 'auto';
+
+    function applyTheme() {
+      const resolved = theme === 'auto' ? (media.matches ? 'dark' : 'light') : theme;
+      root.dataset.theme = resolved;
+      themeButton.textContent = `Theme: ${theme.charAt(0).toUpperCase()}${theme.slice(1)}`;
+    }
+
+    themeButton.addEventListener('click', () => {
+      theme = theme === 'auto' ? 'light' : theme === 'light' ? 'dark' : 'auto';
+      localStorage.setItem('knowlery-brand-theme', theme);
+      applyTheme();
+    });
+
+    media.addEventListener('change', applyTheme);
+    applyTheme();
+
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const original = button.textContent;
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(button.dataset.copy);
+          } else {
+            const field = document.createElement('textarea');
+            field.value = button.dataset.copy;
+            field.setAttribute('readonly', '');
+            field.style.position = 'fixed';
+            field.style.opacity = '0';
+            document.body.appendChild(field);
+            field.select();
+            document.execCommand('copy');
+            field.remove();
+          }
+          button.textContent = 'Copied';
+        } catch {
+          button.textContent = 'Copy failed';
+        }
+        window.setTimeout(() => { button.textContent = original; }, 1400);
+      });
+    });
+
+  </script>
+</body>
+</html>
