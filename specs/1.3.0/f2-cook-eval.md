@@ -60,26 +60,54 @@ Five measured properties per compiled page, aggregated per run:
 1. **Citation coverage**: fraction of compiled pages with a non-empty
    `sources:` whose every entry resolves to an existing file. Pages without
    citations are invisible to staleness — the fabric metric.
-2. **Retrievability**: for each compiled page, form probe questions from its
-   own title and description; the page must appear in the engine's top-k for
-   at least one probe. A page that can't be found by its own framing is
-   compiled noise. (Judged by the real engine — the two organs check each
-   other.)
+2. **Retrievability under competition** (pinned at spec review — the
+   unpinned version would have let implementations diverge): probes are
+   generated deterministically per page — probe 1 is the page's `title`
+   verbatim; probe 2 is the `description` when present (whole field,
+   verbatim). The page must appear in the engine's **top-5** for at least
+   one probe, judged by the in-repo engine. On greenfield material the
+   weighted engine nearly always self-matches (floor ≈ 1.0 is expected and
+   fine — it guards catastrophic regressions only); **the metric bites in
+   the collision fixture**, where sibling pages compete — there it measures
+   duplication/crowding, not mere findability. **Attribution policy for
+   red runs**: cook-eval floors are asserted against the same-commit engine
+   (the two co-evolve). A cook-eval red on an engine-only PR is an engine
+   regression *signal* — that is the organs checking each other working as
+   designed — and resolves either by fixing the engine or by a joint
+   re-baseline with the trade-off called out in review. No engine pinning:
+   pinning would silence exactly the signal this coupling exists to give.
 3. **Frontmatter completeness**: the health-check minimum per type
    (`type`/`created`; `items` for comparisons; `status` for queries), plus
    `description` presence — the field retrieval weights ×2 and the map
    renders.
-4. **Taxonomy discipline**: every page tag/domain either pre-exists in
-   `SCHEMA.md` or was added to it in the same cook (the skill's own rule,
-   now checked); flag synonym-shaped near-duplicates (case/hyphen variants)
-   as findings.
+4. **Taxonomy discipline, as a static predicate** (rewritten at spec
+   review — "added in the same cook" is temporal and undecidable from a
+   snapshot): every tag and domain used by any compiled page **exists in
+   `SCHEMA.md`'s taxonomy sections** — that is the whole machine-checked
+   rule. Synonym-shaped near-duplicates across the used set (case/hyphen/
+   plural variants) are flagged as findings. The temporal half of the
+   skill's rule ("SCHEMA was extended *by* this cook, not edited freely")
+   is a human item on the regeneration-review checklist (§4.3), where the
+   diff makes it visible.
 5. **Wiki connectivity**: fraction of compiled pages with ≥1 wikilink to
    another compiled page — the graph half, measured (orphan compiled pages
    are the anti-pattern the /explore-and-link guidance exists to prevent).
+6. **User material untouched** (added at spec review — cheap and
+   load-bearing): every file under the fixture's `material/` must exist
+   byte-identical inside `cooked/` — cook compiles *from* notes, never
+   rewrites them. A hard boolean, not a ratio.
+7. **Restraint** (the over-compilation guard): each `case.yaml` may list
+   `must_not_compile` decoys (e.g. a pure diary note); the checker fails if
+   any decoy acquired a compiled page. Structure-green junk pages are the
+   failure §4.5 admits the metrics can't see — this at least catches the
+   deliberate-bait shape.
 
-Report shape mirrors the retrieval eval: per-fixture scores + an aggregate,
-written to `evals/reports/`, with a `--assert-baseline` mode against frozen
-floors in `evals/cook/baseline.json`.
+Report shape and baseline semantics mirror the retrieval eval exactly
+(aligned at spec review): reports to `evals/reports/`, floors in
+`evals/cook/baseline.json`, ratio metrics compared with the same tolerance
+mechanism the retrieval baseline uses (±0.01), boolean invariants (material
+untouched, decoys, citation resolution) as **hard floors** — no tolerance.
+`npm run eval:cook -- --assert-baseline` is the CI entry point.
 
 ### 4.2 Fixtures: golden material, committed outputs
 
@@ -94,10 +122,15 @@ Three cases at launch, chosen to exercise distinct cook pressures:
 
 - **greenfield**: 8–10 mixed raw notes (meeting scraps, a clipped article,
   inbox captures incl. CJK titles) into an empty workspace — the cold-start
-  shape.
+  shape. Includes two `must_not_compile` decoys (a diary entry, a transient
+  todo) exercising invariant 7.
 - **incremental**: material that *updates* existing compiled pages (changed
   sources → re-cook) — the staleness-driven shape; asserts updates landed in
-  existing pages rather than duplicates.
+  existing pages rather than duplicates. One changed source **contradicts**
+  a compiled claim, exercising the skill's contradiction section — the
+  reference output must show the contradiction folded in per the update
+  policy (verified at regen review; the checker verifies the structural
+  side: the page updated, no fork).
 - **collision**: material about near-identical topics that must merge or
   cross-link rather than fork (`aliases` discipline) — the drift shape.
 
@@ -113,11 +146,21 @@ checker in CI on every commit thereafter.
 1. Run the current cook skill against `material/` with a real agent
    (invocation recorded in `case.yaml`).
 2. `npm run eval:cook` locally — the checker must pass floors.
-3. Commit `cooked/` with the diff called out in review: **a golden diff is a
-   skill-behavior change made visible.**
+3. Commit `cooked/` — and review **the checker's metric delta as the
+   primary artifact** (amended at spec review: LLM re-cooks are
+   nondeterministic, so raw text diffs are weak behavior evidence; the
+   report-to-report comparison is the signal, the text diff is context).
+   The regen commit includes both reports.
+4. Human checklist at regen review: the temporal taxonomy rule (§4.1.4) and
+   the contradiction handling (§4.2) — the judgments the checker cannot
+   make.
 
-Trigger: material edits to the cook skill (the PR checklist notes it);
-otherwise outputs stay frozen — CI is judging invariants, not freshness.
+Trigger and **drift guard** (amended at spec review — a silent-staleness
+hole otherwise): a CI step fails when the PR changes the cook skill
+(`plugin/skills/cook/SKILL.md`, which is generated and committed, is the
+detectable artifact) without touching `evals/cook/**`. Overridable only by
+a `cook-eval-waiver` note in the PR body for prose-only edits — deliberate,
+visible, never silent.
 
 ### 4.4 CI integration
 
