@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" role="img" aria-labelledby="title desc">
+  <title id="title">Knowlery horizontal logo</title>
+  <desc id="desc">Atlas Fold mark beside the Knowlery wordmark for light surfaces.</desc>
+  <g transform="translate(8 8) scale(.95)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 9v46M12 32h13L49 9M25 32l24 23" stroke="#151713" stroke-width="7"/>
+    <path d="M12 32h13l16-15" stroke="#B7E34A" stroke-width="3.5"/>
+    <circle cx="12" cy="32" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+    <circle cx="25" cy="32" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+    <circle cx="41" cy="17" r="3.25" fill="#B7E34A" stroke="#151713" stroke-width="2"/>
+  </g>
+  <text x="84" y="54" fill="#151713" font-family="Avenir Next, Arial Nova, Helvetica Neue, Arial, sans-serif" font-size="43" font-weight="700" letter-spacing="-2.2">Knowlery</text>
+</svg>
