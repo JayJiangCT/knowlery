@@ -51,6 +51,13 @@ Many commands accept `file` or `path` to target a file. Without either, the acti
 - `file=<name>` — resolves like a wikilink (name only, no path or extension needed)
 - `path=<path>` — exact path from vault root, e.g. `folder/note.md`
 
+Dot-directories (`.claude/`, `.knowlery/`, `.agents/`, `.obsidian/`) are
+outside Obsidian's vault index. Commands that resolve an existing target
+through that index — including `read`, even with `path=` — cannot reach
+them. Read or write those paths directly with your file tools. This is an
+expected boundary; do not retry the Obsidian CLI. Note that the CLI may print
+`Error: File ... not found.` while still exiting with status 0.
+
 ## Vault targeting
 
 Commands target the most recently focused vault by default. Use `vault=<name>` as the first parameter to target a specific vault:

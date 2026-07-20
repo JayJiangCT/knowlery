@@ -40,6 +40,18 @@ necessarily the directory the page belongs in.
 In headless environments (Obsidian closed, CLI-initialized workspaces), write
 `.md` files directly, and run `knowlery health` after bulk changes.
 
+## Hidden Config Paths
+
+Dot-directories (`.claude/`, `.knowlery/`, `.agents/`) are outside
+Obsidian's vault index — the Obsidian CLI cannot target them; use your file
+tools directly.
+
+Claude Code and OpenCode load Knowlery rules through their platform
+configuration at session start (`.claude/CLAUDE.md` imports /
+`opencode.json` instructions). Codex does not automatically receive
+per-vault rule contents; follow the workspace `AGENTS.md` and read the
+relevant hidden rule files directly with your file tools.
+
 ## Required Frontmatter
 
 Every note MUST have these fields:

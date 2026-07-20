@@ -1161,6 +1161,13 @@ Many commands accept \`file\` or \`path\` to target a file. Without either, the 
 - \`file=<name>\` — resolves like a wikilink (name only, no path or extension needed)
 - \`path=<path>\` — exact path from vault root, e.g. \`folder/note.md\`
 
+Dot-directories (\`.claude/\`, \`.knowlery/\`, \`.agents/\`, \`.obsidian/\`) are
+outside Obsidian's vault index. Commands that resolve an existing target
+through that index — including \`read\`, even with \`path=\` — cannot reach
+them. Read or write those paths directly with your file tools. This is an
+expected boundary; do not retry the Obsidian CLI. Note that the CLI may print
+\`Error: File ... not found.\` while still exiting with status 0.
+
 ## Vault targeting
 
 Commands target the most recently focused vault by default. Use \`vault=<name>\` as the first parameter to target a specific vault:
@@ -1756,6 +1763,18 @@ necessarily the directory the page belongs in.
 
 In headless environments (Obsidian closed, CLI-initialized workspaces), write
 \`.md\` files directly, and run \`knowlery health\` after bulk changes.
+
+## Hidden Config Paths
+
+Dot-directories (\`.claude/\`, \`.knowlery/\`, \`.agents/\`) are outside
+Obsidian's vault index — the Obsidian CLI cannot target them; use your file
+tools directly.
+
+Claude Code and OpenCode load Knowlery rules through their platform
+configuration at session start (\`.claude/CLAUDE.md\` imports /
+\`opencode.json\` instructions). Codex does not automatically receive
+per-vault rule contents; follow the workspace \`AGENTS.md\` and read the
+relevant hidden rule files directly with your file tools.
 
 ## Required Frontmatter
 
