@@ -6,13 +6,13 @@ client. Everything after connection is the same everywhere — see
 [Talk to Your Knowledge Base](./talk-to-your-kb).
 
 ::: tip The fastest path: install the plugin
-The Knowlery **agent plugin** collapses the setup below into one install
-action — MCP server (auto-provisioned via npx) plus all fifteen skills:
+The Knowlery **agent plugin** bundles the MCP server (auto-provisioned via
+npx) plus all fifteen skills. Install it with two commands:
 
 - **Claude Code**: `/plugin marketplace add JayJiangCT/knowlery` →
   `/plugin install knowlery`
-- **Codex**: `codex plugin marketplace add <source>` →
-  `codex plugin add knowlery@<marketplace>`
+- **Codex**: `codex plugin marketplace add JayJiangCT/knowlery` →
+  `codex plugin add knowlery@knowlery`
 - **Cursor**: install from a checkout's `plugin/` dir or the release zip
   (until the marketplace listing lands)
 
@@ -54,8 +54,9 @@ path to `npx` (`which npx`).
 | --- | --- | --- |
 | Claude Code | `claude mcp add` | full support |
 | Claude Desktop | `claude_desktop_config.json` | shell-less: `register_kb` is how existing KBs join |
-| Codex CLI | `~/.codex/config.toml` | config shared with the Codex app |
-| Codex (app / IDE extension) | same `config.toml`, or Plugins | shell-having: CLI also works |
+| Codex CLI | Plugins or `~/.codex/config.toml` | `/plugins` opens the plugin browser; config is shared with the desktop app |
+| Codex Desktop | Plugins or shared `config.toml` | plugins supported; start a new task after installation |
+| Codex IDE extension | `~/.codex/config.toml` | MCP config supported; plugins unavailable |
 | OpenCode | `~/.config/opencode/opencode.json` | first-class Knowlery platform — see the config-ownership note |
 | Cursor | `~/.cursor/mcp.json` or deeplink | project-level `.cursor/mcp.json` also supported |
 | Antigravity Desktop / CLI / IDE | `~/.gemini/config/mcp_config.json` | one config serves all three |
@@ -96,7 +97,16 @@ above.
 
 ## Codex CLI
 
-Add to `~/.codex/config.toml`:
+For the complete plugin, run:
+
+```bash
+codex plugin marketplace add JayJiangCT/knowlery
+codex plugin add knowlery@knowlery
+```
+
+Start a new Codex session after installation. Run `/plugins` in an interactive
+CLI session to inspect or enable the plugin. To install only the MCP server
+without the bundled skills, add this block to `~/.codex/config.toml` instead:
 
 ```toml
 [mcp_servers.knowlery]
@@ -104,14 +114,25 @@ command = "npx"
 args = ["-y", "knowlery@^1", "mcp"]
 ```
 
-Restart `codex`. Since Codex has a shell, the `knowlery` CLI works alongside
-the MCP tools — the `knowlery-cli` skill teaches the command surface.
+Restart `codex` after changing the config. Since Codex has a shell, the
+`knowlery` CLI works alongside the MCP tools — the `knowlery-cli` skill
+teaches the command surface.
 
-## Codex (app / IDE extension)
+## Codex Desktop
 
-The app shares `~/.codex/config.toml` with the CLI — the block above serves
-both. Once the Knowlery plugin ships (1.1), the `/plugins` browser becomes
-the one-click path; skills will be invocable as `@knowlery`.
+The marketplace installation above is shared with Codex Desktop. Relaunch the
+app, open **Plugins → Installed**, confirm that Knowlery is enabled, and start
+a new task. Type `@` in the composer to select Knowlery or one of its bundled
+skills explicitly.
+
+The app also shares `~/.codex/config.toml` with the CLI, so the MCP-only block
+above works in both.
+
+## Codex IDE extension
+
+The IDE extension does not support plugins. Use the MCP-only
+`~/.codex/config.toml` block above, then restart the extension and start a new
+session.
 
 ## OpenCode
 

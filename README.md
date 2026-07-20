@@ -36,16 +36,20 @@ Read the official documentation: <https://jayjiangct.github.io/knowlery/>.
 
 ### With your agent (no Obsidian required)
 
-Install the **agent plugin** — MCP server plus all fifteen skills in one
-action:
+Install the **agent plugin** — MCP server plus all fifteen skills — with a
+two-command marketplace flow:
 
 ```text
 Claude Code:  /plugin marketplace add JayJiangCT/knowlery
               /plugin install knowlery
 
-Codex:        codex plugin marketplace add <source>
-              codex plugin add knowlery@<marketplace>
+Codex:        codex plugin marketplace add JayJiangCT/knowlery
+              codex plugin add knowlery@knowlery
 ```
+
+Start a new agent session after installation so the bundled skills and MCP
+tools are loaded. In Codex Desktop, open **Plugins → Installed** to confirm
+that Knowlery is enabled.
 
 Or add one MCP config block to any client (Cursor, Claude Desktop,
 Antigravity, …):

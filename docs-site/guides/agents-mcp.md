@@ -116,7 +116,7 @@ The repository ships an agent plugin (`plugin/` — generated from the same
 sources as everything else): the MCP server config (provisioned via
 `npx -y knowlery@^1 mcp`, no separate install), all fifteen skills, and on
 Claude Code a `bin/` shim that puts `knowlery` on the agent's PATH. One
-install replaces the manual MCP setup above.
+plugin installation replaces the manual MCP setup above.
 
 The honest per-platform install path:
 
@@ -124,9 +124,11 @@ The honest per-platform install path:
   `/plugin marketplace add JayJiangCT/knowlery` →
   `/plugin install knowlery`. Skills appear under the plugin's namespace
   (the exact slash form varies by client).
-- **Codex**: add the repo as a marketplace source
-  (`codex plugin marketplace add <source>`), then
-  `codex plugin add knowlery@<marketplace>`; skills invoke as `@knowlery`.
+- **Codex**: `codex plugin marketplace add JayJiangCT/knowlery` →
+  `codex plugin add knowlery@knowlery`. Start a new session after installation.
+  In Codex Desktop, type `@` to select the plugin or a bundled skill. In the
+  CLI, describe the task normally or explicitly invoke a namespaced skill such
+  as `$knowlery:ask`.
 - **Cursor**: install from a checkout's `plugin/` directory (or the release
   zip) until the marketplace listing lands — MCP tools and skills register
   for the agent either way.
