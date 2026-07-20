@@ -37,8 +37,25 @@ When you do use `obsidian create`, pass `path="dir/note.md"` — `name=`
 resolves like a wikilink and lands in the default new-note location, not
 necessarily the directory the page belongs in.
 
+Treat any page containing frontmatter plus body, Mermaid or other charts, code
+fences, tables, or quoted prose as a full page and write the `.md` file
+directly.
+
 In headless environments (Obsidian closed, CLI-initialized workspaces), write
 `.md` files directly, and run `knowlery health` after bulk changes.
+
+## Hidden Config Paths
+
+Dot-directories (`.claude/`, `.knowlery/`, `.agents/`) are outside
+Obsidian's vault index. Obsidian CLI commands that depend on the vault index —
+including `read` and `create` — cannot reach them even with `path=`; use
+your file tools directly.
+
+Claude Code and OpenCode load Knowlery rules through their platform
+configuration at session start (`.claude/CLAUDE.md` imports /
+`opencode.json` instructions). Codex does not automatically receive
+per-vault rule contents; follow the workspace `AGENTS.md` and read the
+relevant hidden rule files directly with your file tools.
 
 ## Required Frontmatter
 

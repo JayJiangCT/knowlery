@@ -272,6 +272,30 @@ describe('write path chosen by operation, with the escaping failure branch (1.2.
   });
 });
 
+describe('the dot-directory boundary is taught (field finding, verified on Obsidian 1.12.7)', () => {
+  it('obsidian-cli: read and create cannot reach dot-directories; no retries; success/failure signals named', () => {
+    const content = skill('obsidian-cli').replace(/\s+/g, ' ');
+    expect(content).toContain("outside Obsidian's vault index");
+    expect(content).toContain('including `read` and `create`, even with `path=`');
+    expect(content).toContain('do not retry the Obsidian CLI');
+    expect(content).toContain('while still exiting with status 0');
+    expect(content).toContain('require a `Created: <path>` result');
+  });
+
+  it('vault-conventions: boundary covers read and create; full-page rule names charts and tables', () => {
+    const content = skill('vault-conventions').replace(/\s+/g, ' ');
+    expect(content).toContain('Hidden Config Paths');
+    expect(content).toContain('including `read` and `create`');
+    expect(content).toContain('Mermaid or other charts');
+  });
+
+  it('vault-conventions: rules loading is platform-scoped — Codex reads hidden rule files itself', () => {
+    const content = skill('vault-conventions').replace(/\s+/g, ' ');
+    expect(content).toContain('Codex does not automatically receive');
+    expect(content).toContain('AGENTS.md');
+  });
+});
+
 describe('reference hygiene: no phantom skills, no invalid CLI syntax (1.2.3 skills review)', () => {
   it.each(BUNDLED_SKILLS.map((entry) => entry.name))('%s references no removed skill (/trace, /connect, /wiki)', (name) => {
     const content = skill(name);
