@@ -36,9 +36,9 @@ or quoted prose will usually break the command or corrupt the written content �
 on top of the `\n` escaping that multiline content already needs.
 
 - **Short content** (a heading, a line or two): `obsidian create` / `obsidian append` are fine.
-- **Full pages** (frontmatter + body, code blocks): write the `.md` file directly
-  with your file tools — Obsidian indexes new files automatically — then verify
-  with `obsidian read path="..."`.
+- **Full pages** (frontmatter + body, Mermaid or other charts, code fences,
+  tables): write the `.md` file directly with your file tools — Obsidian
+  indexes new files automatically — then verify with `obsidian read path="..."`.
 - Always pass `path="dir/note.md"` when the note must land in a specific folder;
   `name=` resolves like a wikilink and uses the default new-note location.
 - If `create` fails once on escaping, switch to a direct file write; do not retry
@@ -52,11 +52,12 @@ Many commands accept `file` or `path` to target a file. Without either, the acti
 - `path=<path>` — exact path from vault root, e.g. `folder/note.md`
 
 Dot-directories (`.claude/`, `.knowlery/`, `.agents/`, `.obsidian/`) are
-outside Obsidian's vault index. Commands that resolve an existing target
-through that index — including `read`, even with `path=` — cannot reach
+outside Obsidian's vault index. File-targeting commands that depend on that
+index — including `read` and `create`, even with `path=` — cannot reach
 them. Read or write those paths directly with your file tools. This is an
-expected boundary; do not retry the Obsidian CLI. Note that the CLI may print
-`Error: File ... not found.` while still exiting with status 0.
+expected boundary; do not retry the Obsidian CLI. The CLI may print an
+`Error:` while still exiting with status 0, so require a `Created: <path>`
+result and verify important writes.
 
 ## Vault targeting
 
