@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.5] — 2026-07-19
+
+### Fixes
+
+- **Agent skills now handle Obsidian's hidden-path boundary explicitly.**
+  Obsidian CLI commands backed by the vault index — including `read` and
+  `create`, even with `path=` — cannot reach dot-directories such as
+  `.claude/`, `.knowlery/`, `.agents/`, and `.obsidian/`. Agents now use file
+  tools directly for those paths, treat `Error:` output as failure even when
+  the CLI exits with status 0, and require a `Created: <path>` result for
+  successful short-note creation.
+- **Full pages avoid the fragile `content=` transport.** Notes containing
+  frontmatter plus body, Mermaid or other charts, code fences, tables, or
+  quoted prose are written directly as Markdown files; `obsidian create`
+  remains the shortcut for short content. Rule-loading guidance is now
+  platform-scoped: Claude Code and OpenCode load configured rules at session
+  start, while Codex follows `AGENTS.md` and reads relevant hidden rule files
+  directly.
+
 ## [1.2.4] — 2026-07-17
 
 ### Brand
