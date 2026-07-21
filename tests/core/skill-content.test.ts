@@ -297,13 +297,26 @@ describe('the dot-directory boundary is taught (field finding, verified on Obsid
 });
 
 describe('blank-note side effect is taught (field finding: CLI introspection call created Untitled.md)', () => {
-  it('obsidian-cli: bare invocation forbidden; stray blank note is deleted and verified gone', () => {
+  it('obsidian-cli: bare invocation forbidden — it opens the TUI and can leave Untitled.md', () => {
     const content = skill('obsidian-cli').replace(/\s+/g, ' ');
     expect(content).toContain('Never run `obsidian` with no command');
     expect(content).toContain('Untitled.md');
+  });
+
+  it('obsidian-cli: deletion requires proof of tool origin (own bare call, new, empty); otherwise leave and ask', () => {
+    const content = skill('obsidian-cli').replace(/\s+/g, ' ');
+    expect(content).toContain('provably tool debris');
+    expect(content).toContain('did not exist before');
+    expect(content).toContain('it is empty');
     expect(content).toContain('`obsidian delete path="Untitled.md"`');
-    expect(content).toContain('tool debris');
-    expect(content).toContain('Never leave CLI side effects in the vault');
+    expect(content).toContain('leave it and ask the user');
+  });
+
+  it('obsidian-cli: deletion is verified with a targeted read and a not-found signal, never the exit code', () => {
+    const content = skill('obsidian-cli').replace(/\s+/g, ' ');
+    expect(content).toContain('`obsidian read path="Untitled.md"`');
+    expect(content).toContain('not found');
+    expect(content).toContain('never the exit code');
   });
 });
 
