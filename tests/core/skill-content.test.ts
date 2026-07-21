@@ -296,6 +296,17 @@ describe('the dot-directory boundary is taught (field finding, verified on Obsid
   });
 });
 
+describe('blank-note side effect is taught (field finding: CLI introspection call created Untitled.md)', () => {
+  it('obsidian-cli: bare invocation forbidden; stray blank note is deleted and verified gone', () => {
+    const content = skill('obsidian-cli').replace(/\s+/g, ' ');
+    expect(content).toContain('Never run `obsidian` with no command');
+    expect(content).toContain('Untitled.md');
+    expect(content).toContain('`obsidian delete path="Untitled.md"`');
+    expect(content).toContain('tool debris');
+    expect(content).toContain('Never leave CLI side effects in the vault');
+  });
+});
+
 describe('reference hygiene: no phantom skills, no invalid CLI syntax (1.2.3 skills review)', () => {
   it.each(BUNDLED_SKILLS.map((entry) => entry.name))('%s references no removed skill (/trace, /connect, /wiki)', (name) => {
     const content = skill(name);
