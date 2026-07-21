@@ -11,6 +11,21 @@ Use the `obsidian` CLI to interact with a running Obsidian instance. Requires Ob
 
 Run `obsidian help` to see all available commands. This is always up to date. Full docs: https://help.obsidian.md/cli
 
+Never run `obsidian` with no command — a bare call opens an interactive TUI
+meant for humans, and is field-observed to leave a blank `Untitled.md` in
+the vault.
+
+A blank note is provably tool debris only when your own bare call just
+created it: you ran the call this session, the file did not exist before it
+(check creation time), and it is empty. Only then run
+`obsidian delete path="Untitled.md"` (trashes by default), and verify with
+`obsidian read path="Untitled.md"` that the output reports not found — bare
+`obsidian read` reads the active file, and the CLI can print an error while
+exiting 0, so trust the not-found output or a filesystem existence check,
+never the exit code. If any condition is unproven — the note predates your
+call or has content — leave it and ask the user. Never leave CLI side
+effects in the vault, and never guess a user's note into the trash either.
+
 ## Syntax
 
 **Parameters** take a value with `=`. Quote values with spaces:
