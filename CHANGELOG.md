@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.6] — 2026-07-21
+
+### Fixes
+
+- **Agents no longer risk stray `Untitled.md` files from CLI introspection.**
+  Running `obsidian` with no command opens Obsidian's interactive TUI — a
+  field-observed path that left a blank `Untitled.md` in the vault during a
+  real cook session. The obsidian-cli skill now forbids bare invocation and
+  prescribes a proof-first cleanup: delete only when the note is provably
+  tool debris (your own bare call this session, the file new and empty),
+  otherwise leave it and ask the user. Deletion is verified with a targeted
+  `obsidian read path="Untitled.md"` and a not-found signal — never the
+  exit code.
+
+### Docs
+
+- **Codex install instructions corrected.** The README and docs site (en+zh)
+  now describe the right way to install the Knowlery plugin for Codex.
+
 ## [1.2.5] — 2026-07-19
 
 ### Fixes
