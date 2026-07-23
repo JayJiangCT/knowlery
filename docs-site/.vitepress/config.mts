@@ -37,6 +37,9 @@ const englishSidebar = [
         text: 'Sharing Knowledge',
         link: '/sharing/',
         items: [
+          { text: 'Share in Obsidian', link: '/sharing/obsidian' },
+          { text: 'Share with an Agent', link: '/sharing/with-agent' },
+          { text: 'Automate with GitHub Actions', link: '/sharing/github-actions' },
           { text: 'Publish a Bundle', link: '/sharing/publish' },
           { text: 'Grant Access', link: '/sharing/grant-access' },
           { text: 'Install from a URL', link: '/sharing/install-from-url' },
@@ -93,6 +96,9 @@ const chineseSidebar = [
         text: '分享知识',
         link: '/zh/sharing/',
         items: [
+          { text: '在 Obsidian 中分享', link: '/zh/sharing/obsidian' },
+          { text: '让 Agent 帮你分享', link: '/zh/sharing/with-agent' },
+          { text: '使用 GitHub Actions 分发', link: '/zh/sharing/github-actions' },
           { text: '发布知识包', link: '/zh/sharing/publish' },
           { text: '授权', link: '/zh/sharing/grant-access' },
           { text: '从 URL 安装', link: '/zh/sharing/install-from-url' },

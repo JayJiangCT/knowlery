@@ -87,7 +87,7 @@ access. Publishing to a public repo requires re-acknowledging the risk items
 
 ```bash
 # Install from a URL (private repos work through your gh login)
-knowlery bundle install https://github.com/you/knowledge-shelf/releases/download/v1.0.0/bundle.zip \
+knowlery bundle install https://github.com/you/knowledge-shelf/releases/download/you.retrieval-engine-v1.0.0/you.retrieval-engine-1.0.0.zip \
   --kb research --verify <sha256>
 
 # Later: is anything newer?

@@ -1,7 +1,7 @@
 # Install from a URL
 
 ```bash
-knowlery bundle install https://github.com/team/kb-bundles/releases/download/v1.2.0/pack.zip
+knowlery bundle install https://github.com/team/kb-bundles/releases/download/team.delivery-v1.2.0/team.delivery-1.2.0.zip
 ```
 
 The bytes are downloaded to a temporary file and then go through **exactly** the

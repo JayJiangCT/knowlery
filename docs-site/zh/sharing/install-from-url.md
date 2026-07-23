@@ -1,7 +1,7 @@
 # 从 URL 安装
 
 ```bash
-knowlery bundle install https://github.com/team/kb-bundles/releases/download/v1.2.0/pack.zip
+knowlery bundle install https://github.com/team/kb-bundles/releases/download/team.delivery-v1.2.0/team.delivery-1.2.0.zip
 ```
 
 字节流先下载到临时文件，然后走与本地安装**完全相同**的管道——同样的预览、同样的

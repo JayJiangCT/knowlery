@@ -1,4 +1,8 @@
-# Publish a Bundle
+# Publish a Bundle (CLI)
+
+For the plugin workflow, see [Share in Obsidian](./obsidian). To delegate the
+mechanics while keeping review decisions with you, see
+[Share with an Agent](./with-agent).
 
 ```bash
 knowlery bundle publish drone-delivery
@@ -49,6 +53,12 @@ you the list.
 
 The gate runs on **every** public publish — consenting to v1.2 does not silence
 v1.3's scan, because content changes and so do risks.
+
+::: warning When the target repository is already public
+Knowlery does not change repository visibility or infer publishing intent from
+GitHub. Pass `--public`; in Obsidian, select **Public** so the public-risk gate
+appears.
+:::
 
 ::: warning Honest limit
 Pattern scanning catches shapes (API keys, IPs, phone numbers), not meaning. It

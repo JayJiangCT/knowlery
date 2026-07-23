@@ -84,7 +84,7 @@ knowlery bundle publish retrieval-engine --kb research --repo you/knowledge-shel
 
 ```bash
 # 从 URL 安装（私有仓库通过你的 gh 登录访问）
-knowlery bundle install https://github.com/you/knowledge-shelf/releases/download/v1.0.0/bundle.zip \
+knowlery bundle install https://github.com/you/knowledge-shelf/releases/download/you.retrieval-engine-v1.0.0/you.retrieval-engine-1.0.0.zip \
   --kb research --verify <sha256>
 
 # 之后：有更新吗？

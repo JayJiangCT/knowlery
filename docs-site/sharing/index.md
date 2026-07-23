@@ -1,8 +1,19 @@
 # Sharing Knowledge
 
-Knowlery packages reviewed knowledge into **bundles** — sealed, versioned artifacts
-another vault can install. Sharing is a journey with distinct steps, and the most
-important thing to understand is that they are separate:
+Knowlery packages an explicitly reviewed slice of knowledge into an installable,
+verifiable, updateable **bundle**. It is not a vault backup: only pages and
+sources you approve are included.
+
+## Choose how you want to share
+
+| I want to… | Start here |
+| --- | --- |
+| Select, preview, and publish in Obsidian | [Share in Obsidian](./obsidian) |
+| Ask an agent to help | [Share with an Agent](./with-agent) |
+| Review and publish from a terminal | [Publish a Bundle (CLI)](./publish) |
+| Let CI create the Release after review | [Automate with GitHub Actions](./github-actions) |
+
+Every entry point uses the same steps and saved review state:
 
 1. **Export & review** — pick a seed topic; every page and source in scope gets an
    explicit per-item approval (nothing ships unreviewed). See the export command in
@@ -18,6 +29,11 @@ important thing to understand is that they are separate:
 5. **[Subscribe & update](./subscribe-update)** — `check-updates` asks each
    bundle's source for newer versions; `update` installs them through the same
    gates. Pull-based, with local modifications protected.
+
+::: tip Your first share
+Start with a private repository, version `0.1.0`, and a small scope. Complete one
+install and update check in a test vault before widening the audience.
+:::
 
 ## The recommended team setup: an organization shelf
 

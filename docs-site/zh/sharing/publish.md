@@ -1,4 +1,8 @@
-# 发布知识包
+# 发布知识包（CLI）
+
+本页适合终端用户。希望在插件界面中完成操作，请阅读
+[在 Obsidian 中分享](./obsidian)；希望交给 Agent，请阅读
+[让 Agent 帮你分享](./with-agent)。
 
 ```bash
 knowlery bundle publish drone-delivery
@@ -43,6 +47,12 @@ Published jay.drone-delivery v0.1.0 to your-org/kb-bundles (private).
 
 这道门在**每次**公开发布时都会运行——对 v1.2 的同意不会静音 v1.3 的扫描，因为内容
 变了，风险就变了。
+
+::: warning 目标仓库已经公开时
+Knowlery 不会替你修改 GitHub 仓库的可见性，也不会从仓库状态自动推断你是否有意公开。
+只要目标仓库实际是公开的，就必须明确传入 `--public`；在 Obsidian 中则必须选择
+**Public**，这样公开风险确认才会出现。
+:::
 
 ::: warning 诚实的边界
 模式扫描识别的是形状（API key、IP、手机号），不是含义。它无法知道某句话在商业上
