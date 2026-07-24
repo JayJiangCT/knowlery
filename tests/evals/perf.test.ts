@@ -3,7 +3,7 @@ import { mkdtempSync, cpSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import matter from 'gray-matter';
-import { COMPILED_SHARE, TIER_PAGES, generateVault, QUERY_QUESTIONS } from '../../evals/perf/generate-vault';
+import { COMPILED_SHARE, NON_MD_PER_PAGE, TIER_PAGES, generateVault, QUERY_QUESTIONS } from '../../evals/perf/generate-vault';
 import { loadEntryPoints, MissingEntryPointError, measure } from '../../evals/perf/measure';
 import {
   CEILINGS_MS, assertCeilings, assertFederationRatio, assertGrowthShape, comparePaired,
@@ -59,7 +59,7 @@ describe('perf vault generator', () => {
   // not assumed.
   it('page sizes match the calibrated real-vault distribution (~7.7KiB mean)', () => {
     const { files } = generateVault(42, 'medium');
-    const pages = [...files.entries()].filter(([path]) => path !== 'KNOWLEDGE.md');
+    const pages = [...files.entries()].filter(([path]) => path.endsWith('.md') && path !== 'KNOWLEDGE.md');
     const totalBytes = pages.reduce((sum, [, content]) => sum + Buffer.byteLength(content, 'utf8'), 0);
     const meanKiB = totalBytes / pages.length / 1024;
     expect(meanKiB).toBeGreaterThan(6.5);
@@ -68,6 +68,38 @@ describe('perf vault generator', () => {
     const sizes = pages.map(([, content]) => Buffer.byteLength(content, 'utf8')).sort((a, b) => a - b);
     expect(sizes[Math.floor(sizes.length * 0.1)]).toBeLessThan(3 * 1024);
     expect(sizes[Math.floor(sizes.length * 0.9)]).toBeGreaterThan(12 * 1024);
+  });
+
+  // Acceptance round 2 (spec findings §8): page count without tree density,
+  // vocabulary, and character weight was still a 2.7x-light model of the
+  // real workspace. All three dimensions are asserted now.
+  it('carries the real non-markdown tree density (~27 per md page)', () => {
+    const { files } = generateVault(42, 'medium');
+    const nonMd = [...files.keys()].filter((path) => !path.endsWith('.md'));
+    expect(nonMd.length / TIER_PAGES.medium).toBeCloseTo(NON_MD_PER_PAGE, 0);
+    for (const path of nonMd.slice(0, 100)) expect(files.get(path)).toBe('');
+  });
+
+  it('matches real vocabulary diversity and character weight', () => {
+    const { files } = generateVault(42, 'medium');
+    const pages = [...files.entries()].filter(([path]) => path.endsWith('.md') && path !== 'KNOWLEDGE.md');
+
+    // Real pages average ~282 unique ASCII tokens (measured); a repeated
+    // sentence bank averaged 51 and made parsing unrealistically cheap.
+    const uniqueTokenCounts = pages.map(([, content]) => {
+      const tokens = new Set(content.toLowerCase().match(/[a-z0-9][a-z0-9-]*/g) ?? []);
+      return tokens.size;
+    });
+    const meanUnique = uniqueTokenCounts.reduce((a, b) => a + b, 0) / pages.length;
+    expect(meanUnique).toBeGreaterThan(230);
+    expect(meanUnique).toBeLessThan(340);
+
+    // Bytes and characters are different work: real ≈ 7.2k chars for
+    // 7.7KiB (bytes/chars ≈ 1.07); a CJK-heavy filler sat near 1.5.
+    const totalChars = pages.reduce((sum, [, content]) => sum + content.length, 0);
+    const meanChars = totalChars / pages.length;
+    expect(meanChars).toBeGreaterThan(6400);
+    expect(meanChars).toBeLessThan(8200);
   });
 
   // §5.2 — the graph the engine actually walks: non-zero sources: edges,

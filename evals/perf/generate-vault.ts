@@ -35,12 +35,20 @@ const EN_TOPICS = [
 ];
 const ZH_TOPICS = ['电池', '路由', '调度', '遥测', '容灾', '吞吐', '检查点', '仲裁', '背压', '重试'];
 
+// Sentence templates carry {t} (topic) and {w} (procedural word) slots. The
+// {w} slots exist because vocabulary diversity is a measured cost: real
+// pages average ~282 unique ASCII tokens; a fixed sentence bank alone
+// averaged 51, making parsing unrealistically cheap (acceptance round 2).
 const EN_SENTENCES = [
-  'The {t} subsystem degrades gracefully under sustained load.',
-  'We compared {t} strategies across three deployments and kept the simplest.',
-  'A {t} regression in staging traced back to an unbounded queue.',
-  'Field notes suggest {t} tuning matters less than placement.',
-  'The design doc pins {t} behavior to an explicit contract.',
+  'The {t} subsystem run {w} degrades gracefully under sustained load once {w} exceeds the {w} watermark.',
+  'We compared {t} strategies across {w} and {w} deployments and kept {w}.',
+  'A {t} regression in {w} traced back to an unbounded {w} queue near {w}.',
+  'Field notes from {w} suggest {t} tuning matters less than {w} placement against {w}.',
+  'The design doc pins {t} behavior to the {w} contract; see {w} and the {w} appendix.',
+  'Rollout {w} moved the {t} floor by half, with {w} flagged for the {w} review.',
+  // Dense log-line shape: real notes carry identifier-heavy lines (run ids,
+  // hostnames, ticket refs) that dominate unique-token counts.
+  'Run log {w}: {w} {w} {w} {w} ({t} via {w}, cf {w} and {w}).',
 ];
 const ZH_SENTENCES = [
   '关于{t}的取舍记录在设计笔记里,倾向最简单的方案。',
@@ -48,6 +56,37 @@ const ZH_SENTENCES = [
   '上次事故的根因与{t}配置有关,已经写入复盘。',
   '团队对{t}的长期方向还有分歧,先按现状运行。',
 ];
+
+/**
+ * Share of zh sentences in bodies. Calibrated at acceptance round 2: bytes
+ * and characters are different work — real pages average ~7.2k chars for
+ * ~7.7 KiB (mostly ASCII, bytes/chars ≈ 1.07); a CJK-heavy filler hit the
+ * same bytes with ~5k chars. ~8% zh sentences lands the ratio near real.
+ */
+const ZH_SENTENCE_SHARE = 0.08;
+
+/**
+ * Non-markdown tree density (acceptance round 2): the real 1,129-page
+ * workspace's visible tree holds 30,892 non-markdown entries (~27 per md
+ * page) — attachments, exports, assets. scanVault stats every entry it
+ * walks, so traversal is a real cost the synthetic tree must carry. The
+ * files are empty: only their tree entries matter.
+ */
+export const NON_MD_PER_PAGE = 27;
+const ASSET_EXTS = ['png', 'jpg', 'pdf', 'xlsx', 'webp', 'svg'];
+
+// Procedural vocabulary: syllable-composed words from the seeded PRNG give
+// each page its own vocabulary pool without a shipped word list.
+const SYLLABLES = [
+  'ka', 'ro', 'mi', 'ten', 'sol', 'var', 'dex', 'lum', 'tri', 'qua',
+  'zen', 'fol', 'gar', 'nim', 'pex', 'rud', 'sib', 'tor', 'ul', 'vek',
+];
+function proceduralWord(rand: () => number): string {
+  const parts = 2 + Math.floor(rand() * 3);
+  let word = '';
+  for (let i = 0; i < parts; i++) word += SYLLABLES[Math.floor(rand() * SYLLABLES.length)];
+  return word;
+}
 
 /** mulberry32 — tiny, dependency-free, deterministic. */
 export function mulberry32(seed: number): () => number {
@@ -102,19 +141,32 @@ function pick<T>(rand: () => number, items: readonly T[]): T {
   return items[Math.floor(rand() * items.length)];
 }
 
-function sentence(rand: () => number, topic: string, zhTopic: string): string {
-  const en = pick(rand, EN_SENTENCES).replace('{t}', topic);
-  const zh = pick(rand, ZH_SENTENCES).replace('{t}', zhTopic);
-  return rand() < 0.5 ? `${en} ${zh}` : `${zh} ${en}`;
+function sentence(rand: () => number, topic: string, zhTopic: string, pool: string[]): string {
+  if (rand() < ZH_SENTENCE_SHARE) return pick(rand, ZH_SENTENCES).replace('{t}', zhTopic);
+  // Half the word slots mint a fresh word rather than reusing the page pool:
+  // pool-only draws saturate on repeats and undershoot the real ~282 unique
+  // tokens per page; all-fresh overshoots and defeats term reuse. The mix
+  // is pinned by the vocabulary-diversity assertion.
+  return pick(rand, EN_SENTENCES)
+    .replace('{t}', topic)
+    .replace(/\{w\}/g, () => (rand() < 0.5 ? proceduralWord(rand) : pool[Math.floor(rand() * pool.length)]));
 }
 
-/** Appends sentence paragraphs until the page reaches its sampled byte size. */
+/**
+ * Appends sentence paragraphs until the page reaches its sampled byte
+ * size, drawing {w} words from a per-page procedural pool sized to the
+ * page (≈ bytes/30) — bigger pages carry more vocabulary, like real notes.
+ */
 function fillToTarget(rand: () => number, lines: string[], targetBytes: number): string {
+  const poolSize = Math.min(800, Math.max(40, Math.round(targetBytes / 18)));
+  const pool: string[] = [];
+  for (let i = 0; i < poolSize; i++) pool.push(proceduralWord(rand));
+
   let content = lines.join('\n');
   let bytes = Buffer.byteLength(content, 'utf8');
   while (bytes < targetBytes) {
     const t = zipfIndex(rand, EN_TOPICS.length);
-    const paragraph = `\n${sentence(rand, EN_TOPICS[t], ZH_TOPICS[t])}\n`;
+    const paragraph = `\n${sentence(rand, EN_TOPICS[t], ZH_TOPICS[t], pool)}\n`;
     content += paragraph;
     bytes += Buffer.byteLength(paragraph, 'utf8');
   }
@@ -207,6 +259,18 @@ export function generateVault(seed: number, tier: Tier): GeneratedVault {
 
   files.set('KNOWLEDGE.md', '# Synthetic KB\n\nGenerated by evals/perf (seeded, deterministic).\n');
 
+  // The non-markdown tree (empty files; the walk stats every entry). 80%
+  // under attachment subdirectories, 20% scattered next to the notes —
+  // roughly how real vaults accumulate assets.
+  const nonMdCount = total * NON_MD_PER_PAGE;
+  for (let i = 0; i < nonMdCount; i++) {
+    const ext = ASSET_EXTS[i % ASSET_EXTS.length];
+    const path = i % 5 === 4
+      ? `${USER_DIRS[i % USER_DIRS.length]}/asset-${i}.${ext}`
+      : `attachments/d${i % 50}/asset-${i}.${ext}`;
+    files.set(path, '');
+  }
+
   return { files, compiledPaths, userPaths, sourceEdges };
 }
 
@@ -220,5 +284,5 @@ export const QUERY_QUESTIONS = {
   // dilute term coverage below the abstention gate even when strong
   // matches exist — a benchmark that measures abstentions measures nothing.
   zh: '背压的复盘与取舍',
-  mixed: 'battery 容灾 checkpoint behavior',
+  mixed: 'battery checkpoint 容灾 复盘',
 } as const;

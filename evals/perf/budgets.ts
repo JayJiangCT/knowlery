@@ -46,12 +46,12 @@ export type RunnerReport = PerfReport | z.infer<typeof SkippedReportSchema>;
  * unrepresentative). These catch catastrophe, not drift.
  */
 export const CEILINGS_MS: Record<string, Record<string, number>> = {
-  medium: { scan: 500, 'query-en': 500, 'query-zh': 500, 'query-mixed': 500, index: 500 },
-  large: { scan: 2500, 'query-en': 2500, 'query-zh': 2500, 'query-mixed': 2500, index: 2500 },
+  medium: { scan: 1000, 'query-en': 1000, 'query-zh': 1000, 'query-mixed': 1000, index: 1000 },
+  large: { scan: 5000, 'query-en': 5000, 'query-zh': 5000, 'query-mixed': 5000, index: 5000 },
 };
 
 /** Federation over 3 medium KBs (§4.3): its own absolute ceiling. */
-export const FEDERATION_CEILING_MS = 1500;
+export const FEDERATION_CEILING_MS = 3000;
 
 /**
  * Growth shape (§4.3): data grows 5× (1k → 5k pages); time may grow at
