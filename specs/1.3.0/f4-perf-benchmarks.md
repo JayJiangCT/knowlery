@@ -1,6 +1,11 @@
 # F4 (1.3.0) — Performance Benchmarks in CI: the Guardrail Under No-Index
 
-- **Status:** Implemented — awaiting maintainer acceptance (§7)
+- **Status:** Done — maintainer acceptance passed (round 3, 2026-07-24: the
+  same-machine real-vault comparison closed at **1.26× scan / 1.14× query**
+  against Jay WorkSpace, well under the 1.5× line, after two calibration
+  rounds — page weight, then tree density + vocabulary + character weight;
+  federation 2.66× inside the 4.0 bound; growth 5.1–5.4× for 5× data,
+  linear holds; 569 tests, all baselines, 7 CI checks green at `d759eb0`)
 - **Target release:** 1.3.0
 - **Branch:** `cursor/13-f4-perf-bench-92eb`
 - **Depends on:** the eval-harness precedent (0.6 F1 / 1.3 F2 — same repo
