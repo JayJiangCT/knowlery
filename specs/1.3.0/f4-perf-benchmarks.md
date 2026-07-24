@@ -308,6 +308,34 @@ question gets a numeric answer with a dated source.
    guaranteed false-failure generator; 4.0 still fails anything
    super-linear in KB count loudly. Paired ratios this run: 0.953–1.085.
 
+8. **Second acceptance round found three more missing dimensions** — page
+   *weight* was calibrated, page *cost* was not. Maintainer measurement:
+   same-machine gap still 2.7× (synthetic medium scan 124.9 ms vs real
+   329.3 ms) with byte sizes already matching. The misses, each now
+   generated and asserted:
+   - **File-tree density**: the real workspace's visible tree holds 30,892
+     non-markdown entries (~27 per md page); traversal alone ≈ 129 ms
+     there. The generator now emits 27 empty asset files per page (80%
+     under `attachments/`, 20% scattered) — `walkMarkdown` stats every
+     entry, so empty files carry the full traversal cost.
+   - **Vocabulary diversity**: real pages average ~282 unique ASCII tokens;
+     the fixed sentence bank averaged 51, making parsing unrealistically
+     cheap. Procedural syllable words (per-page pools + a 50% fresh-mint
+     mix + an identifier-dense log-line template) now land ~297.
+   - **Character weight**: real ≈ 7.2k chars per 7.7 KiB (bytes/chars
+     ≈ 1.07); the CJK-heavy filler hit the same bytes at ~5k chars. zh
+     sentence share set to 8% → ratio ~1.04.
+   Collateral: the denser vocabulary tipped two marginal questions past the
+   abstention gate on unused seed/tier combos; the en template regained
+   "under sustained load" and the mixed question was re-picked, verified
+   `ok` across 6 seeds × 2 tiers.
+9. **Re-recalibrated CI data** (run 30077779620): medium ~295–315 ms,
+   large ~1515–1545 ms (growth ratios ~5.0 — linear holds at real weight),
+   federation 887.7 ms = 2.94× (comfortably inside the retuned 4.0).
+   Paired ratios 0.991–1.052. **Final ceilings**: medium 1200 ms, large
+   6000 ms, federation 3500 ms (~4× observed). Docs updated to ~300 ms /
+   ~1.5 s / ~890 ms with all four calibration axes stated.
+
 ## 7. Maintainer self-test checklist (acceptance round)
 
 1. `npm run eval:perf` locally — read the table: do the medium-tier numbers

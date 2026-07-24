@@ -91,18 +91,21 @@ restart-safety fell out for free, and `kb add` needs no reindexing step.
 
 Since 1.3 this principle carries numbers, re-measured on every pull request
 (`npm run eval:perf`, seeded synthetic vaults calibrated against real
-vaults: ~20% compiled pages, log-normal page sizes averaging **~7.7 KiB**
-of scannable content — the measured mean of the largest real workspace).
-On the CI reference runner (2026-07-24): a **1,000-page** knowledge base —
-the size class of the largest observed real vault (a 1,129-page workspace)
-— scans and answers a query in **~105 ms**; at **5,000 pages**, **~550 ms**;
-a federated query across three 1,000-page KBs takes **~340 ms** (about 3.2×
-a single query, as expected from its KB-count axis). Observed growth was
-consistent with linear behavior over the measured 1k–5k range; beyond
-5,000 pages you are in unmeasured territory. Three CI guardrails keep this
-honest: absolute ceilings (catastrophe), a growth-shape ratio (super-linear
-blowup), and a same-runner base/head paired comparison (uniform slowdowns
-that the other two cannot see).
+vaults on four axes: ~20% compiled pages; log-normal page sizes averaging
+**~7.7 KiB** of scannable content; real vocabulary diversity (~280 unique
+tokens per page) and character weight; and the real file-tree density —
+**~27 non-markdown entries per page**, because a live scan pays for
+attachments it never reads). On the CI reference runner (2026-07-24): a
+**1,000-page** knowledge base — the size class of the largest observed
+real vault (a 1,129-page workspace) — scans and answers a query in
+**~300 ms**; at **5,000 pages**, **~1.5 s**; a federated query across
+three 1,000-page KBs takes **~890 ms** (about 2.9× a single query, as
+expected from its KB-count axis). Observed growth was consistent with
+linear behavior over the measured 1k–5k range; beyond 5,000 pages you are
+in unmeasured territory. Three CI guardrails keep this honest: absolute
+ceilings (catastrophe), a growth-shape ratio (super-linear blowup), and a
+same-runner base/head paired comparison (uniform slowdowns that the other
+two cannot see).
 
 ## One core, shells as transports
 
