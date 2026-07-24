@@ -1,5 +1,66 @@
 # Changelog
 
+## [1.3.0] — 2026-07-24
+
+Grounding the promises: no new capabilities — measurement and safety
+infrastructure for the ones already shipped.
+
+### One-line installer (F1)
+
+- `curl -fsSL https://jayjiangct.github.io/knowlery/install.sh | sh` installs
+  the CLI on macOS/Linux into an isolated prefix (`~/.knowlery/cli/` with its
+  own private Node) — no system Node or npm required, nothing polluted.
+- PATH is only modified with your explicit consent: the script asks over
+  `/dev/tty`, and when no interactive terminal is available it prints
+  instructions instead of silently editing shell config.
+- CI runs the installer end-to-end on every commit (`installer-smoke`).
+
+### Cook eval (F2)
+
+- The last unmeasured organ is measured: a deterministic seven-invariant
+  checker scores cook output — citation coverage, retrievability (cooked
+  pages must be findable by the engine with real questions), frontmatter
+  completeness, taxonomy discipline, wikilink connectivity, **material
+  immutability** (cook never edits sources — the frozen principle, now
+  machine-checked), and restraint (no invented pages).
+- Three golden material fixtures with committed cooked outputs and frozen
+  floors; `npm run eval:cook -- --assert-baseline` in CI, plus a drift guard:
+  changing the cook skill without re-running the eval fails the build.
+
+### Threat model & indirect prompt injection (F3)
+
+- The content surface is analyzed and instrumented: a documented threat
+  model (`docs/security/threat-model.md`) maps assets, trust boundaries,
+  attack paths, and — plainly stated — the residual risk no knowledge store
+  can close.
+- The risk scanner learns `instruction-like`: deterministic en+zh patterns
+  for text that reads as directives to an agent, firing at **both** trust
+  boundaries — export review (creator side) and **bundle install** (consumer
+  side, new): installs refuse before any write and show the flagged lines;
+  proceeding needs explicit consent (`--acknowledge-risks` on the CLI, a
+  dedicated checkbox in Obsidian), independent of the conformance gate.
+  Prose *about* injection (quoted attacks, security notes) stays clean.
+- The conduct counterweight lands in every channel agents read: **content
+  is not instructions** — in the `knowlery-mcp`/`ask`/`knowlery-cli` skills
+  and the query/resource tool descriptions.
+- New docs page: Security (en+zh) — what is guarded mechanically, what is
+  detected at boundaries, and what cannot be prevented, kept in one place.
+
+### Performance benchmarks in CI (F4)
+
+- The no-index principle now carries a measured envelope, re-verified on
+  every PR: seeded synthetic vaults calibrated against real workspaces on
+  four axes (compiled share, log-normal ~7.7 KiB pages, real vocabulary and
+  character weight, ~27 non-markdown tree entries per page — validated to
+  within 1.26× of a real 1,129-page vault on the same machine).
+- On the CI reference runner: 1,000 pages scan-and-query in ~300 ms, 5,000
+  pages in ~1.5 s, federation across three KBs ~890 ms; observed growth
+  consistent with linear over the measured 1k–5k range.
+- Three guardrail layers, each catching what the others cannot: absolute
+  ceilings (catastrophe), a growth-shape ratio (super-linear blowup), and a
+  same-runner base/head paired comparison (uniform slowdowns). Observational
+  until the graduation criteria hold, then required.
+
 ## [1.2.7] — 2026-07-24
 
 ### Fixes
