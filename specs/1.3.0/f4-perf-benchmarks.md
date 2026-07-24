@@ -270,10 +270,15 @@ question gets a numeric answer with a dated source.
    wants title-field hits). Fixed in the generator with bilingual titles —
    which real cooked pages have anyway. A benchmark that measures
    abstentions measures nothing (§5.3 caught it as designed).
-5. **Graduation window opens at this PR's CI runs.** Paired ratios from
-   each run are printed in the job log and preserved in the report
-   artifacts; the §4.3 criteria (≥10 runs, zero false failures, max ratio
-   ≤ 1.3) are tracked from here.
+5. **Graduation window opens at this PR's CI runs — with an early signal
+   already on record.** Run 1 (30073238618): ratios 0.979–1.044. Run 2
+   (30073603717): 0.898–1.360, the outlier being `medium/scan` at **1.360**
+   — this PR does not touch `src/`, so the true ratio is ~1.0 and that
+   reading is pure runner noise on the fastest, most I/O-bound path. It
+   passed the 1.5 guard but exceeds the 1.3 graduation bound once in two
+   runs: exactly what the observational window exists to surface. If the
+   pattern holds across the window, the §4.3 protocol applies — AB/BA
+   alternation first, then data-driven retune — before any required flip.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
