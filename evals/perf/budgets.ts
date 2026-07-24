@@ -46,12 +46,12 @@ export type RunnerReport = PerfReport | z.infer<typeof SkippedReportSchema>;
  * unrepresentative). These catch catastrophe, not drift.
  */
 export const CEILINGS_MS: Record<string, Record<string, number>> = {
-  medium: { scan: 800, 'query-en': 800, 'query-zh': 800, 'query-mixed': 800, index: 800 },
-  large: { scan: 4000, 'query-en': 4000, 'query-zh': 4000, 'query-mixed': 4000, index: 4000 },
+  medium: { scan: 500, 'query-en': 500, 'query-zh': 500, 'query-mixed': 500, index: 500 },
+  large: { scan: 2500, 'query-en': 2500, 'query-zh': 2500, 'query-mixed': 2500, index: 2500 },
 };
 
 /** Federation over 3 medium KBs (§4.3): its own absolute ceiling. */
-export const FEDERATION_CEILING_MS = 2500;
+export const FEDERATION_CEILING_MS = 1500;
 
 /**
  * Growth shape (§4.3): data grows 5× (1k → 5k pages); time may grow at
@@ -64,9 +64,13 @@ export const SHAPE_PATHS = ['scan', 'query-en', 'query-zh', 'query-mixed', 'inde
 /**
  * Federation's machine-independent bound (§4.3): its scaling axis is KB
  * count, not page count — linear-in-KB-count with headroom for
- * registry/attribution overhead.
+ * registry/attribution overhead. Retuned 3.5 → 4.0 at acceptance (spec
+ * findings §7): with size-calibrated pages the observed ratio sits at
+ * 3.13–3.25 (theoretical floor 3.0 for 3 sequential scans), leaving 3.5
+ * under 8% headroom — a guaranteed flake. 4.0 still fails loudly on
+ * anything super-linear in KB count.
  */
-export const FEDERATION_QUERY_RATIO_MAX = 3.5;
+export const FEDERATION_QUERY_RATIO_MAX = 4.0;
 
 /** Paired base/head budget (§4.3): catches the uniform 2× with margin. */
 export const PAIRED_RATIO_MAX = 1.5;

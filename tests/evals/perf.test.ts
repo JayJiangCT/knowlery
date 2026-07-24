@@ -147,13 +147,13 @@ describe('growth shape and federation ratio', () => {
     expect(violations[0]).toContain('super-linear');
   });
 
-  it('federation above 3.5x a single medium query fails its bound', () => {
+  it('federation above 4x a single medium query fails its bound', () => {
     const report = syntheticReport({
-      federation: { kbs: 3, stats: stats(200), singleQueryMedianMs: 50 },
+      federation: { kbs: 3, stats: stats(250), singleQueryMedianMs: 50 },
     });
     const violations = assertFederationRatio(report);
     expect(violations).toHaveLength(1);
-    expect(violations[0]).toContain('4.0x');
+    expect(violations[0]).toContain('5.0x');
     expect(assertFederationRatio(syntheticReport())).toEqual([]);
   });
 });

@@ -90,17 +90,19 @@ restart-safety fell out for free, and `kb add` needs no reindexing step.
 ### The measured envelope
 
 Since 1.3 this principle carries numbers, re-measured on every pull request
-(`npm run eval:perf`, seeded synthetic vaults with realistic page anatomy).
+(`npm run eval:perf`, seeded synthetic vaults calibrated against real
+vaults: ~20% compiled pages, log-normal page sizes averaging **~7.7 KiB**
+of scannable content — the measured mean of the largest real workspace).
 On the CI reference runner (2026-07-24): a **1,000-page** knowledge base —
-larger than the largest real vault observed to date — scans and answers a
-query in **~40 ms**; at **5,000 pages**, **~200 ms**; a federated query
-across three 1,000-page KBs takes **~125 ms** (about 3× a single query, as
-expected from its KB-count axis). Observed growth was consistent with
-linear behavior over the measured 1k–5k range; beyond 5,000 pages you are
-in unmeasured territory. Three CI guardrails keep this honest: absolute
-ceilings (catastrophe), a growth-shape ratio (super-linear blowup), and a
-same-runner base/head paired comparison (uniform slowdowns that the other
-two cannot see).
+the size class of the largest observed real vault (a 1,129-page workspace)
+— scans and answers a query in **~105 ms**; at **5,000 pages**, **~550 ms**;
+a federated query across three 1,000-page KBs takes **~340 ms** (about 3.2×
+a single query, as expected from its KB-count axis). Observed growth was
+consistent with linear behavior over the measured 1k–5k range; beyond
+5,000 pages you are in unmeasured territory. Three CI guardrails keep this
+honest: absolute ceilings (catastrophe), a growth-shape ratio (super-linear
+blowup), and a same-runner base/head paired comparison (uniform slowdowns
+that the other two cannot see).
 
 ## One core, shells as transports
 

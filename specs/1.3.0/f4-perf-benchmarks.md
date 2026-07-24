@@ -78,6 +78,13 @@ in-memory file map, materialized to a temp dir by the runner:
   compiled-heavy world. The compiled share is a generator parameter; a
   compiled-heavy stress variant is a one-line change if ever needed, not a
   tier of this spec.
+- **Page sizes are calibrated too** (amended at acceptance — findings §6):
+  scannable content per page is log-normal with mean **~7.7 KiB** (median
+  ~5 KiB, capped 64 KiB), the measured mean of the largest real workspace.
+  Page *count* without page *weight* is half a calibration: the first
+  acceptance round found the uncalibrated generator 11.5× lighter than
+  reality and the envelope unrepresentative by ~9×. The mean is asserted
+  in tests, not assumed.
 - **Both graphs the engine actually walks**: compiled pages carry
   conforming frontmatter (type/title/description/domain/created), a
   body-wikilink graph (2–6 outlinks per page, Zipf-ish so hubs exist),
@@ -279,6 +286,27 @@ question gets a numeric answer with a dated source.
    runs: exactly what the observational window exists to surface. If the
    pattern holds across the window, the §4.3 protocol applies — AB/BA
    alternation first, then data-driven retune — before any required flip.
+
+6. **First acceptance round failed on representativeness — the checklist
+   worked.** §7.1/§7.2 against Jay WorkSpace (1,129 pages): real scan
+   342 ms vs synthetic-medium 38.9 ms (8.9× off); root cause: synthetic
+   pages averaged 667 B vs real ~7.7 KiB of scannable content (11.5×
+   lighter). Fixed by log-normal page-size calibration (§4.1 amended; mean
+   asserted in tests). The docs' "larger than the largest real vault"
+   claim was also wrong against the 1,129-page workspace — reworded to
+   "the size class of the largest observed real vault". Collateral fix:
+   the long contiguous zh question shed noise bigrams below the abstention
+   gate on calibrated vaults; replaced with a shorter contiguous zh
+   question, verified `ok` across 5 seeds × 2 tiers.
+7. **Recalibrated CI data** (run 30076143516, 2026-07-24): medium medians
+   101.9–110.2 ms, large 545.8–566.6 ms (growth ratios 5.1–5.4 —
+   consistent with linear), federation 338.9 ms. **Ceilings re-derived**:
+   medium 500 ms, large 2500 ms, federation 1500 ms (~4× observed).
+   **Federation ratio bound retuned 3.5 → 4.0** per the data-driven-retune
+   protocol: calibrated pages put the observed ratio at 3.13–3.25 against
+   a theoretical floor of ~3.0, leaving 3.5 under 8% headroom — a
+   guaranteed false-failure generator; 4.0 still fails anything
+   super-linear in KB count loudly. Paired ratios this run: 0.953–1.085.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
