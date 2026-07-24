@@ -61,6 +61,30 @@ export function mulberry32(seed: number): () => number {
   };
 }
 
+/** Box-Muller standard normal from the seeded PRNG. */
+function gaussian(rand: () => number): number {
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = rand();
+  while (v === 0) v = rand();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/**
+ * Page-size sampler, calibrated at acceptance (spec 1.3 f4, findings §6):
+ * real scannable content averages ~7.7 KiB/page (Jay WorkSpace, 1,129
+ * pages) vs the uncalibrated generator's 667 B — an 11.5× gap that made
+ * the first envelope numbers unrepresentative by ~9×. Log-normal:
+ * median ~5 KiB, mean ~7.7 KiB, capped at 64 KiB — many short notes, a
+ * few long ones, like a real vault.
+ */
+const PAGE_BYTES_MU = 8.54;
+const PAGE_BYTES_SIGMA = 0.9;
+const PAGE_BYTES_CAP = 65536;
+function targetPageBytes(rand: () => number): number {
+  return Math.min(PAGE_BYTES_CAP, Math.round(Math.exp(PAGE_BYTES_MU + PAGE_BYTES_SIGMA * gaussian(rand))));
+}
+
 /** Zipf-ish index sampler: rank r is weighted 1/(r+1), so hubs exist. */
 function zipfIndex(rand: () => number, size: number): number {
   if (size <= 0) return 0;
@@ -82,6 +106,19 @@ function sentence(rand: () => number, topic: string, zhTopic: string): string {
   const en = pick(rand, EN_SENTENCES).replace('{t}', topic);
   const zh = pick(rand, ZH_SENTENCES).replace('{t}', zhTopic);
   return rand() < 0.5 ? `${en} ${zh}` : `${zh} ${en}`;
+}
+
+/** Appends sentence paragraphs until the page reaches its sampled byte size. */
+function fillToTarget(rand: () => number, lines: string[], targetBytes: number): string {
+  let content = lines.join('\n');
+  let bytes = Buffer.byteLength(content, 'utf8');
+  while (bytes < targetBytes) {
+    const t = zipfIndex(rand, EN_TOPICS.length);
+    const paragraph = `\n${sentence(rand, EN_TOPICS[t], ZH_TOPICS[t])}\n`;
+    content += paragraph;
+    bytes += Buffer.byteLength(paragraph, 'utf8');
+  }
+  return content;
 }
 
 export interface GeneratedVault {
@@ -115,12 +152,7 @@ export function generateVault(seed: number, tier: Tier): GeneratedVault {
       lines.push('---', `title: Note ${i} on ${EN_TOPICS[topicIdx]}`, '---', '');
     }
     lines.push(`# Note ${i}`, '');
-    const sentenceCount = 2 + Math.floor(rand() * 5);
-    for (let s = 0; s < sentenceCount; s++) {
-      const t = zipfIndex(rand, EN_TOPICS.length);
-      lines.push(sentence(rand, EN_TOPICS[t], ZH_TOPICS[t]), '');
-    }
-    files.set(path, lines.join('\n'));
+    files.set(path, fillToTarget(rand, lines, targetPageBytes(rand)));
     userPaths.push(path);
   }
 
@@ -151,11 +183,6 @@ export function generateVault(seed: number, tier: Tier): GeneratedVault {
     }
 
     const bodyLines = [`# ${title}`, ''];
-    const sentenceCount = 3 + Math.floor(rand() * 4);
-    for (let s = 0; s < sentenceCount; s++) {
-      const t = zipfIndex(rand, EN_TOPICS.length);
-      bodyLines.push(sentence(rand, EN_TOPICS[t], ZH_TOPICS[t]), '');
-    }
     if (outlinks.size > 0) {
       bodyLines.push(`Related: ${[...outlinks].map((l) => `[[${l}]]`).join(', ')}`, '');
     }
@@ -172,7 +199,8 @@ export function generateVault(seed: number, tier: Tier): GeneratedVault {
       '---',
       '',
     ];
-    files.set(path, `${frontmatter.join('\n')}${bodyLines.join('\n')}`);
+    const skeleton = `${frontmatter.join('\n')}${bodyLines.join('\n')}`;
+    files.set(path, fillToTarget(rand, [skeleton], targetPageBytes(rand)));
     compiledPaths.push(path);
     compiledTitles.push(title);
   }
@@ -188,6 +216,9 @@ export function generateVault(seed: number, tier: Tier): GeneratedVault {
  */
 export const QUERY_QUESTIONS = {
   en: 'how does the scheduler handle backpressure under load',
-  zh: '调度在高负载下如何处理背压',
+  // Contiguous zh, kept short: long zh sentences shed noise bigrams that
+  // dilute term coverage below the abstention gate even when strong
+  // matches exist — a benchmark that measures abstentions measures nothing.
+  zh: '背压的复盘与取舍',
   mixed: 'battery 容灾 checkpoint behavior',
 } as const;

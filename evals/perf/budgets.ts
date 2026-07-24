@@ -39,18 +39,19 @@ export const SkippedReportSchema = z.object({ skipped: z.literal(true), reason: 
 export type RunnerReport = PerfReport | z.infer<typeof SkippedReportSchema>;
 
 /**
- * Absolute ceilings, per path × tier (ms). Set from the first CI run
- * (2026-07-24, run 30073238618: medium medians 40–43ms, large 198–221ms,
- * federation 126ms) with ~4× headroom — recorded in spec §4.3 as an
- * implementation finding. These catch catastrophe, not drift.
+ * Absolute ceilings, per path × tier (ms), ~4× observed CI medians (spec
+ * §4.3 — the numbers are recorded in the spec's findings). Re-derived
+ * after the acceptance-round page-size calibration (real vaults average
+ * ~7.7 KiB/page; the first generator was 11.5× lighter and its envelope
+ * unrepresentative). These catch catastrophe, not drift.
  */
 export const CEILINGS_MS: Record<string, Record<string, number>> = {
-  medium: { scan: 200, 'query-en': 200, 'query-zh': 200, 'query-mixed': 200, index: 200 },
-  large: { scan: 1000, 'query-en': 1000, 'query-zh': 1000, 'query-mixed': 1000, index: 1000 },
+  medium: { scan: 800, 'query-en': 800, 'query-zh': 800, 'query-mixed': 800, index: 800 },
+  large: { scan: 4000, 'query-en': 4000, 'query-zh': 4000, 'query-mixed': 4000, index: 4000 },
 };
 
 /** Federation over 3 medium KBs (§4.3): its own absolute ceiling. */
-export const FEDERATION_CEILING_MS = 600;
+export const FEDERATION_CEILING_MS = 2500;
 
 /**
  * Growth shape (§4.3): data grows 5× (1k → 5k pages); time may grow at

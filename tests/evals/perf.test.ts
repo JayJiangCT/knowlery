@@ -53,6 +53,23 @@ describe('perf vault generator', () => {
     expect(report.errors).toEqual([]);
   });
 
+  // Acceptance-round calibration (spec findings §6): the first generator
+  // averaged 667B/page vs real vaults' ~7.7KiB — a 11.5x gap that made the
+  // envelope unrepresentative by ~9x. The mean page size is now asserted,
+  // not assumed.
+  it('page sizes match the calibrated real-vault distribution (~7.7KiB mean)', () => {
+    const { files } = generateVault(42, 'medium');
+    const pages = [...files.entries()].filter(([path]) => path !== 'KNOWLEDGE.md');
+    const totalBytes = pages.reduce((sum, [, content]) => sum + Buffer.byteLength(content, 'utf8'), 0);
+    const meanKiB = totalBytes / pages.length / 1024;
+    expect(meanKiB).toBeGreaterThan(6.5);
+    expect(meanKiB).toBeLessThan(9);
+    // A distribution, not a constant: short notes and long ones both exist.
+    const sizes = pages.map(([, content]) => Buffer.byteLength(content, 'utf8')).sort((a, b) => a - b);
+    expect(sizes[Math.floor(sizes.length * 0.1)]).toBeLessThan(3 * 1024);
+    expect(sizes[Math.floor(sizes.length * 0.9)]).toBeGreaterThan(12 * 1024);
+  });
+
   // §5.2 — the graph the engine actually walks: non-zero sources: edges,
   // every edge resolving to an existing page, compiled share on parameter.
   it('emits resolving sources: edges and the ~20% compiled share', () => {
