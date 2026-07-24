@@ -194,3 +194,86 @@ describe('OKF bundle compile', () => {
     expect(app.writes['.knowlery/exports/test-bundle/log.md']).toContain('Private activity detail');
   });
 });
+
+describe('Windows-portable source paths (field finding: `|` in a web-clip title broke install on Windows)', () => {
+  const PIPE_SOURCE = 'Wonder/News/Outstanding Operator - Wonder | Food On Demand.md';
+  const COLON_SOURCE = 'Wonder/Fulfillment: The Wonder Story.md';
+
+  const vault = () => ({
+    ...BASE_VAULT,
+    'concepts/wonder.md': [
+      '---',
+      'type: concept',
+      'title: Wonder',
+      'domain: product',
+      'updated: 2026-07-01',
+      'sources:',
+      `  - ${PIPE_SOURCE}`,
+      '---',
+      '',
+      'Wonder body [[Fulfillment: The Wonder Story]].',
+    ].join('\n'),
+    [PIPE_SOURCE]: '---\ntype: note\ntitle: Wonder clip\n---\n\nClip body.',
+    [COLON_SOURCE]: '---\ntype: note\ntitle: Fulfillment story\n---\n\nStory body.',
+  });
+
+  const options = {
+    ...BASE_OPTIONS,
+    approvedConceptIds: ['concepts/wonder'],
+    approvedRawPaths: [PIPE_SOURCE, COLON_SOURCE],
+  };
+
+  it('emits sanitized _sources files and never the original hostile paths', async () => {
+    const app = createOkfMockApp(vault());
+    await compileBundle(okfBundleSource(app), options, NOW);
+
+    const out = '.knowlery/exports/test-bundle';
+    expect(app.writes[`${out}/_sources/Wonder/News/Outstanding Operator - Wonder - Food On Demand.md`]).toContain('Clip body.');
+    expect(app.writes[`${out}/_sources/Wonder/Fulfillment- The Wonder Story.md`]).toContain('Story body.');
+    expect(app.writes[`${out}/_sources/${PIPE_SOURCE}`]).toBeUndefined();
+    expect(app.writes[`${out}/_sources/${COLON_SOURCE}`]).toBeUndefined();
+  });
+
+  it('provenance keeps the original vault path while the emitted name is portable', async () => {
+    const app = createOkfMockApp(vault());
+    await compileBundle(okfBundleSource(app), options, NOW);
+
+    const copy = app.writes['.knowlery/exports/test-bundle/_sources/Wonder/News/Outstanding Operator - Wonder - Food On Demand.md'];
+    expect(copy).toContain('Wonder | Food On Demand.md');
+  });
+
+  it('wikilinks, the root index, and the agent index all use the same mapped paths', async () => {
+    const app = createOkfMockApp(vault());
+    await compileBundle(okfBundleSource(app), options, NOW);
+
+    const page = app.writes['.knowlery/exports/test-bundle/concepts/wonder.md'];
+    expect(page).toContain('_sources/Wonder/Fulfillment-%20The%20Wonder%20Story.md');
+    expect(page).not.toContain('Fulfillment:%20The');
+
+    const index = app.writes['.knowlery/exports/test-bundle/index.md'];
+    expect(index).toContain('Outstanding%20Operator%20-%20Wonder%20-%20Food%20On%20Demand.md');
+    expect(index).not.toContain('%7C'); // no encoded pipe anywhere
+
+    const agentIndex = JSON.parse(app.writes['.knowlery/exports/test-bundle/agent-index.json']) as { rawSources: Array<{ path: string }> };
+    const rawPaths = agentIndex.rawSources.map((source) => source.path).sort();
+    expect(rawPaths).toEqual([
+      '_sources/Wonder/Fulfillment- The Wonder Story.md',
+      '_sources/Wonder/News/Outstanding Operator - Wonder - Food On Demand.md',
+    ]);
+  });
+
+  it('the manifest content hash is computed over the mapped paths (bundle is self-consistent)', async () => {
+    const app = createOkfMockApp(vault());
+    await compileBundle(okfBundleSource(app), options, NOW);
+
+    const out = '.knowlery/exports/test-bundle';
+    const manifest = JSON.parse(app.writes[`${out}/knowlery-bundle.json`]) as { contentHash: string };
+    const { contentHash } = await import('../../src/core/okf/manifest');
+    const recomputed = contentHash([
+      { path: 'concepts/wonder.md', content: app.writes[`${out}/concepts/wonder.md`], kind: 'concept' },
+      { path: '_sources/Wonder/News/Outstanding Operator - Wonder - Food On Demand.md', content: app.writes[`${out}/_sources/Wonder/News/Outstanding Operator - Wonder - Food On Demand.md`], kind: 'source' },
+      { path: '_sources/Wonder/Fulfillment- The Wonder Story.md', content: app.writes[`${out}/_sources/Wonder/Fulfillment- The Wonder Story.md`], kind: 'source' },
+    ]);
+    expect(manifest.contentHash).toBe(recomputed);
+  });
+});

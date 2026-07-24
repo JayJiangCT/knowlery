@@ -6,6 +6,7 @@ import { scanInstructionLike } from './risk-scan';
 import { readInstalledBundles, resolveInstallAction, writeInstalledBundles } from './registry';
 import { ensureInstalledBundlesBlock } from './knowledge-md-bundles';
 import { sha256 } from './hash';
+import type { PortabilityIssue } from './portability';
 import type { VaultFs } from '../vault-fs';
 import { normalizeVaultPath } from '../vault-fs';
 
@@ -20,6 +21,12 @@ export interface InstallOptions {
    * both.
    */
   acknowledgeRisks?: boolean;
+  /**
+   * Platform for the Windows path hard-gate. Defaults to process.platform;
+   * tests override. Detection itself is platform-independent (previewInstall)
+   * — this is where policy is applied.
+   */
+  platform?: string;
 }
 
 export interface InstallResult {
@@ -30,17 +37,27 @@ export interface InstallResult {
   conformanceErrorCount: number;
   /** Instruction-like hints found in the incoming bundle (empty when clean). */
   riskHints: RiskHint[];
+  /** Windows-incompatible paths (empty when portable). Non-blocking off Windows. */
+  portabilityIssues: PortabilityIssue[];
 }
 
 export class InstallBlockedError extends Error {
-  reason: 'blocked-version' | 'conformance-failed' | 'risk-hints';
+  reason: 'blocked-version' | 'conformance-failed' | 'risk-hints' | 'incompatible-paths';
   /** Populated for reason 'risk-hints' — the shell prints these verbatim. */
   riskHints: RiskHint[];
+  /** Populated for reason 'incompatible-paths' — deliberately separate from riskHints. */
+  pathIssues: PortabilityIssue[];
 
-  constructor(reason: InstallBlockedError['reason'], message: string, riskHints: RiskHint[] = []) {
+  constructor(
+    reason: InstallBlockedError['reason'],
+    message: string,
+    riskHints: RiskHint[] = [],
+    pathIssues: PortabilityIssue[] = [],
+  ) {
     super(message);
     this.reason = reason;
     this.riskHints = riskHints;
+    this.pathIssues = pathIssues;
   }
 }
 
@@ -66,7 +83,23 @@ export async function installBundle(
   options: InstallOptions,
   now: Date = new Date(),
 ): Promise<InstallResult> {
-  const { manifest, conformance } = previewInstall(entries);
+  const { manifest, conformance, portabilityIssues } = previewInstall(entries);
+
+  // Windows path hard-gate (field finding: `|` in a source file name gave a
+  // raw ENOENT mid-staging). Not acknowledgeable — the writes below would
+  // definitely fail — and enforced here, not only in shell previews, so no
+  // entry point (modal, CLI, dashboard update) can bypass it.
+  const platform = options.platform ?? process.platform;
+  if (portabilityIssues.length > 0 && platform === 'win32') {
+    const sample = portabilityIssues.slice(0, 3).map((issue) => issue.path).join(', ');
+    throw new InstallBlockedError(
+      'incompatible-paths',
+      `${manifest.id} contains ${portabilityIssues.length} path(s) Windows cannot create (e.g. ${sample}). `
+      + 'Ask the bundle creator to re-export with a current Knowlery — nothing was written.',
+      [],
+      portabilityIssues,
+    );
+  }
 
   const registry = await readInstalledBundles(fs);
   const existing = registry.bundles[manifest.id];
@@ -184,6 +217,7 @@ export async function installBundle(
     conformance: conformanceOutcome,
     conformanceErrorCount: conformance.errors.length,
     riskHints,
+    portabilityIssues,
   };
 }
 

@@ -1,4 +1,4 @@
-import { App, Modal, Notice, requestUrl } from 'obsidian';
+import { App, Modal, Notice, Platform, requestUrl } from 'obsidian';
 import { StrictMode, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
@@ -23,6 +23,7 @@ async function obsidianFetch(url: string): Promise<RemoteFetchResult> {
 import { previewInstall } from '../core/okf/install-scan';
 import { installBundle, InstallBlockedError, scanIncomingBundleRisks } from '../core/okf/install';
 import { readInstalledBundles, resolveInstallAction } from '../core/okf/registry';
+import type { PortabilityIssue } from '../core/okf/portability';
 import type { RiskHint } from '../types';
 
 interface ElectronDialog {
@@ -71,7 +72,7 @@ export class InstallBundleModal extends Modal {
 
 type Stage =
   | { kind: 'pick' }
-  | { kind: 'preview'; path: string; source: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; riskHints: RiskHint[]; blockedInstalledVersion: string | null }
+  | { kind: 'preview'; path: string; source: string; entries: BundleSourceEntry[]; manifestId: string; manifestVersion: string; title: string; conformance: ConformanceReport; riskHints: RiskHint[]; portabilityIssues: PortabilityIssue[]; blockedInstalledVersion: string | null }
   | { kind: 'result'; conformance: 'passed' | 'failed' | 'skipped' };
 
 function InstallBundleContent(props: { onClose: () => void }) {
@@ -129,7 +130,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
     setAcknowledgeRiskHints(false);
     try {
       const entries = await readBundleEntries(path);
-      const { manifest, conformance } = previewInstall(entries);
+      const { manifest, conformance, portabilityIssues } = previewInstall(entries);
       const registry = await readInstalledBundles(plugin.fs);
       const action = resolveInstallAction(registry.bundles[manifest.id], manifest.version);
       setStage({
@@ -142,6 +143,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
         title: manifest.title,
         conformance,
         riskHints: scanIncomingBundleRisks(entries),
+        portabilityIssues,
         blockedInstalledVersion: action.kind === 'blocked' ? action.installedVersion : null,
       });
     } catch (err) {
@@ -236,6 +238,22 @@ function InstallBundleContent(props: { onClose: () => void }) {
             <span>I reviewed the flagged content</span>
           </label>
         )}
+        {stage.portabilityIssues.length > 0 && (
+          <div className="knowlery-install__warning">
+            <div>
+              {Platform.isWin
+                ? 'This bundle cannot be installed on Windows — it contains file names Windows forbids. Ask the bundle creator to re-export it with a current Knowlery:'
+                : 'Heads-up: this bundle contains file names that Windows forbids. It installs fine here, but Windows users will not be able to install it:'}
+            </div>
+            <ul>
+              {stage.portabilityIssues.map((issue) => (
+                <li key={issue.path}>
+                  <b>{issue.path}</b>: {issue.problems.join('; ')}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {stage.blockedInstalledVersion && (
           <div className="knowlery-install__warning">
             v{stage.blockedInstalledVersion} is already installed. Installing v{stage.manifestVersion} will replace it.
@@ -254,6 +272,7 @@ function InstallBundleContent(props: { onClose: () => void }) {
               installing
               || (!stage.conformance.conformant && !acknowledgeConformanceIssues)
               || (stage.riskHints.length > 0 && !acknowledgeRiskHints)
+              || (Platform.isWin && stage.portabilityIssues.length > 0)
             }
             onClick={() =>
               void confirmInstall(stage.blockedInstalledVersion !== null, acknowledgeConformanceIssues, acknowledgeRiskHints)
