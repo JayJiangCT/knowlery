@@ -4,6 +4,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "tests/**/*.ts",
-    "evals/src/**/*.ts"
+    "evals/src/**/*.ts",
+    "evals/perf/**/*.ts"
   ]
 }
