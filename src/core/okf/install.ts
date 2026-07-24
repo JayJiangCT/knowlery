@@ -1,6 +1,8 @@
 import { dirname } from 'path';
+import type { RiskHint } from '../../types';
 import type { BundleSourceEntry } from './install-scan';
 import { assertSafeInstallPath, previewInstall } from './install-scan';
+import { scanInstructionLike } from './risk-scan';
 import { readInstalledBundles, resolveInstallAction, writeInstalledBundles } from './registry';
 import { ensureInstalledBundlesBlock } from './knowledge-md-bundles';
 import { sha256 } from './hash';
@@ -11,6 +13,13 @@ export interface InstallOptions {
   source: string;
   force?: boolean;
   skipConformanceGate?: boolean;
+  /**
+   * Consent to instruction-like risk hints (spec 1.3 f3, §4.2). Deliberately
+   * independent from skipConformanceGate: conformance failures are structural
+   * defects, risk hints are content warnings — one flag must not consent to
+   * both.
+   */
+  acknowledgeRisks?: boolean;
 }
 
 export interface InstallResult {
@@ -19,15 +28,36 @@ export interface InstallResult {
   libraryPath: string;
   conformance: 'passed' | 'failed' | 'skipped';
   conformanceErrorCount: number;
+  /** Instruction-like hints found in the incoming bundle (empty when clean). */
+  riskHints: RiskHint[];
 }
 
 export class InstallBlockedError extends Error {
-  reason: 'blocked-version' | 'conformance-failed';
+  reason: 'blocked-version' | 'conformance-failed' | 'risk-hints';
+  /** Populated for reason 'risk-hints' — the shell prints these verbatim. */
+  riskHints: RiskHint[];
 
-  constructor(reason: 'blocked-version' | 'conformance-failed', message: string) {
+  constructor(reason: InstallBlockedError['reason'], message: string, riskHints: RiskHint[] = []) {
     super(message);
     this.reason = reason;
+    this.riskHints = riskHints;
   }
+}
+
+/**
+ * The consumer-side trust boundary (spec 1.3 f3, §4.2): scan incoming pages
+ * for instruction-like content before anything is written. Exported so the
+ * Obsidian install modal can surface the same hints at preview time.
+ */
+export function scanIncomingBundleRisks(entries: BundleSourceEntry[]): RiskHint[] {
+  const hints: RiskHint[] = [];
+  for (const entry of entries) {
+    if (!entry.path.endsWith('.md')) continue;
+    for (const evidence of scanInstructionLike(entry.content)) {
+      hints.push({ itemId: entry.path, kind: 'instruction-like', evidence });
+    }
+  }
+  return hints;
 }
 
 export async function installBundle(
@@ -57,6 +87,18 @@ export async function installBundle(
       );
     }
     conformanceOutcome = 'skipped';
+  }
+
+  // Consumer-side content gate (spec 1.3 f3, §4.2): before any write, and
+  // independent of the conformance gate above — skipConformanceGate alone
+  // does not consent to hostile-looking content.
+  const riskHints = scanIncomingBundleRisks(entries);
+  if (riskHints.length > 0 && !options.acknowledgeRisks) {
+    throw new InstallBlockedError(
+      'risk-hints',
+      `${manifest.id} contains instruction-like content on ${riskHints.length} line(s) — text that reads as directives to an agent, a known indirect-prompt-injection shape.`,
+      riskHints,
+    );
   }
 
   const libraryDir = `Library/${manifest.id}`;
@@ -141,6 +183,7 @@ export async function installBundle(
     libraryPath: `${libraryDir}/`,
     conformance: conformanceOutcome,
     conformanceErrorCount: conformance.errors.length,
+    riskHints,
   };
 }
 

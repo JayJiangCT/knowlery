@@ -14,14 +14,14 @@ import { CliError } from './shared';
 
 const BUNDLE_USAGE = [
   'Usage:',
-  '  knowlery bundle install <zip-or-folder-or-url> [--dir <vault>] [--verify <sha256>] [--force] [--skip-conformance]',
+  '  knowlery bundle install <zip-or-folder-or-url> [--dir <vault>] [--verify <sha256>] [--force] [--skip-conformance] [--acknowledge-risks]',
   '  knowlery bundle list      [--dir <vault>] [--json]',
   '  knowlery bundle uninstall <bundle-id> [--dir <vault>]',
   '  knowlery bundle export <seed-concept-id> [--dir <vault>] [--hops <n>] [--zip] [--json]',
   '  knowlery bundle publish <seed-concept-id> [--dir <vault>] [--repo <owner/name>] [--public]',
   '                          [--acknowledge-risks] [--force]',
   '  knowlery bundle check-updates [--dir <vault>] [--json]',
-  '  knowlery bundle update <bundle-id> | --all  [--dir <vault>] [--force]',
+  '  knowlery bundle update <bundle-id> | --all  [--dir <vault>] [--force] [--acknowledge-risks]',
   '  knowlery bundle review <seed-concept-id> [--dir <vault>] [--list] [--json]',
   '                         [--approve <id>...] [--flag <id>...]',
 ].join('\n');
@@ -195,12 +195,23 @@ async function installFrom(fs: VaultFs, sourcePath: string, recordedSource: stri
       source: recordedSource,
       force: options.force,
       skipConformanceGate: options.skipConformance,
+      acknowledgeRisks: options.acknowledgeRisks,
     });
+    // Acknowledged hints still print — consent to install is not consent to forget.
+    for (const hint of result.riskHints) {
+      options.log(`  Warning [instruction-like] ${hint.itemId}: ${hint.evidence}`);
+    }
     options.log(`Installed ${result.id} v${result.version} — "${manifestTitle}" (${conceptCount} concept(s))`);
     options.log(`  Library path: ${result.libraryPath}`);
     options.log(`  Conformance:  ${result.conformance}${result.conformanceErrorCount > 0 ? ` (${result.conformanceErrorCount} error(s) acknowledged)` : ''}`);
   } catch (error) {
     if (error instanceof InstallBlockedError) {
+      if (error.reason === 'risk-hints') {
+        const lines = error.riskHints.map((hint) => `  [instruction-like] ${hint.itemId}: ${hint.evidence}`);
+        throw new CliError(
+          `${error.message}\n${lines.join('\n')}\nReview the flagged lines with the user, then pass --acknowledge-risks to install anyway. Nothing was written.`,
+        );
+      }
       const hint = error.reason === 'blocked-version'
         ? 'Pass --force to reinstall over the existing version.'
         : 'Pass --skip-conformance to acknowledge the failures and install anyway.';
