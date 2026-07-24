@@ -1,6 +1,6 @@
 # F4 (1.3.0) — Performance Benchmarks in CI: the Guardrail Under No-Index
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Implemented — awaiting maintainer acceptance (§7)
 - **Target release:** 1.3.0
 - **Branch:** `cursor/13-f4-perf-bench-92eb`
 - **Depends on:** the eval-harness precedent (0.6 F1 / 1.3 F2 — same repo
@@ -247,6 +247,33 @@ question gets a numeric answer with a dated source.
 2. Ceilings recorded in this spec from first CI data (implementation
    finding).
 3. Maintainer §7 passes.
+
+## Implementation findings
+
+1. **First CI data** (run 30073238618, 2026-07-24, ubuntu-latest): medium
+   medians 40–43 ms across scan/query×3/index; large 198–221 ms (growth
+   ratios 4.8–5.3 for 5× data — consistent with linear); federation
+   125.8 ms = 2.95× a single medium query (inside the 3.5× bound with ~19%
+   headroom — worth watching, noted). **Ceilings recorded per §4.3**:
+   medium 200 ms, large 1000 ms, federation 600 ms (~4× observed medians).
+2. **The paired layer ran for real on its first outing** — observed ratios
+   0.979–1.044 across all six comparisons (max 1.044, well inside the 1.3
+   graduation bound). Same-runner pairing is as tight as the spec hoped.
+3. **`--allow-missing-base` turned out unnecessary even for the landing
+   PR**: all four entry points predate F4 on main (shipped 0.6–1.2), so the
+   merge-base tree loads cleanly. The workflow ships **without** the flag
+   from day one — the post-merge removal chore on the landing checklist is
+   moot; the flag survives in the runner (semantics pinned by §5.7) for
+   archaeology-only scenarios.
+4. **The zh question initially abstained** on the generated vault (CJK
+   topic words appeared only in bodies/descriptions; the confidence gate
+   wants title-field hits). Fixed in the generator with bilingual titles —
+   which real cooked pages have anyway. A benchmark that measures
+   abstentions measures nothing (§5.3 caught it as designed).
+5. **Graduation window opens at this PR's CI runs.** Paired ratios from
+   each run are printed in the job log and preserved in the report
+   artifacts; the §4.3 criteria (≥10 runs, zero false failures, max ratio
+   ≤ 1.3) are tracked from here.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
