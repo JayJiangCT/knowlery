@@ -13,6 +13,9 @@ export function convertWikilinks(
   page: PageRecord,
   includedConceptIds: Set<string>,
   approvedRawPaths: Set<string>,
+  /** Original vault path → portable bundle path (compile.ts owns the map;
+   * links must point at the file names actually emitted into `_sources/`). */
+  sourceBundlePaths: Map<string, string> = new Map(),
 ): WikilinkConversionResult {
   let converted = 0;
   const unresolved: UnresolvedLink[] = [];
@@ -39,7 +42,8 @@ export function convertWikilinks(
     const rawPath = toPosixPath(link.targetPath);
     if (approvedRawPaths.has(rawPath)) {
       converted += 1;
-      const href = relativeLinkPath(fromDir, `_sources/${rawPath}`);
+      const bundlePath = sourceBundlePaths.get(rawPath) ?? rawPath;
+      const href = relativeLinkPath(fromDir, `_sources/${bundlePath}`);
       return markdownLink(label, `${href}${headingFragment(parsed.heading)}`, embed);
     }
 
@@ -50,9 +54,9 @@ export function convertWikilinks(
   return { body, converted, unresolved };
 }
 
-export function collectRawBodyUnresolvedLinks(raw: RawDependency): UnresolvedLink[] {
+export function collectRawBodyUnresolvedLinks(raw: RawDependency, bundlePath: string = raw.path): UnresolvedLink[] {
   const matches = raw.body.matchAll(/!?\[\[([^\]]+)\]\]/g);
-  return Array.from(matches, (match) => ({ from: `_sources/${raw.path}`, raw: match[1] }));
+  return Array.from(matches, (match) => ({ from: `_sources/${bundlePath}`, raw: match[1] }));
 }
 
 export function parseWikilink(raw: string): { target: string; heading?: string; alias?: string } {

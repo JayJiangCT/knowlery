@@ -47,6 +47,7 @@ describe('installBundle', () => {
       conformance: 'passed',
       conformanceErrorCount: 0,
       riskHints: [],
+      portabilityIssues: [],
     });
     expect(app.writes['Library/jay.drone-delivery/index.md']).toContain('# Drone Delivery');
     expect(app.writes['Library/jay.drone-delivery/concepts/foo.md']).toContain('Body.');
@@ -183,5 +184,47 @@ describe('installBundle', () => {
     expect(app.writes['Library/jay.drone-delivery/concepts/foo.md']).toBe(
       beforeUpdate['Library/jay.drone-delivery/concepts/foo.md'],
     );
+  });
+});
+
+describe('Windows path portability (field finding: `|` in a source filename gave a raw ENOENT)', () => {
+  const windowsHostileEntries = () => goodEntries([
+    {
+      path: '_sources/Wonder/News/Outstanding Operator - Wonder | Food On Demand.md',
+      content: '---\ntype: Source\ntitle: Clip\n---\n\nClip body.',
+    },
+  ]);
+
+  it('previewInstall reports issues for every entry (not just .md) and the bundle id, on any platform', async () => {
+    const { previewInstall } = await import('../../src/core/okf/install-scan');
+    const entries = goodEntries([{ path: 'assets/logo|draft.png', content: 'binary-ish' }])
+      .map((entry) => (entry.path === 'knowlery-bundle.json'
+        ? { path: entry.path, content: JSON.stringify(manifest({ id: 'creator:wonder' })) }
+        : entry));
+
+    const preview = previewInstall(entries);
+    const paths = preview.portabilityIssues.map((issue) => issue.path);
+    expect(paths).toContain('assets/logo|draft.png');
+    expect(paths.some((path) => path.includes('creator:wonder'))).toBe(true);
+  });
+
+  it('blocks on Windows with reason incompatible-paths and structured pathIssues — before any write', async () => {
+    const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
+    const attempt = installBundle(okfVaultFs(app), windowsHostileEntries(), { source: '/tmp/b.zip', platform: 'win32' });
+    await expect(attempt).rejects.toMatchObject({
+      reason: 'incompatible-paths',
+      pathIssues: [
+        { path: '_sources/Wonder/News/Outstanding Operator - Wonder | Food On Demand.md' },
+      ],
+    });
+    expect(Object.keys(app.writes).some((path) => path.includes('Library/'))).toBe(false);
+  });
+
+  it('installs on non-Windows and returns the issues for the shell to surface as a warning', async () => {
+    const app = createOkfMockApp({ 'KNOWLEDGE.md': '# Vault\n' });
+    const result = await installBundle(okfVaultFs(app), windowsHostileEntries(), { source: '/tmp/b.zip', platform: 'darwin' });
+    expect(result.portabilityIssues).toHaveLength(1);
+    expect(result.portabilityIssues[0].path).toContain('| Food On Demand.md');
+    expect(app.writes['Library/jay.drone-delivery/_sources/Wonder/News/Outstanding Operator - Wonder | Food On Demand.md']).toContain('Clip body.');
   });
 });

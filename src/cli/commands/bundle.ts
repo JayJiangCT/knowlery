@@ -201,6 +201,11 @@ async function installFrom(fs: VaultFs, sourcePath: string, recordedSource: stri
     for (const hint of result.riskHints) {
       options.log(`  Warning [instruction-like] ${hint.itemId}: ${hint.evidence}`);
     }
+    // Reaching here off-Windows with issues: installable locally, but flag it
+    // so the creator learns before a Windows user hits the hard gate.
+    for (const issue of result.portabilityIssues) {
+      options.log(`  Warning [windows-incompatible] ${issue.path}: ${issue.problems.join('; ')}`);
+    }
     options.log(`Installed ${result.id} v${result.version} — "${manifestTitle}" (${conceptCount} concept(s))`);
     options.log(`  Library path: ${result.libraryPath}`);
     options.log(`  Conformance:  ${result.conformance}${result.conformanceErrorCount > 0 ? ` (${result.conformanceErrorCount} error(s) acknowledged)` : ''}`);
@@ -210,6 +215,12 @@ async function installFrom(fs: VaultFs, sourcePath: string, recordedSource: stri
         const lines = error.riskHints.map((hint) => `  [instruction-like] ${hint.itemId}: ${hint.evidence}`);
         throw new CliError(
           `${error.message}\n${lines.join('\n')}\nReview the flagged lines with the user, then pass --acknowledge-risks to install anyway. Nothing was written.`,
+        );
+      }
+      if (error.reason === 'incompatible-paths') {
+        const lines = error.pathIssues.map((issue) => `  [windows-incompatible] ${issue.path}: ${issue.problems.join('; ')}`);
+        throw new CliError(
+          `${error.message}\n${lines.join('\n')}\nThere is no override — these paths cannot exist on Windows.`,
         );
       }
       const hint = error.reason === 'blocked-version'

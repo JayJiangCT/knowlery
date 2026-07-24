@@ -25,7 +25,9 @@ export interface IndexProjectionResult {
 export function projectIndexes(input: {
   title: string;
   entries: IndexEntryInput[];
-  rawSources: RawDependency[];
+  /** `bundlePath` is the portable file name emitted into `_sources/`;
+   * `path` stays the original vault path for provenance. */
+  rawSources: Array<RawDependency & { bundlePath: string }>;
   unresolvedLinks: UnresolvedLink[];
   now: Date;
   staleThresholdDays: number;
@@ -52,7 +54,7 @@ export function projectIndexes(input: {
     stale,
     unresolvedLinks: input.unresolvedLinks,
     rawSources: input.rawSources.map((source) => ({
-      path: `_sources/${source.path}`,
+      path: `_sources/${source.bundlePath}`,
       title: source.title,
       citedBy: source.citedBy,
     })),
@@ -66,7 +68,7 @@ export function projectIndexes(input: {
   };
 }
 
-function buildRootIndex(title: string, concepts: AgentIndexConcept[], rawSources: RawDependency[]): string {
+function buildRootIndex(title: string, concepts: AgentIndexConcept[], rawSources: Array<RawDependency & { bundlePath: string }>): string {
   // OKF §11: the root index carries exactly one frontmatter line, okf_version.
   const lines = ['---', `okf_version: "${OKF_VERSION}"`, '---', '', `# ${title}`, ''];
 
@@ -93,7 +95,7 @@ function buildRootIndex(title: string, concepts: AgentIndexConcept[], rawSources
   if (rawSources.length > 0) {
     lines.push('## Sources', '');
     for (const source of [...rawSources].sort((a, b) => a.title.localeCompare(b.title))) {
-      lines.push(`* [${source.title}](/${encodeMarkdownPath(`_sources/${source.path}`)})`);
+      lines.push(`* [${source.title}](/${encodeMarkdownPath(`_sources/${source.bundlePath}`)})`);
     }
     lines.push('');
   }

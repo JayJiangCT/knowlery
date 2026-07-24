@@ -14,8 +14,8 @@ function entry(overrides: Partial<IndexEntryInput> & { conceptId: string }): Ind
   };
 }
 
-function raw(path: string, citedBy: string[]): RawDependency {
-  return { path, title: path.split('/').pop()!.replace(/\.md$/, ''), body: '', frontmatter: {}, citedBy, contentHash: 'sha256-r' };
+function raw(path: string, citedBy: string[]): RawDependency & { bundlePath: string } {
+  return { path, bundlePath: path, title: path.split('/').pop()!.replace(/\.md$/, ''), body: '', frontmatter: {}, citedBy, contentHash: 'sha256-r' };
 }
 
 describe('index projection', () => {

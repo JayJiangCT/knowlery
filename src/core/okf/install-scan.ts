@@ -3,6 +3,7 @@ import { BundleManifestSchema } from '../../types';
 import type { BundleFile } from './shared';
 import { BUNDLE_MARKER, toPosixPath } from './shared';
 import { checkConformance } from './conformance';
+import { findBundleIdPortabilityProblems, findPathPortabilityIssues, type PortabilityIssue } from './portability';
 
 export interface BundleSourceEntry {
   path: string;
@@ -12,6 +13,12 @@ export interface BundleSourceEntry {
 export interface InstallPreview {
   manifest: BundleManifest;
   conformance: ConformanceReport;
+  /**
+   * Windows-incompatible entry paths and bundle id (detection only — always
+   * computed, on every platform; the shells and installBundle decide policy:
+   * hard block on Windows, warning elsewhere).
+   */
+  portabilityIssues: PortabilityIssue[];
 }
 
 /**
@@ -71,5 +78,13 @@ export function previewInstall(entries: BundleSourceEntry[]): InstallPreview {
       return { path, content: entry.content, kind: inferBundleFileKind(path) };
     });
 
-  return { manifest, conformance: checkConformance(bundleFiles) };
+  // Portability covers every entry (install writes them all, not just .md)
+  // plus the bundle id, which becomes the Library/<id> directory on disk.
+  const portabilityIssues = findPathPortabilityIssues(entries.map((entry) => toPosixPath(entry.path)));
+  const idProblems = findBundleIdPortabilityProblems(manifest.id);
+  if (idProblems.length > 0) {
+    portabilityIssues.unshift({ path: `bundle id "${manifest.id}"`, problems: idProblems });
+  }
+
+  return { manifest, conformance: checkConformance(bundleFiles), portabilityIssues };
 }
