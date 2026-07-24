@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.7] — 2026-07-24
+
+### Fixes
+
+- **Knowledge bundles are now Windows-portable.** A macOS-exported bundle
+  carrying a web-clip source name like `Outstanding Operator - Wonder | Food
+  On Demand.md` failed to install on Windows with a raw ENOENT — `|` is a
+  Windows-reserved filename character.
+  - **Export sanitizes source file names** into a stable
+    `{ original → portable }` map threaded through emitted files, converted
+    wikilinks, indexes, and the manifest hash, so new bundles are portable by
+    construction; `knowlery_raw_path` keeps the original vault path for
+    provenance. Reserved characters, control characters, trailing
+    dots/spaces, and reserved device names are covered; case-insensitive and
+    sanitize-created collisions get deterministic hash suffixes claimed
+    against an occupied set, with uniqueness asserted.
+  - **Export refuses non-portable identity**: knowledge page paths and the
+    bundle id cannot be auto-renamed, so a Windows-incompatible one now fails
+    the export with a rename-and-retry message instead of shipping a bundle
+    consumers must block.
+  - **Install detects incompatibilities on every platform** (all entries plus
+    the bundle id, including case-insensitive file-vs-directory conflicts):
+    Windows blocks before any write with a clear "ask the creator to
+    re-export" explanation — in the modal (Install disabled), the CLI, and
+    the dashboard update path; macOS/Linux install fine and warn that Windows
+    users won't be able to.
+  - Already-published bundles cannot be retro-fixed: creators re-export with
+    this version and publish a new bundle version.
+
 ## [1.2.6] — 2026-07-21
 
 ### Fixes
