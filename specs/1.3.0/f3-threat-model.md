@@ -1,6 +1,9 @@
 # F3 (1.3.0) — Threat Model: Knowledge-Base Content as an Attack Surface
 
-- **Status:** Implemented — awaiting maintainer acceptance (§7)
+- **Status:** Done — maintainer acceptance passed (§7: threat-model read-through,
+  Obsidian install dialog with the independent risk checkbox, creator-boundary
+  review hint, and the real-MCP-session conduct test all verified on
+  1.3.0-beta.1; 545 tests + full CI/eval green)
 - **Target release:** 1.3.0
 - **Branch:** `cursor/13-f3-threat-model-92eb`
 - **Depends on:** the risk scanner (0.8/0.9 — the enforcement point being
