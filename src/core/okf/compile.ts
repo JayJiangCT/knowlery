@@ -16,7 +16,7 @@ import { checkConformance } from './conformance';
 import { buildReadme, buildSourceCopy } from './bundle-docs';
 import { scopeSchemaToBundle } from './schema-scope';
 import { collectRawBodyUnresolvedLinks, convertWikilinks } from './wikilink';
-import { buildPortableSourcePathMap } from './portability';
+import { buildPortableSourcePathMap, findBundleIdPortabilityProblems, findPathPortabilityIssues } from './portability';
 
 export async function compileBundle(source: BundleSource, rawOptions: CompileOptions, now = new Date()): Promise<CompileResult> {
   const options = CompileOptionsSchema.parse(rawOptions);
@@ -25,6 +25,12 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
   const approvedRawPaths = new Set(options.approvedRawPaths.map(toPosixPath));
   const pages = inputs.pages.filter((page) => approvedConceptIds.has(page.conceptId));
   const rawSources = await readApprovedRawDependencies(source.fs, pages, approvedRawPaths);
+  // Concept paths ARE identity (approved ids, backlinks, fork paths) and the
+  // bundle id becomes Library/<id> on the consumer's disk — neither is
+  // mapped, so a non-portable one is rejected at export with the fix in the
+  // creator's hands, instead of shipping a bundle Windows installs must block
+  // (implementation review, P2).
+  assertPortableExportIdentity(options.bundleId, pages.map((page) => `${page.conceptId}.md`));
   // Windows-portable file names for _sources/ (field finding: `|` etc. in a
   // web-clip title breaks install on Windows). One stable map, threaded
   // through file paths, wikilinks, indexes, and thus the manifest hash;
@@ -147,6 +153,23 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
     staleCount: indexProjection.staleCount,
     targetDir: options.targetDir,
   };
+}
+
+function assertPortableExportIdentity(bundleId: string, conceptFilePaths: string[]): void {
+  const problems: string[] = [];
+  for (const problem of findBundleIdPortabilityProblems(bundleId)) {
+    problems.push(`bundle id "${bundleId}": ${problem}`);
+  }
+  for (const issue of findPathPortabilityIssues(conceptFilePaths.map(toPosixPath))) {
+    problems.push(`${issue.path}: ${issue.problems.join('; ')}`);
+  }
+  if (problems.length > 0) {
+    throw new Error(
+      'This export would not install on Windows — knowledge page paths and the bundle id are identity and cannot be auto-renamed:\n'
+      + problems.map((problem) => `  - ${problem}`).join('\n')
+      + '\nRename the offending pages (or adjust the bundle id) and export again.',
+    );
+  }
 }
 
 async function readApprovedRawDependencies(

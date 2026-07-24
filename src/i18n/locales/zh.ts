@@ -149,6 +149,7 @@ export const zh: Record<TranslationKey, string> = {
   'home.bundles.updating': '更新中…',
   'home.bundles.uninstall': '卸载',
   'home.bundles.updated': '{id} 已更新。',
+  'home.bundles.windowsIncompatible': '{id} 包含 {count} 个 Windows 无法创建的文件名 —— Windows 用户将无法安装此版本。',
   'home.bundles.updateFailed': '更新失败 — 已安装的版本未受影响。{error}',
   'home.bundles.andMore': '…以及另外 {count} 项',
   'home.bundles.modifiedLocally': '{id} 在本地被修改过 — 更新会覆盖这些改动：\n{files}\n请先把你的笔记移动到自己的页面，或在 CLI 中运行 `knowlery bundle update {id} --force` 强制覆盖。',

@@ -41,15 +41,21 @@ export function sanitizePortableSegment(segment: string): string {
 /**
  * Stable `{ originalPath → portablePath }` map for bundle source files.
  *
- * Determinism contract: the portable path of an entry depends only on its
- * own original path and the *set* of paths it collides with — never on
- * input order. Collisions are grouped case-insensitively on the sanitized
- * full path (Windows filesystems are case-insensitive, so `Foo.md` and
- * `foo.md` are one file there); every member of a colliding group gets a
- * suffix derived from a hash of its own original path.
+ * Determinism contract: the result is a pure function of the *set* of input
+ * paths — never of input order (entries are processed in canonical sorted
+ * order). Collisions are grouped case-insensitively on the sanitized full
+ * path (Windows filesystems are case-insensitive, so `Foo.md` and `foo.md`
+ * are one file there); every member of a colliding group gets a suffix
+ * derived from a hash of its own original path.
+ *
+ * Suffixed candidates can themselves collide with a legitimate path that
+ * already carries that exact name (implementation review, P1): final names
+ * are claimed against a case-folded occupied set — unrenamed paths reserve
+ * their names first, then renamed entries extend their hash suffix
+ * deterministically until free — and uniqueness is asserted before return.
  */
 export function buildPortableSourcePathMap(paths: string[]): Map<string, string> {
-  const originals = [...new Set(paths)];
+  const originals = [...new Set(paths)].sort();
   const sanitized = new Map<string, string>(
     originals.map((original) => [
       original,
@@ -57,22 +63,48 @@ export function buildPortableSourcePathMap(paths: string[]): Map<string, string>
     ]),
   );
 
-  const groups = new Map<string, string[]>();
-  for (const [original, portable] of sanitized) {
+  const groupSizes = new Map<string, number>();
+  for (const portable of sanitized.values()) {
     const key = portable.toLowerCase();
-    groups.set(key, [...(groups.get(key) ?? []), original]);
+    groupSizes.set(key, (groupSizes.get(key) ?? 0) + 1);
   }
 
+  const occupied = new Set<string>();
   const result = new Map<string, string>();
-  for (const members of groups.values()) {
-    for (const original of members) {
-      const portable = sanitized.get(original)!;
-      result.set(
-        original,
-        // sha256() returns "sha256-<hex>" — take the first 8 hex chars.
-        members.length > 1 ? suffixPath(portable, sha256(original).replace(/^sha256-/, '').slice(0, 8)) : portable,
-      );
+
+  // Pass 1: paths that keep their sanitized name (no group collision) claim
+  // it unconditionally — a renamed entry must never displace an untouched one.
+  const needsSuffix: string[] = [];
+  for (const original of originals) {
+    const portable = sanitized.get(original)!;
+    if ((groupSizes.get(portable.toLowerCase()) ?? 0) > 1) {
+      needsSuffix.push(original);
+    } else {
+      occupied.add(portable.toLowerCase());
+      result.set(original, portable);
     }
+  }
+
+  // Pass 2: colliding entries take hash suffixes, extended deterministically
+  // (longer hash slice, then a counter) until the name is free.
+  for (const original of needsSuffix) {
+    const base = sanitized.get(original)!;
+    // sha256() returns "sha256-<hex>" — use the hex part.
+    const hash = sha256(original).replace(/^sha256-/, '');
+    let candidate = suffixPath(base, hash.slice(0, 8));
+    for (let length = 12; occupied.has(candidate.toLowerCase()) && length <= hash.length; length += 4) {
+      candidate = suffixPath(base, hash.slice(0, length));
+    }
+    for (let counter = 2; occupied.has(candidate.toLowerCase()); counter += 1) {
+      candidate = suffixPath(base, `${hash}-${counter}`);
+    }
+    occupied.add(candidate.toLowerCase());
+    result.set(original, candidate);
+  }
+
+  const distinct = new Set([...result.values()].map((value) => value.toLowerCase()));
+  if (distinct.size !== result.size) {
+    throw new Error('Portable path mapping produced duplicate targets — this is a bug.');
   }
   return result;
 }
@@ -90,13 +122,22 @@ function suffixPath(path: string, suffix: string): string {
 /**
  * Detection only — no platform policy. Scans every path (all entries, not
  * just `.md`) segment by segment, plus case-insensitive collisions across
- * the whole set. Callers pass posix-normalized paths.
+ * the whole set — including file-vs-directory conflicts, where one entry's
+ * full path is another entry's directory prefix (Windows cannot hold a file
+ * and a case-variant directory under the same name). Callers pass
+ * posix-normalized paths.
  */
 export function findPathPortabilityIssues(paths: string[]): PortabilityIssue[] {
   const lowerGroups = new Map<string, string[]>();
+  const dirPrefixes = new Map<string, string>();
   for (const path of paths) {
     const key = path.toLowerCase();
     lowerGroups.set(key, [...(lowerGroups.get(key) ?? []), path]);
+    const segments = path.split('/');
+    for (let depth = 1; depth < segments.length; depth += 1) {
+      const prefix = segments.slice(0, depth).join('/').toLowerCase();
+      if (!dirPrefixes.has(prefix)) dirPrefixes.set(prefix, path);
+    }
   }
 
   const issues: PortabilityIssue[] = [];
@@ -108,6 +149,10 @@ export function findPathPortabilityIssues(paths: string[]): PortabilityIssue[] {
     const twins = (lowerGroups.get(path.toLowerCase()) ?? []).filter((twin) => twin !== path);
     if (twins.length > 0) {
       problems.push(`collides case-insensitively with ${[...new Set(twins)].join(', ')}`);
+    }
+    const claimedAsDir = dirPrefixes.get(path.toLowerCase());
+    if (claimedAsDir !== undefined) {
+      problems.push(`is a file, but ${claimedAsDir} needs it as a directory (case-insensitive on Windows)`);
     }
     if (problems.length > 0) issues.push({ path, problems });
   }

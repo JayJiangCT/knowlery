@@ -154,6 +154,7 @@ export const en = {
   'home.bundles.updating': 'Updating…',
   'home.bundles.uninstall': 'Uninstall',
   'home.bundles.updated': '{id} updated.',
+  'home.bundles.windowsIncompatible': '{id} contains {count} file name(s) Windows cannot create — Windows users will not be able to install this version.',
   'home.bundles.updateFailed': 'Update failed — the installed version is untouched. {error}',
   'home.bundles.andMore': '…and {count} more',
   'home.bundles.modifiedLocally': '{id} was modified locally — updating would overwrite these edits:\n{files}\nMove your notes into your own pages, or run `knowlery bundle update {id} --force` from the CLI to overwrite.',

@@ -73,6 +73,20 @@ describe('buildPortableSourcePathMap', () => {
     expect(map.get('note.md')).not.toBe(map.get('note.md.'));
   });
 
+  it('extends the suffix when the hashed candidate collides with a legitimate existing path (review P1)', () => {
+    // Learn what suffix a colliding pair produces, then add a legitimate file
+    // that already carries exactly that name — the mapping must keep every
+    // final path unique and must not displace the untouched legitimate file.
+    const first = buildPortableSourcePathMap(['a|b.md', 'a?b.md']);
+    const takenName = first.get('a|b.md')!;
+
+    const map = buildPortableSourcePathMap(['a|b.md', 'a?b.md', takenName]);
+    expect(map.get(takenName)).toBe(takenName); // legit path keeps its name
+    const finals = [...map.values()].map((value) => value.toLowerCase());
+    expect(new Set(finals).size).toBe(finals.length);
+    expect(map.get('a|b.md')).not.toBe(takenName);
+  });
+
   it('is order-independent: the same path maps identically regardless of input order', () => {
     const forward = buildPortableSourcePathMap(['Notes/Foo.md', 'Notes/foo.md', 'x|y.md']);
     const reversed = buildPortableSourcePathMap(['x|y.md', 'Notes/foo.md', 'Notes/Foo.md']);
@@ -97,6 +111,13 @@ describe('findPathPortabilityIssues', () => {
     const issues = findPathPortabilityIssues(['a/B.md', 'a/b.md']);
     expect(issues).toHaveLength(2);
     expect(issues[0].problems.join(' ')).toContain('collides case-insensitively');
+  });
+
+  it('reports file-vs-directory prefix conflicts, case-insensitively (review P1)', () => {
+    const issues = findPathPortabilityIssues(['assets/Logo', 'assets/logo/icon.png']);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].path).toBe('assets/Logo');
+    expect(issues[0].problems.join(' ')).toContain('needs it as a directory');
   });
 
   it('stays silent on portable sets', () => {

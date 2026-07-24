@@ -277,3 +277,31 @@ describe('Windows-portable source paths (field finding: `|` in a web-clip title 
     expect(manifest.contentHash).toBe(recomputed);
   });
 });
+
+describe('export identity gate: non-portable concept paths and bundle ids are rejected (review P2)', () => {
+  it('refuses a concept page whose path Windows cannot create', async () => {
+    const app = createOkfMockApp({
+      ...BASE_VAULT,
+      'concepts/Wonder | Ops.md': '---\ntype: concept\ntitle: Wonder Ops\n---\n\nOps body.',
+    });
+    const attempt = compileBundle(okfBundleSource(app), {
+      ...BASE_OPTIONS,
+      approvedConceptIds: ['concepts/Wonder | Ops'],
+      approvedRawPaths: [],
+    }, NOW);
+    await expect(attempt).rejects.toThrow(/would not install on Windows/);
+    await expect(attempt).rejects.toThrow(/Wonder \| Ops/);
+  });
+
+  it('refuses a bundle id Windows cannot create as a Library/ directory', async () => {
+    const app = createOkfMockApp(BASE_VAULT);
+    const attempt = compileBundle(okfBundleSource(app), { ...BASE_OPTIONS, bundleId: 'creator:wonder' }, NOW);
+    await expect(attempt).rejects.toThrow(/bundle id "creator:wonder"/);
+  });
+
+  it('still exports cleanly when identity paths are portable', async () => {
+    const app = createOkfMockApp(BASE_VAULT);
+    const result = await compileBundle(okfBundleSource(app), BASE_OPTIONS, NOW);
+    expect(result.conceptCount).toBe(1);
+  });
+});

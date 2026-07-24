@@ -442,13 +442,20 @@ function InstalledBundlesSection(props: {
         return;
       }
       const downloaded = await downloadRemoteBundle(url, { fetchImpl: obsidianRemoteFetch });
+      let portabilityIssueCount = 0;
       try {
         const bundleEntries = await readBundleEntries(downloaded.zipPath);
-        await installBundle(plugin.fs, bundleEntries, { source: url });
+        const installed = await installBundle(plugin.fs, bundleEntries, { source: url });
+        portabilityIssueCount = installed.portabilityIssues.length;
       } finally {
         await downloaded.cleanup();
       }
       new Notice(t('home.bundles.updated', { id }));
+      // Off-Windows installs succeed with non-portable paths — still warn, so
+      // this entry point matches the modal/CLI policy (implementation review).
+      if (portabilityIssueCount > 0) {
+        new Notice(t('home.bundles.windowsIncompatible', { id, count: portabilityIssueCount }));
+      }
       setStatuses(null);
       plugin.events.trigger('dashboard-refresh');
     } catch (error) {
