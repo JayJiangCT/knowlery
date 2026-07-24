@@ -157,10 +157,17 @@ layer table says which regression class lands where:
   same seed, same tiers (medium only: pairing halves are compared, not
   extrapolated). Budget: **head median ≤ 1.5× base median, per path** —
   catches 2× with margin; same-machine sequential variance is far below
-  this (observed spread recorded during the observational window).
-  Bootstrap rule: if base's core predates the entry points the runner
-  imports, the pairing layer reports `skipped` (only relevant to
-  archaeology; every post-F4 PR has them).
+  this (observed paired ratios recorded during the observational window).
+  **Missing entry points are a failure, not a skip** — a PR that renames or
+  moves a core entry point is exactly the class of change the pairing layer
+  must not silently wave through: head missing an entry point → hard fail,
+  always; base missing an entry point → hard fail, unless the job passes an
+  explicit **`--allow-missing-base`** flag, which downgrades it to a loudly
+  logged `skipped`. That flag exists for exactly one commit range: the F4
+  implementation PR itself (whose merge-base predates the entry points'
+  benchmark contract); removing it from the workflow immediately after F4
+  merges is part of this feature's landing checklist, recorded here when
+  done.
 - **Federation gets its own machine-independent bound** instead of joining
   the tier-shape check (its scaling axis is KB count, not page count):
   `median(federation over 3 medium KBs) ≤ 3.5 × median(single medium
@@ -172,11 +179,24 @@ layer table says which regression class lands where:
   paired comparison, uploading the JSON report as an artifact.
   **Observational→required graduation, concretely**: the job runs
   non-required until (a) ≥ 10 CI runs have accumulated, (b) zero false
-  failures among them, and (c) per-path median spread across runs stays
-  within 30% (confirming the 1.5× paired budget has real margin). The
-  maintainer flips it required and the flip is recorded here with the
-  observed spread numbers. If (c) fails, budgets are retuned from the data
-  before flipping — never silently loosened after.
+  failures among them, and (c) **the per-path paired ratio itself** —
+  base/head on unchanged-perf PRs, where the true value is ~1.0 — stays
+  ≤ 1.3 at its maximum across the window. (c) observes the quantity the
+  1.5× guard actually gates: absolute runner speed can swing wildly while
+  the same-machine ratio stays tight, and conversely a stable-speed runner
+  can still show ordering noise in the ratio — raw median spread proves
+  nothing about either. The maintainer flips the job required and the flip
+  is recorded here with the observed ratio distribution. If (c) fails,
+  first try AB/BA alternating measurement (below), then retune the budget
+  from the data before flipping — never silently loosened after.
+- **Implementation notes for the pairing job** (recorded so the
+  implementation doesn't rediscover them): the checkout needs the
+  merge-base commit available (fetch the base SHA explicitly or unshallow —
+  default shallow clones won't have it); the scratch worktree must resolve
+  head's installed `node_modules` (the runner and its deps come from head;
+  only `src/` is read from base); if the observational window shows
+  ordering bias in paired ratios, switch to AB/BA alternation (base, head,
+  head, base) and compare interleaved medians.
 
 ### 4.4 The documented envelope
 
@@ -211,9 +231,12 @@ question gets a numeric answer with a dated source.
 6. **Pairing mechanics**: head runner with `--src` pointed at a scratch
    copy of the same tree → all paths within budget (self-comparison is the
    null test); with an artificial 2× delay shimmed into one path of the
-   "head" side → the paired assertion fails naming that path; `--src` at a
-   tree missing an entry point → `skipped`, exit zero.
-7. **Purity/lint/CI**: generator + runner live under `evals/` (outside the
+   "head" side → the paired assertion fails naming that path.
+7. **Missing-entry-point semantics**: head tree missing an entry point →
+   hard fail, always; base tree missing one → hard fail by default, and
+   only with `--allow-missing-base` a loudly logged `skipped` with exit
+   zero — the renamed-entry-point PR cannot silently bypass the guard.
+8. **Purity/lint/CI**: generator + runner live under `evals/` (outside the
    core purity boundary but inside lint scope); `npm test`, lint, both
    existing evals stay green — this feature adds a third eval without
    touching the other two.
