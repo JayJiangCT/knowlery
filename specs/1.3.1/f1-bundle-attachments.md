@@ -109,13 +109,26 @@ compiled pages, and the sharing loop must not greet that with dead links.
   (`buildPortableSourcePathMap` generalized to a second root). Flat + a
   collision map is simpler and more portable than mirroring vault
   directory trees.
-- **Embed rewriting**: the wikilink converter already rewrites approved
-  targets to relative markdown links preserving the embed `!`; it gains
-  the attachment map, so `![[flow.png]]` in an emitted page becomes
-  `![flow](_attachments/flow.png)` (relative from the page's own
-  directory) — Obsidian renders relative image links natively. Unapproved
+- **Embed rewriting, depth-aware**: the wikilink converter already
+  computes relative hrefs from the embedding file's own directory
+  (`relativeLinkPath`); attachments ride the same computation. A page at
+  `concepts/foo.md` embedding `flow.png` emits
+  `![flow](../_attachments/flow.png)`; a nested source copy at
+  `_sources/Idea/note.md` emits `../../_attachments/flow.png` — **never**
+  a bare `_attachments/...`, which would only resolve from the bundle
+  root. Obsidian renders relative image links natively. Unapproved
   attachment embeds degrade exactly like unapproved page links today:
   original wikilink text + an `unresolved` note.
+- **Raw-source copies get an embed-rewrite pass** — a gap the current
+  pipeline would otherwise ship: `convertWikilinks` covers knowledge
+  pages only, and `_sources/` copies are emitted verbatim, so their
+  `![[flow.png]]` would arrive broken in every consumer vault. Approved
+  raw copies now pass through an attachment-embed rewriter (attachment
+  embeds only — page wikilinks in raw copies keep today's behavior,
+  unchanged scope). This is consistent with material-untouched: the
+  vault's originals are never edited; `_sources/` copies are already
+  transformed artifacts (1.2.7 renames them for portability), and a copy
+  that ships broken embeds serves nobody.
 - **Manifest** (`knowlery-bundle.json`) gains one **optional** field:
   `attachments: [{ path, bytes, sha256 }]`. The existing `contentHash`
   computation is **untouched** (md-only, backward compatible); attachment
@@ -134,7 +147,19 @@ platforms); the gaps are the pipeline types:
   files decode as UTF-8, everything else stays bytes. Directory sources
   read the same way.
 - **Compile** writes attachment entries via `writeBinary`.
-- **Install** writes byte entries via `writeBinary` (same
+- **Install verifies before it writes** — emitted hashes that nobody
+  checks are decoration. Before any write, every byte entry must match a
+  manifest `attachments` record on all three of path, size, and sha256,
+  **and** every manifest record must have its entry present. Any
+  mismatch, any unlisted binary in the archive (no smuggling entries the
+  reviewer never saw), any listed-but-missing file → refusal with a new
+  `InstallBlockedError` reason `attachment-integrity`, naming the file
+  and which check failed, workspace untouched. This sits beside the
+  version and conformance gates and is not skippable —
+  `--skip-conformance` and `--acknowledge-risks` consent to *known*
+  defects and *reviewed* content; a hash mismatch is tampering or
+  corruption, and there is no informed consent to that.
+- Byte entries are written via `writeBinary` (same
   `assertSafeInstallPath` on every entry — the containment argument is
   path-based and already covers them); conformance, the instruction-like
   risk scan, and the query scanner remain md-only by construction.
@@ -144,21 +169,34 @@ platforms); the gaps are the pipeline types:
   who annotated a shipped diagram gets the same protective refusal as an
   edited page.
 
-### 4.5 Compatibility, stated as promises
+### 4.5 Compatibility: a conditional schema bump, not a false promise
 
-1. A bundle exported with zero attachments is **byte-identical** to
-   today's output (no empty `_attachments/`, no manifest field).
-2. Old Knowlery versions installing an attachment-bearing bundle: the
-   manifest's unknown field is ignored by the schema (verify: current
-   parse must not `.strict()` the manifest — checked at implementation;
-   if it does, this is the compatibility note in the release notes),
-   attachments decode as garbage strings **but** the md knowledge
-   installs correctly. Not corrupted silently: recorded as a known
-   limitation ("update Knowlery to render shipped attachments").
-3. New Knowlery installing old bundles: nothing changes.
-4. The format change is additive → **minor version (1.3.1)** under the
-   stability contract; the format-contract test extends, no golden
-   changes.
+The first draft promised old versions would "skip what they don't know" —
+**that promise was false**: pre-1.3.1 install decodes every entry as
+UTF-8 and writes it as a string, so an attachment-bearing bundle would
+install with **silently corrupted** binaries and no warning. Silent
+corruption is the one outcome this codebase never accepts, so the fix is
+refusal, priced honestly:
+
+1. **Attachment-bearing bundles declare `schemaVersion: 2`.** Pre-1.3.1
+   manifest parsing pins `schemaVersion: z.literal(1)`, so every older
+   version **refuses the whole bundle at the manifest gate, before any
+   write** — with its generic "Not a valid knowledge bundle" message. We
+   cannot retro-improve old versions' wording; we can guarantee they
+   corrupt nothing. The 1.3.1 release notes carry the consumer-facing
+   sentence ("sharing bundles with attachments requires receivers on
+   ≥ 1.3.1").
+2. **Attachment-free bundles keep `schemaVersion: 1`** and are
+   **byte-identical** to today's output (no `_attachments/`, no manifest
+   field, same schema line) — the overwhelmingly common case loses
+   nothing, and the bump prices exactly the bundles that need it.
+3. New Knowlery accepts both versions; installing old bundles changes
+   nothing.
+4. Under the stability contract this is additive for readers (1.3.1
+   accepts a superset) and a **deliberate, documented compatibility
+   boundary for old readers of new attachment-bearing bundles** — the
+   honest cost of preventing silent corruption; minor version, format
+   contract test extended.
 
 ## 5. Safety properties, restated as tests
 
@@ -169,23 +207,41 @@ platforms); the gaps are the pipeline types:
 2. **Review**: attachment approval records a byte hash; changing the file
    invalidates it (`<- changed` like pages); checklist JSON carries kind
    and bytes; the 20 MB soft warning fires on a synthetic large set.
-3. **Byte integrity**: export → zip → readBundleEntries → install
-   round-trips a PNG-shaped byte pattern (incl. bytes invalid as UTF-8)
-   **hash-identical**; the installed file's sha256 equals the manifest
-   entry.
-4. **Portability**: an attachment named with a Windows-reserved character
+3. **Byte integrity, positive and negative**: export → zip →
+   readBundleEntries → install round-trips a PNG-shaped byte pattern
+   (incl. bytes invalid as UTF-8) **hash-identical**; the installed
+   file's sha256 equals the manifest entry. Then the tampering suite —
+   one flipped byte in an attachment, a size mismatch, an archive binary
+   absent from the manifest list, a manifest record with no matching
+   entry — **each refuses with reason `attachment-integrity` naming the
+   file, before any write** (workspace byte-identical after refusal),
+   and neither `--skip-conformance` nor `--acknowledge-risks` unlocks
+   it.
+4. **Link depth**: the emitted embed from `concepts/foo.md` reads
+   `../_attachments/…`; from a nested `_sources/Idea/note.md` it reads
+   `../../_attachments/…`; both resolve when the bundle tree is walked
+   from the file's own directory (asserted by path resolution, not
+   string-matching alone).
+5. **Raw-source rewrite**: an approved source note embedding an approved
+   attachment ships with its embed rewritten; its page-wikilinks are
+   byte-unchanged from today's copy output.
+6. **Portability**: an attachment named with a Windows-reserved character
    sanitizes; the embed in the emitted page points at the sanitized name;
    collision between two sanitized names gets the deterministic suffix.
-5. **Containment**: a hostile entry `_attachments/../../evil.png` refuses
+7. **Containment**: a hostile entry `_attachments/../../evil.png` refuses
    before any write (existing assertion, now exercised with a bytes
    entry).
-6. **Compatibility**: attachment-free export byte-identical to pre-change
-   output (fixture diff); manifest without the field parses; installed
-   registry entry for an attachment-free bundle is unchanged.
-7. **Update path**: locally-modified attachment blocks `bundle update`
+8. **Compatibility both ways**: attachment-free export byte-identical to
+   pre-change output including `schemaVersion: 1` (fixture diff);
+   attachment-bearing manifest carries `schemaVersion: 2` and **fails
+   the pre-1.3.1 schema** (asserted by parsing it with
+   `z.literal(1)` — the exact refusal old versions execute); new code
+   parses both; installed registry entry for an attachment-free bundle
+   is unchanged.
+9. **Update path**: locally-modified attachment blocks `bundle update`
    with the file listed; unmodified updates flow through.
-8. **Contract**: format-contract test extended for the optional manifest
-   field; CLI/MCP goldens untouched.
+10. **Contract**: format-contract test extended for the schemaVersion
+    rules and the optional manifest field; CLI/MCP goldens untouched.
 
 ## 6. Acceptance criteria
 
@@ -205,8 +261,11 @@ platforms); the gaps are the pipeline types:
 3. Edit the image after approval (re-screenshot) — export refuses with
    `<- changed`.
 4. Install the same bundle with the previous Knowlery release (1.3.0) —
-   knowledge pages install and work; note what happens to the attachment
-   files (the recorded limitation).
-5. `bundle update` after scribbling on an installed attachment — the
+   it must **refuse at the manifest gate** (generic "not a valid
+   knowledge bundle" message) with nothing written; then install an
+   attachment-free bundle with 1.3.0 — works exactly as before.
+5. Tamper with one byte of an attachment inside the zip — install
+   refuses naming the file; nothing written.
+6. `bundle update` after scribbling on an installed attachment — the
    protective refusal names the file.
-6. Full suites green.
+7. Full suites green.
