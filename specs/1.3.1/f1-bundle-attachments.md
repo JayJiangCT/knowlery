@@ -139,17 +139,28 @@ compiled pages, and the sharing loop must not greet that with dead links.
 
   ```ts
   z.discriminatedUnion('schemaVersion', [
-    z.object({ schemaVersion: z.literal(1), /* today's fields; no attachments key */ }),
+    z.object({
+      schemaVersion: z.literal(1),
+      // z.object() strips unknown keys silently — without this line a
+      // v1 manifest carrying attachments would parse and drop the field
+      // (review probe confirmed). Explicit never > .strict(): it forbids
+      // exactly this key while keeping tolerance for unrelated future keys.
+      attachments: z.never().optional(),
+      /* today's fields */
+    }),
     z.object({ schemaVersion: z.literal(2), attachments: z.array(AttachmentRecord).nonempty(), /* + today's fields */ }),
   ])
   ```
 
-  Version 1 with an `attachments` key **fails to parse**; version 2
-  without a non-empty one **fails to parse** — a merely-optional field on
-  an accepted 1–2 range could quietly recreate the very corruption path
-  §4.5 closes. `AttachmentRecord = { path, bytes, sha256 }`. The existing
-  `contentHash` computation is **untouched** (md-only); attachment
-  integrity rides the per-file hashes.
+  Version 1 with an `attachments` key **fails to parse** (enforced by the
+  `z.never().optional()` line — not by default `z.object()` behavior,
+  which strips unknown keys); version 2 without a non-empty one **fails
+  to parse** — a merely-optional field on an accepted 1–2 range could
+  quietly recreate the very corruption path §4.5 closes. The §5.8
+  negative pair must exercise the real shipped `BundleManifestSchema`,
+  not a test-local re-declaration. `AttachmentRecord = { path, bytes,
+  sha256 }`. The existing `contentHash` computation is **untouched**
+  (md-only); attachment integrity rides the per-file hashes.
 
 ### 4.4 The binary lane
 
@@ -266,7 +277,9 @@ refusal, priced honestly:
 9. **Update path**: locally-modified attachment blocks `bundle update`
    with the file listed; unmodified updates flow through.
 10. **Contract**: format-contract test extended for the schemaVersion
-    rules and the optional manifest field; CLI/MCP goldens untouched.
+    rules and the discriminated `attachments` invariant (forbidden in
+    version 1, required non-empty in version 2); CLI/MCP goldens
+    untouched.
 
 ## 6. Acceptance criteria
 
