@@ -1,6 +1,14 @@
 # F1 (1.3.1) — Bundle Attachments: Embeds Travel With the Knowledge
 
-- **Status:** Implemented — awaiting maintainer acceptance (§7)
+- **Status:** Done — maintainer acceptance passed (three rounds on real
+  vaults at `d272c24`: modal attachment display + eyes line; post-approval
+  image swap → gate refusal, return-to-review, `changed` marker; ambiguity
+  callout + disabled Continue; second-vault install renders the image;
+  1.3.0 refuses schema v2 with zero writes and still installs v1; zip
+  byte-tamper refused naming the file; post-scribble update refused;
+  close-modal → resume → export lands in the resumed bundle's own
+  directory at its recorded version. 620 tests, lint, build, docs, all
+  three evals green)
 - **Target release:** 1.3.1
 - **Branch:** `cursor/131-f1-bundle-attachments-92eb`
 - **Depends on:** the export review gate (0.8 — extended with a third item
