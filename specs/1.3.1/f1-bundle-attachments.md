@@ -1,6 +1,6 @@
 # F1 (1.3.1) — Bundle Attachments: Embeds Travel With the Knowledge
 
-- **Status:** Draft — awaiting maintainer spec acceptance
+- **Status:** Implemented — awaiting maintainer acceptance (§7)
 - **Target release:** 1.3.1
 - **Branch:** `cursor/131-f1-bundle-attachments-92eb`
 - **Depends on:** the export review gate (0.8 — extended with a third item
@@ -287,6 +287,35 @@ refusal, priced honestly:
 2. A real vault page embedding a real image exports, publishes, installs
    in a second vault, and **renders** in Obsidian reading mode.
 3. Maintainer §7 passes.
+
+## Implementation findings
+
+1. **The binary lane was a typing job, as predicted**: `VaultFs.readBinary`
+   / `writeBinary` already existed on both platforms; every change was in
+   the pipeline's types and the zip/compile/install seams. The OKF test
+   mock's `writeBinary` is a lossy string-decode, so the attachment suite
+   runs on real temp-dir vaults — with invalid-UTF-8 canary bytes that a
+   lossy round trip cannot reproduce.
+2. **Attachment resolution is index-based on both shells** — deliberately
+   not Obsidian's `metadataCache`, so export behavior is byte-identical
+   cross-shell and ambiguity is a deterministic refusal (candidate list +
+   embed-the-fuller-path fix-it) rather than a shell-dependent guess.
+3. **`|300` display suffixes become the markdown label** (`![300](…)`):
+   Obsidian's display-size syntax has no md-link equivalent, so the size
+   hint is lost while the image renders correctly — expected degradation,
+   same class as heading-fragment links.
+4. **All 595 pre-existing tests passed unchanged** before the 18 new ones
+   were added — the §4.5 compatibility promises (v1 byte-identical,
+   goldens untouched) held without edits to any existing test.
+5. **Gate ordering under a listed-and-hashed hostile path**: an entry at
+   `_attachments/../../evil.png` whose manifest record is *correct* passes
+   the integrity gate and is then refused by the containment assertion —
+   tested (§5.7's extension), so the two gates compose rather than mask
+   each other.
+6. **Ambiguity refuses at export, not at review**: the checklist stays
+   viewable (the fix is editing the embed, not reviewing), and
+   `bundle export` refuses with the candidate list before the unreviewed
+   gate.
 
 ## 7. Maintainer self-test checklist (acceptance round)
 
