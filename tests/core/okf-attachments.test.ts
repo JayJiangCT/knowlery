@@ -12,6 +12,7 @@ import { modifiedFiles } from '../../src/core/okf/update-check';
 import { readInstalledBundles } from '../../src/core/okf/registry';
 import { sha256Bytes } from '../../src/core/okf/hash';
 import { classifyEmbedTarget, buildAttachmentIndex } from '../../src/core/okf/attachments';
+import { evaluateExportGate } from '../../src/core/okf/export-scope';
 import { buildFlatPortableNameMap } from '../../src/core/okf/portability';
 import { BundleManifestSchema, type BundleManifest } from '../../src/types';
 
@@ -346,6 +347,40 @@ describe('compatibility (§5.8) and the update path (§5.9)', () => {
       expect(changed).toHaveLength(1);
       expect(changed[0]).toContain('_attachments/flow.png (edited)');
     });
+  });
+});
+
+// Acceptance round — the shared pre-export gate both shells run: the
+// Obsidian modal's stale-React-state hole (approve, file changes while the
+// modal sits open, compile ships unreviewed bytes) is closed by evaluating
+// a FRESH closure, whose recomputed hashes already reverted the approval.
+describe('the shared pre-export gate', () => {
+  it('a post-approval byte change is not ready: the approval reverted and the item is out of the approved set', async () => {
+    await withVault(async (root, _workDir, fs) => {
+      await approveAll(fs, root);
+      const approvedScope = await resolveScope(fs, 'drone-delivery', {});
+      expect(evaluateExportGate(approvedScope.closure).ready).toBe(true);
+
+      // The modal-race simulation: bytes change after approval.
+      await writeFile(join(root, 'assets/flow.png'), new Uint8Array([...PNG_BYTES, 0x01]));
+      const fresh = await resolveScope(fs, 'drone-delivery', {});
+      const gate = evaluateExportGate(fresh.closure);
+      expect(gate.ready).toBe(false);
+      expect(gate.unreviewed.map((item) => item.id)).toEqual(['assets/flow.png']);
+      expect(gate.unreviewed[0].reviewNote).toBe('changed');
+      expect(gate.approvedAttachmentPaths).toEqual(['pics/route-sketch.png']);
+    });
+  });
+
+  it('ambiguity makes the gate not ready; approved sets exclude flagged items', async () => {
+    await withVault(async (root, _workDir, fs) => {
+      await runBundleReview(fs, { seed: 'drone-delivery', root, approve: [], flag: ['Idea/route-notes.md'], log: silent });
+      const scope = await resolveScope(fs, 'drone-delivery', {});
+      const gate = evaluateExportGate(scope.closure);
+      expect(gate.ambiguous.map((issue) => issue.target)).toEqual(['flow.png']);
+      expect(gate.ready).toBe(false);
+      expect(gate.approvedRawPaths).toEqual([]);
+    }, { 'a/flow.png': PNG_BYTES });
   });
 });
 

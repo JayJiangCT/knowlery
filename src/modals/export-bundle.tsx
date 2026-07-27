@@ -4,7 +4,7 @@ import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
 import type { CompileResult, ExportScopeFile, ReviewStatus, RiskHint } from '../types';
-import { buildClosure, readExportScope, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, readExportScope, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
 import { scanRisks } from '../core/okf/risk-scan';
 import { compileBundle } from '../core/okf/compile';
 import {
@@ -297,6 +297,33 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const runExport = async () => {
     setExporting(true);
     try {
+      // The shared pre-export gate (spec 1.3.1 f1, acceptance round): flush
+      // the debounced review state, rebuild the closure fresh — recomputed
+      // hashes revert any approval whose file changed while this modal sat
+      // open — and compile from the GATE's approved sets, never from React
+      // state. Without this, a re-screenshotted attachment ships bytes
+      // nobody reviewed, with matching manifest hashes.
+      if (persistTimer.current !== null) {
+        window.clearTimeout(persistTimer.current);
+        persistTimer.current = null;
+      }
+      if (latestScope.current) await persistScope(latestScope.current);
+      const freshClosure = await buildClosure(bundleSourceFor(plugin), bundleId, seeds, maxCompiledHops);
+      const gate = evaluateExportGate(freshClosure);
+      if (!gate.ready) {
+        setClosure(freshClosure);
+        setItems(freshClosure.items);
+        const changed = gate.unreviewed.filter((item) => item.reviewNote === 'changed');
+        if (gate.ambiguous.length > 0) {
+          new Notice(`Ambiguous attachment embed(s): ${gate.ambiguous.map((issue) => `![[${issue.target}]]`).join(', ')} — embed the fuller path so the export knows which file you mean.`);
+        } else if (changed.length > 0) {
+          new Notice(`${changed.length} item(s) changed since review — their approvals were invalidated. Re-review the items marked "changed".`);
+        } else {
+          new Notice(`${gate.unreviewed.length} item(s) still need review.`);
+        }
+        return;
+      }
+
       const compileResult = await compileBundle(bundleSourceFor(plugin), {
         targetDir,
         bundleId,
@@ -307,9 +334,9 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
         includeSchema,
         includeFullLog,
         includeSources,
-        approvedConceptIds: items.filter((item) => item.kind === 'concept' && item.status === 'approved').map((item) => item.id),
-        approvedRawPaths: items.filter((item) => item.kind === 'raw' && item.status === 'approved').map((item) => item.id),
-        approvedAttachmentPaths: items.filter((item) => item.kind === 'attachment' && item.status === 'approved').map((item) => item.id),
+        approvedConceptIds: gate.approvedConceptIds,
+        approvedRawPaths: gate.approvedRawPaths,
+        approvedAttachmentPaths: gate.approvedAttachmentPaths,
         overwrite: true,
       });
       setResult(compileResult);
@@ -560,6 +587,31 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
           <div className="knowlery-export__progress">
             <div style={{ inlineSize: `${items.length ? Math.round((counts.approved / items.length) * 100) : 0}%` }} />
           </div>
+
+          {closure && closure.embedIssues.ambiguous.length > 0 && (
+            <div className="knowlery-export__callout">
+              Ambiguous attachment embed(s) — the export will refuse until the embed names the fuller path:
+              {closure.embedIssues.ambiguous.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  {issue.owner}: <code>![[{issue.target}]]</code> matches {issue.candidates.join(', ')}
+                </div>
+              ))}
+            </div>
+          )}
+          {closure && (closure.embedIssues.missing.length > 0 || closure.embedIssues.unsupported.length > 0) && (
+            <div className="knowlery-export__footer-note">
+              {closure.embedIssues.missing.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  note: {issue.owner} embeds <code>![[{issue.target}]]</code> which does not exist — it will ship unresolved.
+                </div>
+              ))}
+              {closure.embedIssues.unsupported.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  note: {issue.owner} embeds <code>![[{issue.target}]]</code> — extension not in the attachment allowlist; skipped.
+                </div>
+              ))}
+            </div>
+          )}
 
           <section className="knowlery-export__workspace">
             <div className="knowlery-export__main">

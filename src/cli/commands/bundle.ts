@@ -223,6 +223,13 @@ async function installFrom(fs: VaultFs, sourcePath: string, recordedSource: stri
           `${error.message}\n${lines.join('\n')}\nThere is no override — these paths cannot exist on Windows.`,
         );
       }
+      if (error.reason === 'attachment-integrity') {
+        // Deliberately no flag hint: this gate is not skippable (spec 1.3.1
+        // f1, §4.4) — there is no informed consent to tampering.
+        throw new CliError(
+          `${error.message}\nThis gate cannot be skipped — re-download the bundle, or ask the creator to re-export it.`,
+        );
+      }
       const hint = error.reason === 'blocked-version'
         ? 'Pass --force to reinstall over the existing version.'
         : 'Pass --skip-conformance to acknowledge the failures and install anyway.';

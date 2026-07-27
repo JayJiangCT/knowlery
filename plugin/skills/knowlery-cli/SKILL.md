@@ -58,6 +58,11 @@ You are the interface between the checklist and the user. The review decision is
    `knowlery bundle review <seed> --list --json` and present it to the user
    **completely** — every item, every risk hint (emails, sensitive URLs, person pages,
    meeting-like notes), verbatim. Never summarize warnings away.
+   **Attachment items** (images, PDFs embedded by pages in scope) appear with
+   their byte sizes and a fixed limitation: binary content — no scanner reads
+   pixels, so the user must review each attachment **with their own eyes**
+   (screenshots are the highest-leak-density artifacts). Present them like
+   every other item; never approve one on the user's behalf.
 2. Translate the user's stated decisions into enumerated calls:
    `knowlery bundle review <seed> --approve <id> <id>... --flag <id>...`
    If the user says "approve all of them", that is acceptable **only after** the full

@@ -316,6 +316,20 @@ refusal, priced honestly:
    viewable (the fix is editing the embed, not reviewing), and
    `bundle export` refuses with the candidate list before the unreviewed
    gate.
+7. **Acceptance round found the modal compiling from stale React state** —
+   the exact hole the byte-hash invalidation exists to close: approve, let
+   the file change while the modal sits open, and compile would ship
+   unreviewed bytes with matching manifest hashes. Fixed with a **shared
+   pre-export gate** (`evaluateExportGate`, pure, in core): both shells
+   flush review state, rebuild the closure fresh (recomputed hashes revert
+   changed approvals), and compile **from the gate's approved sets, never
+   from UI state**. The same gate carries ambiguity blocking to the modal
+   (it only lived in the CLI), and the modal now renders
+   missing/unsupported embed notes. Also from the round: the
+   `attachment-integrity` refusal no longer falls through to the
+   `--skip-conformance` hint (it says the gate cannot be skipped), and the
+   knowlery-cli skill's review conduct names attachments, byte sizes, and
+   the eyes-only limitation (content-asserted; plugin tree regenerated).
 
 ## 7. Maintainer self-test checklist (acceptance round)
 

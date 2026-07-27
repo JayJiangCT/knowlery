@@ -4,7 +4,7 @@ import type { VaultFs } from '../../core/vault-fs';
 import type { BundleSource } from '../../core/okf/collect';
 import { collectBundleInputs } from '../../core/okf/collect';
 import { buildHeadlessLinkResolver } from '../../core/okf/link-resolver';
-import { buildClosure, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
 import { scanRisks } from '../../core/okf/risk-scan';
 import { compileBundle } from '../../core/okf/compile';
 import { zipBundleDirectory } from '../../core/okf/zip';
@@ -61,10 +61,14 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
   const scope = await resolveScope(fs, options.seed, { hops: options.hops, creator: options.creator });
   await persistScope(fs, scope);
 
+  // The shared pre-export gate (spec 1.3.1 f1) — the identical evaluation
+  // the Obsidian modal runs; the closure here is fresh by construction.
+  const gate = evaluateExportGate(scope.closure);
+
   // Ambiguous attachment embeds refuse the export (spec 1.3.1 f1, §4.1):
   // deterministic like every refusal here — the fix is the creator's.
-  if (scope.closure.embedIssues.ambiguous.length > 0) {
-    const lines = scope.closure.embedIssues.ambiguous.map(
+  if (gate.ambiguous.length > 0) {
+    const lines = gate.ambiguous.map(
       (issue) => `  ${issue.owner}: ![[${issue.target}]] matches ${issue.candidates.join(', ')}`,
     );
     throw new CliError(
@@ -73,8 +77,7 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
     );
   }
 
-  const unreviewed = scope.closure.items.filter((item) => item.status === 'unreviewed');
-  if (unreviewed.length > 0) {
+  if (gate.unreviewed.length > 0) {
     printChecklist(scope, { json: options.json, log: options.log, jsonStatus: 'review-required' });
     if (!options.json) {
       options.log('');
@@ -82,7 +85,7 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
       options.log(`  knowlery bundle review ${options.seed} --approve <id>... [--flag <id>...]`);
       options.log('(or review in Obsidian: Share knowledge bundle — same saved scope)');
     }
-    throw new CliError(`${unreviewed.length} item(s) unreviewed — nothing was exported.`, 1);
+    throw new CliError(`${gate.unreviewed.length} item(s) unreviewed — nothing was exported.`, 1);
   }
 
   const version = options.bundleVersion ?? '0.1.0';
@@ -208,7 +211,9 @@ async function resolveSeed(source: BundleSource, seedInput: string): Promise<str
 /** The export compile step, shared with publish (spec 0.9 f2, §4.1 step 2). */
 export async function compileScope(scope: ResolvedScope, version: string, creator?: string) {
   const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
-  const approved = scope.closure.items.filter((item) => item.status === 'approved');
+  // Approved sets come from the gate's evaluation of the fresh closure —
+  // the single derivation both shells compile from (spec 1.3.1 f1).
+  const gate = evaluateExportGate(scope.closure);
   return compileBundle(scope.source, {
     targetDir,
     bundleId: scope.bundleId,
@@ -219,9 +224,9 @@ export async function compileScope(scope: ResolvedScope, version: string, creato
     includeSchema: true,
     includeFullLog: false,
     includeSources: false,
-    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
-    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
-    approvedAttachmentPaths: approved.filter((item) => item.kind === 'attachment').map((item) => item.id),
+    approvedConceptIds: gate.approvedConceptIds,
+    approvedRawPaths: gate.approvedRawPaths,
+    approvedAttachmentPaths: gate.approvedAttachmentPaths,
     overwrite: true,
   });
 }

@@ -121,6 +121,30 @@ describe('knowlery bundle install (spec 0.7 f4, §5.1-2)', () => {
     });
   });
 
+  // Spec 1.3.1 f1, §4.4 (acceptance round) — the integrity refusal must not
+  // suggest --skip-conformance: the gate is deliberately not skippable.
+  it('attachment-integrity refusals carry no skip hint', async () => {
+    await withWorkspace(async (root, workDir) => {
+      const fs = nodeVaultFs(root);
+      const source = await writeBundleFolder(workDir, {
+        ...GOOD_FILES,
+        'knowlery-bundle.json': JSON.stringify(manifest({
+          schemaVersion: 2,
+          attachments: [{ path: '_attachments/flow.png', bytes: 4, sha256: 'sha256-wrong' }],
+        })),
+      });
+      await mkdir(join(source, '_attachments'), { recursive: true });
+      await writeFile(join(source, '_attachments/flow.png'), new Uint8Array([1, 2, 3, 4]));
+
+      const error = await runBundleCommand(fs, { sub: 'install', arg: source, log: silent })
+        .catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).message).toContain('sha256 mismatch');
+      expect((error as CliError).message).toContain('cannot be skipped');
+      expect((error as CliError).message).not.toContain('--skip-conformance');
+    });
+  });
+
   // Spec 1.3 f3, §4.2/§5.3 — the consumer-side content gate at the CLI shell.
   it('gates on instruction-like content: refuses with evidence, installs with --acknowledge-risks', async () => {
     await withWorkspace(async (root, workDir) => {

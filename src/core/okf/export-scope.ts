@@ -136,6 +136,40 @@ export async function buildClosure(
   return { pages: Array.from(included.values()), rawDependencies, items, edges, embedIssues };
 }
 
+/**
+ * The shared pre-export gate (spec 1.3.1 f1, acceptance round: one gate,
+ * both shells). Pure evaluation over a closure — the caller must pass a
+ * closure built AFTER the latest review-state persist, because freshness
+ * is the whole point: buildClosure recomputes content hashes, so an
+ * approval whose file changed (a re-screenshotted attachment, an edited
+ * page) has already been reverted to unreviewed/`changed` by the time
+ * this gate looks. A shell that compiles from its own cached UI state
+ * instead of the gate's approved sets recreates the ships-unreviewed-bytes
+ * hole this exists to close.
+ */
+export interface ExportGateResult {
+  ready: boolean;
+  ambiguous: EmbedIssues['ambiguous'];
+  unreviewed: ScopeItem[];
+  approvedConceptIds: string[];
+  approvedRawPaths: string[];
+  approvedAttachmentPaths: string[];
+}
+
+export function evaluateExportGate(closure: ScopeClosure): ExportGateResult {
+  const unreviewed = closure.items.filter((item) => item.status === 'unreviewed');
+  const approved = closure.items.filter((item) => item.status === 'approved');
+  const ambiguous = closure.embedIssues.ambiguous;
+  return {
+    ready: unreviewed.length === 0 && ambiguous.length === 0,
+    ambiguous,
+    unreviewed,
+    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
+    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
+    approvedAttachmentPaths: approved.filter((item) => item.kind === 'attachment').map((item) => item.id),
+  };
+}
+
 export async function readExportScope(fs: VaultFs): Promise<ExportScopeFile> {
   const path = normalizeVaultPath(EXPORT_SCOPE_PATH);
   if (!(await fs.exists(path))) return { schemaVersion: 1, bundles: {} };
