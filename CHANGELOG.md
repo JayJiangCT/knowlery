@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.3.1] — 2026-07-27
+
+### Attachments travel with knowledge bundles
+
+A page that embeds `![[flow.png]]` no longer ships without the flow.
+
+- **Discovery**: wikilink embeds in exported pages *and* their raw sources
+  join the export scope (images, PDFs, audio/video — `|size` suffixes
+  handled). Resolution is deterministic and identical on both shells: an
+  ambiguous basename refuses the export with the candidate list; missing
+  or non-allowlisted embeds surface as checklist notes.
+- **Review**: attachments are checklist items like everything else — per-item
+  approve/flag, byte sizes shown with a total and a 20 MB soft warning, and
+  approvals that **invalidate when the file's bytes change** (a
+  re-screenshotted image needs re-review, exactly like an edited page). The
+  checklist says the honest part out loud: binary content — no scanner reads
+  pixels; review with your eyes.
+- **Portable by construction**: attachments land in `_attachments/` through
+  the same Windows-safe renaming machinery as `_sources/`; embeds in
+  exported pages and source copies rewrite to relative links that render
+  natively in Obsidian.
+- **Byte-verified installs**: the manifest records size and sha256 per
+  attachment; install verifies every entry both ways **before writing
+  anything** — a tampered byte, a size mismatch, an unlisted binary, or a
+  listed-but-missing file refuses the install, and this gate cannot be
+  skipped. Locally modified attachments also block `bundle update`, like
+  edited pages.
+- **Compatibility, priced honestly**: attachment-bearing bundles declare
+  bundle `schemaVersion: 2`, which releases before 1.3.1 refuse whole at the
+  manifest gate — nothing corrupts, but **sharing bundles with attachments
+  requires receivers on ≥ 1.3.1**. Attachment-free bundles are byte-identical
+  to before and install everywhere.
+- **Export-gate hardening** (found during acceptance): both shells now run
+  one shared pre-export gate — approvals invalidated while the export modal
+  sits open are caught at export time; ambiguity blocks Obsidian exports and
+  publishes too (never just the CLI); and resuming a saved bundle restores
+  its version and its own target directory (previously a resumed export
+  could write into — and overwrite — another bundle's directory).
+
 ## [1.3.0] — 2026-07-24
 
 Grounding the promises: no new capabilities — measurement and safety
