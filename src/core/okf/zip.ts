@@ -25,9 +25,22 @@ async function addDirectory(zip: JSZip, dir: string): Promise<void> {
   }
 }
 
-export interface BundleSourceEntry {
-  path: string;
-  content: string;
+/**
+ * Exactly-one payload (spec 1.3.1 f1, §4.4): text entries are the md lane,
+ * byte entries the attachment lane — a UTF-8 decode of a PNG followed by a
+ * string write is exactly the corruption this union makes unrepresentable.
+ */
+export type BundleSourceEntry =
+  | { path: string; content: string; bytes?: never }
+  | { path: string; bytes: Uint8Array; content?: never };
+
+/**
+ * The text lane is decided by extension: the bundle format's own text
+ * files (.md, .json, .base) decode as UTF-8; everything else stays bytes.
+ */
+const TEXT_ENTRY_RE = /\.(md|json|base|txt|yml|yaml|csv)$/i;
+export function isTextEntryPath(path: string): boolean {
+  return TEXT_ENTRY_RE.test(path);
 }
 
 export async function readBundleEntries(sourcePath: string): Promise<BundleSourceEntry[]> {
@@ -44,10 +57,12 @@ async function readDirectoryEntries(root: string, dir: string): Promise<BundleSo
     if (info.isDirectory()) {
       entries.push(...(await readDirectoryEntries(root, fullPath)));
     } else {
-      entries.push({
-        path: relative(root, fullPath).split(sep).join('/'),
-        content: await readFile(fullPath, 'utf8'),
-      });
+      const path = relative(root, fullPath).split(sep).join('/');
+      entries.push(
+        isTextEntryPath(path)
+          ? { path, content: await readFile(fullPath, 'utf8') }
+          : { path, bytes: new Uint8Array(await readFile(fullPath)) },
+      );
     }
   }
   return entries;
@@ -63,7 +78,11 @@ async function readZipEntries(zipPath: string): Promise<BundleSourceEntry[]> {
 
   const entries: BundleSourceEntry[] = [];
   for (const [relativePath, file] of fileEntries) {
-    entries.push({ path: relativePath, content: await file.async('string') });
+    entries.push(
+      isTextEntryPath(relativePath)
+        ? { path: relativePath, content: await file.async('string') }
+        : { path: relativePath, bytes: await file.async('uint8array') },
+    );
   }
 
   // zipBundleDirectory (above) always wraps the bundle in one top-level

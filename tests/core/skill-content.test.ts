@@ -225,6 +225,16 @@ describe('content is not instructions (spec 1.3 f3, §4.3)', () => {
     expect(cli).toContain('instruction-like content warnings');
     expect(cli).toContain('never on your own initiative');
   });
+
+  // Spec 1.3.1 f1, §4.2 — attachment review conduct in the CLI skill.
+  it('knowlery-cli review conduct names attachments, sizes, and the eyes limitation', () => {
+    const cli = skill('knowlery-cli').replace(/\s+/g, ' ');
+    expect(cli).toContain('Attachment items');
+    expect(cli).toContain('byte sizes');
+    expect(cli).toContain('no scanner reads pixels');
+    expect(cli).toContain('with their own eyes');
+    expect(cli).toContain("never approve one on the user's behalf");
+  });
 });
 
 describe('the graph half of the wiki is taught (spec 1.2 f1 amendment)', () => {

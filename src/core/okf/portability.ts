@@ -109,6 +109,60 @@ export function buildPortableSourcePathMap(paths: string[]): Map<string, string>
   return result;
 }
 
+/**
+ * Flat portable *file names* for `_attachments/` (spec 1.3.1 f1, §4.3):
+ * maps each vault path to a unique, Windows-safe basename. Same
+ * determinism contract as the source-path map (pure function of the input
+ * set, sorted processing, hash suffixes claimed against an occupied set) —
+ * flattening just makes basename collisions across directories a normal
+ * case rather than an edge one.
+ */
+export function buildFlatPortableNameMap(paths: string[]): Map<string, string> {
+  const originals = [...new Set(paths)].sort();
+  const sanitized = new Map<string, string>(
+    originals.map((original) => [original, sanitizePortableSegment(original.split('/').pop() ?? original)]),
+  );
+
+  const groupSizes = new Map<string, number>();
+  for (const name of sanitized.values()) {
+    const key = name.toLowerCase();
+    groupSizes.set(key, (groupSizes.get(key) ?? 0) + 1);
+  }
+
+  const occupied = new Set<string>();
+  const result = new Map<string, string>();
+  const needsSuffix: string[] = [];
+  for (const original of originals) {
+    const name = sanitized.get(original)!;
+    if ((groupSizes.get(name.toLowerCase()) ?? 0) > 1) {
+      needsSuffix.push(original);
+    } else {
+      occupied.add(name.toLowerCase());
+      result.set(original, name);
+    }
+  }
+
+  for (const original of needsSuffix) {
+    const base = sanitized.get(original)!;
+    const hash = sha256(original).replace(/^sha256-/, '');
+    let candidate = suffixPath(base, hash.slice(0, 8));
+    for (let length = 12; occupied.has(candidate.toLowerCase()) && length <= hash.length; length += 4) {
+      candidate = suffixPath(base, hash.slice(0, length));
+    }
+    for (let counter = 2; occupied.has(candidate.toLowerCase()); counter += 1) {
+      candidate = suffixPath(base, `${hash}-${counter}`);
+    }
+    occupied.add(candidate.toLowerCase());
+    result.set(original, candidate);
+  }
+
+  const distinct = new Set([...result.values()].map((value) => value.toLowerCase()));
+  if (distinct.size !== result.size) {
+    throw new Error('Portable attachment name mapping produced duplicate targets — this is a bug.');
+  }
+  return result;
+}
+
 function suffixPath(path: string, suffix: string): string {
   const slash = path.lastIndexOf('/');
   const dir = slash === -1 ? '' : path.slice(0, slash + 1);

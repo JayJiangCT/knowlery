@@ -67,12 +67,26 @@ export interface BundleInput {
   activity: ActivityRecord[];
 }
 
-export interface BundleFile {
+/**
+ * Exactly-one payload, unrepresentable-wrong (spec 1.3.1 f1, §4.4): a text
+ * entry cannot carry bytes, a byte entry cannot carry content — an optional
+ * `bytes` beside a required `content` could not express a binary-only
+ * entry, and a both-set entry must not typecheck.
+ */
+export type BundlePayload =
+  | { content: string; bytes?: never }
+  | { bytes: Uint8Array; content?: never };
+
+export type BundleFile = BundlePayload & {
   path: string;
-  content: string;
   frontmatter?: OkfFrontmatter;
   sourceConceptId?: string;
-  kind: 'concept' | 'reference' | 'index' | 'log' | 'manifest' | 'agent-index' | 'readme' | 'source';
+  kind: 'concept' | 'reference' | 'index' | 'log' | 'manifest' | 'agent-index' | 'readme' | 'source' | 'attachment';
+};
+
+/** Narrows the payload union to the text lane. */
+export function isTextBundleFile<T extends BundlePayload>(file: T): file is T & { content: string } {
+  return typeof (file as { content?: unknown }).content === 'string';
 }
 
 export interface FrontmatterMapResult {

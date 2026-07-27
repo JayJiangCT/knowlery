@@ -4,7 +4,7 @@ import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
 import type { CompileResult, ExportScopeFile, ReviewStatus, RiskHint } from '../types';
-import { buildClosure, readExportScope, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, exportTargetDir, readExportScope, resumeExportDefaults, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
 import { scanRisks } from '../core/okf/risk-scan';
 import { compileBundle } from '../core/okf/compile';
 import {
@@ -34,6 +34,7 @@ function bundleSourceFor(plugin: KnowleryPlugin): BundleSource {
 }
 import { zipBundleDirectory } from '../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
+import { ATTACHMENT_TOTAL_WARN_BYTES, formatBytes } from '../core/okf/attachments';
 import { computeGraphLayout } from './export-graph';
 import { IconCheck, IconDownload, IconSearch, IconX } from '../views/Icons';
 
@@ -66,6 +67,7 @@ const RISK_LABEL: Record<RiskHint['kind'], string> = {
 interface PickerEntry {
   id: string;
   title?: string;
+  lastVersion?: string;
   seedNames: string[];
   approved: number;
   flagged: number;
@@ -77,6 +79,7 @@ function pickerEntryFrom(id: string, bundle: ExportScopeFile['bundles'][string])
   return {
     id,
     title: bundle.title,
+    lastVersion: bundle.lastVersion,
     seedNames: bundle.seeds.map((seed) => seed.split('/').pop() ?? seed),
     approved: statuses.filter((item) => item.status === 'approved').length,
     flagged: statuses.filter((item) => item.status === 'flagged').length,
@@ -161,7 +164,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const [license, setLicense] = useState(plugin.settings.bundleDefaultLicense);
   const [creatorName, setCreatorName] = useState(plugin.settings.bundleCreatorName);
   const [creatorUrl, setCreatorUrl] = useState(plugin.settings.bundleCreatorUrl);
-  const [targetDir, setTargetDir] = useState(`.knowlery/exports/${defaultBundleId}-0.1.0`);
+  const [targetDir, setTargetDir] = useState(exportTargetDir(defaultBundleId, '0.1.0'));
   const [includeSchema, setIncludeSchema] = useState(true);
   const [includeFullLog, setIncludeFullLog] = useState(false);
   const [includeSources, setIncludeSources] = useState(false);
@@ -280,6 +283,13 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const resumeBundle = (entry: PickerEntry) => {
     setBundleId(entry.id);
     if (entry.title) setTitle(entry.title);
+    // Version and target dir come from the RESUMED bundle's state
+    // (acceptance round 3: they once stayed derived from the default
+    // bundle id, so a resumed export wrote into — and with overwrite,
+    // clobbered — another bundle's directory).
+    const defaults = resumeExportDefaults({ lastVersion: entry.lastVersion }, entry.id);
+    setVersion(defaults.version);
+    setTargetDir(defaults.targetDir);
     setPhase('scope');
   };
 
@@ -289,13 +299,43 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
     const id = sanitizeBundleId(creatorName, name);
     setBundleId(id);
     setTitle(name);
-    setTargetDir(`.knowlery/exports/${id}-${version}`);
+    setTargetDir(exportTargetDir(id, version));
     setPhase('scope');
   };
 
   const runExport = async () => {
     setExporting(true);
     try {
+      // The shared pre-export gate (spec 1.3.1 f1, acceptance round): flush
+      // the debounced review state, rebuild the closure fresh — recomputed
+      // hashes revert any approval whose file changed while this modal sat
+      // open — and compile from the GATE's approved sets, never from React
+      // state. Without this, a re-screenshotted attachment ships bytes
+      // nobody reviewed, with matching manifest hashes.
+      if (persistTimer.current !== null) {
+        window.clearTimeout(persistTimer.current);
+        persistTimer.current = null;
+      }
+      if (latestScope.current) await persistScope(latestScope.current);
+      const freshClosure = await buildClosure(bundleSourceFor(plugin), bundleId, seeds, maxCompiledHops);
+      const gate = evaluateExportGate(freshClosure);
+      if (!gate.ready) {
+        setClosure(freshClosure);
+        setItems(freshClosure.items);
+        // Back to the review phase — the refusal's fix lives there, and the
+        // fresh closure's `changed` markers are already visible in the list.
+        setPhase('scope');
+        const changed = gate.unreviewed.filter((item) => item.reviewNote === 'changed');
+        if (gate.ambiguous.length > 0) {
+          new Notice(`Ambiguous attachment embed(s): ${gate.ambiguous.map((issue) => `![[${issue.target}]]`).join(', ')} — embed the fuller path so the export knows which file you mean.`);
+        } else if (changed.length > 0) {
+          new Notice(`${changed.length} item(s) changed since review — their approvals were invalidated. Re-review the items marked "changed".`);
+        } else {
+          new Notice(`${gate.unreviewed.length} item(s) still need review.`);
+        }
+        return;
+      }
+
       const compileResult = await compileBundle(bundleSourceFor(plugin), {
         targetDir,
         bundleId,
@@ -306,8 +346,9 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
         includeSchema,
         includeFullLog,
         includeSources,
-        approvedConceptIds: items.filter((item) => item.kind === 'concept' && item.status === 'approved').map((item) => item.id),
-        approvedRawPaths: items.filter((item) => item.kind === 'raw' && item.status === 'approved').map((item) => item.id),
+        approvedConceptIds: gate.approvedConceptIds,
+        approvedRawPaths: gate.approvedRawPaths,
+        approvedAttachmentPaths: gate.approvedAttachmentPaths,
         overwrite: true,
       });
       setResult(compileResult);
@@ -428,11 +469,17 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
             <div className="knowlery-export__confirm-col">
               <div className="knowlery-export__col-label">Bundle metadata (prefilled)</div>
               <TextField label="Title" value={title} onChange={setTitle} />
-              <TextField label="Bundle id" value={bundleId} onChange={setBundleId} />
+              <TextField label="Bundle id" value={bundleId} onChange={(next) => {
+                setBundleId(next);
+                // Same staleness class as the resume bug: metadata edits
+                // re-derive the target; the folder field stays editable for
+                // deliberate overrides.
+                setTargetDir(exportTargetDir(next, version));
+              }} />
               <div className="knowlery-export__field-row">
                 <TextField label="Version" value={version} onChange={(next) => {
                   setVersion(next);
-                  setTargetDir(`.knowlery/exports/${bundleId}-${next}`);
+                  setTargetDir(exportTargetDir(bundleId, next));
                 }} />
                 <TextField label="License" value={license} onChange={setLicense} />
               </div>
@@ -559,6 +606,31 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
             <div style={{ inlineSize: `${items.length ? Math.round((counts.approved / items.length) * 100) : 0}%` }} />
           </div>
 
+          {closure && closure.embedIssues.ambiguous.length > 0 && (
+            <div className="knowlery-export__callout">
+              Ambiguous attachment embed(s) — the export will refuse until the embed names the fuller path:
+              {closure.embedIssues.ambiguous.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  {issue.owner}: <code>![[{issue.target}]]</code> matches {issue.candidates.join(', ')}
+                </div>
+              ))}
+            </div>
+          )}
+          {closure && (closure.embedIssues.missing.length > 0 || closure.embedIssues.unsupported.length > 0) && (
+            <div className="knowlery-export__footer-note">
+              {closure.embedIssues.missing.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  note: {issue.owner} embeds <code>![[{issue.target}]]</code> which does not exist — it will ship unresolved.
+                </div>
+              ))}
+              {closure.embedIssues.unsupported.map((issue) => (
+                <div key={`${issue.owner}:${issue.target}`}>
+                  note: {issue.owner} embeds <code>![[{issue.target}]]</code> — extension not in the attachment allowlist; skipped.
+                </div>
+              ))}
+            </div>
+          )}
+
           <section className="knowlery-export__workspace">
             <div className="knowlery-export__main">
               {loading ? (
@@ -589,12 +661,23 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
 
           <div className="knowlery-export__footer">
             <span className="knowlery-export__footer-note">
-              Progress is saved automatically — you can close and come back. Unreviewed and flagged items simply won't ship.
+              Progress is saved automatically — you can close and come back. Every item needs a decision before
+              export: approved items ship, flagged items don't.
             </span>
             <button
               type="button"
               className="knowlery-btn knowlery-btn--primary"
-              disabled={loading || counts.approved === 0}
+              disabled={
+                loading
+                || counts.approved === 0
+                || counts.unreviewed > 0
+                || (closure?.embedIssues.ambiguous.length ?? 0) > 0
+              }
+              title={counts.unreviewed > 0
+                ? `${counts.unreviewed} item(s) still need review`
+                : (closure?.embedIssues.ambiguous.length ?? 0) > 0
+                  ? 'Ambiguous attachment embeds must be fixed first'
+                  : undefined}
               onClick={() => setPhase('confirm')}
             >
               Continue — export {counts.approved} item{counts.approved === 1 ? '' : 's'}
@@ -686,6 +769,10 @@ function ListView(props: {
     Number(props.risksByItem.has(b.id)) - Number(props.risksByItem.has(a.id)) || a.title.localeCompare(b.title);
   const compiled = filtered.filter((item) => item.kind === 'concept').sort(riskFirst);
   const raw = filtered.filter((item) => item.kind === 'raw').sort(riskFirst);
+  const attachments = filtered.filter((item) => item.kind === 'attachment').sort(riskFirst);
+  const attachmentTotalBytes = props.items
+    .filter((item) => item.kind === 'attachment')
+    .reduce((sum, item) => sum + (item.sizeBytes ?? 0), 0);
 
   return (
     <div className="knowlery-export__list">
@@ -716,6 +803,19 @@ function ListView(props: {
         <Row key={item.id} item={item} risks={props.risksByItem.get(item.id)} selected={props.selectedId === item.id} onSelect={props.onSelect} onStatus={props.onStatus} />
       ))}
 
+      {attachments.length > 0 && (
+        <div className="knowlery-export__section-label">
+          Attachments ({formatBytes(attachmentTotalBytes)} total)
+          {attachmentTotalBytes > ATTACHMENT_TOTAL_WARN_BYTES && ' — large bundle; consider flagging heavyweight media'}
+        </div>
+      )}
+      {attachments.length > 0 && (
+        <div className="knowlery-export__empty">binary content — no scanner reads pixels; review with your eyes.</div>
+      )}
+      {attachments.map((item) => (
+        <Row key={item.id} item={item} risks={props.risksByItem.get(item.id)} selected={props.selectedId === item.id} onSelect={props.onSelect} onStatus={props.onStatus} />
+      ))}
+
       {filtered.length === 0 && <div className="knowlery-export__empty">No items match this filter.</div>}
     </div>
   );
@@ -729,9 +829,11 @@ function Row(props: {
   onStatus: (id: string, status: ReviewStatus) => void;
 }) {
   const { item } = props;
-  const typeLetter = item.kind === 'raw'
-    ? 'R'
-    : TYPE_LETTER[frontmatterText(item.frontmatter.type, '').toLowerCase()] ?? 'C';
+  const typeLetter = item.kind === 'attachment'
+    ? 'A'
+    : item.kind === 'raw'
+      ? 'R'
+      : TYPE_LETTER[frontmatterText(item.frontmatter.type, '').toLowerCase()] ?? 'C';
 
   return (
     <div
@@ -757,7 +859,9 @@ function Row(props: {
           {item.reviewNote === 'new' && <em className="knowlery-export__tag is-new">new</em>}
         </TruncatableText>
         <span className="knowlery-export__row-meta">
-          {item.kind === 'raw' ? item.path : frontmatterText(item.frontmatter.domain, item.path)}
+          {item.kind === 'attachment'
+            ? `${item.path} · ${formatBytes(item.sizeBytes ?? 0)} · embedded by ${item.citedBy.join(', ')}`
+            : item.kind === 'raw' ? item.path : frontmatterText(item.frontmatter.domain, item.path)}
           {props.risks?.map((risk) => (
             <em key={`${risk.kind}-${risk.evidence}`} className="knowlery-export__risk" title={risk.evidence}>
               ⚠ {RISK_LABEL[risk.kind]}

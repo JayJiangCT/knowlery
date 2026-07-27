@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { createMemoryFs } from '../mocks/memory-fs';
 import { executeSetup } from '../../src/core/setup-executor';
 import {
@@ -62,6 +63,35 @@ describe('1.0.0 state files parse with the live schemas — forever', () => {
       knowleryVersion: '1.0.0',
       conceptCount: 1,
     })).not.toThrow();
+  });
+
+  // Spec 1.3.1 f1, §5.8/§5.10 — the discriminated attachments invariant,
+  // asserted against the real shipped schema (never a test-local replica).
+  it('knowlery-bundle.json schemaVersion 2 requires non-empty attachments; v1 forbids the key', () => {
+    const base = {
+      okfVersion: '0.1',
+      id: 'creator.topic',
+      title: 'Topic',
+      version: '1.0.0',
+      creator: { name: 'Creator', url: '' },
+      releasedAt: '2026-07-08T00:00:00.000Z',
+      entrypoint: 'index.md',
+      contentHash: 'sha256-abc',
+      license: 'personal',
+      knowleryVersion: '1.3.1',
+      conceptCount: 1,
+    };
+    const record = { path: '_attachments/flow.png', bytes: 4, sha256: 'sha256-def' };
+
+    expect(() => BundleManifestSchema.parse({ schemaVersion: 2, attachments: [record], ...base })).not.toThrow();
+    // Negative pair: v1 carrying attachments must fail (z.object() would
+    // silently strip it without the explicit never — the probe finding),
+    // and v2 without a non-empty list must fail.
+    expect(() => BundleManifestSchema.parse({ schemaVersion: 1, attachments: [record], ...base })).toThrow();
+    expect(() => BundleManifestSchema.parse({ schemaVersion: 2, ...base })).toThrow();
+    expect(() => BundleManifestSchema.parse({ schemaVersion: 2, attachments: [], ...base })).toThrow();
+    // The exact refusal pre-1.3.1 readers execute: their schema pins literal 1.
+    expect(() => z.object({ schemaVersion: z.literal(1) }).parse({ schemaVersion: 2 })).toThrow();
   });
 
   it('registry.json (schemaVersion 1) and the name grammar', () => {

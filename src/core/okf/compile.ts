@@ -15,8 +15,12 @@ import { buildBundleManifest } from './manifest';
 import { checkConformance } from './conformance';
 import { buildReadme, buildSourceCopy } from './bundle-docs';
 import { scopeSchemaToBundle } from './schema-scope';
-import { collectRawBodyUnresolvedLinks, convertWikilinks } from './wikilink';
-import { buildPortableSourcePathMap, findBundleIdPortabilityProblems, findPathPortabilityIssues } from './portability';
+import { collectRawBodyUnresolvedLinks, convertAttachmentEmbedsInBody, convertWikilinks, type AttachmentLinkMap } from './wikilink';
+import { buildFlatPortableNameMap, buildPortableSourcePathMap, findBundleIdPortabilityProblems, findPathPortabilityIssues } from './portability';
+import { buildAttachmentIndex, collectAttachmentEmbedTargets } from './attachments';
+import { sha256Bytes } from './hash';
+import type { BundleAttachmentRecord } from '../../types';
+import { posix } from 'path';
 
 export async function compileBundle(source: BundleSource, rawOptions: CompileOptions, now = new Date()): Promise<CompileResult> {
   const options = CompileOptionsSchema.parse(rawOptions);
@@ -37,9 +41,34 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
   // provenance (`knowlery_raw_path`) keeps the original vault path.
   const sourceBundlePaths = buildPortableSourcePathMap(rawSources.map((raw) => toPosixPath(raw.path)));
   const bundleSourcePath = (path: string): string => {
-    const posix = toPosixPath(path);
-    return sourceBundlePaths.get(posix) ?? posix;
+    const posixPath = toPosixPath(path);
+    return sourceBundlePaths.get(posixPath) ?? posixPath;
   };
+
+  // Shipped attachments (spec 1.3.1 f1, §4.3): approved by review AND
+  // embedded by at least one approved page or approved raw source — a
+  // flagged owner's attachments never ship through it.
+  const attachmentIndex = await buildAttachmentIndex(source.fs, source.configDir);
+  const approvedAttachmentPaths = new Set(options.approvedAttachmentPaths.map(toPosixPath));
+  const shippedAttachmentPaths = new Set<string>();
+  const approvedBodies = [...pages.map((page) => page.body), ...rawSources.map((raw) => raw.body)];
+  for (const body of approvedBodies) {
+    for (const target of collectAttachmentEmbedTargets(body)) {
+      const resolution = attachmentIndex.resolve(target);
+      if (resolution.kind === 'path' && approvedAttachmentPaths.has(resolution.path)) {
+        shippedAttachmentPaths.add(resolution.path);
+      }
+    }
+  }
+  const attachmentNames = buildFlatPortableNameMap([...shippedAttachmentPaths]);
+  const attachmentLinkMap: AttachmentLinkMap = {
+    resolveTarget: (target) => {
+      const resolution = attachmentIndex.resolve(target);
+      return resolution.kind === 'path' && shippedAttachmentPaths.has(resolution.path) ? resolution.path : null;
+    },
+    bundleNameByVaultPath: attachmentNames,
+  };
+
   const files: BundleFile[] = [];
   const indexEntries: IndexEntryInput[] = [];
   const unresolvedLinks: UnresolvedLink[] = [];
@@ -51,7 +80,7 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
   for (const page of pages) {
     const mapped = mapFrontmatterToOkf(page, { includeSources: options.includeSources });
     collectTaxonomyUsage(mapped.frontmatter, usedTags, usedDomains);
-    const converted = convertWikilinks(page, approvedConceptIds, approvedRawPaths, sourceBundlePaths);
+    const converted = convertWikilinks(page, approvedConceptIds, approvedRawPaths, sourceBundlePaths, attachmentLinkMap);
     wikilinksConverted += converted.converted;
     unresolvedLinks.push(...converted.unresolved);
     files.push({
@@ -73,12 +102,27 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
   }
 
   for (const raw of rawSources) {
-    unresolvedLinks.push(...collectRawBodyUnresolvedLinks(raw, bundleSourcePath(raw.path)));
+    // Attachment embeds in the copy rewrite depth-aware from the copy's
+    // own emitted directory (spec §4.3); rewritten embeds are md links and
+    // correctly drop out of the unresolved list.
+    const copyDir = posix.dirname(`_sources/${bundleSourcePath(raw.path)}`);
+    const rewritten = convertAttachmentEmbedsInBody(raw.body, copyDir, attachmentLinkMap);
+    wikilinksConverted += rewritten.converted;
+    const rawForCopy = { ...raw, body: rewritten.body };
+    unresolvedLinks.push(...collectRawBodyUnresolvedLinks(rawForCopy, bundleSourcePath(raw.path)));
     files.push({
       path: `_sources/${bundleSourcePath(raw.path)}`,
-      content: buildSourceCopy(raw),
+      content: buildSourceCopy(rawForCopy),
       kind: 'source',
     });
+  }
+
+  const attachmentRecords: BundleAttachmentRecord[] = [];
+  for (const vaultPath of [...shippedAttachmentPaths].sort()) {
+    const name = attachmentNames.get(vaultPath)!;
+    const bytes = new Uint8Array(await source.fs.readBinary(normalizeVaultPath(vaultPath)));
+    files.push({ path: `_attachments/${name}`, bytes, kind: 'attachment' });
+    attachmentRecords.push({ path: `_attachments/${name}`, bytes: bytes.byteLength, sha256: sha256Bytes(bytes) });
   }
 
   if (options.includeSchema) {
@@ -126,6 +170,7 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
     knowleryVersion: '1.3.0',
     conceptCount: files.filter((file) => file.kind === 'concept').length,
     files,
+    attachments: attachmentRecords,
   });
 
   files.push({ path: 'README.md', content: buildReadme(manifest), kind: 'readme' });
@@ -207,7 +252,8 @@ async function writeBundleFiles(fs: VaultFs, targetDir: string, files: BundleFil
     for (const file of files) {
       const fullPath = join(targetDir, file.path);
       await mkdir(dirname(fullPath), { recursive: true });
-      await writeFsFile(fullPath, file.content, 'utf8');
+      if (file.bytes !== undefined) await writeFsFile(fullPath, file.bytes);
+      else await writeFsFile(fullPath, file.content, 'utf8');
     }
     return;
   }
@@ -221,8 +267,13 @@ async function writeBundleFiles(fs: VaultFs, targetDir: string, files: BundleFil
     const path = normalizeVaultPath(`${normalizedTarget}/${file.path}`);
     assertSafeWritePath(path);
     await ensureVaultDir(fs, dirname(path));
-    await fs.write(path, file.content);
+    if (file.bytes !== undefined) await fs.writeBinary(path, toArrayBuffer(file.bytes));
+    else await fs.write(path, file.content);
   }
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
 function buildReferenceFile(path: string, content: string, title: string): BundleFile {

@@ -5,11 +5,12 @@ import { normalizeVaultPath } from '../vault-fs';
 import { collectBundleInputs, readRawDependency, type BundleSource } from './collect';
 import type { PageRecord, RawDependency } from './shared';
 import { DEFAULT_MAX_COMPILED_HOPS, EXPORT_SCOPE_PATH, isKnowledgePath, toPosixPath } from './shared';
-import { sha256 } from './hash';
+import { sha256, sha256Bytes } from './hash';
+import { buildAttachmentIndex, collectAttachmentEmbedTargets, collectUnsupportedEmbedTargets } from './attachments';
 
 export interface ScopeItem {
   id: string;
-  kind: 'concept' | 'raw';
+  kind: 'concept' | 'raw' | 'attachment';
   title: string;
   path: string;
   body: string;
@@ -19,6 +20,8 @@ export interface ScopeItem {
   status: ReviewStatus;
   contentHash: string;
   contentHashAtReview: string | null;
+  /** Attachment items only: the file's byte size, for checklist display. */
+  sizeBytes?: number;
   /**
    * Incremental-review note (§8.2 callouts): 'new' = entered the closure
    * since the last saved scope; 'changed' = had a saved approval/flag that
@@ -27,11 +30,23 @@ export interface ScopeItem {
   reviewNote: 'new' | 'changed' | null;
 }
 
+/**
+ * Embed problems surfaced at scope build (spec 1.3.1 f1, §4.1) —
+ * presentation-level, never persisted: ambiguity refuses the export,
+ * missing and unsupported targets become checklist notes.
+ */
+export interface EmbedIssues {
+  ambiguous: Array<{ owner: string; target: string; candidates: string[] }>;
+  missing: Array<{ owner: string; target: string }>;
+  unsupported: Array<{ owner: string; target: string }>;
+}
+
 export interface ScopeClosure {
   pages: PageRecord[];
   rawDependencies: RawDependency[];
   items: ScopeItem[];
   edges: Array<{ from: string; to: string; kind: 'compiled' | 'raw' }>;
+  embedIssues: EmbedIssues;
 }
 
 export async function buildClosure(
@@ -82,8 +97,97 @@ export async function buildClosure(
     ...rawDependencies.map((raw) => itemFromRaw(raw, persistedItems[raw.path], hasSavedScope)),
   ];
 
+  // Attachment discovery (spec 1.3.1 f1, §4.1): embeds of in-scope items,
+  // resolved through the shared index. Owner statuses are known at this
+  // point — an attachment whose every owner is flagged never enters scope
+  // (flagging a page flags its evidence trail with it).
+  const statusById = new Map(items.map((item) => [item.id, item.status]));
+  const attachmentIndex = await buildAttachmentIndex(source.fs, source.configDir);
+  const owners = new Map<string, Set<string>>();
+  const embedIssues: EmbedIssues = { ambiguous: [], missing: [], unsupported: [] };
+  const embedSources: Array<{ ownerId: string; body: string }> = [
+    ...Array.from(included.values()).map((page) => ({ ownerId: page.conceptId, body: page.body })),
+    ...rawDependencies.map((raw) => ({ ownerId: raw.path, body: raw.body })),
+  ];
+  const seenIssues = new Set<string>();
+  for (const { ownerId, body } of embedSources) {
+    if (statusById.get(ownerId) === 'flagged') continue;
+    for (const target of collectAttachmentEmbedTargets(body)) {
+      const resolution = attachmentIndex.resolve(target);
+      if (resolution.kind === 'path') {
+        if (!owners.has(resolution.path)) owners.set(resolution.path, new Set());
+        owners.get(resolution.path)!.add(ownerId);
+      } else if (seenIssues.add(`${ownerId}:${target}`)) {
+        if (resolution.kind === 'ambiguous') embedIssues.ambiguous.push({ owner: ownerId, target, candidates: resolution.candidates });
+        else embedIssues.missing.push({ owner: ownerId, target });
+      }
+    }
+    for (const target of collectUnsupportedEmbedTargets(body)) {
+      if (seenIssues.add(`${ownerId}:${target}`)) embedIssues.unsupported.push({ owner: ownerId, target });
+    }
+  }
+
+  for (const [path, citedBy] of [...owners.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    const item = await attachmentItem(source.fs, path, Array.from(citedBy).sort(), persistedItems[path], hasSavedScope);
+    if (item) items.push(item);
+  }
+
   items.sort((a, b) => a.title.localeCompare(b.title));
-  return { pages: Array.from(included.values()), rawDependencies, items, edges };
+  return { pages: Array.from(included.values()), rawDependencies, items, edges, embedIssues };
+}
+
+/**
+ * The shared pre-export gate (spec 1.3.1 f1, acceptance round: one gate,
+ * both shells). Pure evaluation over a closure — the caller must pass a
+ * closure built AFTER the latest review-state persist, because freshness
+ * is the whole point: buildClosure recomputes content hashes, so an
+ * approval whose file changed (a re-screenshotted attachment, an edited
+ * page) has already been reverted to unreviewed/`changed` by the time
+ * this gate looks. A shell that compiles from its own cached UI state
+ * instead of the gate's approved sets recreates the ships-unreviewed-bytes
+ * hole this exists to close.
+ */
+export interface ExportGateResult {
+  ready: boolean;
+  ambiguous: EmbedIssues['ambiguous'];
+  unreviewed: ScopeItem[];
+  approvedConceptIds: string[];
+  approvedRawPaths: string[];
+  approvedAttachmentPaths: string[];
+}
+
+export function evaluateExportGate(closure: ScopeClosure): ExportGateResult {
+  const unreviewed = closure.items.filter((item) => item.status === 'unreviewed');
+  const approved = closure.items.filter((item) => item.status === 'approved');
+  const ambiguous = closure.embedIssues.ambiguous;
+  return {
+    ready: unreviewed.length === 0 && ambiguous.length === 0,
+    ambiguous,
+    unreviewed,
+    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
+    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
+    approvedAttachmentPaths: approved.filter((item) => item.kind === 'attachment').map((item) => item.id),
+  };
+}
+
+/** Canonical export target for a bundle+version — the single derivation both shells use. */
+export function exportTargetDir(bundleId: string, version: string): string {
+  return `.knowlery/exports/${bundleId}-${version}`;
+}
+
+/**
+ * Resume defaults (acceptance round 3): resuming a saved bundle must
+ * restore version and target dir from ITS state — the modal's resume flow
+ * once kept the defaults derived from the initial bundle id, so a resumed
+ * `creator.acceptance.f1` exported into `creator.my.knowledge.base-0.1.0`
+ * and, with overwrite, could clobber another bundle's export.
+ */
+export function resumeExportDefaults(
+  saved: { lastVersion?: string } | undefined,
+  bundleId: string,
+): { version: string; targetDir: string } {
+  const version = saved?.lastVersion ?? '0.1.0';
+  return { version, targetDir: exportTargetDir(bundleId, version) };
 }
 
 export async function readExportScope(fs: VaultFs): Promise<ExportScopeFile> {
@@ -184,6 +288,45 @@ function itemFromPage(page: PageRecord, persisted: PersistedItem | undefined, ha
     status,
     contentHash: page.contentHash,
     contentHashAtReview: status === 'unreviewed' ? null : page.contentHash,
+    reviewNote,
+  };
+}
+
+/**
+ * Attachment scope item (spec 1.3.1 f1, §4.2): exactly the persisted
+ * fields every item has — status and contentHashAtReview, here computed
+ * over the bytes, so a re-exported screenshot invalidates its approval
+ * like an edited page. No new scope-state fields, no migration.
+ */
+async function attachmentItem(
+  fs: VaultFs,
+  path: string,
+  citedBy: string[],
+  persisted: PersistedItem | undefined,
+  hasSavedScope: boolean,
+): Promise<ScopeItem | null> {
+  let data: ArrayBuffer;
+  try {
+    data = await fs.readBinary(normalizeVaultPath(path));
+  } catch {
+    return null;
+  }
+  const bytes = new Uint8Array(data);
+  const contentHash = sha256Bytes(bytes);
+  const { status, reviewNote } = effectiveStatus(contentHash, persisted, hasSavedScope);
+  return {
+    id: path,
+    kind: 'attachment',
+    title: path.split('/').pop() ?? path,
+    path,
+    body: '',
+    frontmatter: {},
+    citedBy,
+    isSeed: false,
+    status,
+    contentHash,
+    contentHashAtReview: status === 'unreviewed' ? null : contentHash,
+    sizeBytes: bytes.byteLength,
     reviewNote,
   };
 }

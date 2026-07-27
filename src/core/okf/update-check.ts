@@ -1,7 +1,7 @@
 import type { VaultFs } from '../vault-fs';
 import type { InstalledBundleEntry } from '../../types';
 import { compareVersions, readInstalledBundles } from './registry';
-import { sha256 } from './hash';
+import { sha256, sha256Bytes } from './hash';
 import { upstreamFor, type UpstreamDeps } from './upstream';
 
 /**
@@ -52,11 +52,20 @@ export async function updateStatusFor(id: string, entry: InstalledBundleEntry, d
 export async function modifiedFiles(fs: VaultFs, entry: InstalledBundleEntry): Promise<string[]> {
   const root = entry.libraryPath.replace(/\/$/, '');
   const files: Array<{ path: string; content: string }> = [];
+  // Attachments hash on the byte lane (spec 1.3.1 f1, §4.4): a consumer who
+  // annotated a shipped diagram gets the same protective refusal as an
+  // edited page. Non-md files without a recorded hash are ignored (user
+  // additions next to a pre-1.3.1 bundle are not "modifications").
+  const byteHashes = new Map<string, string>();
   async function walk(dir: string): Promise<void> {
     const listing = await fs.list(dir).catch(() => ({ files: [], folders: [] }));
     for (const file of listing.files) {
-      if (!file.endsWith('.md')) continue;
-      files.push({ path: file.slice(root.length + 1), content: await fs.read(file) });
+      const relPath = file.slice(root.length + 1);
+      if (file.endsWith('.md')) {
+        files.push({ path: relPath, content: await fs.read(file) });
+      } else if (entry.fileHashes && entry.fileHashes[relPath] !== undefined) {
+        byteHashes.set(relPath, sha256Bytes(new Uint8Array(await fs.readBinary(file))));
+      }
     }
     for (const folder of listing.folders) await walk(folder);
   }
@@ -70,6 +79,10 @@ export async function modifiedFiles(fs: VaultFs, entry: InstalledBundleEntry): P
       const recorded = entry.fileHashes[file.path];
       if (recorded === undefined) changed.push(`${root}/${file.path} (added)`);
       else if (recorded !== sha256(file.content)) changed.push(`${root}/${file.path} (edited)`);
+    }
+    for (const [path, liveHash] of byteHashes) {
+      seen.add(path);
+      if (entry.fileHashes[path] !== liveHash) changed.push(`${root}/${path} (edited)`);
     }
     for (const path of Object.keys(entry.fileHashes)) {
       if (!seen.has(path)) changed.push(`${root}/${path} (deleted)`);

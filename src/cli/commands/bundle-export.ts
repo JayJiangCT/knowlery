@@ -4,11 +4,12 @@ import type { VaultFs } from '../../core/vault-fs';
 import type { BundleSource } from '../../core/okf/collect';
 import { collectBundleInputs } from '../../core/okf/collect';
 import { buildHeadlessLinkResolver } from '../../core/okf/link-resolver';
-import { buildClosure, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, exportTargetDir, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
 import { scanRisks } from '../../core/okf/risk-scan';
 import { compileBundle } from '../../core/okf/compile';
 import { zipBundleDirectory } from '../../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, sanitizeBundleId } from '../../core/okf/shared';
+import { ATTACHMENT_TOTAL_WARN_BYTES, formatBytes } from '../../core/okf/attachments';
 import { CliError } from './shared';
 
 /**
@@ -60,8 +61,23 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
   const scope = await resolveScope(fs, options.seed, { hops: options.hops, creator: options.creator });
   await persistScope(fs, scope);
 
-  const unreviewed = scope.closure.items.filter((item) => item.status === 'unreviewed');
-  if (unreviewed.length > 0) {
+  // The shared pre-export gate (spec 1.3.1 f1) — the identical evaluation
+  // the Obsidian modal runs; the closure here is fresh by construction.
+  const gate = evaluateExportGate(scope.closure);
+
+  // Ambiguous attachment embeds refuse the export (spec 1.3.1 f1, §4.1):
+  // deterministic like every refusal here — the fix is the creator's.
+  if (gate.ambiguous.length > 0) {
+    const lines = gate.ambiguous.map(
+      (issue) => `  ${issue.owner}: ![[${issue.target}]] matches ${issue.candidates.join(', ')}`,
+    );
+    throw new CliError(
+      `Ambiguous attachment embed(s) — embed the fuller path so the export knows which file you mean:\n${lines.join('\n')}`,
+      1,
+    );
+  }
+
+  if (gate.unreviewed.length > 0) {
     printChecklist(scope, { json: options.json, log: options.log, jsonStatus: 'review-required' });
     if (!options.json) {
       options.log('');
@@ -69,7 +85,7 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
       options.log(`  knowlery bundle review ${options.seed} --approve <id>... [--flag <id>...]`);
       options.log('(or review in Obsidian: Share knowledge bundle — same saved scope)');
     }
-    throw new CliError(`${unreviewed.length} item(s) unreviewed — nothing was exported.`, 1);
+    throw new CliError(`${gate.unreviewed.length} item(s) unreviewed — nothing was exported.`, 1);
   }
 
   const version = options.bundleVersion ?? '0.1.0';
@@ -194,8 +210,25 @@ async function resolveSeed(source: BundleSource, seedInput: string): Promise<str
 
 /** The export compile step, shared with publish (spec 0.9 f2, §4.1 step 2). */
 export async function compileScope(scope: ResolvedScope, version: string, creator?: string) {
-  const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
-  const approved = scope.closure.items.filter((item) => item.status === 'approved');
+  const targetDir = exportTargetDir(scope.bundleId, version);
+  // The gate is enforced HERE, not only in the callers (acceptance round 2:
+  // publish checked unreviewed items but skipped the ambiguity refusal, so
+  // a reviewed scope with an ambiguous embed could be zipped and released).
+  // Every compile path — export, publish, future callers — inherits the
+  // refusal; callers with richer UX refuse earlier with better output.
+  const gate = evaluateExportGate(scope.closure);
+  if (gate.ambiguous.length > 0) {
+    const lines = gate.ambiguous.map(
+      (issue) => `  ${issue.owner}: ![[${issue.target}]] matches ${issue.candidates.join(', ')}`,
+    );
+    throw new CliError(
+      `Ambiguous attachment embed(s) — embed the fuller path so the export knows which file you mean:\n${lines.join('\n')}`,
+      1,
+    );
+  }
+  if (gate.unreviewed.length > 0) {
+    throw new CliError(`${gate.unreviewed.length} item(s) unreviewed — nothing was compiled.`, 1);
+  }
   return compileBundle(scope.source, {
     targetDir,
     bundleId: scope.bundleId,
@@ -206,8 +239,9 @@ export async function compileScope(scope: ResolvedScope, version: string, creato
     includeSchema: true,
     includeFullLog: false,
     includeSources: false,
-    approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
-    approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
+    approvedConceptIds: gate.approvedConceptIds,
+    approvedRawPaths: gate.approvedRawPaths,
+    approvedAttachmentPaths: gate.approvedAttachmentPaths,
     overwrite: true,
   });
 }
@@ -227,6 +261,8 @@ export function printChecklist(
   options: { json?: boolean; log: (line: string) => void; jsonStatus: 'checklist' | 'review-required' },
 ): void {
   const counts = countStatuses(scope.closure.items);
+  const attachmentItems = scope.closure.items.filter((item) => item.kind === 'attachment');
+  const attachmentTotalBytes = attachmentItems.reduce((sum, item) => sum + (item.sizeBytes ?? 0), 0);
   if (options.json) {
     options.log(JSON.stringify({
       status: options.jsonStatus,
@@ -235,6 +271,9 @@ export function printChecklist(
       seeds: scope.seeds,
       maxCompiledHops: scope.maxCompiledHops,
       counts,
+      // Additive keys (spec 1.3.1 f1, §4.2) — existing keys unchanged.
+      attachmentTotalBytes,
+      embedIssues: scope.closure.embedIssues,
       items: scope.closure.items.map((item) => ({
         id: item.id,
         kind: item.kind,
@@ -244,6 +283,7 @@ export function printChecklist(
         isSeed: item.isSeed,
         reviewNote: item.reviewNote,
         citedBy: item.citedBy,
+        ...(item.kind === 'attachment' ? { bytes: item.sizeBytes ?? 0 } : {}),
         risks: (scope.risksByItem.get(item.id) ?? []).map((risk) => ({ kind: risk.kind, evidence: risk.evidence })),
       })),
     }, null, 2));
@@ -254,9 +294,26 @@ export function printChecklist(
   for (const item of scope.closure.items) {
     const marker = item.reviewNote ? `  <- ${item.reviewNote}` : '';
     const seedMark = item.isSeed ? ' (seed)' : '';
+    if (item.kind === 'attachment') {
+      options.log(`  [${item.status.padEnd(10)}] attachment ${item.id} (${formatBytes(item.sizeBytes ?? 0)}) — embedded by: ${item.citedBy.join(', ')}${marker}`);
+      options.log('               binary content — no scanner reads pixels; review with your eyes.');
+      continue;
+    }
     options.log(`  [${item.status.padEnd(10)}] ${item.kind.padEnd(7)} ${item.id} — ${item.title}${seedMark}${marker}`);
     for (const risk of scope.risksByItem.get(item.id) ?? []) {
       options.log(`               !! risk ${risk.kind}: ${risk.evidence}`);
+    }
+  }
+  for (const issue of scope.closure.embedIssues.missing) {
+    options.log(`  note: ${issue.owner} embeds ![[${issue.target}]] which does not exist — it will ship unresolved.`);
+  }
+  for (const issue of scope.closure.embedIssues.unsupported) {
+    options.log(`  note: ${issue.owner} embeds ![[${issue.target}]] — extension not in the attachment allowlist; skipped.`);
+  }
+  if (attachmentItems.length > 0) {
+    options.log(`  attachments total: ${formatBytes(attachmentTotalBytes)}`);
+    if (attachmentTotalBytes > ATTACHMENT_TOTAL_WARN_BYTES) {
+      options.log('  warning: large bundle — consider flagging heavyweight media.');
     }
   }
 }

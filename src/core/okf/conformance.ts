@@ -15,7 +15,9 @@ export function checkConformance(files: BundleFile[]): ConformanceReport {
     typeMismatch: { count: 0, pages: [] },
   };
 
-  for (const file of files.filter((entry) => entry.path.endsWith('.md'))) {
+  for (const file of files.filter(
+    (entry): entry is BundleFile & { content: string } => entry.path.endsWith('.md') && typeof entry.content === 'string',
+  )) {
     if (file.path === 'index.md' || file.path.endsWith('/index.md')) {
       validateReservedIndex(file, warnings);
       continue;
@@ -75,7 +77,7 @@ export function checkConformance(files: BundleFile[]): ConformanceReport {
   return { conformant: errors.length === 0, errors, warnings, fieldQuality };
 }
 
-function validateReservedIndex(file: BundleFile, warnings: ConformanceIssue[]): void {
+function validateReservedIndex(file: BundleFile & { content: string }, warnings: ConformanceIssue[]): void {
   if (!file.content.includes('# ')) {
     warnings.push(issue(file.path, 'weak-index', 'Index file has no heading.'));
   }
@@ -84,7 +86,7 @@ function validateReservedIndex(file: BundleFile, warnings: ConformanceIssue[]): 
   }
 }
 
-function validateReservedLog(file: BundleFile, warnings: ConformanceIssue[]): void {
+function validateReservedLog(file: BundleFile & { content: string }, warnings: ConformanceIssue[]): void {
   if (!file.content.includes('# Knowledge Update Log')) {
     warnings.push(issue(file.path, 'weak-log', 'Log file has no Knowledge Update Log heading.'));
   }
