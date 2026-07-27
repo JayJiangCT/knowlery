@@ -12,7 +12,7 @@ import { modifiedFiles } from '../../src/core/okf/update-check';
 import { readInstalledBundles } from '../../src/core/okf/registry';
 import { sha256Bytes } from '../../src/core/okf/hash';
 import { classifyEmbedTarget, buildAttachmentIndex } from '../../src/core/okf/attachments';
-import { evaluateExportGate } from '../../src/core/okf/export-scope';
+import { evaluateExportGate, exportTargetDir, readExportScope, resumeExportDefaults } from '../../src/core/okf/export-scope';
 import { buildFlatPortableNameMap } from '../../src/core/okf/portability';
 import { BundleManifestSchema, type BundleManifest } from '../../src/types';
 
@@ -381,6 +381,40 @@ describe('the shared pre-export gate', () => {
       expect(gate.ready).toBe(false);
       expect(gate.approvedRawPaths).toEqual([]);
     }, { 'a/flow.png': PNG_BYTES });
+  });
+});
+
+// Acceptance round 3 (P1): resuming a saved bundle must restore version and
+// target dir from ITS state — the modal once kept both derived from the
+// default bundle id, so a resumed export wrote into (and with overwrite,
+// clobbered) another bundle's directory. The close-modal → resume → export
+// path is pinned at the shared derivation both shells now use.
+describe('resume defaults (modal P1 regression)', () => {
+  it('restores lastVersion and the bundle-specific target dir from the saved scope', async () => {
+    await withVault(async (root, _workDir, fs) => {
+      await approveAll(fs, root);
+      const lines: string[] = [];
+      await runBundleExport(fs, { seed: 'drone-delivery', root, bundleVersion: '0.3.0', json: true, log: (l) => lines.push(l) });
+      const exported = JSON.parse(lines.join('\n')) as { bundleId: string; targetDir: string };
+
+      // "Close the modal": all that survives is the scope file. "Resume":
+      // read it back and derive the defaults the modal restores.
+      const saved = (await readExportScope(fs)).bundles[exported.bundleId];
+      expect(saved.lastVersion).toBe('0.3.0');
+      const defaults = resumeExportDefaults(saved, exported.bundleId);
+      expect(defaults.version).toBe('0.3.0');
+      expect(defaults.targetDir).toBe(exported.targetDir);
+      // Never the default-bundle directory the bug wrote into.
+      expect(defaults.targetDir).toContain(exported.bundleId);
+    });
+  });
+
+  it('a bundle without a recorded version falls back to 0.1.0 under its own id', () => {
+    expect(resumeExportDefaults(undefined, 'creator.acceptance.f1')).toEqual({
+      version: '0.1.0',
+      targetDir: '.knowlery/exports/creator.acceptance.f1-0.1.0',
+    });
+    expect(exportTargetDir('creator.acceptance.f1', '0.3.0')).toBe('.knowlery/exports/creator.acceptance.f1-0.3.0');
   });
 });
 

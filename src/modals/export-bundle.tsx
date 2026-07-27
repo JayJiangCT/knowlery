@@ -4,7 +4,7 @@ import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
 import { PluginContext, usePlugin } from '../context';
 import type { CompileResult, ExportScopeFile, ReviewStatus, RiskHint } from '../types';
-import { buildClosure, evaluateExportGate, readExportScope, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, exportTargetDir, readExportScope, resumeExportDefaults, writeBundleMeta, type ScopeClosure, type ScopeItem, writeExportScope } from '../core/okf/export-scope';
 import { scanRisks } from '../core/okf/risk-scan';
 import { compileBundle } from '../core/okf/compile';
 import {
@@ -67,6 +67,7 @@ const RISK_LABEL: Record<RiskHint['kind'], string> = {
 interface PickerEntry {
   id: string;
   title?: string;
+  lastVersion?: string;
   seedNames: string[];
   approved: number;
   flagged: number;
@@ -78,6 +79,7 @@ function pickerEntryFrom(id: string, bundle: ExportScopeFile['bundles'][string])
   return {
     id,
     title: bundle.title,
+    lastVersion: bundle.lastVersion,
     seedNames: bundle.seeds.map((seed) => seed.split('/').pop() ?? seed),
     approved: statuses.filter((item) => item.status === 'approved').length,
     flagged: statuses.filter((item) => item.status === 'flagged').length,
@@ -162,7 +164,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const [license, setLicense] = useState(plugin.settings.bundleDefaultLicense);
   const [creatorName, setCreatorName] = useState(plugin.settings.bundleCreatorName);
   const [creatorUrl, setCreatorUrl] = useState(plugin.settings.bundleCreatorUrl);
-  const [targetDir, setTargetDir] = useState(`.knowlery/exports/${defaultBundleId}-0.1.0`);
+  const [targetDir, setTargetDir] = useState(exportTargetDir(defaultBundleId, '0.1.0'));
   const [includeSchema, setIncludeSchema] = useState(true);
   const [includeFullLog, setIncludeFullLog] = useState(false);
   const [includeSources, setIncludeSources] = useState(false);
@@ -281,6 +283,13 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
   const resumeBundle = (entry: PickerEntry) => {
     setBundleId(entry.id);
     if (entry.title) setTitle(entry.title);
+    // Version and target dir come from the RESUMED bundle's state
+    // (acceptance round 3: they once stayed derived from the default
+    // bundle id, so a resumed export wrote into — and with overwrite,
+    // clobbered — another bundle's directory).
+    const defaults = resumeExportDefaults({ lastVersion: entry.lastVersion }, entry.id);
+    setVersion(defaults.version);
+    setTargetDir(defaults.targetDir);
     setPhase('scope');
   };
 
@@ -290,7 +299,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
     const id = sanitizeBundleId(creatorName, name);
     setBundleId(id);
     setTitle(name);
-    setTargetDir(`.knowlery/exports/${id}-${version}`);
+    setTargetDir(exportTargetDir(id, version));
     setPhase('scope');
   };
 
@@ -460,11 +469,17 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
             <div className="knowlery-export__confirm-col">
               <div className="knowlery-export__col-label">Bundle metadata (prefilled)</div>
               <TextField label="Title" value={title} onChange={setTitle} />
-              <TextField label="Bundle id" value={bundleId} onChange={setBundleId} />
+              <TextField label="Bundle id" value={bundleId} onChange={(next) => {
+                setBundleId(next);
+                // Same staleness class as the resume bug: metadata edits
+                // re-derive the target; the folder field stays editable for
+                // deliberate overrides.
+                setTargetDir(exportTargetDir(next, version));
+              }} />
               <div className="knowlery-export__field-row">
                 <TextField label="Version" value={version} onChange={(next) => {
                   setVersion(next);
-                  setTargetDir(`.knowlery/exports/${bundleId}-${next}`);
+                  setTargetDir(exportTargetDir(bundleId, next));
                 }} />
                 <TextField label="License" value={license} onChange={setLicense} />
               </div>

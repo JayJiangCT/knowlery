@@ -170,6 +170,26 @@ export function evaluateExportGate(closure: ScopeClosure): ExportGateResult {
   };
 }
 
+/** Canonical export target for a bundle+version — the single derivation both shells use. */
+export function exportTargetDir(bundleId: string, version: string): string {
+  return `.knowlery/exports/${bundleId}-${version}`;
+}
+
+/**
+ * Resume defaults (acceptance round 3): resuming a saved bundle must
+ * restore version and target dir from ITS state — the modal's resume flow
+ * once kept the defaults derived from the initial bundle id, so a resumed
+ * `creator.acceptance.f1` exported into `creator.my.knowledge.base-0.1.0`
+ * and, with overwrite, could clobber another bundle's export.
+ */
+export function resumeExportDefaults(
+  saved: { lastVersion?: string } | undefined,
+  bundleId: string,
+): { version: string; targetDir: string } {
+  const version = saved?.lastVersion ?? '0.1.0';
+  return { version, targetDir: exportTargetDir(bundleId, version) };
+}
+
 export async function readExportScope(fs: VaultFs): Promise<ExportScopeFile> {
   const path = normalizeVaultPath(EXPORT_SCOPE_PATH);
   if (!(await fs.exists(path))) return { schemaVersion: 1, bundles: {} };

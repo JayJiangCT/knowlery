@@ -4,7 +4,7 @@ import type { VaultFs } from '../../core/vault-fs';
 import type { BundleSource } from '../../core/okf/collect';
 import { collectBundleInputs } from '../../core/okf/collect';
 import { buildHeadlessLinkResolver } from '../../core/okf/link-resolver';
-import { buildClosure, evaluateExportGate, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
+import { buildClosure, evaluateExportGate, exportTargetDir, readExportScope, writeBundleMeta, writeExportScope, type ScopeClosure, type ScopeItem } from '../../core/okf/export-scope';
 import { scanRisks } from '../../core/okf/risk-scan';
 import { compileBundle } from '../../core/okf/compile';
 import { zipBundleDirectory } from '../../core/okf/zip';
@@ -210,7 +210,7 @@ async function resolveSeed(source: BundleSource, seedInput: string): Promise<str
 
 /** The export compile step, shared with publish (spec 0.9 f2, §4.1 step 2). */
 export async function compileScope(scope: ResolvedScope, version: string, creator?: string) {
-  const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
+  const targetDir = exportTargetDir(scope.bundleId, version);
   // The gate is enforced HERE, not only in the callers (acceptance round 2:
   // publish checked unreviewed items but skipped the ambiguity refusal, so
   // a reviewed scope with an ambiguous embed could be zipped and released).

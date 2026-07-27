@@ -343,6 +343,20 @@ refusal, priced honestly:
    the stricter gate — every item needs a decision before export;
    Continue disables on unreviewed items or ambiguous embeds.
 
+9. **Acceptance round 3 caught the resume flow writing into the wrong
+   directory**: `resumeBundle()` restored only id/title, leaving
+   version/targetDir derived from the *default* bundle id — a resumed
+   `creator.acceptance.f1` exported into
+   `creator.my.knowledge.base-0.1.0`, and `overwrite: true` could clobber
+   that bundle's export. Fixed with shared derivations in core
+   (`exportTargetDir`, `resumeExportDefaults`): resume restores version
+   from the saved `lastVersion` and the target dir from the resumed id;
+   the CLI's `compileScope` uses the same derivation; editing the Bundle
+   id in the confirm form now re-derives the target too (same staleness
+   class). Regression pinned at the derivation: export at 0.3.0 → read
+   the scope back ("close the modal") → resume defaults equal the
+   recorded target dir, never the default bundle's.
+
 ## 7. Maintainer self-test checklist (acceptance round)
 
 1. In a real vault: embed an image in a knowledge page, export — the
