@@ -167,7 +167,7 @@ export async function compileBundle(source: BundleSource, rawOptions: CompileOpt
     license: options.license,
     // Stamped metadata only (nothing gates on it) — part of the release-prep
     // lockstep bump alongside manifest.json / package.json / versions.json.
-    knowleryVersion: '1.3.0',
+    knowleryVersion: '1.3.1',
     conceptCount: files.filter((file) => file.kind === 'concept').length,
     files,
     attachments: attachmentRecords,
