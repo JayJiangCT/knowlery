@@ -34,10 +34,13 @@ compiled pages, and the sharing loop must not greet that with dead links.
 4. **The binary lane** (§4.4): bytes survive export → zip → download →
    install byte-identically, and participate in local-modification
    detection on update.
-5. **Backward/forward compatibility** (§4.5): attachment-free bundles are
-   byte-identical to today's output; old Knowlery versions install
-   attachment-bearing bundles without corruption (they skip what they don't
-   know); the bundle-format change is additive under the 1.0 contract.
+5. **Compatibility without silent corruption** (§4.5): attachment-free
+   bundles stay `schemaVersion: 1`, byte-identical to today's output; an
+   attachment-bearing bundle declares `schemaVersion: 2`, which every
+   older Knowlery **refuses whole at the manifest gate before any write**
+   — old versions never corrupt, at the honestly-priced cost of a
+   receivers-need-≥1.3.1 boundary. The version↔attachments relationship
+   is a schema-enforced invariant, not a convention.
 
 ## 3. Non-goals
 
@@ -82,10 +85,11 @@ compiled pages, and the sharing loop must not greet that with dead links.
 ### 4.2 Review: the third item kind
 
 - `ScopeItem` gains `kind: 'attachment'` alongside `concept | raw`. Scope
-  state (`.knowlery/export-scope.json`) stores it like any item: status,
-  reviewedAt, and **`contentHashAtReview` computed over the bytes** — a
-  re-exported screenshot that changed invalidates its approval exactly like
-  an edited page.
+  state (`.knowlery/export-scope.json`) stores exactly the fields it
+  stores for every item today — `status` and **`contentHashAtReview`,
+  here computed over the bytes** — a re-exported screenshot that changed
+  invalidates its approval exactly like an edited page. No new scope
+  fields, no migration.
 - **Checklist presentation** (CLI `review --list [--json]` and the Obsidian
   modal): attachments show `[attachment]`, the vault path, the byte size
   (human units), and which approved item(s) embed them. A fixed line
@@ -129,19 +133,36 @@ compiled pages, and the sharing loop must not greet that with dead links.
   vault's originals are never edited; `_sources/` copies are already
   transformed artifacts (1.2.7 renames them for portability), and a copy
   that ships broken embeds serves nobody.
-- **Manifest** (`knowlery-bundle.json`) gains one **optional** field:
-  `attachments: [{ path, bytes, sha256 }]`. The existing `contentHash`
-  computation is **untouched** (md-only, backward compatible); attachment
-  integrity rides the per-file hashes. Absent field ≡ no attachments —
-  today's bundles parse unchanged.
+- **Manifest** (`knowlery-bundle.json`): the version↔attachments
+  relationship is a **schema-enforced discriminated invariant**, not an
+  optional field that happens to correlate:
+
+  ```ts
+  z.discriminatedUnion('schemaVersion', [
+    z.object({ schemaVersion: z.literal(1), /* today's fields; no attachments key */ }),
+    z.object({ schemaVersion: z.literal(2), attachments: z.array(AttachmentRecord).nonempty(), /* + today's fields */ }),
+  ])
+  ```
+
+  Version 1 with an `attachments` key **fails to parse**; version 2
+  without a non-empty one **fails to parse** — a merely-optional field on
+  an accepted 1–2 range could quietly recreate the very corruption path
+  §4.5 closes. `AttachmentRecord = { path, bytes, sha256 }`. The existing
+  `contentHash` computation is **untouched** (md-only); attachment
+  integrity rides the per-file hashes.
 
 ### 4.4 The binary lane
 
 The FS layer already has it (`VaultFs.readBinary`/`writeBinary`, both
 platforms); the gaps are the pipeline types:
 
-- `BundleFile`/`BundleSourceEntry` gain an optional `bytes?: Uint8Array`;
-  `content: string` remains the md lane. Exactly one of the two is set.
+- `BundleFile`/`BundleSourceEntry` become a **discriminated union that
+  makes "exactly one payload" unrepresentable rather than aspirational**:
+  `{ content: string; bytes?: never } | { bytes: Uint8Array;
+  content?: never }` — an optional `bytes` beside a required `content`
+  cannot express a binary-only entry, and a both-set entry must not
+  typecheck. Text entries are the md lane; byte entries are the
+  attachment lane.
 - **Zip**: write path already streams Buffers; the read path
   (`readBundleEntries`) decides by extension — `.md` and the known text
   files decode as UTF-8, everything else stays bytes. Directory sources
@@ -231,13 +252,17 @@ refusal, priced honestly:
 7. **Containment**: a hostile entry `_attachments/../../evil.png` refuses
    before any write (existing assertion, now exercised with a bytes
    entry).
-8. **Compatibility both ways**: attachment-free export byte-identical to
-   pre-change output including `schemaVersion: 1` (fixture diff);
-   attachment-bearing manifest carries `schemaVersion: 2` and **fails
-   the pre-1.3.1 schema** (asserted by parsing it with
-   `z.literal(1)` — the exact refusal old versions execute); new code
-   parses both; installed registry entry for an attachment-free bundle
-   is unchanged.
+8. **Compatibility both ways, invariant enforced**: attachment-free
+   export byte-identical to pre-change output including
+   `schemaVersion: 1` (fixture diff); attachment-bearing manifest
+   carries `schemaVersion: 2` and **fails the pre-1.3.1 schema**
+   (asserted by parsing it with `z.literal(1)` — the exact refusal old
+   versions execute); new code parses both valid forms; installed
+   registry entry for an attachment-free bundle is unchanged. **Negative
+   pair for the discriminated invariant**: a version-1 manifest carrying
+   an `attachments` key fails to parse, and a version-2 manifest with a
+   missing or empty `attachments` array fails to parse — the invariant
+   is the schema's, not a convention's.
 9. **Update path**: locally-modified attachment blocks `bundle update`
    with the file listed; unmodified updates flow through.
 10. **Contract**: format-contract test extended for the schemaVersion
