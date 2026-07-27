@@ -9,6 +9,7 @@ import { scanRisks } from '../../core/okf/risk-scan';
 import { compileBundle } from '../../core/okf/compile';
 import { zipBundleDirectory } from '../../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, sanitizeBundleId } from '../../core/okf/shared';
+import { ATTACHMENT_TOTAL_WARN_BYTES, formatBytes } from '../../core/okf/attachments';
 import { CliError } from './shared';
 
 /**
@@ -59,6 +60,18 @@ export async function runBundleExport(fs: VaultFs, options: ExportCommandOptions
   }
   const scope = await resolveScope(fs, options.seed, { hops: options.hops, creator: options.creator });
   await persistScope(fs, scope);
+
+  // Ambiguous attachment embeds refuse the export (spec 1.3.1 f1, §4.1):
+  // deterministic like every refusal here — the fix is the creator's.
+  if (scope.closure.embedIssues.ambiguous.length > 0) {
+    const lines = scope.closure.embedIssues.ambiguous.map(
+      (issue) => `  ${issue.owner}: ![[${issue.target}]] matches ${issue.candidates.join(', ')}`,
+    );
+    throw new CliError(
+      `Ambiguous attachment embed(s) — embed the fuller path so the export knows which file you mean:\n${lines.join('\n')}`,
+      1,
+    );
+  }
 
   const unreviewed = scope.closure.items.filter((item) => item.status === 'unreviewed');
   if (unreviewed.length > 0) {
@@ -208,6 +221,7 @@ export async function compileScope(scope: ResolvedScope, version: string, creato
     includeSources: false,
     approvedConceptIds: approved.filter((item) => item.kind === 'concept').map((item) => item.id),
     approvedRawPaths: approved.filter((item) => item.kind === 'raw').map((item) => item.id),
+    approvedAttachmentPaths: approved.filter((item) => item.kind === 'attachment').map((item) => item.id),
     overwrite: true,
   });
 }
@@ -227,6 +241,8 @@ export function printChecklist(
   options: { json?: boolean; log: (line: string) => void; jsonStatus: 'checklist' | 'review-required' },
 ): void {
   const counts = countStatuses(scope.closure.items);
+  const attachmentItems = scope.closure.items.filter((item) => item.kind === 'attachment');
+  const attachmentTotalBytes = attachmentItems.reduce((sum, item) => sum + (item.sizeBytes ?? 0), 0);
   if (options.json) {
     options.log(JSON.stringify({
       status: options.jsonStatus,
@@ -235,6 +251,9 @@ export function printChecklist(
       seeds: scope.seeds,
       maxCompiledHops: scope.maxCompiledHops,
       counts,
+      // Additive keys (spec 1.3.1 f1, §4.2) — existing keys unchanged.
+      attachmentTotalBytes,
+      embedIssues: scope.closure.embedIssues,
       items: scope.closure.items.map((item) => ({
         id: item.id,
         kind: item.kind,
@@ -244,6 +263,7 @@ export function printChecklist(
         isSeed: item.isSeed,
         reviewNote: item.reviewNote,
         citedBy: item.citedBy,
+        ...(item.kind === 'attachment' ? { bytes: item.sizeBytes ?? 0 } : {}),
         risks: (scope.risksByItem.get(item.id) ?? []).map((risk) => ({ kind: risk.kind, evidence: risk.evidence })),
       })),
     }, null, 2));
@@ -254,9 +274,26 @@ export function printChecklist(
   for (const item of scope.closure.items) {
     const marker = item.reviewNote ? `  <- ${item.reviewNote}` : '';
     const seedMark = item.isSeed ? ' (seed)' : '';
+    if (item.kind === 'attachment') {
+      options.log(`  [${item.status.padEnd(10)}] attachment ${item.id} (${formatBytes(item.sizeBytes ?? 0)}) — embedded by: ${item.citedBy.join(', ')}${marker}`);
+      options.log('               binary content — no scanner reads pixels; review with your eyes.');
+      continue;
+    }
     options.log(`  [${item.status.padEnd(10)}] ${item.kind.padEnd(7)} ${item.id} — ${item.title}${seedMark}${marker}`);
     for (const risk of scope.risksByItem.get(item.id) ?? []) {
       options.log(`               !! risk ${risk.kind}: ${risk.evidence}`);
+    }
+  }
+  for (const issue of scope.closure.embedIssues.missing) {
+    options.log(`  note: ${issue.owner} embeds ![[${issue.target}]] which does not exist — it will ship unresolved.`);
+  }
+  for (const issue of scope.closure.embedIssues.unsupported) {
+    options.log(`  note: ${issue.owner} embeds ![[${issue.target}]] — extension not in the attachment allowlist; skipped.`);
+  }
+  if (attachmentItems.length > 0) {
+    options.log(`  attachments total: ${formatBytes(attachmentTotalBytes)}`);
+    if (attachmentTotalBytes > ATTACHMENT_TOTAL_WARN_BYTES) {
+      options.log('  warning: large bundle — consider flagging heavyweight media.');
     }
   }
 }

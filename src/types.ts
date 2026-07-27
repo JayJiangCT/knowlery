@@ -196,8 +196,14 @@ export const OkfFrontmatterSchema = z.object({
 }).passthrough();
 export type OkfFrontmatter = z.infer<typeof OkfFrontmatterSchema>;
 
-export const BundleManifestSchema = z.object({
-  schemaVersion: z.literal(1),
+export const BundleAttachmentRecordSchema = z.object({
+  path: z.string().min(1),
+  bytes: z.number().int().nonnegative(),
+  sha256: z.string().min(1),
+});
+export type BundleAttachmentRecord = z.infer<typeof BundleAttachmentRecordSchema>;
+
+const bundleManifestBaseShape = {
   okfVersion: z.string(),
   id: z.string().min(1),
   title: z.string().min(1),
@@ -212,7 +218,32 @@ export const BundleManifestSchema = z.object({
   license: z.string(),
   knowleryVersion: z.string(),
   conceptCount: z.number().int().nonnegative(),
-});
+} as const;
+
+/**
+ * The version↔attachments relationship is a schema-enforced discriminated
+ * invariant (spec 1.3.1 f1, §4.3): version 1 must not carry attachments,
+ * version 2 must carry a non-empty list. The v1 branch forbids the key
+ * explicitly — z.object() strips unknown keys silently, so without
+ * `z.never().optional()` a v1 manifest carrying attachments would parse
+ * and drop the field (review probe confirmed). Explicit never over
+ * .strict(): it forbids exactly this key while keeping tolerance for
+ * unrelated future keys. Pre-1.3.1 readers pin `schemaVersion: 1`, so a
+ * version-2 bundle refuses whole at their manifest gate — nothing
+ * corrupts (§4.5).
+ */
+export const BundleManifestSchema = z.discriminatedUnion('schemaVersion', [
+  z.object({
+    schemaVersion: z.literal(1),
+    attachments: z.never().optional(),
+    ...bundleManifestBaseShape,
+  }),
+  z.object({
+    schemaVersion: z.literal(2),
+    attachments: z.array(BundleAttachmentRecordSchema).nonempty(),
+    ...bundleManifestBaseShape,
+  }),
+]);
 export type BundleManifest = z.infer<typeof BundleManifestSchema>;
 
 export const UnresolvedLinkSchema = z.object({
@@ -371,6 +402,7 @@ export const CompileOptionsSchema = z.object({
   includeSources: z.boolean().default(false),
   approvedConceptIds: z.array(z.string()).default([]),
   approvedRawPaths: z.array(z.string()).default([]),
+  approvedAttachmentPaths: z.array(z.string()).default([]),
   overwrite: z.boolean().default(false),
 });
 export type CompileOptions = z.infer<typeof CompileOptionsSchema>;

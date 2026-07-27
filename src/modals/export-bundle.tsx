@@ -34,6 +34,7 @@ function bundleSourceFor(plugin: KnowleryPlugin): BundleSource {
 }
 import { zipBundleDirectory } from '../core/okf/zip';
 import { DEFAULT_MAX_COMPILED_HOPS, conceptIdFromPath, isKnowledgePath, sanitizeBundleId } from '../core/okf/shared';
+import { ATTACHMENT_TOTAL_WARN_BYTES, formatBytes } from '../core/okf/attachments';
 import { computeGraphLayout } from './export-graph';
 import { IconCheck, IconDownload, IconSearch, IconX } from '../views/Icons';
 
@@ -308,6 +309,7 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
         includeSources,
         approvedConceptIds: items.filter((item) => item.kind === 'concept' && item.status === 'approved').map((item) => item.id),
         approvedRawPaths: items.filter((item) => item.kind === 'raw' && item.status === 'approved').map((item) => item.id),
+        approvedAttachmentPaths: items.filter((item) => item.kind === 'attachment' && item.status === 'approved').map((item) => item.id),
         overwrite: true,
       });
       setResult(compileResult);
@@ -686,6 +688,10 @@ function ListView(props: {
     Number(props.risksByItem.has(b.id)) - Number(props.risksByItem.has(a.id)) || a.title.localeCompare(b.title);
   const compiled = filtered.filter((item) => item.kind === 'concept').sort(riskFirst);
   const raw = filtered.filter((item) => item.kind === 'raw').sort(riskFirst);
+  const attachments = filtered.filter((item) => item.kind === 'attachment').sort(riskFirst);
+  const attachmentTotalBytes = props.items
+    .filter((item) => item.kind === 'attachment')
+    .reduce((sum, item) => sum + (item.sizeBytes ?? 0), 0);
 
   return (
     <div className="knowlery-export__list">
@@ -716,6 +722,19 @@ function ListView(props: {
         <Row key={item.id} item={item} risks={props.risksByItem.get(item.id)} selected={props.selectedId === item.id} onSelect={props.onSelect} onStatus={props.onStatus} />
       ))}
 
+      {attachments.length > 0 && (
+        <div className="knowlery-export__section-label">
+          Attachments ({formatBytes(attachmentTotalBytes)} total)
+          {attachmentTotalBytes > ATTACHMENT_TOTAL_WARN_BYTES && ' — large bundle; consider flagging heavyweight media'}
+        </div>
+      )}
+      {attachments.length > 0 && (
+        <div className="knowlery-export__empty">binary content — no scanner reads pixels; review with your eyes.</div>
+      )}
+      {attachments.map((item) => (
+        <Row key={item.id} item={item} risks={props.risksByItem.get(item.id)} selected={props.selectedId === item.id} onSelect={props.onSelect} onStatus={props.onStatus} />
+      ))}
+
       {filtered.length === 0 && <div className="knowlery-export__empty">No items match this filter.</div>}
     </div>
   );
@@ -729,9 +748,11 @@ function Row(props: {
   onStatus: (id: string, status: ReviewStatus) => void;
 }) {
   const { item } = props;
-  const typeLetter = item.kind === 'raw'
-    ? 'R'
-    : TYPE_LETTER[frontmatterText(item.frontmatter.type, '').toLowerCase()] ?? 'C';
+  const typeLetter = item.kind === 'attachment'
+    ? 'A'
+    : item.kind === 'raw'
+      ? 'R'
+      : TYPE_LETTER[frontmatterText(item.frontmatter.type, '').toLowerCase()] ?? 'C';
 
   return (
     <div
@@ -757,7 +778,9 @@ function Row(props: {
           {item.reviewNote === 'new' && <em className="knowlery-export__tag is-new">new</em>}
         </TruncatableText>
         <span className="knowlery-export__row-meta">
-          {item.kind === 'raw' ? item.path : frontmatterText(item.frontmatter.domain, item.path)}
+          {item.kind === 'attachment'
+            ? `${item.path} · ${formatBytes(item.sizeBytes ?? 0)} · embedded by ${item.citedBy.join(', ')}`
+            : item.kind === 'raw' ? item.path : frontmatterText(item.frontmatter.domain, item.path)}
           {props.risks?.map((risk) => (
             <em key={`${risk.kind}-${risk.evidence}`} className="knowlery-export__risk" title={risk.evidence}>
               ⚠ {RISK_LABEL[risk.kind]}

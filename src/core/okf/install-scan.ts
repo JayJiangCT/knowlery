@@ -5,10 +5,10 @@ import { BUNDLE_MARKER, toPosixPath } from './shared';
 import { checkConformance } from './conformance';
 import { findBundleIdPortabilityProblems, findPathPortabilityIssues, type PortabilityIssue } from './portability';
 
-export interface BundleSourceEntry {
-  path: string;
-  content: string;
-}
+/** Mirrors zip.ts's union (structurally identical — the modules stay decoupled). */
+export type BundleSourceEntry =
+  | { path: string; content: string; bytes?: never }
+  | { path: string; bytes: Uint8Array; content?: never };
 
 export interface InstallPreview {
   manifest: BundleManifest;
@@ -65,14 +65,14 @@ export function inferBundleFileKind(path: string): BundleFile['kind'] {
 
 export function previewInstall(entries: BundleSourceEntry[]): InstallPreview {
   const manifestEntry = entries.find((entry) => toPosixPath(entry.path) === BUNDLE_MARKER);
-  if (!manifestEntry) {
+  if (!manifestEntry || manifestEntry.content === undefined) {
     throw new Error(`Not a knowledge bundle: missing ${BUNDLE_MARKER} at the bundle root.`);
   }
   const manifest = BundleManifestSchema.parse(JSON.parse(manifestEntry.content));
   assertSafeBundleId(manifest.id);
 
   const bundleFiles: BundleFile[] = entries
-    .filter((entry) => entry.path.endsWith('.md'))
+    .filter((entry): entry is BundleSourceEntry & { content: string } => entry.path.endsWith('.md') && entry.content !== undefined)
     .map((entry) => {
       const path = toPosixPath(entry.path);
       return { path, content: entry.content, kind: inferBundleFileKind(path) };

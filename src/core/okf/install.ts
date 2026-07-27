@@ -1,11 +1,11 @@
 import { dirname } from 'path';
-import type { RiskHint } from '../../types';
+import type { BundleManifest, RiskHint } from '../../types';
 import type { BundleSourceEntry } from './install-scan';
 import { assertSafeInstallPath, previewInstall } from './install-scan';
 import { scanInstructionLike } from './risk-scan';
 import { readInstalledBundles, resolveInstallAction, writeInstalledBundles } from './registry';
 import { ensureInstalledBundlesBlock } from './knowledge-md-bundles';
-import { sha256 } from './hash';
+import { sha256, sha256Bytes } from './hash';
 import type { PortabilityIssue } from './portability';
 import type { VaultFs } from '../vault-fs';
 import { normalizeVaultPath } from '../vault-fs';
@@ -42,7 +42,7 @@ export interface InstallResult {
 }
 
 export class InstallBlockedError extends Error {
-  reason: 'blocked-version' | 'conformance-failed' | 'risk-hints' | 'incompatible-paths';
+  reason: 'blocked-version' | 'conformance-failed' | 'risk-hints' | 'incompatible-paths' | 'attachment-integrity';
   /** Populated for reason 'risk-hints' — the shell prints these verbatim. */
   riskHints: RiskHint[];
   /** Populated for reason 'incompatible-paths' — deliberately separate from riskHints. */
@@ -69,12 +69,52 @@ export class InstallBlockedError extends Error {
 export function scanIncomingBundleRisks(entries: BundleSourceEntry[]): RiskHint[] {
   const hints: RiskHint[] = [];
   for (const entry of entries) {
-    if (!entry.path.endsWith('.md')) continue;
+    if (!entry.path.endsWith('.md') || entry.content === undefined) continue;
     for (const evidence of scanInstructionLike(entry.content)) {
       hints.push({ itemId: entry.path, kind: 'instruction-like', evidence });
     }
   }
   return hints;
+}
+
+/**
+ * The attachment integrity gate (spec 1.3.1 f1, §4.4): before any write,
+ * every byte entry must match a manifest record on path, size, and sha256
+ * — and both ways: every record needs its entry, and no unlisted binary
+ * rides in the archive (nothing the reviewer never saw). Not skippable:
+ * `--skip-conformance` and `--acknowledge-risks` consent to known defects
+ * and reviewed content; a hash mismatch is tampering or corruption, and
+ * there is no informed consent to that.
+ */
+export function verifyAttachmentIntegrity(manifest: BundleManifest, entries: BundleSourceEntry[]): string[] {
+  const problems: string[] = [];
+  const byteEntries = entries.filter(
+    (entry): entry is BundleSourceEntry & { bytes: Uint8Array } => entry.bytes !== undefined,
+  );
+  const records = new Map(
+    (manifest.schemaVersion === 2 ? manifest.attachments : []).map((record) => [record.path, record]),
+  );
+
+  for (const entry of byteEntries) {
+    const record = records.get(entry.path);
+    if (!record) {
+      problems.push(`${entry.path}: binary entry not listed in the manifest (unlisted content cannot be installed)`);
+      continue;
+    }
+    if (entry.bytes.byteLength !== record.bytes) {
+      problems.push(`${entry.path}: size mismatch (${entry.bytes.byteLength} bytes vs ${record.bytes} in the manifest)`);
+    } else if (sha256Bytes(entry.bytes) !== record.sha256) {
+      problems.push(`${entry.path}: sha256 mismatch against the manifest (tampered or corrupted)`);
+    }
+  }
+
+  const present = new Set(byteEntries.map((entry) => entry.path));
+  for (const record of records.values()) {
+    if (!present.has(record.path)) {
+      problems.push(`${record.path}: listed in the manifest but missing from the bundle`);
+    }
+  }
+  return problems;
 }
 
 export async function installBundle(
@@ -134,12 +174,22 @@ export async function installBundle(
     );
   }
 
+  // The attachment integrity gate (spec 1.3.1 f1, §4.4) — pre-write and
+  // never skippable, unlike the two consent gates above.
+  const integrityProblems = verifyAttachmentIntegrity(manifest, entries);
+  if (integrityProblems.length > 0) {
+    throw new InstallBlockedError(
+      'attachment-integrity',
+      `${manifest.id} failed attachment integrity — nothing was written:\n${integrityProblems.map((problem) => `  - ${problem}`).join('\n')}`,
+    );
+  }
+
   const libraryDir = `Library/${manifest.id}`;
   // Path safety is asserted against the final destination; the staging dir is a
   // sibling under Library/ so the same containment argument covers it.
   const safeWrites = entries.map((entry) => ({
     relativePath: assertSafeInstallPath(libraryDir, entry.path).slice(`${libraryDir}/`.length),
-    content: entry.content,
+    entry,
   }));
 
   // Staged replacement (spec 0.9 f3, §4.3.5): the previous rmdir-then-write
@@ -153,10 +203,14 @@ export async function installBundle(
   await fs.rmdir(normalizeVaultPath(stagingDir), true).catch(() => { /* no stale staging */ });
 
   try {
-    for (const { relativePath, content } of safeWrites) {
+    for (const { relativePath, entry } of safeWrites) {
       const stagedPath = `${stagingDir}/${relativePath}`;
       await ensureVaultDir(fs, dirname(stagedPath));
-      await fs.write(normalizeVaultPath(stagedPath), content);
+      if (entry.bytes !== undefined) {
+        await fs.writeBinary(normalizeVaultPath(stagedPath), toArrayBuffer(entry.bytes));
+      } else {
+        await fs.write(normalizeVaultPath(stagedPath), entry.content);
+      }
     }
   } catch (error) {
     await fs.rmdir(normalizeVaultPath(stagingDir), true).catch(() => { /* best-effort cleanup */ });
@@ -179,16 +233,24 @@ export async function installBundle(
     await fs.rename(normalizeVaultPath(stagingDir), normalizeVaultPath(libraryDir));
   }
 
-  const mdEntries = entries.filter((entry) => entry.path.endsWith('.md'));
+  const mdEntries = entries.filter(
+    (entry): entry is BundleSourceEntry & { content: string } => entry.path.endsWith('.md') && entry.content !== undefined,
+  );
   const installedContentHash = sha256(
     mdEntries
       .map((entry) => `${entry.path}\n${entry.content}`)
       .sort()
       .join('\n'),
   );
-  const fileHashes = Object.fromEntries(
-    mdEntries.map((entry) => [entry.path, sha256(entry.content)]),
-  );
+  // Attachment hashes join fileHashes (same record shape, more keys), so
+  // bundle update's local-modification protection covers an annotated
+  // diagram exactly like an edited page (spec 1.3.1 f1, §4.4).
+  const fileHashes = Object.fromEntries([
+    ...mdEntries.map((entry) => [entry.path, sha256(entry.content)] as const),
+    ...entries
+      .filter((entry): entry is BundleSourceEntry & { bytes: Uint8Array } => entry.bytes !== undefined)
+      .map((entry) => [entry.path, sha256Bytes(entry.bytes)] as const),
+  ]);
 
   registry.bundles[manifest.id] = {
     version: manifest.version,
@@ -219,6 +281,10 @@ export async function installBundle(
     riskHints,
     portabilityIssues,
   };
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
 // Mirrors compile.ts's private ensureVaultDir (§6) — duplicated rather than
