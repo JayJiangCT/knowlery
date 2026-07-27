@@ -211,9 +211,24 @@ async function resolveSeed(source: BundleSource, seedInput: string): Promise<str
 /** The export compile step, shared with publish (spec 0.9 f2, §4.1 step 2). */
 export async function compileScope(scope: ResolvedScope, version: string, creator?: string) {
   const targetDir = `.knowlery/exports/${scope.bundleId}-${version}`;
-  // Approved sets come from the gate's evaluation of the fresh closure —
-  // the single derivation both shells compile from (spec 1.3.1 f1).
+  // The gate is enforced HERE, not only in the callers (acceptance round 2:
+  // publish checked unreviewed items but skipped the ambiguity refusal, so
+  // a reviewed scope with an ambiguous embed could be zipped and released).
+  // Every compile path — export, publish, future callers — inherits the
+  // refusal; callers with richer UX refuse earlier with better output.
   const gate = evaluateExportGate(scope.closure);
+  if (gate.ambiguous.length > 0) {
+    const lines = gate.ambiguous.map(
+      (issue) => `  ${issue.owner}: ![[${issue.target}]] matches ${issue.candidates.join(', ')}`,
+    );
+    throw new CliError(
+      `Ambiguous attachment embed(s) — embed the fuller path so the export knows which file you mean:\n${lines.join('\n')}`,
+      1,
+    );
+  }
+  if (gate.unreviewed.length > 0) {
+    throw new CliError(`${gate.unreviewed.length} item(s) unreviewed — nothing was compiled.`, 1);
+  }
   return compileBundle(scope.source, {
     targetDir,
     bundleId: scope.bundleId,

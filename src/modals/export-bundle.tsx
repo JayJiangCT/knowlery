@@ -313,6 +313,9 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
       if (!gate.ready) {
         setClosure(freshClosure);
         setItems(freshClosure.items);
+        // Back to the review phase — the refusal's fix lives there, and the
+        // fresh closure's `changed` markers are already visible in the list.
+        setPhase('scope');
         const changed = gate.unreviewed.filter((item) => item.reviewNote === 'changed');
         if (gate.ambiguous.length > 0) {
           new Notice(`Ambiguous attachment embed(s): ${gate.ambiguous.map((issue) => `![[${issue.target}]]`).join(', ')} — embed the fuller path so the export knows which file you mean.`);
@@ -643,12 +646,23 @@ function ExportBundleContent(props: { seedConceptId?: string; onClose: () => voi
 
           <div className="knowlery-export__footer">
             <span className="knowlery-export__footer-note">
-              Progress is saved automatically — you can close and come back. Unreviewed and flagged items simply won't ship.
+              Progress is saved automatically — you can close and come back. Every item needs a decision before
+              export: approved items ship, flagged items don't.
             </span>
             <button
               type="button"
               className="knowlery-btn knowlery-btn--primary"
-              disabled={loading || counts.approved === 0}
+              disabled={
+                loading
+                || counts.approved === 0
+                || counts.unreviewed > 0
+                || (closure?.embedIssues.ambiguous.length ?? 0) > 0
+              }
+              title={counts.unreviewed > 0
+                ? `${counts.unreviewed} item(s) still need review`
+                : (closure?.embedIssues.ambiguous.length ?? 0) > 0
+                  ? 'Ambiguous attachment embeds must be fixed first'
+                  : undefined}
               onClick={() => setPhase('confirm')}
             >
               Continue — export {counts.approved} item{counts.approved === 1 ? '' : 's'}

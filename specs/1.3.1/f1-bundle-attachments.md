@@ -331,6 +331,18 @@ refusal, priced honestly:
    knowlery-cli skill's review conduct names attachments, byte sizes, and
    the eyes-only limitation (content-asserted; plugin tree regenerated).
 
+8. **Acceptance round 2 moved the gate into `compileScope` itself**: the
+   publish path checked unreviewed items but skipped the ambiguity refusal
+   — a reviewed scope with an ambiguous embed could be zipped and
+   released. The gate is now enforced at the compile choke point (every
+   caller — export, publish, future ones — inherits the refusal; callers
+   with richer UX refuse earlier with better output), with a regression
+   test proving `gh` is never invoked. Also from the round: a failed
+   modal gate returns to the review phase (`setPhase('scope')`) with the
+   fresh `changed` markers visible, and the modal's copy/button now match
+   the stricter gate — every item needs a decision before export;
+   Continue disables on unreviewed items or ambiguous embeds.
+
 ## 7. Maintainer self-test checklist (acceptance round)
 
 1. In a real vault: embed an image in a knowledge page, export — the

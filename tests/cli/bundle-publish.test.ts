@@ -87,6 +87,35 @@ describe('publish safety properties (spec 0.9 f2, §5)', () => {
     });
   });
 
+  // Spec 1.3.1 f1 (acceptance round 2): publish must enforce the ambiguity
+  // refusal, not only the unreviewed count — the gate lives in compileScope,
+  // so a fully-reviewed scope with an ambiguous embed refuses before any
+  // gh invocation.
+  it('ambiguous attachment embed: exit 1 with candidates; gh never invoked', async () => {
+    await withVault(async (root) => {
+      await mkdir(join(root, 'a'), { recursive: true });
+      await mkdir(join(root, 'b'), { recursive: true });
+      await writeFile(join(root, 'a/flow.png'), new Uint8Array([1, 2, 3]));
+      await writeFile(join(root, 'b/flow.png'), new Uint8Array([4, 5, 6]));
+      const fs = nodeVaultFs(root);
+      await fs.write(
+        'concepts/drone-delivery.md',
+        VAULT_FILES['concepts/drone-delivery.md'].replace('Drones deliver packages', 'The flow: ![[flow.png]]. Drones deliver packages'),
+      );
+      await approveAll(root);
+
+      const gh = scriptedGh();
+      const error = await runBundlePublish(fs, {
+        seed: 'drone-delivery', root, repo: 'jay/shelf', prompt: null, log: silent, gh: gh.runner,
+      }).then(() => null, (thrown: unknown) => thrown);
+
+      expect(error).toBeInstanceOf(CliError);
+      expect((error as CliError).message).toContain('Ambiguous attachment embed');
+      expect((error as CliError).message).toContain('a/flow.png');
+      expect(gh.calls).toEqual([]);
+    });
+  });
+
   it('§5.2 public + risky approved items without acknowledgment: exit 1 listing them; no release call', async () => {
     await withVault(async (root) => {
       await approveAll(root);
