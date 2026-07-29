@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0] — 2026-07-29
+
+### MCP 2026-07-28 compatibility
+
+- Migrates the MCP implementation to the official TypeScript SDK v2 and Zod 4.
+- Serves both the modern MCP `2026-07-28` protocol and the legacy
+  `2025-11-25` protocol from the same stdio and HTTP entry points. Existing
+  client configuration, tools, prompts, resources, access flags, and bearer
+  authentication remain compatible.
+- Updates advertised JSON Schema documents to draft 2020-12 while preserving
+  the existing tool input and structured-output contract.
+- Raises the CLI runtime minimum to Node.js 20 and targets Node 20 in generated
+  Node bundles. The Obsidian plugin bundle remains separate from MCP runtime
+  dependencies.
+
 ## [1.3.1] — 2026-07-27
 
 ### Attachments travel with knowledge bundles

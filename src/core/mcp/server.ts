@@ -2,7 +2,7 @@ import { realpath } from 'node:fs/promises';
 import { readFile } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import { z } from 'zod';
-import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { listKbs, resolveKb, KbRegistryError } from '../kb-registry';
 import { runFederatedQuery } from '../federated-query';
 import { scanVault } from '../query/scan';
@@ -36,7 +36,7 @@ import { BUNDLED_SKILLS } from '../../assets/skills';
  */
 
 /** Exported for the version-coherence contract test (spec 1.0 f5, §5.3). */
-export const SERVER_INFO = { name: 'knowlery', version: '1.3.1' };
+export const SERVER_INFO = { name: 'knowlery', version: '1.4.0' };
 
 /** Skills whose content stands without Obsidian (spec 1.0 f2 §4.3, curated
  * set; knowlery-mcp added by spec 1.1 f2 §4.3 — the front-door skill). */
@@ -144,10 +144,8 @@ function ok(structured: Record<string, unknown>, text: string): ToolResult {
  * args fully typed at a fraction of the checking cost; the runtime call is
  * the SDK's own, unchanged.
  *
- * The input shape is wrapped `.strict()` before it reaches the SDK: handed a
- * raw shape, the SDK would normalize to a default `z.object(...)`, which
- * *strips* unknown keys — spec §4.1 requires them rejected (maintainer P2 at
- * implementation review).
+ * Both shapes are wrapped as Zod objects before they reach the SDK v2. The
+ * input object is strict because spec §4.1 requires unknown keys rejected.
  */
 function defineTool<Shape extends z.ZodRawShape>(
   server: McpServer,
@@ -155,9 +153,16 @@ function defineTool<Shape extends z.ZodRawShape>(
   config: { title: string; description: string; inputSchema: Shape; outputSchema: z.ZodRawShape },
   handler: (args: z.infer<z.ZodObject<Shape>>) => Promise<ToolResult>,
 ): void {
-  (server.registerTool as unknown as (n: string, c: unknown, cb: unknown) => void)(
+  const facade = server as unknown as {
+    registerTool: (n: string, c: unknown, cb: unknown) => void;
+  };
+  facade.registerTool(
     name,
-    { ...config, inputSchema: z.object(config.inputSchema).strict() },
+    {
+      ...config,
+      inputSchema: z.strictObject(config.inputSchema),
+      outputSchema: z.object(config.outputSchema),
+    },
     handler,
   );
 }
@@ -201,7 +206,7 @@ function registerTools(server: McpServer): void {
     },
     outputSchema: {
       verdict: z.string().optional(),
-      verdictByKb: z.record(z.string()).optional(),
+      verdictByKb: z.record(z.string(), z.string()).optional(),
       candidates: z.array(QueryCandidateSchema),
     },
   }, async ({ kb, question, k }) => {
@@ -244,8 +249,8 @@ function registerTools(server: McpServer): void {
     inputSchema: { kb: z.string() },
     outputSchema: {
       healthy: z.boolean(),
-      config: z.object({}).passthrough(),
-      knowledgePages: z.record(z.number()),
+      config: z.looseObject({}),
+      knowledgePages: z.record(z.string(), z.number()),
     },
   }, async ({ kb }) => {
     const root = await resolveKbOrThrow(kb);
@@ -260,7 +265,7 @@ function registerTools(server: McpServer): void {
     title: 'Installed bundles',
     description: 'Knowledge bundles installed in a KB, with version and source provenance.',
     inputSchema: { kb: z.string() },
-    outputSchema: { bundles: z.record(InstalledBundleEntrySchema) },
+    outputSchema: { bundles: z.record(z.string(), InstalledBundleEntrySchema) },
   }, async ({ kb }) => {
     const root = await resolveKbOrThrow(kb);
     const registry = await readInstalledBundles(nodeVaultFs(root));

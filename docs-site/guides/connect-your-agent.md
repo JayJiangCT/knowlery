@@ -226,5 +226,5 @@ In any connected client, ask:
 You should get the registry listing (or "No knowledge bases registered" on a
 fresh machine — then say "set up a knowledge base for me" and go from
 there). If the server doesn't appear at all: check JSON/TOML syntax, use
-absolute paths (the GUI PATH caveat above), and confirm Node.js ≥ 18 is
+absolute paths (the GUI PATH caveat above), and confirm Node.js ≥ 20 is
 installed.

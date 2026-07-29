@@ -15,7 +15,7 @@ MCP 客户端配置也可以直接用 npx 形式。安装是给想在终端里�
 
 ## macOS（及 Linux）
 
-**前提：** Node.js ≥ 18（`node -v` 检查；通过 [nodejs.org](https://nodejs.org)、
+**前提：** Node.js ≥ 20（`node -v` 检查；通过 [nodejs.org](https://nodejs.org)、
 Homebrew 或 nvm 安装）。
 
 **推荐——一行安装脚本：**
@@ -48,7 +48,7 @@ npm install -g knowlery
 
 ## Windows
 
-**前提：** Node.js ≥ 18——两种安装方式任选：
+**前提：** Node.js ≥ 20——两种安装方式任选：
 
 ```powershell
 winget install OpenJS.NodeJS.LTS

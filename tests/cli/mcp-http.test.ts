@@ -4,8 +4,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { realpath, stat, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { startMcpHttpServer, tokenMatches } from '../../src/core/mcp/http-server';
 import { resolveServeOptions } from '../../src/cli/commands/mcp';
 import { CliError } from '../../src/cli/commands/shared';
@@ -58,11 +57,14 @@ async function serve(access: McpAccess = {}): Promise<number> {
   return (server.address() as { port: number }).port;
 }
 
-async function connectHttp(port: number, token: string = TOKEN): Promise<Client> {
+async function connectHttp(port: number, token: string = TOKEN, modern = false): Promise<Client> {
   const transport = new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`), {
     requestInit: { headers: { Authorization: `Bearer ${token}` } },
   });
-  const client = new Client({ name: 'http-test', version: '0.0.0' });
+  const client = new Client(
+    { name: 'http-test', version: '0.0.0' },
+    modern ? { versionNegotiation: { mode: 'auto' } } : undefined,
+  );
   await client.connect(transport);
   clients.push(client);
   return client;
@@ -149,9 +151,8 @@ describe('structural access flags (spec §5.3)', () => {
       ['health', 'list_bundles', 'list_kbs', 'query', 'stale'],
     );
 
-    const write = await client.callTool({ name: 'capture', arguments: { kb: 'work', content: 'x' } });
-    expect(write.isError).toBe(true);
-    expect(JSON.stringify(write.content)).toMatch(/not found/i);
+    await expect(client.callTool({ name: 'capture', arguments: { kb: 'work', content: 'x' } }))
+      .rejects.toThrow(/not found/i);
     expect(await readdir(dir)).not.toContain('inbox');
   });
 
@@ -172,6 +173,26 @@ describe('structural access flags (spec §5.3)', () => {
     expect((await client2.listTools()).tools.map((tool) => tool.name).sort()).toEqual(
       ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'stale', 'sync'],
     );
+  });
+});
+
+describe('protocol negotiation', () => {
+  it('serves modern 2026-07-28 and legacy 2025-11-25 clients from one endpoint', async () => {
+    await addKb('work', await makeKb('work'));
+    const port = await serve();
+
+    const modern = await connectHttp(port, TOKEN, true);
+    expect(modern.getProtocolEra()).toBe('modern');
+    expect((await modern.listTools()).tools.map((tool) => tool.name)).toContain('query');
+
+    const legacy = await connectHttp(port);
+    expect(legacy.getProtocolEra()).toBe('legacy');
+    const result = await legacy.callTool({
+      name: 'query',
+      arguments: { kb: 'work', question: 'backpressure' },
+    });
+    expect((result.structuredContent as { candidates: Array<{ path: string }> }).candidates[0].path)
+      .toBe('concepts/backpressure.md');
   });
 });
 

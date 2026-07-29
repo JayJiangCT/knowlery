@@ -19,7 +19,7 @@ export type PathStats = z.infer<typeof PathStatsSchema>;
 
 export const TierResultSchema = z.object({
   pages: z.number().int(),
-  paths: z.record(PathStatsSchema),
+  paths: z.record(z.string(), PathStatsSchema),
 });
 
 export const PerfReportSchema = z.object({
@@ -27,11 +27,11 @@ export const PerfReportSchema = z.object({
   seed: z.number(),
   srcRoot: z.string(),
   skipped: z.literal(false),
-  tiers: z.record(TierResultSchema),
+  tiers: z.record(z.string(), TierResultSchema),
   federation: z
     .object({ kbs: z.number().int(), stats: PathStatsSchema, singleQueryMedianMs: z.number() })
     .nullable(),
-  info: z.object({ scanPagesPerSec: z.record(z.number()), rssDeltaMb: z.number() }),
+  info: z.object({ scanPagesPerSec: z.record(z.string(), z.number()), rssDeltaMb: z.number() }),
 });
 export type PerfReport = z.infer<typeof PerfReportSchema>;
 

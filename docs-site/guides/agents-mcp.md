@@ -6,6 +6,11 @@ runs an MCP server over stdio: the agent starts it, discovers the tools, and
 your knowledge becomes ambient in every conversation, with no
 per-conversation setup.
 
+Knowlery 1.4 serves both MCP `2026-07-28` and the legacy `2025-11-25`
+protocol over the same stdio and HTTP entry points. Existing client
+configuration continues to work; newer clients negotiate the modern protocol
+automatically.
+
 The server addresses knowledge bases by their **registry names** — register
 each one with `knowlery kb add work ~/vaults/work-kb`, or from a
 conversation with the `register_kb` tool.

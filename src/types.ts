@@ -187,13 +187,13 @@ export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {
 export const KNOWLEDGE_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as const;
 export type KnowledgeDir = typeof KNOWLEDGE_DIRS[number];
 
-export const OkfFrontmatterSchema = z.object({
+export const OkfFrontmatterSchema = z.looseObject({
   type: z.string().min(1),
   title: z.string().optional(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
   timestamp: z.string().optional(),
-}).passthrough();
+});
 export type OkfFrontmatter = z.infer<typeof OkfFrontmatterSchema>;
 
 export const BundleAttachmentRecordSchema = z.object({
@@ -278,8 +278,8 @@ export const AgentIndexSchema = z.object({
   entrypoint: z.string(),
   concepts: z.array(AgentIndexConceptSchema),
   groups: z.object({
-    byType: z.record(z.array(z.string())),
-    byDomain: z.record(z.array(z.string())),
+    byType: z.record(z.string(), z.array(z.string())),
+    byDomain: z.record(z.string(), z.array(z.string())),
   }),
   stale: z.array(z.string()),
   unresolvedLinks: z.array(UnresolvedLinkSchema),
@@ -331,7 +331,7 @@ export type PublishConfig = z.infer<typeof PublishConfigSchema>;
 
 export const ExportScopeFileSchema = z.object({
   schemaVersion: z.literal(1),
-  bundles: z.record(z.object({
+  bundles: z.record(z.string(), z.object({
     title: z.string().optional(),
     seeds: z.array(z.string()),
     maxCompiledHops: z.number().int().min(0).default(1),
@@ -339,7 +339,7 @@ export const ExportScopeFileSchema = z.object({
     lastVersion: z.string().optional(),
     /** Publish target, remembered per bundle (spec 0.9 f2, §4.2). */
     publish: PublishConfigSchema.optional(),
-    items: z.record(z.object({
+    items: z.record(z.string(), z.object({
       status: ReviewStatusSchema,
       contentHashAtReview: z.string().nullable(),
     })),
@@ -360,7 +360,7 @@ export const InstalledBundleEntrySchema = z.object({
    * local-modification check name exactly which files changed). Optional:
    * pre-0.9 installs lack it and fall back to the aggregate hash.
    */
-  fileHashes: z.record(z.string()).optional(),
+  fileHashes: z.record(z.string(), z.string()).optional(),
   conformance: z.enum(['passed', 'failed', 'skipped']),
   conformanceErrorCount: z.number().int().nonnegative(),
 });
@@ -368,7 +368,7 @@ export type InstalledBundleEntry = z.infer<typeof InstalledBundleEntrySchema>;
 
 export const InstalledBundlesFileSchema = z.object({
   schemaVersion: z.literal(1),
-  bundles: z.record(InstalledBundleEntrySchema),
+  bundles: z.record(z.string(), InstalledBundleEntrySchema),
 });
 export type InstalledBundlesFile = z.infer<typeof InstalledBundlesFileSchema>;
 
@@ -421,7 +421,7 @@ export type CompileResult = z.infer<typeof CompileResultSchema>;
 
 export const KbRegistrySchema = z.object({
   schemaVersion: z.literal(1),
-  kbs: z.record(z.object({
+  kbs: z.record(z.string(), z.object({
     path: z.string().min(1),
   })),
 });

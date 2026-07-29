@@ -5,6 +5,9 @@ Cursor、Antigravity 套件——都可以直接访问你的知识库。`knowler
 运行一个 MCP 服务器：由客户端启动、自动发现工具，你的知识库从此常驻于
 每一次对话，无需逐次配置。
 
+Knowlery 1.4 在同一套 stdio 和 HTTP 入口上同时支持 MCP `2026-07-28` 与旧版
+`2025-11-25` 协议。现有客户端配置无需修改；新版客户端会自动协商现代协议。
+
 服务器通过 **注册表名称** 定位知识库——用 `knowlery kb add work
 ~/vaults/work-kb` 注册，或在对话里用 `register_kb` 工具接入。
 
