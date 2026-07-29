@@ -15,7 +15,7 @@ Installing is for people who want the bare command in their terminal.
 
 ## macOS (and Linux)
 
-**Requirement:** Node.js ≥ 18 (`node -v` to check; install via
+**Requirement:** Node.js ≥ 20 (`node -v` to check; install via
 [nodejs.org](https://nodejs.org), Homebrew, or nvm).
 
 **Recommended — the one-line installer:**
@@ -51,7 +51,7 @@ plus the one marked line in your shell config if you approved it.
 
 ## Windows
 
-**Requirement:** Node.js ≥ 18 — install with either:
+**Requirement:** Node.js ≥ 20 — install with either:
 
 ```powershell
 winget install OpenJS.NodeJS.LTS

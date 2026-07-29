@@ -84,6 +84,9 @@ Stated just as plainly, so absence of a promise is never mistaken for one:
   and **eval thresholds**.
 - Private state under `.knowlery/` not listed above (activity receipts,
   reports).
+- **The Node.js runtime floor.** Knowlery follows maintained Node.js LTS
+  releases, so a minor release may raise the minimum. Knowlery 1.4 requires
+  Node.js 20 or newer.
 - TypeScript internals: `src/` is not a public API; importing from the
   package is unsupported.
 

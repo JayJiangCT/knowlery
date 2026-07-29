@@ -71,6 +71,8 @@ CI 强制，而不是靠善意。
   （布尔值）加上 `config` 对象的存在。
 - **插件 UI**（dashboard 布局、弹窗、设置组织）、**文档**、**eval 阈值**。
 - 上面未列出的 `.knowlery/` 私有状态（活动回执、报告）。
+- **Node.js 最低运行版本。** Knowlery 跟随仍受维护的 Node.js LTS，因此 minor
+  版本可以提高最低要求。Knowlery 1.4 要求 Node.js 20 或更高版本。
 - TypeScript 内部：`src/` 不是公开 API；从包中 import 不受支持。
 
 ## 弃用路径

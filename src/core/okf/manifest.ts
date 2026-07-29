@@ -33,7 +33,7 @@ export function buildBundleManifest(input: {
   // their manifest gate — the alternative was silent binary corruption.
   // Attachment-free bundles stay version 1, byte-identical to before.
   if (input.attachments && input.attachments.length > 0) {
-    return { schemaVersion: 2, attachments: input.attachments as [BundleAttachmentRecord, ...BundleAttachmentRecord[]], ...base };
+    return { schemaVersion: 2, attachments: input.attachments, ...base };
   }
   return { schemaVersion: 1, ...base };
 }

@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { toNodeHandler, type NodeMcpRequestHandler } from '@modelcontextprotocol/node';
+import { createMcpHandler } from '@modelcontextprotocol/server';
 import { buildMcpServer, type McpAccess } from './server';
 
 /**
@@ -57,8 +58,16 @@ export function startMcpHttpServer(options: McpHttpOptions): Promise<Server> {
       register: false,
     },
   };
+  // One entry serves both protocol eras from the same factory. Its default
+  // stateless legacy leg preserves 2025 clients; modern requests use the
+  // 2026 per-request envelope and server/discover lifecycle.
+  const handler = createMcpHandler(
+    () => buildMcpServer({ toolVersion: normalized.toolVersion, access: normalized.access }),
+    { legacy: 'stateless' },
+  );
+  const nodeHandler = toNodeHandler(handler);
   const httpServer = createServer((req, res) => {
-    void handleRequest(normalized, req, res).catch(() => {
+    void handleRequest(normalized, nodeHandler, req, res).catch(() => {
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -69,13 +78,21 @@ export function startMcpHttpServer(options: McpHttpOptions): Promise<Server> {
       }
     });
   });
+  httpServer.once('close', () => {
+    void handler.close();
+  });
   return new Promise((resolvePromise, rejectPromise) => {
     httpServer.once('error', rejectPromise);
     httpServer.listen(options.port, options.host, () => resolvePromise(httpServer));
   });
 }
 
-async function handleRequest(options: McpHttpOptions, req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handleRequest(
+  options: McpHttpOptions,
+  nodeHandler: NodeMcpRequestHandler,
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
   if (url.pathname !== '/mcp') {
     res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -87,15 +104,5 @@ async function handleRequest(options: McpHttpOptions, req: IncomingMessage, res:
     return;
   }
 
-  // Fresh pair per request (spec §4.5, the stateless contract), closed with
-  // the response. Handler registration is schema objects + closures; every
-  // tool call is a live scan anyway, so this costs nothing that matters.
-  const server = buildMcpServer({ toolVersion: options.toolVersion, access: options.access });
-  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-  res.on('close', () => {
-    void transport.close();
-    void server.close();
-  });
-  await server.connect(transport);
-  await transport.handleRequest(req, res);
+  await nodeHandler(req, res);
 }

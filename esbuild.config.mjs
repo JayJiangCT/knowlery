@@ -75,7 +75,7 @@ async function buildQueryScript() {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node20',
     minify: false,
     write: false,
     logLevel: 'silent',
@@ -111,13 +111,20 @@ async function buildCli() {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node20',
     minify: false,
     outfile: 'knowlery-cli.mjs',
     logLevel: 'silent',
     define: { KNOWLERY_VERSION: JSON.stringify(pkg.version) },
     banner: {
-      js: "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);",
+      js: `#!/usr/bin/env node
+import { createRequire as __createRequire } from 'node:module';
+const __knowleryNodeMajor = Number(process.versions.node.split('.')[0]);
+if (__knowleryNodeMajor < 20) {
+  process.stderr.write('Knowlery ${pkg.version} requires Node.js >= 20 (found ' + process.versions.node + ').\\n');
+  process.exit(1);
+}
+const require = __createRequire(import.meta.url);`,
     },
     plugins: [scannerHygieneShims],
   });

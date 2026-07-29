@@ -1,5 +1,5 @@
 import { readFile, realpath } from 'node:fs/promises';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { buildMcpServer, type McpAccess } from '../../core/mcp/server';
 import { startMcpHttpServer } from '../../core/mcp/http-server';
 import { CliError } from './shared';
@@ -10,14 +10,10 @@ import { CliError } from './shared';
  * core/mcp and know nothing about the transport.
  */
 export async function runMcpCommand(toolVersion?: string): Promise<void> {
-  const server = buildMcpServer({ toolVersion });
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  // The server runs until the client closes stdin; resolve on close so the
-  // process exits cleanly instead of hanging.
-  await new Promise<void>((resolve) => {
-    transport.onclose = () => resolve();
-  });
+  // The serving entry negotiates the connection era once, then pins a fresh
+  // server from this factory for its lifetime. Legacy remains enabled so
+  // existing 2025 clients keep the exact same tool surface.
+  serveStdio(() => buildMcpServer({ toolVersion }), { legacy: 'serve' });
 }
 
 // ---------------------------------------------------------------------------

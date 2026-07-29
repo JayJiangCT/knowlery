@@ -26,11 +26,11 @@ say()  { printf '%s\n' "$*"; }
 fail() { printf 'knowlery install: %s\n' "$*" >&2; exit 1; }
 
 # --- 1. preflight ------------------------------------------------------------
-command -v node >/dev/null 2>&1 || fail "Node.js is required (>= 18). Install it first: https://nodejs.org (or your version manager), then re-run."
-command -v npm  >/dev/null 2>&1 || fail "npm is required (it ships with Node.js). Install Node.js >= 18, then re-run."
+command -v node >/dev/null 2>&1 || fail "Node.js is required (>= 20). Install it first: https://nodejs.org (or your version manager), then re-run."
+command -v npm  >/dev/null 2>&1 || fail "npm is required (it ships with Node.js). Install Node.js >= 20, then re-run."
 
 NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
-[ "$NODE_MAJOR" -ge 18 ] 2>/dev/null || fail "Node.js >= 18 is required (found $(node -v)). Upgrade Node, then re-run."
+[ "$NODE_MAJOR" -ge 20 ] 2>/dev/null || fail "Node.js >= 20 is required (found $(node -v)). Upgrade Node, then re-run."
 
 # --- 2. isolated install (no -g, no sudo) ------------------------------------
 say "Installing ${PKG_SPEC} into ${KNOWLERY_HOME} ..."

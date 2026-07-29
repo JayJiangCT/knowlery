@@ -25,7 +25,7 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
         bundle: true,
         platform: 'node',
         format: 'esm',
-        target: 'node18',
+        target: 'node20',
         outfile: cliPath,
         logLevel: 'silent',
         define: { KNOWLERY_VERSION: JSON.stringify('0.0.0-test') },
@@ -208,16 +208,20 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       // MCP over stdio (spec 1.0 f2, §5.7): the built artifact serves a real
       // JSON-RPC session — handshake, tool list, one query — then exits when
       // the client hangs up.
-      const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-      const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+      const { Client } = await import('@modelcontextprotocol/client');
+      const { StdioClientTransport } = await import('@modelcontextprotocol/client/stdio');
       const mcpTransport = new StdioClientTransport({
         command: 'node',
         args: [cliPath, 'mcp'],
         env: { ...kbEnv } as Record<string, string>,
       });
-      const mcpClient = new Client({ name: 'smoke', version: '0.0.0' });
+      const mcpClient = new Client(
+        { name: 'smoke', version: '0.0.0' },
+        { versionNegotiation: { mode: 'auto' } },
+      );
       await mcpClient.connect(mcpTransport);
       try {
+        expect(mcpClient.getProtocolEra()).toBe('modern');
         const mcpTools = await mcpClient.listTools();
         expect(mcpTools.tools.map((tool) => tool.name).sort()).toEqual(
           ['capture', 'health', 'init_kb', 'list_bundles', 'list_kbs', 'query', 'register_kb', 'stale', 'sync'],
@@ -299,7 +303,7 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
         });
         expect(denied.status).toBe(401);
 
-        const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/sdk/client/streamableHttp.js');
+        const { StreamableHTTPClientTransport } = await import('@modelcontextprotocol/client');
         const httpTransport = new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${servePort}/mcp`), {
           requestInit: { headers: { Authorization: `Bearer ${serveToken}` } },
         });
