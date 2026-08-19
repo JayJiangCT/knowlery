@@ -2,7 +2,7 @@ import type { Platform } from '../types';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
 import { readManifest } from './setup-executor';
-import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports } from './migration';
+import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from './migration';
 import { syncQueryScript } from './query-script';
 import { refreshInstalledBundlesBlock } from './okf/knowledge-md-bundles';
 import { syncClaudeRuleImports } from './rule-imports';
@@ -42,6 +42,7 @@ export async function runVaultSync(
   await syncQueryScript(fs);
   await migrateSchemaMd(fs);
   await migrateFixedContextImports(fs);
+  await migrateOpenCodeUnrecognizedKeys(fs);
   await refreshInstalledBundlesBlock(fs);
   if (platform === 'claude-code') {
     await syncClaudeRuleImports(fs);

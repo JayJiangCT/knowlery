@@ -64,3 +64,19 @@ describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
     expect(compareVersions('0.9.0', '0.10.0')).toBeLessThan(0);
   });
 });
+
+describe('sync migrates OpenCode config (issue #72)', () => {
+  it('strips the rejected name key from an existing vault opencode.json', async () => {
+    const fs = createMemoryFs({
+      '.knowlery/manifest.json': manifest({ platform: 'opencode' }),
+      'opencode.json': JSON.stringify({
+        name: 'My KB',
+        instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
+      }, null, 2),
+    });
+    expect(await runVaultSync(fs, 'opencode')).toEqual({ skipped: false });
+    const parsed = JSON.parse(fs.files.get('opencode.json')!) as { name?: string; instructions: string[] };
+    expect(parsed).not.toHaveProperty('name');
+    expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+  });
+});

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1] — 2026-08-19
+
+### Fixes
+
+- **OpenCode vault config no longer writes a top-level `name`.** OpenCode's
+  project schema is strict (`additionalProperties: false`); the leftover
+  Knowlery identity key made `opencode` fail to start with `Unrecognized key:
+  name` (issue #72). New inits emit only `instructions`. Existing vaults
+  drop the key on `knowlery sync` / plugin version-sync, preserving any other
+  keys the user added. Upgrading the Obsidian plugin to 1.4.1 runs that
+  sync on the next vault open.
+
 ## [1.4.0] — 2026-07-29
 
 ### MCP 2026-07-28 compatibility

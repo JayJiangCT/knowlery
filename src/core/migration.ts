@@ -263,3 +263,36 @@ export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
     }
   }
 }
+
+/** Keys OpenCode's strict project schema rejects at startup. */
+const OPENCODE_UNRECOGNIZED_KEYS = ['name'] as const;
+
+/**
+ * Strips leftover Knowlery identity keys from vault-level opencode.json so
+ * OpenCode can start (issue #72). Preserves every other key, writes only on
+ * change, and leaves malformed JSON untouched.
+ */
+export async function migrateOpenCodeUnrecognizedKeys(fs: VaultFs): Promise<void> {
+  const openCodePath = 'opencode.json';
+  if (!(await fs.exists(openCodePath))) return;
+
+  const raw = await fs.read(openCodePath);
+  let config: Record<string, unknown>;
+  try {
+    config = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return;
+  }
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return;
+
+  let changed = false;
+  for (const key of OPENCODE_UNRECOGNIZED_KEYS) {
+    if (key in config) {
+      delete config[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    await fs.write(openCodePath, JSON.stringify(config, null, 2));
+  }
+}
