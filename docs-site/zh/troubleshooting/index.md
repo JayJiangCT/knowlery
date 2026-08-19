@@ -72,6 +72,15 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 可以在 settings 中重新生成 agent config。如果你曾从 Claude Code 切换过来，请确认当前 active platform 是 OpenCode。
 
+## OpenCode 报错 `Unrecognized key: name`
+
+旧版 Knowlery 会在 vault 的 `opencode.json` 写入顶层 `name`。OpenCode 的
+配置 schema 不接受这个字段，因此无法启动。
+
+在 vault 里运行 `knowlery sync`（或从插件设置里重新生成 agent config）。
+sync 会删掉 `name`，并保留文件里的其他字段。新初始化的 vault 不会再写入
+该字段。
+
 ## Broken Wikilinks
 
 Broken wikilinks 表示 Obsidian 无法解析链接目标。

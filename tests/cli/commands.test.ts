@@ -77,8 +77,11 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
         prompt: async () => answers.shift() ?? '',
         log: silent,
       });
-      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8')) as { name: string };
-      expect(opencode.name).toBe('Prompted KB');
+      const knowledge = await readFile(join(root, 'KNOWLEDGE.md'), 'utf8');
+      expect(knowledge).toMatch(/^# Prompted KB/m);
+      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8')) as { name?: string; instructions: string[] };
+      expect(opencode).not.toHaveProperty('name');
+      expect(opencode.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
     });
   });
 });

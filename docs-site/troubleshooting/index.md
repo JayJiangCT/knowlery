@@ -72,6 +72,15 @@ For OpenCode, Knowlery expects:
 
 Use settings to regenerate agent config. If you switched from Claude Code, confirm the active platform is OpenCode.
 
+## OpenCode Fails with `Unrecognized key: name`
+
+Knowlery used to write a top-level `name` into the vault's `opencode.json`.
+OpenCode rejects that key and will not start.
+
+Run `knowlery sync` in the vault (or regenerate agent config from plugin
+settings). Sync strips `name` and leaves the rest of the file intact. New
+inits no longer write the key.
+
 ## Broken Wikilinks
 
 Broken wikilinks mean Obsidian cannot resolve a link target.

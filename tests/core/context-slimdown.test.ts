@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generateClaudeMd, generateKnowledgeMd, generateOpenCodeJson } from '../../src/assets/templates';
-import { migrateFixedContextImports } from '../../src/core/migration';
+import { migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from '../../src/core/migration';
 import { CLAUDE_RULE_IMPORTS_START, CLAUDE_RULE_IMPORTS_END } from '../../src/core/rule-imports';
 
 import { createMemoryFs } from '../mocks/memory-fs';
@@ -15,8 +15,9 @@ describe('slimmed templates (spec f4, §4.1)', () => {
   });
 
   it('opencode.json template lists the operating card and rules only', () => {
-    const parsed = JSON.parse(generateOpenCodeJson('My KB')) as { instructions: string[] };
+    const parsed = JSON.parse(generateOpenCodeJson('My KB')) as { instructions: string[]; name?: string };
     expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+    expect(parsed).not.toHaveProperty('name');
   });
 
   it('KNOWLEDGE.md instructs reading SCHEMA.md before writing pages', () => {
@@ -97,6 +98,55 @@ describe('migrateFixedContextImports (spec f4, §4.2)', () => {
   it('does nothing when neither file exists', async () => {
     const fs = createMemoryFs();
     await migrateFixedContextImports(fs);
+    expect(fs.writeLog).toEqual([]);
+  });
+});
+
+describe('migrateOpenCodeUnrecognizedKeys (issue #72)', () => {
+  it('strips the rejected top-level name key and preserves everything else', async () => {
+    const fs = createMemoryFs({
+      'opencode.json': JSON.stringify({
+        name: 'My KB',
+        instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
+        customKey: { nested: true },
+      }, null, 2),
+    });
+    await migrateOpenCodeUnrecognizedKeys(fs);
+
+    const parsed = JSON.parse(fs.files.get('opencode.json')!) as {
+      instructions: string[];
+      name?: string;
+      customKey: unknown;
+    };
+    expect(parsed).not.toHaveProperty('name');
+    expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+    expect(parsed.customKey).toEqual({ nested: true });
+  });
+
+  it('is idempotent — the second run writes nothing', async () => {
+    const fs = createMemoryFs({
+      'opencode.json': JSON.stringify({
+        name: 'My KB',
+        instructions: ['KNOWLEDGE.md'],
+      }, null, 2),
+    });
+    await migrateOpenCodeUnrecognizedKeys(fs);
+    const writesAfterFirst = fs.writeLog.length;
+    await migrateOpenCodeUnrecognizedKeys(fs);
+    expect(fs.writeLog.length).toBe(writesAfterFirst);
+  });
+
+  it('leaves malformed opencode.json untouched', async () => {
+    const broken = '{ this is not json';
+    const fs = createMemoryFs({ 'opencode.json': broken });
+    await migrateOpenCodeUnrecognizedKeys(fs);
+    expect(fs.writeLog).toEqual([]);
+    expect(fs.files.get('opencode.json')).toBe(broken);
+  });
+
+  it('does nothing when opencode.json is absent', async () => {
+    const fs = createMemoryFs();
+    await migrateOpenCodeUnrecognizedKeys(fs);
     expect(fs.writeLog).toEqual([]);
   });
 });
