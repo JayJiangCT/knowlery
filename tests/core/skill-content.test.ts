@@ -30,6 +30,30 @@ describe('frontmatter identity', () => {
   });
 });
 
+describe('query phrasing is taught (field finding: a request-shaped question abstained on a well-covered topic)', () => {
+  it('/ask: pass subject terms, not the request; retry once on abstention; INDEX.base is not a retrieval step', () => {
+    const content = skill('ask').replace(/\s+/g, ' ');
+    expect(content).toContain('never the request itself');
+    expect(content).toContain('2–6 terms is the sweet spot');
+    expect(content).toContain('retry **once** with 2–6 subject keywords only');
+    expect(content).toContain('`INDEX.base` is a human preview of compiled pages, not a retrieval step');
+  });
+
+  it('no skill treats INDEX.base as a lookup or retrieval source any more', () => {
+    for (const name of ['cook', 'explore', 'ideas']) {
+      const content = skill(name).replace(/\s+/g, ' ');
+      expect(content, name).not.toMatch(/Check `INDEX\.base`|Read `INDEX\.base` if it exists|Uses INDEX\.base/);
+    }
+  });
+
+  it('KNOWLEDGE.md operating card says the same', () => {
+    const card = generateKnowledgeMd('KB').replace(/\s+/g, ' ');
+    expect(card).toContain('Pass the subject only');
+    expect(card).toContain('`INDEX.base` is a human preview of compiled pages, not a retrieval step');
+    expect(card).not.toContain('base:query');
+  });
+});
+
 describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   it('/ask lists all three transports in order', () => {
     const ask = skill('ask');
@@ -51,7 +75,7 @@ describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   it('KNOWLEDGE.md template teaches the ladder', () => {
     const knowledgeMd = generateKnowledgeMd('KB');
     expect(knowledgeMd).toContain('obsidian knowlery:query');
-    expect(knowledgeMd).toContain('knowlery query "<question>"');
+    expect(knowledgeMd).toContain('knowlery query "<subject terms>"');
     expect(knowledgeMd).toContain('node .knowlery/bin/query.mjs');
   });
 });

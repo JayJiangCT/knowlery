@@ -29,7 +29,7 @@ discovery, and run \`knowlery health\` after bulk changes.
 |------|---------|
 | Read a note | \`obsidian read file="..."\` |
 | Search vault | \`obsidian search query="..."\` |
-| Query the knowledge index | \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` |
+| Find knowledge on a topic | \`obsidian knowlery:query question="<subject terms>"\` |
 | Read a note property | \`obsidian property:read name="type" path="entities/example.md"\` |
 | Create a note | \`obsidian create path="queries/example.md" content="..."\` |
 | List files | \`obsidian files folder="..."\` |
@@ -60,10 +60,14 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 
 When answering questions from this vault (not general knowledge):
 
-1. Run the retrieval engine once — \`obsidian knowlery:query question="<question>"\`
-   when Obsidian is running, else \`knowlery query "<question>"\` (global CLI), else
-   \`node .knowlery/bin/query.mjs "<question>"\`; all three scan compiled pages, user
-   notes, and installed bundles, and print the same ranked candidate list
+1. Run the retrieval engine once — \`obsidian knowlery:query question="<subject terms>"\`
+   when Obsidian is running, else \`knowlery query "<subject terms>"\` (global CLI), else
+   \`node .knowlery/bin/query.mjs "<subject terms>"\`; all three scan compiled pages, user
+   notes, and installed bundles, and print the same ranked candidate list. Pass the
+   subject only (names, terms, nouns — 2–6 of them), never the request phrasing:
+   words like "return", "latest", "context", 请返回, 相关 can never be covered by a
+   page and push a correct page under the confidence gate. \`INDEX.base\` is a human
+   preview of compiled pages, not a retrieval step
 2. Read promising candidates with \`obsidian read\` — prefer \`status: reviewed\` over
    \`draft\`, recent \`updated\`, and any \`evidence via source:\` notes it flags
 3. If it prints \`No confident matches\`, say the vault does not cover the question and
@@ -80,7 +84,7 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 
 | Skill | Purpose |
 |-------|---------|
-| \`/cook\` | Digest notes and sources into knowledge pages, maintain INDEX.base |
+| \`/cook\` | Digest notes and sources into knowledge pages |
 | \`/ask\` | Answer questions from vault content with citations |
 | \`/explore\` | Trace idea timelines or find connections between topics |
 | \`/challenge\` | Pressure-test beliefs or track intention-vs-action gaps |

@@ -2,7 +2,7 @@
 name: ideas
 description: >
   Deep vault scan to generate actionable ideas by combining insights across domains, finding gaps,
-  and proposing concrete next steps. Uses INDEX.base (Bases wiki index) and agent directories (`entities/`, `concepts/`,
+  and proposing concrete next steps. Uses the retrieval engine (the `/ask` ladder) and agent directories (`entities/`, `concepts/`,
   `comparisons/`, `queries/`) for compiled knowledge. Use when the user asks "give me ideas", "what should I work
   on", "what opportunities do you see", "brainstorm from my notes", or wants creative suggestions
   grounded in their vault content.
@@ -48,7 +48,7 @@ Read notes across domains, prioritizing:
 - Recent notes (last 30 days) — what the user is actively thinking about
 - Highly connected notes (many backlinks) — central concepts
 - Notes with `status: active` — current work
-- `INDEX.base` and `obsidian properties` / `search` — same compiled knowledge scope as **`/ask`**
+- The **`/ask`** retrieval ladder (`obsidian knowlery:query` on subject terms) plus `obsidian properties` / `search` — same compiled knowledge scope
 - Agent pages in `entities/`, `concepts/`, `comparisons/`, `queries/` — for compiled knowledge
 
 For each domain, read 5-10 representative notes to understand the landscape.
