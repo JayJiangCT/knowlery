@@ -54,6 +54,16 @@ describe('query phrasing is taught (field finding: a request-shaped question abs
   });
 });
 
+describe('the dot-directory boundary is on the operating card (field finding: Codex ran `obsidian read` on ~/.agents/skills/ask/SKILL.md)', () => {
+  it('KNOWLEDGE.md names the boundary, the Error:-with-exit-0 trait, and where skills actually live', () => {
+    const card = generateKnowledgeMd('KB').replace(/\s+/g, ' ');
+    expect(card).toContain('Obsidian CLI reaches only notes in the vault index');
+    expect(card).toContain('treat any `Error:` output as failure');
+    expect(card).toContain('`.agents/skills/<name>/SKILL.md`');
+    expect(card).toContain('never `obsidian read` and never a home-directory path');
+  });
+});
+
 describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   it('/ask lists all three transports in order', () => {
     const ask = skill('ask');

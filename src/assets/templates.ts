@@ -21,6 +21,11 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 **Use Obsidian CLI for note-centric vault operations when Obsidian is running.** Do not start vault discovery with raw Bash commands such as \`ls\`, \`find\`, \`grep\`, or \`cat\`. Use Bash only when Obsidian CLI is unavailable, a verified Obsidian CLI command fails, or the task is non-note environment diagnostics. State the fallback reason before using Bash.
 
+Obsidian CLI reaches only notes in the vault index. Skills, rules, and config under
+dot-directories (\`.agents/\`, \`.claude/\`, \`.knowlery/\`) and anything outside the vault
+are read with your file tools — that is the boundary, not a fallback. The CLI may print
+\`Error:\` and still exit 0; treat any \`Error:\` output as failure.
+
 In headless environments (Obsidian closed, CLI-initialized workspaces), work with files
 directly under the same conventions, use the Knowlery retrieval commands below for
 discovery, and run \`knowlery health\` after bulk changes.
@@ -79,6 +84,11 @@ When answering questions from this vault (not general knowledge):
 Every claim must be backed by vault notes. See \`/ask\` for the full specification.
 
 ## Available Skills
+
+Skills are installed in this vault at \`.agents/skills/<name>/SKILL.md\` (mirrored to
+\`.claude/skills/\` for Claude Code). Your platform discovers them there — invoke a skill
+by name; if you must read one, use your file tools on that vault-relative path, never
+\`obsidian read\` and never a home-directory path.
 
 ### Knowledge Workflows
 

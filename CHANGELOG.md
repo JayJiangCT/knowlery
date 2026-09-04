@@ -55,6 +55,14 @@
   same rule. Vaults initialized before this release keep their own
   `KNOWLEDGE.md` (it is user-owned) — refresh its Knowledge Retrieval
   section by hand to pick up the wording.
+- **The dot-directory boundary is on the operating card.** A Codex session
+  tried `obsidian read` on `~/.agents/skills/ask/SKILL.md` (wrong tool,
+  wrong path) and took the CLI's `Error: … not found` / exit 0 as success.
+  `KNOWLEDGE.md` now states what the `obsidian-cli` skill already did:
+  Obsidian CLI reaches only notes in the vault index; skills, rules, and
+  config under `.agents/`, `.claude/`, `.knowlery/` are read with file
+  tools; `Error:` output is failure regardless of exit code; skills live at
+  the vault-relative `.agents/skills/<name>/SKILL.md`.
 - **`INDEX.base` is a human preview, not a retrieval step.** Since 0.6 the
   deterministic engine replaced index-driven discovery; the remaining
   "check / read `INDEX.base`" instructions in `/ask`, `/cook`, `/explore`,
