@@ -65,16 +65,24 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 ## Agent 没有遵守 vault 规则
 
-所有 agent 的固定上下文都来自 vault 根目录的 `AGENTS.md`，Knowlery 会把
-`KNOWLEDGE.md` 和 `.agents/rules/` 下的 rules 内联到其中的
-`<!-- Knowlery managed:start/end -->` 区块里。Codex、OpenCode、Cursor 直接
-读取它；Claude Code 通过 `.claude/CLAUDE.md` 读取它。该区块会在插件加载和
-`knowlery sync` 时根据源文件重新生成，请修改 `KNOWLEDGE.md` 或 rule 文件，
-不要直接修改区块。你写在标记之外（或 `CLAUDE.md` 里 import 之后）的内容
-都会保留。
+所有 agent 的固定上下文都来自 vault 根目录的 `AGENTS.md`，Knowlery 会把三
+部分内联到其中的 `<!-- Knowlery managed:start/end -->` 区块里：你的
+`KNOWLEDGE.md`（这个知识库是什么）、当前版本 Knowlery 的操作规则（Obsidian
+CLI 用法、检索流程、skills——由模板渲染，修正能到达每个 vault）、以及
+`.agents/rules/` 下的 rules。Codex、OpenCode、Cursor 直接读取它；Claude Code
+通过 `.claude/CLAUDE.md` 读取它。该区块会在插件加载和 `knowlery sync` 时重新
+生成，请修改 `KNOWLEDGE.md` 或 rule 文件，不要直接修改区块。你写在标记之外
+（或 `CLAUDE.md` 里 import 之后）的内容都会保留。
 
 从 1.5 之前的 vault 升级时：
 
+- **`KNOWLEDGE.md` 仍含旧的操作规则。** 1.5 之前的模板把 `## Operating
+  Rules`、`## Knowledge Retrieval`、`## Available Skills` 写进了
+  `KNOWLEDGE.md`；现在这些由 Knowlery 直接写入 `AGENTS.md`，留在
+  `KNOWLEDGE.md` 里的是过时的重复。它们存在期间 health 会显示警告。请删除这
+  三节（保留标题、简介、Vault Structure 和你自己的段落——如果你把自己的内容
+  嵌套在其中某一节下面，先移出来）。`KNOWLEDGE.md` 是你的文件，Knowlery 不
+  会代劳。
 - 如果 vault 里已有手写的 `AGENTS.md`，受管区块会放在最前面，你的内容接在
   后面。这些旧内容通常已与 `KNOWLEDGE.md` 重复；**设置 → 重新生成 Agent 配置
   → 重置 AGENTS.md** 会（确认后）丢弃区块之外的全部内容。之后再把值得保留的

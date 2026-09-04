@@ -30,7 +30,7 @@
 
 | 路径 | Setup 创建 | 说明 |
 | --- | --- | --- |
-| `KNOWLEDGE.md` | 是 | Vault 操作指南 |
+| `KNOWLEDGE.md` | 是 | 你对知识库的描述；由你维护 |
 | `SCHEMA.md` | 是 | 知识分类与页面约定 |
 | `INDEX.base` | 是 | Bases index |
 | `entities/` | 是 | Agent-maintained entity pages |
@@ -41,7 +41,7 @@
 | `.agents/skills/` | 是 | Canonical skills |
 | `.agents/rules/` | 是 | 所有平台共用的 rules（内联进 AGENTS.md） |
 | `.claude/skills/` | 是 | 为 Claude Code 镜像的内置 skills |
-| `AGENTS.md` | 是 | 内联 KNOWLEDGE.md + rules（受管区块）；Codex、OpenCode、Cursor 等直接读取 |
+| `AGENTS.md` | 是 | 内联 KNOWLEDGE.md + Knowlery 操作规则 + rules（受管区块）；Codex、OpenCode、Cursor 等直接读取 |
 | `.claude/CLAUDE.md` | 是 | 供 Claude Code 使用的一行 `@../AGENTS.md` import |
 | `skills-lock.json` | 是 | Skill lock state |
 | `.knowlery/activity/` | Activity logging | 私有 activity receipts |

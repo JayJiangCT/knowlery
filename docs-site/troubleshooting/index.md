@@ -66,15 +66,26 @@ Use settings to regenerate agent config.
 ## An Agent Ignores the Vault Rules
 
 Every agent gets the same fixed context from the vault-root `AGENTS.md`, where
-Knowlery inlines `KNOWLEDGE.md` and the rules from `.agents/rules/` inside a
-`<!-- Knowlery managed:start/end -->` block. Codex, OpenCode, and Cursor read
-it directly; Claude Code reads it through `.claude/CLAUDE.md`. The block is
-regenerated from its sources on plugin load and `knowlery sync`, so edit
-`KNOWLEDGE.md` or the rule files, not the block. Anything you write outside
-the markers (or below the import in `CLAUDE.md`) is kept.
+Knowlery inlines three things inside a `<!-- Knowlery managed:start/end -->`
+block: your `KNOWLEDGE.md` (what the knowledge base is), Knowlery's operating
+rules for the installed version (Obsidian CLI use, retrieval procedure,
+skills — rendered from the template, so fixes reach every vault), and the
+rules from `.agents/rules/`. Codex, OpenCode, and Cursor read it directly;
+Claude Code reads it through `.claude/CLAUDE.md`. The block is regenerated on
+plugin load and `knowlery sync`, so edit `KNOWLEDGE.md` or the rule files,
+not the block. Anything you write outside the markers (or below the import
+in `CLAUDE.md`) is kept.
 
 Upgrading from a pre-1.5 vault:
 
+- **`KNOWLEDGE.md` still carries the old operating rules.** Templates before
+  1.5 wrote `## Operating Rules`, `## Knowledge Retrieval`, and
+  `## Available Skills` into `KNOWLEDGE.md`; Knowlery now supplies them in
+  `AGENTS.md`, so those sections are stale duplicates. Health shows a warning
+  while they remain. Delete the three sections (keep your title, intro,
+  Vault Structure, and any sections of your own — if you nested your own
+  notes under one of them, move them out first). `KNOWLEDGE.md` is yours, so
+  Knowlery does not do this for you.
 - If the vault already had a hand-written `AGENTS.md`, the managed block is
   placed first and your text follows it. Much of that older text is usually
   redundant with `KNOWLEDGE.md` now; **Settings → Regenerate agent config →

@@ -62,7 +62,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 
 | 路径 | 用途 |
 | --- | --- |
-| `KNOWLEDGE.md` | 给人和 agent 看的 vault 操作指南 |
+| `KNOWLEDGE.md` | 你对知识库的描述（覆盖什么、如何组织）——由你维护 |
 | `SCHEMA.md` | 知识分类与页面约定 |
 | `INDEX.base` | 编译知识页面的 Obsidian Bases 索引 |
 | `entities/` | 人、工具、组织、项目等命名对象 |
@@ -73,7 +73,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `.agents/skills/` | skills 的 canonical 存放位置 |
 | `.agents/rules/` | 所有平台共用的 rules（内联进 `AGENTS.md`） |
 | `.claude/skills/` | 为 Claude Code 镜像的内置 skills |
-| `AGENTS.md` | 内联 `KNOWLEDGE.md` 与 rules（受管区块，sync 时重新生成）；Codex、OpenCode 等直接读取 |
+| `AGENTS.md` | 内联 `KNOWLEDGE.md` + Knowlery 操作规则 + 你的 rules（受管区块，sync 时重新生成）；Codex、OpenCode 等直接读取 |
 | `.claude/CLAUDE.md` | 供 Claude Code 使用的一行 `@../AGENTS.md` import；后面可追加 Claude 专属说明 |
 | `skills-lock.json` | skill 来源、版本、禁用状态 |
 

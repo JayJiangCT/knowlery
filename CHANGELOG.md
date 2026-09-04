@@ -43,6 +43,30 @@
 - **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as
   a new optional file (1.0 f5 §4.1, minor).
 
+### KNOWLEDGE.md is yours; the operating rules are Knowlery's
+
+- **Operating rules move out of `KNOWLEDGE.md` into the `AGENTS.md` block.**
+  `KNOWLEDGE.md` is written once at setup and never migrated — which meant
+  every fix to the Obsidian CLI rules, the retrieval procedure, or the
+  skills table reached new vaults only (three such fixes landed during this
+  release's acceptance alone). Those sections now render from the template
+  into `AGENTS.md` on every sync, after your `KNOWLEDGE.md` and before the
+  rules. The `KNOWLEDGE.md` template shrinks to what is genuinely yours:
+  title, intro, Vault Structure, and an "About This Knowledge Base"
+  section to fill in. Result: the two files stop duplicating ~90 lines of
+  Knowlery boilerplate, and `KNOWLEDGE.md` becomes a note worth opening.
+- **Existing vaults**: the old `## Operating Rules` / `## Knowledge
+  Retrieval` / `## Available Skills` sections stay in your `KNOWLEDGE.md`
+  (it is your file) but are now stale duplicates — `knowlery health` and
+  the Health tab warn until you delete them.
+- **Renaming the knowledge base no longer overwrites `KNOWLEDGE.md`.** The
+  settings rename used to regenerate the whole file from the template,
+  discarding your edits; it now retitles the first heading only.
+- **Installed-bundles hint fixed.** The `KNOWLERY:INSTALLED_BUNDLES` block
+  in `KNOWLEDGE.md` was hard-coded as list item "9." from a retrieval list
+  that has had five steps since 0.6; it is now a standalone paragraph, and a
+  leftover block is removed when no bundles are installed.
+
 ### Retrieval guidance
 
 - **Query with subject terms, not the request.** A Codex session passed a

@@ -30,7 +30,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 
 | Path | Created by | Notes |
 | --- | --- | --- |
-| `KNOWLEDGE.md` | Setup | Vault operating guide |
+| `KNOWLEDGE.md` | Setup | Your description of the knowledge base; user-owned |
 | `SCHEMA.md` | Setup | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Setup | Bases index |
 | `entities/` | Setup | Agent-maintained entity pages |
@@ -41,7 +41,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.agents/skills/` | Setup | Canonical skills |
 | `.agents/rules/` | Setup | Rules, for every platform (inlined into AGENTS.md) |
 | `.claude/skills/` | Setup | Mirrored built-in skills for Claude Code |
-| `AGENTS.md` | Setup | KNOWLEDGE.md + rules inlined (managed block); read by Codex, OpenCode, Cursor… |
+| `AGENTS.md` | Setup | KNOWLEDGE.md + Knowlery operating rules + rules inlined (managed block); read by Codex, OpenCode, Cursor… |
 | `.claude/CLAUDE.md` | Setup | One-line `@../AGENTS.md` import for Claude Code |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |

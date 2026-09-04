@@ -61,7 +61,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 
 | Path | Purpose |
 | --- | --- |
-| `KNOWLEDGE.md` | Vault operating guide for humans and agents |
+| `KNOWLEDGE.md` | Your description of the knowledge base (what it covers, how it is laid out) — yours to edit |
 | `SCHEMA.md` | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Obsidian Bases index for compiled knowledge pages |
 | `entities/` | Named things such as people, tools, organizations, and projects |
@@ -72,7 +72,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `.agents/skills/` | Canonical installed skill files |
 | `.agents/rules/` | Rules, for every platform (inlined into `AGENTS.md`) |
 | `.claude/skills/` | Mirrored built-in skill files for Claude Code |
-| `AGENTS.md` | `KNOWLEDGE.md` and rules inlined (managed block, regenerated on sync); read directly by Codex, OpenCode, and others |
+| `AGENTS.md` | `KNOWLEDGE.md` + Knowlery's operating rules + your rules, inlined (managed block, regenerated on sync); read directly by Codex, OpenCode, and others |
 | `.claude/CLAUDE.md` | One-line `@../AGENTS.md` import for Claude Code; Claude-specific notes can follow it |
 | `skills-lock.json` | Skill source, version, and disabled-state metadata |
 
