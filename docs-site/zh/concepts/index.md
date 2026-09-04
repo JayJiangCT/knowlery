@@ -160,9 +160,9 @@ Knowlery 支持两个 agent 平台：
 | 平台 | 配置文件 | Rules 目录 |
 | --- | --- | --- |
 | Claude Code | `.claude/CLAUDE.md` | `.claude/rules/` |
-| OpenCode | `opencode.json` | `.agents/rules/` |
+| OpenCode | `AGENTS.md` | `.agents/rules/` |
 
-切换平台时，Knowlery 会重新生成目标平台配置，并可以迁移之前平台目录中的 rules。
+两者拿到的固定上下文完全相同——`KNOWLEDGE.md` 加 rules。Claude Code 通过 `@` import 组装；Codex 和 OpenCode 读取 vault 根目录的 `AGENTS.md`，Knowlery 会根据同样的源文件重新生成它（无论选择哪个平台都会写入）。切换平台时，Knowlery 会重新生成目标平台配置，并可以迁移之前平台目录中的 rules。
 
 ## Companion Chat
 

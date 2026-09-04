@@ -62,24 +62,29 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 可以在 settings 中重新生成 agent config。如果你曾从 OpenCode 切换过来，请确认当前 active platform 是 Claude Code。
 
-## OpenCode Config 缺失
+## OpenCode 或 Codex Config 缺失
 
-对于 OpenCode，Knowlery 预期存在：
+对于 OpenCode（以及 Codex），Knowlery 预期存在：
 
-- `opencode.json`
+- vault 根目录的 `AGENTS.md`
 - `.agents/rules/`
 - `.agents/skills/`
 
 可以在 settings 中重新生成 agent config。如果你曾从 Claude Code 切换过来，请确认当前 active platform 是 OpenCode。
 
-## OpenCode 报错 `Unrecognized key: name`
+## Codex 或 OpenCode 没有遵守 vault 规则
 
-旧版 Knowlery 会在 vault 的 `opencode.json` 写入顶层 `name`。OpenCode 的
-配置 schema 不接受这个字段，因此无法启动。
+两者都读取 vault 根目录的 `AGENTS.md`，Knowlery 会把 `KNOWLEDGE.md` 和
+rules 内联到其中的 `<!-- Knowlery managed:start/end -->` 区块里。它们都
+不支持 Claude Code 的 `@` import，所以内容必须内联——并且会在插件加载和
+`knowlery sync` 时根据源文件重新生成。请修改 `KNOWLEDGE.md` 或 rule 文件，
+不要直接修改该区块。
 
-在 vault 里运行 `knowlery sync`（或从插件设置里重新生成 agent config）。
-sync 会删掉 `name`，并保留文件里的其他字段。新初始化的 vault 不会再写入
-该字段。
+旧版 vault 里有一份 Knowlery 写入的 `opencode.json`（带 `instructions`
+数组）。OpenCode V2 已不再加载这个数组，因此 Knowlery 不再写入它；
+`knowlery sync` 会删掉那两条 Knowlery 条目（若没有你自己添加的内容，会
+连文件一起删除）。Codex 默认把项目指令总量限制在 32 KiB
+（`project_doc_max_bytes`）；生成的区块约 9 KB。
 
 ## Broken Wikilinks
 

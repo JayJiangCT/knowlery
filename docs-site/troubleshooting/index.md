@@ -62,24 +62,30 @@ For Claude Code, Knowlery expects:
 
 Use settings to regenerate agent config. If you switched from OpenCode, confirm the active platform is Claude Code.
 
-## OpenCode Config Is Missing
+## OpenCode or Codex Config Is Missing
 
-For OpenCode, Knowlery expects:
+For OpenCode (and Codex), Knowlery expects:
 
-- `opencode.json`
+- `AGENTS.md` at the vault root
 - `.agents/rules/`
 - `.agents/skills/`
 
 Use settings to regenerate agent config. If you switched from Claude Code, confirm the active platform is OpenCode.
 
-## OpenCode Fails with `Unrecognized key: name`
+## Codex or OpenCode Ignores the Vault Rules
 
-Knowlery used to write a top-level `name` into the vault's `opencode.json`.
-OpenCode rejects that key and will not start.
+Both read the vault-root `AGENTS.md`, where Knowlery inlines `KNOWLEDGE.md`
+and the rules inside a `<!-- Knowlery managed:start/end -->` block. Neither
+platform supports Claude Code's `@` imports, so the content must be inlined
+— and it is regenerated from its sources on plugin load and `knowlery sync`.
+Edit `KNOWLEDGE.md` or the rule files, not the block.
 
-Run `knowlery sync` in the vault (or regenerate agent config from plugin
-settings). Sync strips `name` and leaves the rest of the file intact. New
-inits no longer write the key.
+Older vaults carried a Knowlery-written `opencode.json` with an
+`instructions` array. OpenCode V2 no longer loads that array, so Knowlery
+stopped writing it; `knowlery sync` removes the two Knowlery entries (and
+the file itself when nothing you added remains). Codex caps the combined
+project instructions at 32 KiB by default (`project_doc_max_bytes`); the
+generated block is around 9 KB.
 
 ## Broken Wikilinks
 

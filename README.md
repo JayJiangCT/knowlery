@@ -177,7 +177,7 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `.knowlery/manifest.json`
 - `.agents/skills/` and `.agents/rules/`
 - `.claude/skills/`, `.claude/rules/`, and `.claude/CLAUDE.md`
-- `opencode.json`, when OpenCode is selected
+- `AGENTS.md` — the same operating card and rules Claude Code imports, inlined for Codex and OpenCode
 - `skills-lock.json`
 - `.knowlery/activity/`, when activity logging is enabled
 - `.knowlery/reports/`, when Weekly summary generates an HTML report

@@ -49,7 +49,9 @@ The setup wizard asks you to choose a platform:
 | Platform | Generated config |
 | --- | --- |
 | Claude Code | `.claude/CLAUDE.md` plus `.claude/rules/` |
-| OpenCode | `opencode.json` plus `.agents/rules/` |
+| OpenCode | `.agents/rules/` |
+
+Both choices also write a vault-root `AGENTS.md` that inlines `KNOWLEDGE.md` and the rules — the same fixed context `.claude/CLAUDE.md` imports — so Codex and OpenCode start every session with the same instructions Claude Code does.
 
 If you are upgrading from an older release, v0.5.0 adds knowledge bundle sharing and installing: a Bundles section on the dashboard, the **Share knowledge bundle** and **Install knowledge bundle** commands, the `Library/` folder for installed bundles, and a bundle-aware `/ask` skill. v0.4.0 kept the dashboard focused on one action-first home and moved diagnostics, rules, schema shortcuts, and the Skills library into the Knowlery settings tab. Bundled skills still auto-sync on version changes, and `SCHEMA.md` is migrated in place when missing anchor sections are found. Custom and forked skills are preserved.
 
@@ -72,7 +74,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `.claude/skills/` | Mirrored built-in skill files for Claude Code |
 | `.claude/CLAUDE.md` | Claude Code vault instructions |
 | `.claude/rules/` | Claude Code rules |
-| `opencode.json` | OpenCode configuration |
+| `AGENTS.md` | `KNOWLEDGE.md` and rules inlined for Codex and OpenCode (managed block, regenerated on sync) |
 | `skills-lock.json` | Skill source, version, and disabled-state metadata |
 
 Normal use can also create private activity receipts, weekly summary reports, and daily review request/result files under `.knowlery/`.

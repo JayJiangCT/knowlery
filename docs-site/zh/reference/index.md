@@ -43,7 +43,7 @@
 | `.claude/skills/` | 是 | 为 Claude Code 镜像的内置 skills |
 | `.claude/CLAUDE.md` | Claude Code path | Claude instructions |
 | `.claude/rules/` | Claude Code path | Claude Code rules |
-| `opencode.json` | OpenCode path | OpenCode config |
+| `AGENTS.md` | 是 | 为 Codex 和 OpenCode 内联的 KNOWLEDGE.md + rules（受管区块） |
 | `skills-lock.json` | 是 | Skill lock state |
 | `.knowlery/activity/` | Activity logging | 私有 activity receipts |
 | `.knowlery/reports/` | Weekly summary | 本地 HTML report 输出 |

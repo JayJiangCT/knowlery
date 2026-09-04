@@ -43,7 +43,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.claude/skills/` | Setup | Mirrored built-in skills for Claude Code |
 | `.claude/CLAUDE.md` | Claude Code | Claude instructions |
 | `.claude/rules/` | Claude Code | Rules for Claude Code |
-| `opencode.json` | OpenCode | OpenCode config |
+| `AGENTS.md` | Setup | KNOWLEDGE.md + rules inlined for Codex and OpenCode (managed block) |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |
 | `.knowlery/reports/` | Weekly summary | Local HTML report output |

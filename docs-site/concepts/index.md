@@ -159,9 +159,9 @@ Knowlery supports two agent platforms:
 | Platform | Config file | Rules directory |
 | --- | --- | --- |
 | Claude Code | `.claude/CLAUDE.md` | `.claude/rules/` |
-| OpenCode | `opencode.json` | `.agents/rules/` |
+| OpenCode | `AGENTS.md` | `.agents/rules/` |
 
-Switching platforms regenerates the target platform config and can migrate rules from the previous platform directory.
+Both deliver the same fixed context — `KNOWLEDGE.md` plus the rules. Claude Code assembles it by `@` import; Codex and OpenCode read the vault-root `AGENTS.md`, which Knowlery regenerates from those same sources (it is written for either platform choice). Switching platforms regenerates the target platform config and can migrate rules from the previous platform directory.
 
 ## Companion Chat
 

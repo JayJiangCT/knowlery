@@ -1,5 +1,34 @@
 # Changelog
 
+## [Unreleased]
+
+### Agent platform parity
+
+- **Codex and OpenCode now get the same fixed context as Claude Code.**
+  `.claude/CLAUDE.md` assembles the operating card and rules by `@` import;
+  neither Codex nor OpenCode supports imports, so Codex received nothing and
+  OpenCode V2 ignored the `opencode.json` `instructions` array Knowlery
+  wrote. Knowlery now writes a vault-root `AGENTS.md` — for every platform
+  choice — with `KNOWLEDGE.md` and the rules inlined inside a
+  `<!-- Knowlery managed:start/end -->` block, regenerated write-on-change
+  on init, rule add/remove, plugin load, and `knowlery sync`. Prose outside
+  the markers is preserved. `CLAUDE.md` is unchanged and remains the
+  reference.
+- **Vault-level `opencode.json` retired.** New inits no longer write it;
+  sync removes the two Knowlery `instructions` entries from an existing one
+  and deletes the file when nothing user-added remains. Health check,
+  setup-wizard copy, settings strings, and the `vault-conventions` skill
+  now describe `AGENTS.md`.
+- **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as
+  a new optional file (1.0 f5 §4.1, minor).
+
+### Removed
+
+- **BYOAO legacy migration.** All BYOAO vaults have moved to Knowlery; the
+  detection/migration module, the setup wizard's migration mode, and the
+  "formerly BYOAO" skill pointer are gone. `vault-conventions` now tells
+  agents to read `KNOWLEDGE.md` instead of the BYOAO-era `AGENTS.md`.
+
 ## [1.4.1] — 2026-08-19
 
 ### Fixes
