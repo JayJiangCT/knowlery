@@ -57,7 +57,7 @@ If some are missing:
 Whichever platform is selected, Knowlery expects:
 
 - `AGENTS.md` at the vault root
-- `.claude/CLAUDE.md` (the one-line `@../AGENTS.md` import)
+- `.claude/CLAUDE.md`
 - `.agents/rules/`
 - `.agents/skills/`
 
@@ -65,23 +65,34 @@ Use settings to regenerate agent config.
 
 ## An Agent Ignores the Vault Rules
 
-Every agent gets the same fixed context from the vault-root `AGENTS.md`, where
-Knowlery inlines three things inside a `<!-- Knowlery managed:start/end -->`
-block: your `KNOWLEDGE.md` (what the knowledge base is), Knowlery's operating
+Every agent starts from the same three sources: your `KNOWLEDGE.md` (what the
+knowledge base is), the rules in `.agents/rules/`, and Knowlery's operating
 rules for the installed version (Obsidian CLI use, retrieval procedure,
-skills — rendered from the template, so fixes reach every vault), and the
-rules from `.agents/rules/`. Codex, OpenCode, and Cursor read it directly;
-Claude Code reads it through `.claude/CLAUDE.md`. The block is regenerated on
-plugin load and `knowlery sync`, so edit `KNOWLEDGE.md` or the rule files,
-not the block. Anything you write outside the markers (or below the import
-in `CLAUDE.md`) is kept.
+skills — rendered from the template, so fixes reach every vault). There are
+two entry files, each with a `<!-- Knowlery managed:start/end -->` block:
+
+- `AGENTS.md`, read by Codex, OpenCode, and Cursor. Those harnesses have no
+  import syntax, so the block opens with a **Read First** section telling the
+  agent to read `KNOWLEDGE.md` and each listed rule file before anything
+  else, then carries the operating rules. If a Codex/OpenCode session skips
+  that read, the vault description is simply not in its context — check the
+  session's first tool calls.
+- `.claude/CLAUDE.md`, read by Claude Code. Its block `@`-imports
+  `KNOWLEDGE.md` first, inlines the operating rules, and `@`-imports every
+  rule file, so Claude gets the same context as hard injection. It does not
+  import `AGENTS.md`.
+
+`KNOWLEDGE.md` is never copied into either file. Both blocks are regenerated
+on plugin load, rule add/remove, and `knowlery sync`, so edit `KNOWLEDGE.md`
+or the rule files, not the blocks. Anything you write outside the markers is
+kept.
 
 Upgrading from a pre-1.5 vault:
 
 - **`KNOWLEDGE.md` still carries the old operating rules.** Templates before
   1.5 wrote `## Operating Rules`, `## Knowledge Retrieval`, and
   `## Available Skills` into `KNOWLEDGE.md`; Knowlery now supplies them in
-  `AGENTS.md`, so those sections are stale duplicates. Health shows a warning
+  the entry files, so those sections are stale duplicates. Health shows a warning
   while they remain. Delete the three sections (keep your title, intro,
   Vault Structure, and any sections of your own — if you nested your own
   notes under one of them, move them out first). `KNOWLEDGE.md` is yours, so
@@ -97,14 +108,15 @@ Upgrading from a pre-1.5 vault:
   remove that directory Claude sees those rules twice — harmless, but noisy.
   Delete `.claude/rules/` once you have confirmed `.agents/rules/` holds
   everything.
-- `.claude/CLAUDE.md` is converged in place: the old `@../KNOWLEDGE.md` and
-  `@rules/*.md` imports become `@../AGENTS.md`; your own text stays.
+- `.claude/CLAUDE.md` is converged in place: the 1.5 `@../AGENTS.md` import
+  and the older loose `@../KNOWLEDGE.md` / `@rules/*.md` imports are replaced
+  by the managed block; your own text stays after it.
 - A Knowlery-written `opencode.json` is retired: OpenCode V2 no longer loads
   its `instructions` array, so `knowlery sync` removes the two Knowlery
   entries (and the file when nothing you added remains).
 
 Codex caps the combined project instructions at 32 KiB by default
-(`project_doc_max_bytes`); the generated block is around 9 KB.
+(`project_doc_max_bytes`); the generated block is around 6 KB.
 
 ## Broken Wikilinks
 

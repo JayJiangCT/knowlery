@@ -2,7 +2,47 @@
 
 ## [Unreleased]
 
-### One fixed context for every agent
+### KNOWLEDGE.md is referenced, not copied
+
+- **The entry files point at `KNOWLEDGE.md` and the rules instead of
+  inlining them.** Local testing of the layout below showed `AGENTS.md`
+  repeating most of `KNOWLEDGE.md`, and a file that is copied wholesale into
+  another stops being the one place agents look. `KNOWLEDGE.md` is now a
+  standalone file that nothing copies, and each harness reaches it the way
+  that harness allows:
+  - **Codex / OpenCode → `AGENTS.md`.** Neither supports an import syntax
+    (Codex concatenates the `AGENTS.md` chain only; OpenCode V2 does not
+    resolve `@` references or its `instructions` array), so the managed block
+    opens with a **Read First** section: read `KNOWLEDGE.md` in full before
+    anything else (`obsidian read` when Obsidian is running, file tools
+    otherwise), then read each listed `.agents/rules/<file>.md` with file
+    tools and follow them for the session. Knowlery's operating rules follow.
+    This is a soft reference — it depends on the agent doing the read — which
+    is the trade-off accepted for keeping `KNOWLEDGE.md` single-sourced.
+  - **Claude Code → `.claude/CLAUDE.md`.** Claude's `@` imports are hard
+    injection, so its managed block imports `@../KNOWLEDGE.md` first (the
+    most important part of the prompt), inlines the operating rules, and
+    imports each rule file individually (`@../.agents/rules/<file>.md`;
+    Claude has no glob import, so the list is regenerated on rule
+    add/remove). It **no longer imports `AGENTS.md`** — that file exists for
+    harnesses without imports and would only repeat the operating rules.
+- `AGENTS.md` shrinks from ~9 KB to ~6 KB (well under Codex's 32 KiB
+  `project_doc_max_bytes`). Rule bodies are no longer inlined anywhere, so the
+  "Applies to files matching" restatement of Claude `paths:` frontmatter is
+  gone with them; Claude sees the frontmatter itself through the import.
+- **Existing vaults converge on sync.** A 1.5 `.claude/CLAUDE.md` (`@../AGENTS.md`)
+  and a pre-1.5 one (`@../KNOWLEDGE.md` + `@rules/*.md` block) both become the
+  managed block; your own text stays after it. `AGENTS.md` keeps text outside
+  its markers as before. Neither entry file is written for an uninitialized
+  vault (no `KNOWLEDGE.md`).
+- Adding or deleting a rule now re-renders both entry files, not just
+  `AGENTS.md`.
+- The stale operating-rule sections a pre-1.5 `KNOWLEDGE.md` may still carry
+  are still flagged by health: they now reach agents through the import /
+  read of `KNOWLEDGE.md` itself, alongside the current rules in the entry
+  file — the same duplication, one hop further away.
+
+### One fixed context for every agent (superseded in part by the section above)
 
 - **`AGENTS.md` is now the single source of the fixed context.** Until now
   only Claude Code received the operating card and rules (via
