@@ -6,6 +6,7 @@ import type { Platform } from './types';
 import { PluginContext } from './context';
 import { SettingsAdvanced } from './views/SettingsAdvanced';
 import { generatePlatformConfig } from './core/platform-adapter';
+import { resetAgentsMd } from './core/agents-md';
 import { detectNode } from './core/node-detect';
 import { generateKnowledgeMd } from './assets/templates';
 import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/setup-executor';
@@ -447,6 +448,22 @@ export class KnowlerySettingTab extends PluginSettingTab {
               new Notice(t('settings.regenerate.done'));
             })();
           }),
+        );
+        setting.addButton((btn) =>
+          btn
+            .setButtonText(t('settings.regenerate.resetButton'))
+            .setWarning()
+            .onClick(() => {
+              new ConfirmModal(
+                this.plugin.app,
+                t('settings.regenerate.resetConfirmTitle'),
+                t('settings.regenerate.resetConfirmMessage'),
+                async () => {
+                  await resetAgentsMd(this.plugin.fs);
+                  new Notice(t('settings.regenerate.resetDone'));
+                },
+              ).open();
+            }),
         );
       },
     };

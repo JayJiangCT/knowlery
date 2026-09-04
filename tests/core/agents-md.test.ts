@@ -6,6 +6,7 @@ import {
   collectRulePaths,
   mergeAgentsMd,
   renderAgentsMdBlock,
+  resetAgentsMd,
   syncAgentsMd,
 } from '../../src/core/agents-md';
 import { RULE_TEMPLATES } from '../../src/assets/rules';
@@ -123,12 +124,27 @@ describe('AGENTS.md is a managed block, not an owned file', () => {
     expect(merged2.split(AGENTS_MD_MANAGED_START).length - 1).toBe(1);
   });
 
-  it('appends the block to a pre-existing AGENTS.md that has no markers', () => {
+  it('puts the block first in a pre-existing AGENTS.md without markers, keeping the user text after it', () => {
+    // Same order Claude documents for CLAUDE.md: shared instructions lead, additions trail.
     const existing = '# Hand-written instructions\n\nUse British spelling.\n';
     const block = renderAgentsMdBlock({ knowledgeMd: 'card', rules: [] });
     const merged = mergeAgentsMd(existing, block);
-    expect(merged.startsWith(existing.trimEnd())).toBe(true);
-    expect(merged).toContain(block);
+    expect(merged).toBe(`${block}\n\n${existing.trim()}\n`);
+  });
+
+  it('resetAgentsMd is the only path that drops text outside the markers', async () => {
+    const fs = createMemoryFs({
+      'KNOWLEDGE.md': KNOWLEDGE,
+      'AGENTS.md': '# Stale pre-Knowlery guide\n\nRun /wiki.\n',
+    });
+    await syncAgentsMd(fs);
+    expect(fs.files.get('AGENTS.md')).toContain('Run /wiki.');
+
+    await resetAgentsMd(fs);
+    const reset = fs.files.get('AGENTS.md')!;
+    expect(reset).not.toContain('Run /wiki.');
+    expect(reset.startsWith(AGENTS_MD_MANAGED_START)).toBe(true);
+    expect(reset).toContain(KNOWLEDGE.trim());
   });
 
   it('does not rewrite an already-synced file (no mtime churn on plugin load)', async () => {

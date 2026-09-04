@@ -82,6 +82,14 @@ export function renderRuleBody(content: string): string {
     : [scope, '', body].join('\n');
 }
 
+/**
+ * With markers present the block is replaced in place. Without markers (a
+ * pre-existing, hand-written AGENTS.md) the block goes *first* and the user's
+ * text follows — the same order Claude Code documents for CLAUDE.md ("loads the
+ * imported file, then appends the rest"): shared instructions lead, additions
+ * trail. Nothing of the user's is dropped; `resetAgentsMd` is the explicit way
+ * to discard it.
+ */
 export function mergeAgentsMd(existing: string | null, block: string): string {
   if (existing === null || existing.trim().length === 0) {
     return `${block}\n`;
@@ -95,7 +103,7 @@ export function mergeAgentsMd(existing: string | null, block: string): string {
     return `${before}${block}${after.endsWith('\n') ? after : `${after}\n`}`;
   }
 
-  return `${existing.trimEnd()}\n\n${block}\n`;
+  return `${block}\n\n${existing.trim()}\n`;
 }
 
 /** Every `.md` under `dir`, recursively, as sorted paths relative to `dir`. */
@@ -147,4 +155,15 @@ export async function syncAgentsMd(fs: VaultFs): Promise<void> {
   if (!fileExists || merged !== existing) {
     await fs.write(AGENTS_MD_PATH, merged);
   }
+}
+
+/**
+ * The explicit, user-initiated cleanup: rewrites AGENTS.md as the managed block
+ * alone, discarding everything outside the markers (typically the pre-Knowlery
+ * instructions a vault carried). Sync never does this on its own.
+ */
+export async function resetAgentsMd(fs: VaultFs): Promise<void> {
+  const source = await readAgentsMdSource(fs);
+  if (!source) return;
+  await fs.write(AGENTS_MD_PATH, mergeAgentsMd(null, renderAgentsMdBlock(source)));
 }
