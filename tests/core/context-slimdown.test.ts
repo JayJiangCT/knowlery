@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateClaudeMd, generateKnowledgeMd, generateOpenCodeJson } from '../../src/assets/templates';
+import { generateClaudeMd, generateKnowledgeMd } from '../../src/assets/templates';
 import { migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from '../../src/core/migration';
 import { CLAUDE_RULE_IMPORTS_START, CLAUDE_RULE_IMPORTS_END } from '../../src/core/rule-imports';
 
@@ -12,12 +12,6 @@ describe('slimmed templates (spec f4, §4.1)', () => {
     expect(claudeMd).toContain('@rules/activity-ledger.md');
     expect(claudeMd).not.toContain('@../SCHEMA.md');
     expect(claudeMd).not.toContain('@../INDEX.base');
-  });
-
-  it('opencode.json template lists the operating card and rules only', () => {
-    const parsed = JSON.parse(generateOpenCodeJson('My KB')) as { instructions: string[]; name?: string };
-    expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
-    expect(parsed).not.toHaveProperty('name');
   });
 
   it('KNOWLEDGE.md instructs reading SCHEMA.md before writing pages', () => {

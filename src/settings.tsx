@@ -412,7 +412,6 @@ export class KnowlerySettingTab extends PluginSettingTab {
                   this.plugin.fs,
                   this.plugin.settings.platform,
                   otherPlatform,
-                  this.plugin.settings.kbName,
                   true,
                 );
                 this.plugin.settings.platform = otherPlatform;
@@ -455,11 +454,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
         setting.addButton((btn) =>
           btn.setButtonText(t('settings.regenerate.button')).onClick(() => {
             void (async () => {
-              await generatePlatformConfig(
-                this.plugin.fs,
-                this.plugin.settings.platform,
-                this.plugin.settings.kbName,
-              );
+              await generatePlatformConfig(this.plugin.fs, this.plugin.settings.platform);
               new Notice(t('settings.regenerate.done'));
             })();
           }),
@@ -532,11 +527,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
       );
     }
 
-    await generatePlatformConfig(
-      this.plugin.fs,
-      this.plugin.settings.platform,
-      this.plugin.settings.kbName,
-    );
+    await generatePlatformConfig(this.plugin.fs, this.plugin.settings.platform);
 
     await writeManifestUpdate(this.plugin.fs, {
       kbName: this.plugin.settings.kbName,

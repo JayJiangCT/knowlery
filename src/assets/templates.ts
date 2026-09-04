@@ -312,12 +312,3 @@ export function generateClaudeMd(ruleImportPaths: string[] = []): string {
     '',
   ].join('\n');
 }
-
-export function generateOpenCodeJson(_kbName?: string): string {
-  // OpenCode's config schema is additionalProperties:false. A top-level
-  // `name` is rejected at startup (`Unrecognized key: name`, issue #72).
-  // The KB name lives in KNOWLEDGE.md / the Knowlery manifest, not here.
-  return JSON.stringify({
-    instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
-  }, null, 2);
-}

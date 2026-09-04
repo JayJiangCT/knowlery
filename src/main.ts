@@ -10,6 +10,8 @@ import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncClaudeRuleImports } from './core/rule-imports';
+import { syncAgentsMd } from './core/agents-md';
+import { getRulesDir } from './core/platform-adapter';
 import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
@@ -179,6 +181,9 @@ export default class KnowleryPlugin extends Plugin {
         if (this.settings.platform === 'claude-code') {
           await syncClaudeRuleImports(this.fs);
         }
+        // Every load, not only on version change: picks up hand edits to
+        // KNOWLEDGE.md or the rules made while Obsidian was closed.
+        await syncAgentsMd(this.fs, getRulesDir(this.settings.platform));
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
           const syncResult = await runVaultSync(this.fs, this.settings.platform, pluginVersion);

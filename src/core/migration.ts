@@ -264,6 +264,48 @@ export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
   }
 }
 
+/** The two entries Knowlery used to write into vault-level opencode.json (pre-1.5). */
+const RETIRED_OPENCODE_INSTRUCTIONS = new Set(['KNOWLEDGE.md', '.agents/rules/*.md']);
+
+/**
+ * The operating card and rules now reach OpenCode through the vault-root
+ * AGENTS.md (which OpenCode V2 reads; its `instructions` array it does not),
+ * so the old entries would only double-inject on V1. Removes exactly those two,
+ * drops an emptied `instructions` key, and deletes the file when nothing the
+ * user added remains. Malformed JSON is left untouched.
+ */
+export async function migrateOpenCodeInstructionsToAgentsMd(fs: VaultFs): Promise<void> {
+  const openCodePath = 'opencode.json';
+  if (!(await fs.exists(openCodePath))) return;
+
+  const raw = await fs.read(openCodePath);
+  let config: Record<string, unknown>;
+  try {
+    config = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return;
+  }
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return;
+  if (!Array.isArray(config.instructions)) return;
+
+  const filtered = config.instructions.filter(
+    (entry) => typeof entry !== 'string' || !RETIRED_OPENCODE_INSTRUCTIONS.has(entry),
+  );
+  if (filtered.length === config.instructions.length) return;
+
+  if (filtered.length === 0) {
+    delete config.instructions;
+  } else {
+    config.instructions = filtered;
+  }
+
+  if (Object.keys(config).length === 0) {
+    await fs.remove(openCodePath);
+  } else {
+    await fs.write(openCodePath, JSON.stringify(config, null, 2));
+  }
+}
+
 /** Keys OpenCode's strict project schema rejects at startup. */
 const OPENCODE_UNRECOGNIZED_KEYS = ['name'] as const;
 

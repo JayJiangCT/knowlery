@@ -1817,11 +1817,11 @@ Obsidian's vault index. Obsidian CLI commands that depend on the vault index —
 including \`read\` and \`create\` — cannot reach them even with \`path=\`; use
 your file tools directly.
 
-Claude Code and OpenCode load Knowlery rules through their platform
-configuration at session start (\`.claude/CLAUDE.md\` imports /
-\`opencode.json\` instructions). Codex does not automatically receive
-per-vault rule contents; follow the workspace \`AGENTS.md\` and read the
-relevant hidden rule files directly with your file tools.
+Every platform receives the same fixed context — \`KNOWLEDGE.md\` plus the
+rules — at session start. Claude Code loads it through \`.claude/CLAUDE.md\`
+imports; Codex and OpenCode load the vault-root \`AGENTS.md\`, where Knowlery
+inlines the same files. \`AGENTS.md\` is regenerated from its sources on
+sync: change \`KNOWLEDGE.md\` or a rule file, never the managed block itself.
 
 ## Required Frontmatter
 

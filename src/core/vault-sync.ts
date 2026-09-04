@@ -2,10 +2,18 @@ import type { Platform } from '../types';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
 import { readManifest } from './setup-executor';
-import { syncBuiltinSkills, migrateSchemaMd, migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from './migration';
+import {
+  syncBuiltinSkills,
+  migrateSchemaMd,
+  migrateFixedContextImports,
+  migrateOpenCodeUnrecognizedKeys,
+  migrateOpenCodeInstructionsToAgentsMd,
+} from './migration';
 import { syncQueryScript } from './query-script';
 import { refreshInstalledBundlesBlock } from './okf/knowledge-md-bundles';
 import { syncClaudeRuleImports } from './rule-imports';
+import { syncAgentsMd } from './agents-md';
+import { getRulesDir } from './platform-adapter';
 
 const MANIFEST_PATH = '.knowlery/manifest.json';
 
@@ -43,10 +51,13 @@ export async function runVaultSync(
   await migrateSchemaMd(fs);
   await migrateFixedContextImports(fs);
   await migrateOpenCodeUnrecognizedKeys(fs);
+  await migrateOpenCodeInstructionsToAgentsMd(fs);
   await refreshInstalledBundlesBlock(fs);
   if (platform === 'claude-code') {
     await syncClaudeRuleImports(fs);
   }
+  // After the bundles block: AGENTS.md mirrors the final KNOWLEDGE.md.
+  await syncAgentsMd(fs, getRulesDir(platform));
 
   if (guardActive && manifest && manifest.lastSyncedBy !== toolVersion) {
     manifest.lastSyncedBy = toolVersion;

@@ -65,18 +65,33 @@ describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
   });
 });
 
-describe('sync migrates OpenCode config (issue #72)', () => {
-  it('strips the rejected name key from an existing vault opencode.json', async () => {
+describe('sync retires the Knowlery-written opencode.json in favour of AGENTS.md', () => {
+  it('removes a vault opencode.json that held only Knowlery keys (name + instructions)', async () => {
     const fs = createMemoryFs({
       '.knowlery/manifest.json': manifest({ platform: 'opencode' }),
+      'KNOWLEDGE.md': '# My KB\n',
       'opencode.json': JSON.stringify({
         name: 'My KB',
         instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
       }, null, 2),
     });
     expect(await runVaultSync(fs, 'opencode')).toEqual({ skipped: false });
-    const parsed = JSON.parse(fs.files.get('opencode.json')!) as { name?: string; instructions: string[] };
-    expect(parsed).not.toHaveProperty('name');
-    expect(parsed.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+    expect(fs.files.has('opencode.json')).toBe(false);
+    expect(fs.files.get('AGENTS.md')).toContain('# My KB');
+  });
+
+  it('keeps user keys and user instructions, dropping only the two Knowlery entries', async () => {
+    const fs = createMemoryFs({
+      '.knowlery/manifest.json': manifest({ platform: 'opencode' }),
+      'KNOWLEDGE.md': '# My KB\n',
+      'opencode.json': JSON.stringify({
+        $schema: 'https://opencode.ai/config.json',
+        instructions: ['KNOWLEDGE.md', 'docs/team.md', '.agents/rules/*.md'],
+      }, null, 2),
+    });
+    expect(await runVaultSync(fs, 'opencode')).toEqual({ skipped: false });
+    const parsed = JSON.parse(fs.files.get('opencode.json')!) as { $schema: string; instructions: string[] };
+    expect(parsed.$schema).toBe('https://opencode.ai/config.json');
+    expect(parsed.instructions).toEqual(['docs/team.md']);
   });
 });

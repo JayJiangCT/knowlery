@@ -61,7 +61,7 @@ export async function executeSetup(
 
   onProgress('platform-config');
   await installDefaultRules(fs, platform);
-  await generatePlatformConfig(fs, platform, kbName);
+  await generatePlatformConfig(fs, platform);
 
   onProgress('lock-files');
   const lock = buildInitialSkillsLock();

@@ -48,7 +48,7 @@ export async function checkVaultConfigFiles(
 
   const agentConfigPath = platform === 'claude-code'
     ? normalizeVaultPath('.claude/CLAUDE.md')
-    : normalizeVaultPath('opencode.json');
+    : normalizeVaultPath('AGENTS.md');
   const agentConfigExists = await fs.exists(agentConfigPath);
 
   return {

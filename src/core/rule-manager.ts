@@ -4,6 +4,7 @@ import { normalizeVaultPath } from './vault-fs';
 import { RULE_TEMPLATES, type RuleTemplate } from '../assets/rules';
 import { getRulesDir } from './platform-adapter';
 import { syncClaudeRuleImports as syncClaudeRuleImportBlock } from './rule-imports';
+import { syncAgentsMd } from './agents-md';
 
 export function getRuleTemplates(): RuleTemplate[] {
   return RULE_TEMPLATES;
@@ -50,7 +51,7 @@ export async function writeRule(
   const rulesDir = getRulesDir(platform);
   await fs.mkdir(rulesDir);
   await fs.write(`${rulesDir}/${filename}`, content);
-  await syncClaudeRuleImports(fs, platform);
+  await syncFixedContext(fs, platform);
 }
 
 export async function deleteRule(
@@ -63,7 +64,7 @@ export async function deleteRule(
   if (await fs.exists(path)) {
     await fs.remove(path);
   }
-  await syncClaudeRuleImports(fs, platform);
+  await syncFixedContext(fs, platform);
 }
 
 export async function installDefaultRules(
@@ -84,7 +85,9 @@ export async function installActivityLedgerRule(
   await writeRule(fs, platform, template.filename, template.content);
 }
 
-async function syncClaudeRuleImports(fs: VaultFs, platform: Platform): Promise<void> {
-  if (platform !== 'claude-code') return;
-  await syncClaudeRuleImportBlock(fs);
+async function syncFixedContext(fs: VaultFs, platform: Platform): Promise<void> {
+  if (platform === 'claude-code') {
+    await syncClaudeRuleImportBlock(fs);
+  }
+  await syncAgentsMd(fs, getRulesDir(platform));
 }

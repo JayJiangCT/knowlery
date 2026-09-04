@@ -16,16 +16,17 @@ describe('Claude rule imports', () => {
     expect(claudeMd).toContain('@rules/frontend/testing.md');
   });
 
-  it('regenerates Claude config with installed rules and keeps OpenCode glob instructions', async () => {
+  it('regenerates Claude config with installed rules; OpenCode gets no opencode.json', async () => {
     const fs = createMemoryFs();
     await installDefaultRules(fs, 'claude-code');
-    await generatePlatformConfig(fs, 'claude-code', 'My KB');
+    await generatePlatformConfig(fs, 'claude-code');
 
     expect(fs.files.get('.claude/CLAUDE.md')).toContain('@rules/activity-ledger.md');
     expect(fs.files.get('.claude/CLAUDE.md')).toContain('@rules/citation-required.md');
 
-    await generatePlatformConfig(fs, 'opencode', 'My KB');
-    expect(fs.files.get('opencode.json')).toContain('.agents/rules/*.md');
+    await generatePlatformConfig(fs, 'opencode');
+    expect(fs.files.has('opencode.json')).toBe(false);
+    expect(fs.dirs.has('.agents/rules')).toBe(true);
   });
 
   it('syncs Claude rule imports after custom rules are added and deleted', async () => {

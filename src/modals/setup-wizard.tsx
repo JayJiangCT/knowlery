@@ -814,8 +814,8 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
               >
                 <p className="knowlery-wizard__config-summary">
                   {platform === 'claude-code'
-                    ? <>Creates <code>.claude/CLAUDE.md</code> with @includes for KNOWLEDGE.md, SCHEMA.md, and INDEX.base, plus rules in <code>.claude/rules/</code></>
-                    : <>Creates <code>opencode.json</code> with instructions referencing KNOWLEDGE.md, SCHEMA.md, and INDEX.base, plus rules in <code>.agents/rules/</code></>}
+                    ? <>Creates <code>.claude/CLAUDE.md</code> importing KNOWLEDGE.md and the rules in <code>.claude/rules/</code>, plus a vault-root <code>AGENTS.md</code> with the same content inlined for Codex and OpenCode</>
+                    : <>Creates a vault-root <code>AGENTS.md</code> — KNOWLEDGE.md and the rules in <code>.agents/rules/</code> inlined — which OpenCode and Codex load at session start</>}
                 </p>
               </PreviewSection>
             </div>

@@ -79,9 +79,12 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
       });
       const knowledge = await readFile(join(root, 'KNOWLEDGE.md'), 'utf8');
       expect(knowledge).toMatch(/^# Prompted KB/m);
-      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8')) as { name?: string; instructions: string[] };
-      expect(opencode).not.toHaveProperty('name');
-      expect(opencode.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+      // OpenCode loads the vault-root AGENTS.md; no opencode.json is written.
+      const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(agentsMd).toContain('# Prompted KB');
+      expect(agentsMd).toContain('# Citation Required');
+      expect(agentsMd).toContain('.agents/rules/*.md');
+      await expect(readFile(join(root, 'opencode.json'), 'utf8')).rejects.toThrow();
     });
   });
 });

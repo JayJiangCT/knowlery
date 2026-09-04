@@ -79,7 +79,7 @@ describe('executeSetup over nodeVaultFs (spec 0.7 f1, §6.2)', () => {
       expect(rootEntries).toEqual(
         [
           '.agents', '.claude', '.knowlery',
-          'INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md',
+          'AGENTS.md', 'INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md',
           ...KNOWLEDGE_DIRS,
           'skills-lock.json',
         ].sort(),
