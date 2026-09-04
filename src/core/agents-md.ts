@@ -50,21 +50,24 @@ export function renderAgentsMdBlock(source: AgentsMdSource): string {
  * card's boundary).
  */
 export function renderReadFirst(rulePaths: string[]): string {
+  const hasRules = rulePaths.length > 0;
   const lines = [
     '## Read First',
     '',
-    '`KNOWLEDGE.md` at the vault root is the user\'s description of this knowledge base — what',
-    'it covers, how it is laid out, and what it should be able to answer. It is the most',
-    'important context for any task here and it is **not** injected automatically: read it in',
-    'full before doing anything else in a session (`obsidian read file="KNOWLEDGE.md"` when',
-    'Obsidian is running, otherwise your file tools).',
+    `Do ${hasRules ? 'these two steps' : 'this'} before your first reply in this session — before answering, planning,`,
+    `or invoking any skill. ${hasRules ? 'These files are' : 'This file is'} **not** injected automatically, and no skill`,
+    `substitutes for reading ${hasRules ? 'them' : 'it'}.`,
+    '',
+    '1. Read `KNOWLEDGE.md` at the vault root in full: `obsidian read file="KNOWLEDGE.md"` when',
+    '   Obsidian is running, otherwise your file tools. It is the user\'s description of this',
+    '   knowledge base — what it covers, how it is laid out, what it should be able to answer —',
+    '   and the most important context for any task here.',
   ];
 
-  if (rulePaths.length > 0) {
+  if (hasRules) {
     lines.push(
-      '',
-      `Then read each rule file below with your file tools (\`${RULES_DIR}/\` is a dot-directory,`,
-      'outside the vault index) and follow them as standing instructions for the whole session:',
+      `2. Then read each rule file below with your file tools (\`${RULES_DIR}/\` is a dot-directory,`,
+      '   outside the vault index) and follow them as standing instructions for the whole session:',
       '',
       ...rulePaths.map((path) => `- \`${RULES_DIR}/${path}\``),
     );

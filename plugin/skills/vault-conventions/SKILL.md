@@ -59,6 +59,10 @@ OpenCode read the vault-root `AGENTS.md`, which tells them to read
 regenerated on sync: change `KNOWLEDGE.md` or a rule file, never the managed
 block itself.
 
+**If this session has not yet read `KNOWLEDGE.md` and every
+`.agents/rules/*.md`, do that now, before continuing with this skill.** On
+Codex and OpenCode nothing injects them for you; this skill is not a substitute.
+
 ## Required Frontmatter
 
 Every note MUST have these fields:
