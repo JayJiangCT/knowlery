@@ -75,6 +75,12 @@ the markers (or below the import in `CLAUDE.md`) is kept.
 
 Upgrading from a pre-1.5 vault:
 
+- If the vault already had a hand-written `AGENTS.md`, the managed block is
+  placed first and your text follows it. Much of that older text is usually
+  redundant with `KNOWLEDGE.md` now; **Settings → Regenerate agent config →
+  Reset AGENTS.md** discards everything outside the block (after a
+  confirmation). Move anything worth keeping — say, an MCP source-priority
+  rule — back in below the block afterwards.
 - Rules that lived in `.claude/rules/` are **copied** into `.agents/rules/`
   (never deleted). Claude Code also auto-loads `.claude/rules/`, so until you
   remove that directory Claude sees those rules twice — harmless, but noisy.

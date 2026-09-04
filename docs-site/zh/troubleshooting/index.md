@@ -75,6 +75,10 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 从 1.5 之前的 vault 升级时：
 
+- 如果 vault 里已有手写的 `AGENTS.md`，受管区块会放在最前面，你的内容接在
+  后面。这些旧内容通常已与 `KNOWLEDGE.md` 重复；**设置 → 重新生成 Agent 配置
+  → 重置 AGENTS.md** 会（确认后）丢弃区块之外的全部内容。之后再把值得保留的
+  部分——比如 MCP 数据源优先级规则——补回区块下方即可。
 - 原本在 `.claude/rules/` 里的 rules 会被**复制**到 `.agents/rules/`（不会
   删除）。Claude Code 也会自动加载 `.claude/rules/`，所以在你删除该目录之前
   Claude 会看到这些 rules 两遍——无害但冗余。确认 `.agents/rules/` 已齐全后

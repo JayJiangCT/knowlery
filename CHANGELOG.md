@@ -16,7 +16,12 @@
   exactly this purpose. Both files are written whichever platform is
   selected; the block is regenerated write-on-change on init, rule
   add/remove, plugin load, and `knowlery sync`. Text outside the markers
-  (and below the import in `CLAUDE.md`) is preserved.
+  (and below the import in `CLAUDE.md`) is preserved; a pre-existing
+  hand-written `AGENTS.md` gets the block placed first and its own text
+  after it (the same order Claude Code documents for `CLAUDE.md`). A new
+  **Reset AGENTS.md** button in settings discards everything outside the
+  block — the explicit way to drop pre-Knowlery instructions; sync never
+  does that on its own.
 - **One rules directory: `.agents/rules/`.** Rules are no longer split per
   platform. Existing `.claude/rules/*.md` are **copied** into
   `.agents/rules/` on the first sync (nothing is deleted). Claude Code also
@@ -37,6 +42,24 @@
   `vault-conventions` skill describe the new layout.
 - **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as
   a new optional file (1.0 f5 §4.1, minor).
+
+### Retrieval guidance
+
+- **Query with subject terms, not the request.** A Codex session passed a
+  request-shaped question (`…方案是什么？请返回相关的最新原始记录、决策上下文…`)
+  to `knowlery:query` and the engine abstained on a topic the vault covers
+  thoroughly: request words can never be covered by a page, and weighted by
+  CJK length they sank coverage to ~15%. `/ask` now says to pass 2–6 subject
+  terms in the user's own language and to retry once with keywords before
+  declaring the vault silent; the `KNOWLEDGE.md` operating card carries the
+  same rule. Vaults initialized before this release keep their own
+  `KNOWLEDGE.md` (it is user-owned) — refresh its Knowledge Retrieval
+  section by hand to pick up the wording.
+- **`INDEX.base` is a human preview, not a retrieval step.** Since 0.6 the
+  deterministic engine replaced index-driven discovery; the remaining
+  "check / read `INDEX.base`" instructions in `/ask`, `/cook`, `/explore`,
+  `/ideas` and the operating card's CLI table are gone. The file itself is
+  unchanged and still renders in Obsidian.
 
 ### Removed
 
