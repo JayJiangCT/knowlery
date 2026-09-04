@@ -2,7 +2,8 @@ import type { RuleInfo } from '../types';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
 import { RULE_TEMPLATES, type RuleTemplate } from '../assets/rules';
-import { RULES_DIR, syncAgentsMd } from './agents-md';
+import { RULES_DIR } from './agents-md';
+import { syncAgentConfig } from './platform-adapter';
 
 export function getRuleTemplates(): RuleTemplate[] {
   return RULE_TEMPLATES;
@@ -37,7 +38,7 @@ export async function readRule(fs: VaultFs, filename: string): Promise<string | 
 export async function writeRule(fs: VaultFs, filename: string, content: string): Promise<void> {
   await fs.mkdir(RULES_DIR);
   await fs.write(`${RULES_DIR}/${filename}`, content);
-  await syncAgentsMd(fs);
+  await syncAgentConfig(fs);
 }
 
 export async function deleteRule(fs: VaultFs, filename: string): Promise<void> {
@@ -45,7 +46,7 @@ export async function deleteRule(fs: VaultFs, filename: string): Promise<void> {
   if (await fs.exists(path)) {
     await fs.remove(path);
   }
-  await syncAgentsMd(fs);
+  await syncAgentConfig(fs);
 }
 
 export async function installDefaultRules(fs: VaultFs): Promise<void> {

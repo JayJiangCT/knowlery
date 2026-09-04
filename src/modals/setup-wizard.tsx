@@ -813,7 +813,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
                 icon={<IconSettings size={16} />}
               >
                 <p className="knowlery-wizard__config-summary">
-                  Creates a vault-root <code>AGENTS.md</code> with KNOWLEDGE.md and the rules in <code>.agents/rules/</code> inlined — read directly by Codex and OpenCode — plus <code>.claude/CLAUDE.md</code>, which imports it for Claude Code
+                  Creates a vault-root <code>AGENTS.md</code> for Codex and OpenCode and a <code>.claude/CLAUDE.md</code> for Claude Code. Both carry Knowlery's operating rules and point at KNOWLEDGE.md and the rules in <code>.agents/rules/</code> — AGENTS.md by instruction, CLAUDE.md by <code>@</code> import — so KNOWLEDGE.md stays a single standalone file
                 </p>
               </PreviewSection>
             </div>

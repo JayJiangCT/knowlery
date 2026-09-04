@@ -71,7 +71,7 @@ export async function checkVaultConfigFiles(
   };
 }
 
-/** The H2 headings the pre-1.5 KNOWLEDGE.md template wrote; now rendered into AGENTS.md instead. */
+/** The H2 headings the pre-1.5 KNOWLEDGE.md template wrote; now rendered into AGENTS.md and .claude/CLAUDE.md instead. */
 export const LEGACY_OPERATING_RULE_HEADINGS = [
   '## Operating Rules',
   '## Knowledge Retrieval',

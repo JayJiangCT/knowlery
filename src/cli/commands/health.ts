@@ -77,7 +77,7 @@ function renderReport(report: HealthReport, log: (line: string) => void): void {
   row(config.agentConfigExists, 'Agent configuration');
   row(config.rulesConfigured, 'Rules configured');
   if (config.knowledgeMdLegacyOperatingRules) {
-    log('  WARNING  KNOWLEDGE.md still carries the old Operating Rules / Knowledge Retrieval / Available Skills sections — Knowlery now renders them into AGENTS.md; delete them from KNOWLEDGE.md (keep your own text)');
+    log('  WARNING  KNOWLEDGE.md still carries the old Operating Rules / Knowledge Retrieval / Available Skills sections — Knowlery now renders them into AGENTS.md and .claude/CLAUDE.md; delete them from KNOWLEDGE.md (keep your own text)');
   }
   row(
     config.skillsComplete.missing.length === 0,
