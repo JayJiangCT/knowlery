@@ -191,6 +191,8 @@ export const en = {
   'health.knowledgeDirs': 'Knowledge directories',
   'health.agentConfig': 'Agent configuration',
   'health.rulesConfigured': 'Rules configured',
+  'health.knowledgeMdLegacyRules': 'KNOWLEDGE.md carries old operating rules',
+  'health.knowledgeMdLegacyRulesDetail': 'Knowlery now supplies Operating Rules, Knowledge Retrieval, and Available Skills in AGENTS.md. Delete those sections from KNOWLEDGE.md (keep your own text) to stop agents seeing stale duplicates.',
   'health.noneFound': 'None found',
   'health.skillsInstalled': 'Skills installed',
   'health.skillsPresent': '{count} installed',

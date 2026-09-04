@@ -218,6 +218,13 @@ export function HealthTab() {
             label={t('health.rulesConfigured')}
             detail={integrity.rulesConfigured ? undefined : t('health.noneFound')}
           />
+          {integrity.knowledgeMdLegacyOperatingRules && (
+            <IntegrityRow
+              state="warn"
+              label={t('health.knowledgeMdLegacyRules')}
+              detail={t('health.knowledgeMdLegacyRulesDetail')}
+            />
+          )}
           <IntegrityRow
             state={integrity.skillsComplete.missing.length === 0 ? 'ok' : 'fail'}
             label={t('health.skillsInstalled')}

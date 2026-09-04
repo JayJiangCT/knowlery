@@ -1,3 +1,10 @@
+/**
+ * KNOWLEDGE.md is the user's description of the knowledge base — what it covers,
+ * how it is laid out — written once at setup and then theirs to edit. Knowlery's
+ * own operating rules are *not* in it: they come from `generateOperatingRules`
+ * and are rendered into AGENTS.md on every sync, so wording fixes reach every
+ * vault without touching a user-owned file.
+ */
 export function generateKnowledgeMd(kbName: string): string {
   return `# ${kbName}
 
@@ -15,7 +22,21 @@ This vault is an agent-assisted knowledge base. Your notes are the raw material 
 
 Agent pages are compiled from user notes. **User notes are never modified by the agent.**
 
-## Operating Rules
+## About This Knowledge Base
+
+_Describe what this knowledge base covers — the domains, projects, people, and the
+questions it should be able to answer. Agents read this file first. Keep it about your
+knowledge; Knowlery supplies its operating rules separately (see \`AGENTS.md\`)._
+`;
+}
+
+/**
+ * Knowlery's operating rules for agents — the tooling half of the fixed context.
+ * Rendered into AGENTS.md by `renderAgentsMdBlock` (after the user's KNOWLEDGE.md,
+ * before the rules), never written into a user-owned file.
+ */
+export function generateOperatingRules(): string {
+  return `## Operating Rules
 
 ### Obsidian CLI Only
 

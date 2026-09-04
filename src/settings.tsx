@@ -8,7 +8,6 @@ import { SettingsAdvanced } from './views/SettingsAdvanced';
 import { generatePlatformConfig } from './core/platform-adapter';
 import { resetAgentsMd } from './core/agents-md';
 import { detectNode } from './core/node-detect';
-import { generateKnowledgeMd } from './assets/templates';
 import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/setup-executor';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { installActivityLedgerRule } from './core/rule-manager';
@@ -525,12 +524,14 @@ export class KnowlerySettingTab extends PluginSettingTab {
   }
 
   private async updateKbName(): Promise<void> {
+    // KNOWLEDGE.md is the user's file: retitle the first heading, never regenerate it.
     const knowledgeMd = this.plugin.app.vault.getFileByPath('KNOWLEDGE.md');
     if (knowledgeMd) {
-      await this.plugin.app.vault.modify(
-        knowledgeMd,
-        generateKnowledgeMd(this.plugin.settings.kbName),
-      );
+      const content = await this.plugin.app.vault.read(knowledgeMd);
+      const retitled = content.replace(/^# .*$/m, `# ${this.plugin.settings.kbName}`);
+      if (retitled !== content) {
+        await this.plugin.app.vault.modify(knowledgeMd, retitled);
+      }
     }
 
     await generatePlatformConfig(this.plugin.fs);

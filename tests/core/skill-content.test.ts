@@ -1,7 +1,8 @@
 import matter from 'gray-matter';
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
-import { generateKnowledgeMd, generateSchemaMd } from '../../src/assets/templates';
+import { generateKnowledgeMd, generateOperatingRules, generateSchemaMd } from '../../src/assets/templates';
+import { hasLegacyOperatingRules } from '../../src/core/vault-config-health';
 
 /**
  * Spec 0.7 f5, §4.1-4: the acceptance criteria for this feature are skill-content
@@ -46,17 +47,39 @@ describe('query phrasing is taught (field finding: a request-shaped question abs
     }
   });
 
-  it('KNOWLEDGE.md operating card says the same', () => {
-    const card = generateKnowledgeMd('KB').replace(/\s+/g, ' ');
+  it('the operating rules say the same', () => {
+    const card = generateOperatingRules().replace(/\s+/g, ' ');
     expect(card).toContain('Pass the subject only');
     expect(card).toContain('`INDEX.base` is a human preview of compiled pages, not a retrieval step');
     expect(card).not.toContain('base:query');
   });
 });
 
+describe('KNOWLEDGE.md is the user\'s description; the operating rules are Knowlery\'s and render into AGENTS.md', () => {
+  it('the KNOWLEDGE.md template carries no operating-rule sections, so template fixes never need a user-file migration again', () => {
+    const knowledgeMd = generateKnowledgeMd('KB');
+    expect(knowledgeMd).toContain('# KB');
+    expect(knowledgeMd).toContain('## Vault Structure');
+    expect(knowledgeMd).toContain('## About This Knowledge Base');
+    expect(hasLegacyOperatingRules(knowledgeMd)).toBe(false);
+    expect(knowledgeMd).not.toContain('obsidian ');
+  });
+
+  it('health flags a pre-1.5 KNOWLEDGE.md that still carries those sections', () => {
+    expect(hasLegacyOperatingRules('# KB\n\n## Operating Rules\n\n### Obsidian CLI Only\n')).toBe(true);
+    expect(hasLegacyOperatingRules('# KB\n\n## Knowledge Retrieval\n')).toBe(true);
+    expect(hasLegacyOperatingRules('# KB\n\n## About This Knowledge Base\n\n### Freshness Review\n')).toBe(false);
+  });
+
+  it('the operating rules start at the H2 level so they nest under the KNOWLEDGE.md title in AGENTS.md', () => {
+    expect(generateOperatingRules().startsWith('## Operating Rules')).toBe(true);
+    expect(generateOperatingRules()).not.toMatch(/^# /m);
+  });
+});
+
 describe('the dot-directory boundary is on the operating card (field finding: Codex ran `obsidian read` on ~/.agents/skills/ask/SKILL.md)', () => {
-  it('KNOWLEDGE.md names the boundary, the Error:-with-exit-0 trait, and where skills actually live', () => {
-    const card = generateKnowledgeMd('KB').replace(/\s+/g, ' ');
+  it('the operating rules name the boundary, the Error:-with-exit-0 trait, and where skills actually live', () => {
+    const card = generateOperatingRules().replace(/\s+/g, ' ');
     expect(card).toContain('Obsidian CLI reaches only notes in the vault index');
     expect(card).toContain('treat any `Error:` output as failure');
     expect(card).toContain('`.agents/skills/<name>/SKILL.md`');
@@ -83,7 +106,7 @@ describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   });
 
   it('KNOWLEDGE.md template teaches the ladder', () => {
-    const knowledgeMd = generateKnowledgeMd('KB');
+    const knowledgeMd = generateOperatingRules();
     expect(knowledgeMd).toContain('obsidian knowlery:query');
     expect(knowledgeMd).toContain('knowlery query "<subject terms>"');
     expect(knowledgeMd).toContain('node .knowlery/bin/query.mjs');
@@ -98,7 +121,7 @@ describe('headless write branch (spec 0.7 f5, §4.2)', () => {
   });
 
   it('KNOWLEDGE.md operating rules cover headless environments', () => {
-    expect(generateKnowledgeMd('KB')).toContain('headless environments');
+    expect(generateOperatingRules()).toContain('headless environments');
   });
 });
 

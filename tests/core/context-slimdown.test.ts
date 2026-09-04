@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { generateKnowledgeMd } from '../../src/assets/templates';
+import { generateOperatingRules } from '../../src/assets/templates';
 import { migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from '../../src/core/migration';
 
 import { createMemoryFs } from '../mocks/memory-fs';
 
 describe('slimmed templates (spec f4, §4.1)', () => {
-  it('KNOWLEDGE.md instructs reading SCHEMA.md before writing pages', () => {
-    expect(generateKnowledgeMd('My KB')).toContain(
+  it('the operating rules instruct reading SCHEMA.md before writing pages', () => {
+    expect(generateOperatingRules()).toContain(
       'Read `SCHEMA.md` before creating or re-tagging knowledge pages',
     );
   });

@@ -10,6 +10,7 @@ import {
   syncAgentsMd,
 } from '../../src/core/agents-md';
 import { RULE_TEMPLATES } from '../../src/assets/rules';
+import { generateOperatingRules } from '../../src/assets/templates';
 import { generatePlatformConfig } from '../../src/core/platform-adapter';
 import { deleteRule, installDefaultRules, writeRule } from '../../src/core/rule-manager';
 import { createMemoryFs } from '../mocks/memory-fs';
@@ -33,8 +34,11 @@ describe('AGENTS.md is the single fixed context every platform ends up with', ()
     const block = managedBlock(fs.files.get('AGENTS.md')!);
     expect(block).toContain(KNOWLEDGE.trim());
 
-    // Same order a reader of the directory would see — deterministic across platforms.
-    let cursor = block.indexOf(KNOWLEDGE.trim());
+    // Order: the user's KNOWLEDGE.md, then Knowlery's operating rules (rendered from
+    // the template, not read from any user file), then the rules directory.
+    const opsAt = block.indexOf(generateOperatingRules().trim());
+    expect(opsAt).toBeGreaterThan(block.indexOf(KNOWLEDGE.trim()));
+    let cursor = opsAt;
     for (const rulePath of await collectRulePaths(fs)) {
       const ruleBody = fs.files.get(`${RULES_DIR}/${rulePath}`)!.trim();
       const at = block.indexOf(ruleBody, cursor);
@@ -91,7 +95,7 @@ describe('AGENTS.md is the single fixed context every platform ends up with', ()
       rules: [{ path: 'agent-pages.md', content: scoped }],
     });
 
-    expect(block).not.toContain('---');
+    expect(block).not.toMatch(/^---$/m);
     expect(block).not.toContain('paths:');
     expect(block).toContain(
       '# Agent-Maintained Pages\n\n_Applies to files matching: `entities/**/*.md`, `!SCHEMA.md`_\n\nYou can create and update them.',

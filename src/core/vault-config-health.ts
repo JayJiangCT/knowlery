@@ -50,8 +50,12 @@ export async function checkVaultConfigFiles(
   const agentConfigExists = (await fs.exists(AGENTS_MD_PATH))
     && (await fs.exists(normalizeVaultPath(CLAUDE_MD_PATH)));
 
+  const knowledgeMdExists = await fs.exists('KNOWLEDGE.md');
+  const knowledgeMdLegacyOperatingRules = knowledgeMdExists
+    && hasLegacyOperatingRules(await fs.read('KNOWLEDGE.md'));
+
   return {
-    knowledgeMdExists: await fs.exists('KNOWLEDGE.md'),
+    knowledgeMdExists,
     schemaMdExists: await fs.exists('SCHEMA.md'),
     indexBaseExists: await fs.exists('INDEX.base'),
     queryScriptExists: await fs.exists(normalizeVaultPath(QUERY_SCRIPT_PATH)),
@@ -61,7 +65,20 @@ export async function checkVaultConfigFiles(
     },
     agentConfigExists,
     rulesConfigured,
+    knowledgeMdLegacyOperatingRules,
     skillsComplete: { present: presentSkills, missing: missingSkills },
     platform,
   };
+}
+
+/** The H2 headings the pre-1.5 KNOWLEDGE.md template wrote; now rendered into AGENTS.md instead. */
+export const LEGACY_OPERATING_RULE_HEADINGS = [
+  '## Operating Rules',
+  '## Knowledge Retrieval',
+  '## Available Skills',
+] as const;
+
+export function hasLegacyOperatingRules(knowledgeMd: string): boolean {
+  const lines = knowledgeMd.split(/\r?\n/).map((line) => line.trimEnd());
+  return LEGACY_OPERATING_RULE_HEADINGS.some((heading) => lines.includes(heading));
 }
