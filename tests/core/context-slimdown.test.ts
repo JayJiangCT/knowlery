@@ -1,19 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { generateClaudeMd, generateKnowledgeMd } from '../../src/assets/templates';
+import { generateKnowledgeMd } from '../../src/assets/templates';
 import { migrateFixedContextImports, migrateOpenCodeUnrecognizedKeys } from '../../src/core/migration';
-import { CLAUDE_RULE_IMPORTS_START, CLAUDE_RULE_IMPORTS_END } from '../../src/core/rule-imports';
 
 import { createMemoryFs } from '../mocks/memory-fs';
 
 describe('slimmed templates (spec f4, §4.1)', () => {
-  it('CLAUDE.md template imports the operating card and rules only', () => {
-    const claudeMd = generateClaudeMd(['activity-ledger.md']);
-    expect(claudeMd).toContain('@../KNOWLEDGE.md');
-    expect(claudeMd).toContain('@rules/activity-ledger.md');
-    expect(claudeMd).not.toContain('@../SCHEMA.md');
-    expect(claudeMd).not.toContain('@../INDEX.base');
-  });
-
   it('KNOWLEDGE.md instructs reading SCHEMA.md before writing pages', () => {
     expect(generateKnowledgeMd('My KB')).toContain(
       'Read `SCHEMA.md` before creating or re-tagging knowledge pages',
@@ -21,50 +12,7 @@ describe('slimmed templates (spec f4, §4.1)', () => {
   });
 });
 
-describe('migrateFixedContextImports (spec f4, §4.2)', () => {
-  const legacyClaudeMd = [
-    '@../KNOWLEDGE.md',
-    '@../SCHEMA.md',
-    '@../INDEX.base',
-    '',
-    '# My own notes about this vault',
-    'Keep answers short.',
-    CLAUDE_RULE_IMPORTS_START,
-    '@rules/activity-ledger.md',
-    CLAUDE_RULE_IMPORTS_END,
-    '',
-  ].join('\n');
-
-  it('removes exactly the two stale import lines and preserves everything else', async () => {
-    const fs = createMemoryFs({ '.claude/CLAUDE.md': legacyClaudeMd });
-    await migrateFixedContextImports(fs);
-
-    const migrated = fs.files.get('.claude/CLAUDE.md')!;
-    expect(migrated).toContain('@../KNOWLEDGE.md');
-    expect(migrated).not.toContain('@../SCHEMA.md');
-    expect(migrated).not.toContain('@../INDEX.base');
-    expect(migrated).toContain('# My own notes about this vault');
-    expect(migrated).toContain('Keep answers short.');
-    expect(migrated).toContain(CLAUDE_RULE_IMPORTS_START);
-    expect(migrated).toContain('@rules/activity-ledger.md');
-  });
-
-  it('is idempotent — the second run writes nothing', async () => {
-    const fs = createMemoryFs({ '.claude/CLAUDE.md': legacyClaudeMd });
-    await migrateFixedContextImports(fs);
-    const writesAfterFirst = fs.writeLog.length;
-    await migrateFixedContextImports(fs);
-    expect(fs.writeLog.length).toBe(writesAfterFirst);
-  });
-
-  it('does not touch a CLAUDE.md where the user re-added nothing stale', async () => {
-    const content = '@../KNOWLEDGE.md\n\n# Custom section\n';
-    const fs = createMemoryFs({ '.claude/CLAUDE.md': content });
-    await migrateFixedContextImports(fs);
-    expect(fs.writeLog).toEqual([]);
-    expect(fs.files.get('.claude/CLAUDE.md')).toBe(content);
-  });
-
+describe('migrateFixedContextImports (spec f4, §4.2) — opencode.json half; CLAUDE.md is covered by claude-md.test', () => {
   it('filters only the instructions array in opencode.json, preserving other keys', async () => {
     const fs = createMemoryFs({
       'opencode.json': JSON.stringify({

@@ -154,10 +154,10 @@ describe('shared sync surface (spec 0.7 f2, §6.4)', () => {
     await withTempDir(async (root) => {
       const fs = nodeVaultFs(root);
       await runInit(fs, { platform: 'claude-code', name: 'KB', prompt: null, log: silent });
-      await runSync(fs, { log: silent }); // normalizes plain imports into the managed block
+      await runSync(fs, { log: silent });
       const converged = await fs.read('.claude/CLAUDE.md');
-      expect(converged).toContain('@../KNOWLEDGE.md');
-      expect(converged).toContain(generateClaudeMd([]).trim());
+      expect(converged).toBe(generateClaudeMd());
+      expect(converged).toContain('@../AGENTS.md');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { normalizePath, Notice } from 'obsidian';
-import { usePlugin, useSettings } from '../context';
+import { usePlugin } from '../context';
 import type { RuleInfo, DashboardRefreshPayload } from '../types';
 import { listRules, deleteRule } from '../core/rule-manager';
 import { RuleEditorModal } from '../modals/rule-editor';
@@ -110,14 +110,13 @@ function RuleCard(props: {
 
 export function ConfigTab() {
   const plugin = usePlugin();
-  const [settings] = useSettings();
   const [rules, setRules] = useState<RuleInfo[]>([]);
 
   const refreshRules = useCallback(async (payload?: DashboardRefreshPayload) => {
-    const result = await listRules(plugin.fs, settings.platform);
+    const result = await listRules(plugin.fs);
     setRules(result);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
-  }, [plugin, settings.platform]);
+  }, [plugin]);
 
   useEffect(() => {
     void refreshRules();
@@ -145,7 +144,7 @@ export function ConfigTab() {
   };
 
   const handleDelete = async (rule: RuleInfo) => {
-    await deleteRule(plugin.fs, settings.platform, rule.filename);
+    await deleteRule(plugin.fs, rule.filename);
     new Notice(t('config.ruleDeleted', { name: rule.name }));
     void refreshRules();
   };

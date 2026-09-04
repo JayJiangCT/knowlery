@@ -18,7 +18,6 @@ import { collectOrientationMap } from '../orientation-source';
 import { renderOrientationMap } from '../query/orientation';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
-import { resolvePlatform } from '../../cli/commands/shared';
 import { BUNDLED_SKILLS } from '../../assets/skills';
 
 /**
@@ -390,7 +389,7 @@ function registerSync(server: McpServer, options: McpServerOptions): void {
       throw new Error(`"${kb}" is not an initialized Knowlery workspace (no KNOWLEDGE.md or .knowlery/manifest.json).`);
     }
     const { fs: logged, writes } = loggingVaultFs(fs);
-    const result = await runVaultSync(logged, await resolvePlatform(fs), options.toolVersion);
+    const result = await runVaultSync(logged, options.toolVersion);
     if (result.skipped === 'newer-shell') {
       // The downgrade guard is a tool error, not a finding (spec §4.4): the
       // tool's point is the write it refused to make.

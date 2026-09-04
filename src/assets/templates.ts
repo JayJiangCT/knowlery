@@ -298,17 +298,11 @@ views:
 `;
 }
 
-export function generateClaudeMd(ruleImportPaths: string[] = []): string {
-  const ruleImports = [...new Set(ruleImportPaths)]
-    .filter((path) => path.endsWith('.md'))
-    .sort((a, b) => a.localeCompare(b))
-    .map((path) => `@rules/${path}`);
-
-  // Fixed context is the operating card plus rules only (spec f4): SCHEMA.md is an
-  // on-demand read (it grows forever) and INDEX.base is Base view YAML, useless inline.
-  return [
-    '@../KNOWLEDGE.md',
-    ...ruleImports,
-    '',
-  ].join('\n');
+/**
+ * Claude Code's documented way to share instructions with other agents: import
+ * AGENTS.md (which holds the operating card and rules, see core/agents-md.ts).
+ * Claude-specific additions belong below the import; `mergeClaudeMd` keeps them.
+ */
+export function generateClaudeMd(): string {
+  return '@../AGENTS.md\n';
 }

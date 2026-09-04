@@ -1,4 +1,3 @@
-import type { Platform } from '../types';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
 import { readManifest } from './setup-executor';
@@ -8,12 +7,12 @@ import {
   migrateFixedContextImports,
   migrateOpenCodeUnrecognizedKeys,
   migrateOpenCodeInstructionsToAgentsMd,
+  migrateClaudeRulesToAgentsRules,
 } from './migration';
 import { syncQueryScript } from './query-script';
 import { refreshInstalledBundlesBlock } from './okf/knowledge-md-bundles';
-import { syncClaudeRuleImports } from './rule-imports';
 import { syncAgentsMd } from './agents-md';
-import { getRulesDir } from './platform-adapter';
+import { syncClaudeMd } from './claude-md';
 
 const MANIFEST_PATH = '.knowlery/manifest.json';
 
@@ -34,7 +33,6 @@ export type VaultSyncResult =
  */
 export async function runVaultSync(
   fs: VaultFs,
-  platform: Platform,
   toolVersion?: string,
 ): Promise<VaultSyncResult> {
   const manifest = await readManifest(fs);
@@ -52,12 +50,11 @@ export async function runVaultSync(
   await migrateFixedContextImports(fs);
   await migrateOpenCodeUnrecognizedKeys(fs);
   await migrateOpenCodeInstructionsToAgentsMd(fs);
+  await migrateClaudeRulesToAgentsRules(fs);
   await refreshInstalledBundlesBlock(fs);
-  if (platform === 'claude-code') {
-    await syncClaudeRuleImports(fs);
-  }
-  // After the bundles block: AGENTS.md mirrors the final KNOWLEDGE.md.
-  await syncAgentsMd(fs, getRulesDir(platform));
+  // After the bundles block and the rules copy: AGENTS.md mirrors the final sources.
+  await syncAgentsMd(fs);
+  await syncClaudeMd(fs);
 
   if (guardActive && manifest && manifest.lastSyncedBy !== toolVersion) {
     manifest.lastSyncedBy = toolVersion;

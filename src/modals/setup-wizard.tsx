@@ -813,9 +813,7 @@ function SetupWizardContent(props: { onComplete: () => void; onCancel: () => voi
                 icon={<IconSettings size={16} />}
               >
                 <p className="knowlery-wizard__config-summary">
-                  {platform === 'claude-code'
-                    ? <>Creates <code>.claude/CLAUDE.md</code> importing KNOWLEDGE.md and the rules in <code>.claude/rules/</code>, plus a vault-root <code>AGENTS.md</code> with the same content inlined for Codex and OpenCode</>
-                    : <>Creates a vault-root <code>AGENTS.md</code> — KNOWLEDGE.md and the rules in <code>.agents/rules/</code> inlined — which OpenCode and Codex load at session start</>}
+                  Creates a vault-root <code>AGENTS.md</code> with KNOWLEDGE.md and the rules in <code>.agents/rules/</code> inlined — read directly by Codex and OpenCode — plus <code>.claude/CLAUDE.md</code>, which imports it for Claude Code
                 </p>
               </PreviewSection>
             </div>

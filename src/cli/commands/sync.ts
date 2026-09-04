@@ -2,7 +2,7 @@ import type { VaultFs } from '../../core/vault-fs';
 import { loggingVaultFs } from '../../core/vault-fs';
 import { isVaultInitialized } from '../../core/setup-executor';
 import { runVaultSync } from '../../core/vault-sync';
-import { CliError, resolvePlatform } from './shared';
+import { CliError } from './shared';
 
 export interface SyncOptions {
   /** The running CLI's version, for the downgrade guard (spec 0.7 f5, §2.5). */
@@ -15,9 +15,8 @@ export async function runSync(fs: VaultFs, options: SyncOptions): Promise<void> 
     throw new CliError('Not a Knowlery workspace (no KNOWLEDGE.md or .knowlery/manifest.json). Run `knowlery init` first.');
   }
 
-  const platform = await resolvePlatform(fs);
   const { fs: logged, writes } = loggingVaultFs(fs);
-  const result = await runVaultSync(logged, platform, options.toolVersion);
+  const result = await runVaultSync(logged, options.toolVersion);
 
   if (result.skipped === 'newer-shell') {
     throw new CliError(
