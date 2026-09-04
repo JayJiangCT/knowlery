@@ -89,14 +89,18 @@ kept.
 
 Upgrading from a pre-1.5 vault:
 
-- **`KNOWLEDGE.md` still carries the old operating rules.** Templates before
-  1.5 wrote `## Operating Rules`, `## Knowledge Retrieval`, and
+- **`KNOWLEDGE.md` carried the old operating rules.** Templates before 1.5
+  wrote `## Operating Rules`, `## Knowledge Retrieval`, and
   `## Available Skills` into `KNOWLEDGE.md`; Knowlery now supplies them in
-  the entry files, so those sections are stale duplicates. Health shows a warning
-  while they remain. Delete the three sections (keep your title, intro,
-  Vault Structure, and any sections of your own — if you nested your own
-  notes under one of them, move them out first). `KNOWLEDGE.md` is yours, so
-  Knowlery does not do this for you.
+  the entry files, and since `KNOWLEDGE.md` is read or imported first, the old
+  copies would put stale instructions ahead of the current ones. Sync (and
+  every plugin load) removes the three sections and the template's own
+  subsections under them. Sections of your own that sat under one of them as
+  an `###` are kept and promoted to `##` in the same place; every other line
+  is untouched. The original is saved once to
+  `.knowlery/backups/KNOWLEDGE.pre-1.5.md`. If health still shows the "carries
+  old operating rules" warning, the vault has not been synced by this version
+  yet — reload the plugin or run `knowlery sync`.
 - If the vault already had a hand-written `AGENTS.md`, the managed block is
   placed first and your text follows it. Much of that older text is usually
   redundant with `KNOWLEDGE.md` now; **Settings → Regenerate agent config →

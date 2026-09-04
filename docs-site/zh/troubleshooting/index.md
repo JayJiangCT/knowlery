@@ -85,13 +85,15 @@ rule 和 `knowlery sync` 时重新生成，请修改 `KNOWLEDGE.md` 或 rule 文
 
 从 1.5 之前的 vault 升级时：
 
-- **`KNOWLEDGE.md` 仍含旧的操作规则。** 1.5 之前的模板把 `## Operating
+- **`KNOWLEDGE.md` 曾含旧的操作规则。** 1.5 之前的模板把 `## Operating
   Rules`、`## Knowledge Retrieval`、`## Available Skills` 写进了
-  `KNOWLEDGE.md`；现在这些由 Knowlery 直接写入入口文件，留在
-  `KNOWLEDGE.md` 里的是过时的重复。它们存在期间 health 会显示警告。请删除这
-  三节（保留标题、简介、Vault Structure 和你自己的段落——如果你把自己的内容
-  嵌套在其中某一节下面，先移出来）。`KNOWLEDGE.md` 是你的文件，Knowlery 不
-  会代劳。
+  `KNOWLEDGE.md`；现在这些由 Knowlery 直接写入入口文件，而 `KNOWLEDGE.md` 又
+  是最先被读取/import 的文件，旧副本会把过时指令排在新指令前面。sync（以及每
+  次插件加载）会移除这三节及模板自带的小节。你自己写在其中某节下的 `###`
+  小节会保留并提升为 `##`，位置不变；其他每一行都不会动。原文件会在第一次
+  写入前备份到 `.knowlery/backups/KNOWLEDGE.pre-1.5.md`。如果 health 仍显示
+  "仍含旧的操作规则"，说明这个 vault 还没被当前版本 sync 过——重新加载插件或
+  运行 `knowlery sync`。
 - 如果 vault 里已有手写的 `AGENTS.md`，受管区块会放在最前面，你的内容接在
   后面。这些旧内容通常已与 `KNOWLEDGE.md` 重复；**设置 → 重新生成 Agent 配置
   → 重置 AGENTS.md** 会（确认后）丢弃区块之外的全部内容。之后再把值得保留的

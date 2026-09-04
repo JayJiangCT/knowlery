@@ -187,7 +187,7 @@ export const zh: Record<TranslationKey, string> = {
   'health.agentConfig': 'Agent 配置',
   'health.rulesConfigured': '已配置规则',
   'health.knowledgeMdLegacyRules': 'KNOWLEDGE.md 仍含旧的操作规则',
-  'health.knowledgeMdLegacyRulesDetail': 'Operating Rules、Knowledge Retrieval、Available Skills 三节现由 Knowlery 直接写入 AGENTS.md 和 .claude/CLAUDE.md。请从 KNOWLEDGE.md 删除这三节（保留你自己的内容），避免 agent 看到过时的重复指令。',
+  'health.knowledgeMdLegacyRulesDetail': 'Operating Rules、Knowledge Retrieval、Available Skills 三节现由 Knowlery 直接写入 AGENTS.md 和 .claude/CLAUDE.md。sync 会从 KNOWLEDGE.md 移除这三节（你自己的小节会保留，原文件备份在 .knowlery/backups/）——重新加载插件或运行 knowlery sync。',
   'health.noneFound': '未找到',
   'health.skillsInstalled': '已安装技能',
   'health.skillsPresent': '已安装 {count} 个',

@@ -11,6 +11,7 @@ import {
 } from './migration';
 import { syncQueryScript } from './query-script';
 import { refreshInstalledBundlesBlock } from './okf/knowledge-md-bundles';
+import { migrateKnowledgeMdLegacyOperatingRules } from './knowledge-md-migration';
 import { syncAgentsMd } from './agents-md';
 import { syncClaudeMd } from './claude-md';
 
@@ -51,6 +52,8 @@ export async function runVaultSync(
   await migrateOpenCodeUnrecognizedKeys(fs);
   await migrateOpenCodeInstructionsToAgentsMd(fs);
   await migrateClaudeRulesToAgentsRules(fs);
+  // Strip first, then the bundles block is re-placed/normalized at the end of the file.
+  await migrateKnowledgeMdLegacyOperatingRules(fs);
   await refreshInstalledBundlesBlock(fs);
   // After the bundles block and the rules copy: AGENTS.md mirrors the final sources.
   await syncAgentsMd(fs);

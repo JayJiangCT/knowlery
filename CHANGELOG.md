@@ -37,10 +37,20 @@
   vault (no `KNOWLEDGE.md`).
 - Adding or deleting a rule now re-renders both entry files, not just
   `AGENTS.md`.
-- The stale operating-rule sections a pre-1.5 `KNOWLEDGE.md` may still carry
-  are still flagged by health: they now reach agents through the import /
-  read of `KNOWLEDGE.md` itself, alongside the current rules in the entry
-  file — the same duplication, one hop further away.
+- **Pre-1.5 `KNOWLEDGE.md` is cleaned up on sync.** The earlier plan of
+  leaving the old `## Operating Rules` / `## Knowledge Retrieval` /
+  `## Available Skills` sections in place behind a health warning did not
+  survive contact with a real vault: with `KNOWLEDGE.md` now imported or read
+  first, those sections put the stale instructions (`INDEX.base` as a
+  retrieval step, `base:query`) *ahead* of the current ones. Sync — and every
+  plugin load, so it happens even without a version change — now removes the
+  three sections together with the template's own subsections (Obsidian CLI
+  Only, Writing Conventions, Knowledge Workflows, Quick Reference). Anything
+  you added under them as an `###` of your own (e.g. a Freshness Review) is
+  kept and promoted to `##` in the same position; the installed-bundles block
+  is re-placed at the end; every other line is untouched. The original file
+  is copied once to `.knowlery/backups/KNOWLEDGE.pre-1.5.md` before the first
+  write. The health warning remains for files the CLI has not synced yet.
 
 ### One fixed context for every agent (superseded in part by the section above)
 

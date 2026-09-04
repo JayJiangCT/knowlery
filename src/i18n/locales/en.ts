@@ -192,7 +192,7 @@ export const en = {
   'health.agentConfig': 'Agent configuration',
   'health.rulesConfigured': 'Rules configured',
   'health.knowledgeMdLegacyRules': 'KNOWLEDGE.md carries old operating rules',
-  'health.knowledgeMdLegacyRulesDetail': 'Knowlery now supplies Operating Rules, Knowledge Retrieval, and Available Skills in AGENTS.md and .claude/CLAUDE.md. Delete those sections from KNOWLEDGE.md (keep your own text) to stop agents seeing stale duplicates.',
+  'health.knowledgeMdLegacyRulesDetail': 'Knowlery now supplies Operating Rules, Knowledge Retrieval, and Available Skills in AGENTS.md and .claude/CLAUDE.md. Sync removes those sections from KNOWLEDGE.md (your own subsections are kept; the original is saved under .knowlery/backups/) — reload the plugin or run knowlery sync.',
   'health.noneFound': 'None found',
   'health.skillsInstalled': 'Skills installed',
   'health.skillsPresent': '{count} installed',
