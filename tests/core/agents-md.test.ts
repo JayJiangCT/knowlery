@@ -80,6 +80,31 @@ describe('AGENTS.md mirrors the fixed context CLAUDE.md assembles by import', ()
     expect(fs.files.get('AGENTS.md')).not.toContain('Operating card body.');
   });
 
+  it('restates a Claude path-scoped rule as prose instead of inlining its YAML frontmatter', () => {
+    const scoped = [
+      '---',
+      'paths:',
+      '  - "entities/**/*.md"',
+      '  - "!SCHEMA.md"',
+      '---',
+      '# Agent-Maintained Pages',
+      '',
+      'You can create and update them.',
+      '',
+    ].join('\n');
+    const block = renderAgentsMdBlock({
+      knowledgeMd: 'card',
+      rulesDir: '.claude/rules',
+      rules: [{ path: 'agent-pages.md', content: scoped }],
+    });
+
+    expect(block).not.toContain('---');
+    expect(block).not.toContain('paths:');
+    expect(block).toContain(
+      '# Agent-Maintained Pages\n\n_Applies to files matching: `entities/**/*.md`, `!SCHEMA.md`_\n\nYou can create and update them.',
+    );
+  });
+
   it('follows the rules directory across a platform switch', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs, 'claude-code');

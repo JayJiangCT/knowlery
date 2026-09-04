@@ -1,3 +1,4 @@
+import matter from 'gray-matter';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
 import { collectRuleImportPaths } from './rule-imports';
@@ -32,7 +33,7 @@ export interface AgentsMdSource {
 export function renderAgentsMdBlock(source: AgentsMdSource): string {
   const sections = [
     source.knowledgeMd.trim(),
-    ...source.rules.map((rule) => rule.content.trim()),
+    ...source.rules.map((rule) => renderRuleBody(rule.content)),
   ].filter((section) => section.length > 0);
 
   return [
@@ -43,6 +44,32 @@ export function renderAgentsMdBlock(source: AgentsMdSource): string {
     '',
     AGENTS_MD_MANAGED_END,
   ].join('\n');
+}
+
+/**
+ * Claude Code scopes a rule to files via `paths:` frontmatter. Codex and OpenCode
+ * have no such mechanism, so inlining the YAML verbatim would leave a bare `---`
+ * block mid-document; the scope is restated as a sentence under the heading instead.
+ */
+export function renderRuleBody(content: string): string {
+  let parsed: ReturnType<typeof matter>;
+  try {
+    parsed = matter(content);
+  } catch {
+    return content.trim();
+  }
+
+  const body = parsed.content.trim();
+  const paths = Array.isArray(parsed.data.paths)
+    ? (parsed.data.paths as unknown[]).filter((path): path is string => typeof path === 'string')
+    : [];
+  if (paths.length === 0) return body;
+
+  const scope = `_Applies to files matching: ${paths.map((path) => `\`${path}\``).join(', ')}_`;
+  const [firstLine, ...rest] = body.split('\n');
+  return firstLine.startsWith('#')
+    ? [firstLine, '', scope, ...rest].join('\n')
+    : [scope, '', body].join('\n');
 }
 
 export function mergeAgentsMd(existing: string | null, block: string): string {
