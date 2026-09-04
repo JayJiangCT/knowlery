@@ -52,39 +52,41 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 2. 如果 skill 是被禁用的，尝试从 settings 的 Skills 区块重新启用。
 3. 如果安装不完整，可以使用 maintenance actions 重新初始化或修复 vault。
 
-## Claude Code Config 缺失
+## Agent Config 缺失
 
-对于 Claude Code，Knowlery 预期存在：
-
-- `.claude/CLAUDE.md`
-- `.claude/rules/`
-- `.agents/skills/`
-
-可以在 settings 中重新生成 agent config。如果你曾从 OpenCode 切换过来，请确认当前 active platform 是 Claude Code。
-
-## OpenCode 或 Codex Config 缺失
-
-对于 OpenCode（以及 Codex），Knowlery 预期存在：
+无论选择哪个平台，Knowlery 都预期存在：
 
 - vault 根目录的 `AGENTS.md`
+- `.claude/CLAUDE.md`（只有一行 `@../AGENTS.md` import）
 - `.agents/rules/`
 - `.agents/skills/`
 
-可以在 settings 中重新生成 agent config。如果你曾从 Claude Code 切换过来，请确认当前 active platform 是 OpenCode。
+可以在 settings 中重新生成 agent config。
 
-## Codex 或 OpenCode 没有遵守 vault 规则
+## Agent 没有遵守 vault 规则
 
-两者都读取 vault 根目录的 `AGENTS.md`，Knowlery 会把 `KNOWLEDGE.md` 和
-rules 内联到其中的 `<!-- Knowlery managed:start/end -->` 区块里。它们都
-不支持 Claude Code 的 `@` import，所以内容必须内联——并且会在插件加载和
-`knowlery sync` 时根据源文件重新生成。请修改 `KNOWLEDGE.md` 或 rule 文件，
-不要直接修改该区块。
+所有 agent 的固定上下文都来自 vault 根目录的 `AGENTS.md`，Knowlery 会把
+`KNOWLEDGE.md` 和 `.agents/rules/` 下的 rules 内联到其中的
+`<!-- Knowlery managed:start/end -->` 区块里。Codex、OpenCode、Cursor 直接
+读取它；Claude Code 通过 `.claude/CLAUDE.md` 读取它。该区块会在插件加载和
+`knowlery sync` 时根据源文件重新生成，请修改 `KNOWLEDGE.md` 或 rule 文件，
+不要直接修改区块。你写在标记之外（或 `CLAUDE.md` 里 import 之后）的内容
+都会保留。
 
-旧版 vault 里有一份 Knowlery 写入的 `opencode.json`（带 `instructions`
-数组）。OpenCode V2 已不再加载这个数组，因此 Knowlery 不再写入它；
-`knowlery sync` 会删掉那两条 Knowlery 条目（若没有你自己添加的内容，会
-连文件一起删除）。Codex 默认把项目指令总量限制在 32 KiB
-（`project_doc_max_bytes`）；生成的区块约 9 KB。
+从 1.5 之前的 vault 升级时：
+
+- 原本在 `.claude/rules/` 里的 rules 会被**复制**到 `.agents/rules/`（不会
+  删除）。Claude Code 也会自动加载 `.claude/rules/`，所以在你删除该目录之前
+  Claude 会看到这些 rules 两遍——无害但冗余。确认 `.agents/rules/` 已齐全后
+  可以删掉 `.claude/rules/`。
+- `.claude/CLAUDE.md` 就地收敛：旧的 `@../KNOWLEDGE.md` 和 `@rules/*.md`
+  import 变成 `@../AGENTS.md`；你自己写的内容保留。
+- Knowlery 写入的 `opencode.json` 被退役：OpenCode V2 不再加载它的
+  `instructions` 数组，`knowlery sync` 会删掉那两条 Knowlery 条目（若没有
+  你自己添加的内容，会连文件一起删除）。
+
+Codex 默认把项目指令总量限制在 32 KiB（`project_doc_max_bytes`）；生成的
+区块约 9 KB。
 
 ## Broken Wikilinks
 

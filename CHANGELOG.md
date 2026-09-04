@@ -2,23 +2,39 @@
 
 ## [Unreleased]
 
-### Agent platform parity
+### One fixed context for every agent
 
-- **Codex and OpenCode now get the same fixed context as Claude Code.**
-  `.claude/CLAUDE.md` assembles the operating card and rules by `@` import;
-  neither Codex nor OpenCode supports imports, so Codex received nothing and
-  OpenCode V2 ignored the `opencode.json` `instructions` array Knowlery
-  wrote. Knowlery now writes a vault-root `AGENTS.md` — for every platform
-  choice — with `KNOWLEDGE.md` and the rules inlined inside a
-  `<!-- Knowlery managed:start/end -->` block, regenerated write-on-change
-  on init, rule add/remove, plugin load, and `knowlery sync`. Prose outside
-  the markers is preserved. `CLAUDE.md` is unchanged and remains the
-  reference.
+- **`AGENTS.md` is now the single source of the fixed context.** Until now
+  only Claude Code received the operating card and rules (via
+  `.claude/CLAUDE.md` `@` imports); Codex got nothing, and OpenCode V2
+  ignores the `opencode.json` `instructions` array Knowlery wrote. Knowlery
+  now writes a vault-root `AGENTS.md` — the cross-vendor standard read
+  natively by Codex, OpenCode, Cursor, Gemini CLI and others — with
+  `KNOWLEDGE.md` and the rules inlined inside a
+  `<!-- Knowlery managed:start/end -->` block, and `.claude/CLAUDE.md`
+  becomes the one-line `@../AGENTS.md` import Claude Code documents for
+  exactly this purpose. Both files are written whichever platform is
+  selected; the block is regenerated write-on-change on init, rule
+  add/remove, plugin load, and `knowlery sync`. Text outside the markers
+  (and below the import in `CLAUDE.md`) is preserved.
+- **One rules directory: `.agents/rules/`.** Rules are no longer split per
+  platform. Existing `.claude/rules/*.md` are **copied** into
+  `.agents/rules/` on the first sync (nothing is deleted). Claude Code also
+  auto-loads `.claude/rules/`, so until you remove that directory Claude
+  sees those rules twice — harmless; delete it once `.agents/rules/` holds
+  everything. Rules carrying Claude's `paths:` frontmatter are inlined with
+  the scope restated as an "Applies to files matching" line.
+- **`.claude/CLAUDE.md` converges in place**: `@../KNOWLEDGE.md`, the
+  managed `@rules/*.md` block, and stale `@../SCHEMA.md` / `@../INDEX.base`
+  imports become the single `@../AGENTS.md`; your own text stays. This also
+  removes the double-loading of rules Claude had (auto-load + import).
 - **Vault-level `opencode.json` retired.** New inits no longer write it;
   sync removes the two Knowlery `instructions` entries from an existing one
-  and deletes the file when nothing user-added remains. Health check,
-  setup-wizard copy, settings strings, and the `vault-conventions` skill
-  now describe `AGENTS.md`.
+  and deletes the file when nothing user-added remains.
+- The platform switch in settings no longer regenerates or migrates config
+  (there is nothing platform-specific left); it only changes CLI detection
+  and labels. Health check, setup-wizard copy, settings strings, and the
+  `vault-conventions` skill describe the new layout.
 - **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as
   a new optional file (1.0 f5 §4.1, minor).
 

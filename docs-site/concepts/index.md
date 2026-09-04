@@ -156,12 +156,12 @@ Installed bundles are part of retrieval: `KNOWLEDGE.md` gains a pointer block wh
 
 Knowlery supports two agent platforms:
 
-| Platform | Config file | Rules directory |
-| --- | --- | --- |
-| Claude Code | `.claude/CLAUDE.md` | `.claude/rules/` |
-| OpenCode | `AGENTS.md` | `.agents/rules/` |
+| Platform | How it loads the fixed context |
+| --- | --- |
+| Claude Code | `.claude/CLAUDE.md`, a one-line `@../AGENTS.md` import |
+| OpenCode (and Codex, Cursor…) | Reads the vault-root `AGENTS.md` directly |
 
-Both deliver the same fixed context — `KNOWLEDGE.md` plus the rules. Claude Code assembles it by `@` import; Codex and OpenCode read the vault-root `AGENTS.md`, which Knowlery regenerates from those same sources (it is written for either platform choice). Switching platforms regenerates the target platform config and can migrate rules from the previous platform directory.
+There is one fixed context, not two: `AGENTS.md` — the cross-vendor standard — holds `KNOWLEDGE.md` and the rules from `.agents/rules/` inlined, regenerated on sync. Both files are written whichever platform you pick; the choice only steers CLI detection and labels.
 
 ## Companion Chat
 

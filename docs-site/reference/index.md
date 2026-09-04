@@ -39,11 +39,10 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `queries/` | Setup | Agent-maintained research threads |
 | `.knowlery/manifest.json` | Setup | Setup state |
 | `.agents/skills/` | Setup | Canonical skills |
-| `.agents/rules/` | OpenCode | Rules for OpenCode |
+| `.agents/rules/` | Setup | Rules, for every platform (inlined into AGENTS.md) |
 | `.claude/skills/` | Setup | Mirrored built-in skills for Claude Code |
-| `.claude/CLAUDE.md` | Claude Code | Claude instructions |
-| `.claude/rules/` | Claude Code | Rules for Claude Code |
-| `AGENTS.md` | Setup | KNOWLEDGE.md + rules inlined for Codex and OpenCode (managed block) |
+| `AGENTS.md` | Setup | KNOWLEDGE.md + rules inlined (managed block); read by Codex, OpenCode, Cursor… |
+| `.claude/CLAUDE.md` | Setup | One-line `@../AGENTS.md` import for Claude Code |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |
 | `.knowlery/reports/` | Weekly summary | Local HTML report output |
