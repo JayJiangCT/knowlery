@@ -54,8 +54,6 @@ Setup wizard 会要求你选择一个平台：
 
 如果你是从旧版本升级，v0.5.0 新增了 knowledge bundle 的分享与安装：dashboard 的 Bundles 区块、**Share knowledge bundle** 和 **Install knowledge bundle** 命令、存放已安装 bundle 的 `Library/` 文件夹，以及能感知 bundle 的 `/ask` skill。v0.4.0 把 dashboard 收敛成一个行动优先的首页，并把 diagnostics、rules、schema shortcuts 和 Skills library 移到 Knowlery settings tab。Bundled skills 仍会在版本变化时自动同步，`SCHEMA.md` 缺少 anchor sections 时也会就地迁移。custom 和 forked skills 不会被覆盖。
 
-如果 Knowlery 检测到旧的 BYOAO vault，setup wizard 会切换到 migration mode，并保留原有 BYOAO/OpenCode 文件，同时改为 Knowlery 的 Claude Code 配置。
-
 ## Setup 会创建什么
 
 Knowlery 会在 vault 中创建知识工作区和 agent 配置：

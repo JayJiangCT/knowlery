@@ -1766,7 +1766,7 @@ formulas:
     description: 'Vault-specific note-writing conventions',
     content: `---
 name: vault-conventions
-description: Use when creating or modifying notes in a Knowlery-structured vault (formerly BYOAO). Enforces frontmatter requirements, wikilinks, and naming conventions.
+description: Use when creating or modifying notes in a Knowlery-structured vault. Enforces frontmatter requirements, wikilinks, and naming conventions.
 ---
 
 # Vault Document Conventions
@@ -1777,7 +1777,7 @@ You MUST follow these conventions when creating or modifying any note in this va
 
 Before creating any note:
 
-1. Read \`AGENTS.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
+1. Read \`KNOWLEDGE.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. \`Projects/\`, \`Daily/\`); **agent knowledge pages** live only under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`
 3. Pick the writing tool by the operation (see Creating Notes below), following every convention in this skill
 

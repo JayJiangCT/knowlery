@@ -23,8 +23,10 @@ describe('frontmatter identity', () => {
     },
   );
 
-  it('vault-conventions keeps the legacy BYOAO pointer so old vaults still activate it', () => {
-    expect(matter(skill('vault-conventions')).data.description).toContain('formerly BYOAO');
+  it('vault-conventions points agents at KNOWLEDGE.md, the operating card every platform loads', () => {
+    const content = skill('vault-conventions');
+    expect(content).toContain('Read `KNOWLEDGE.md`');
+    expect(content).not.toContain('BYOAO');
   });
 });
 
