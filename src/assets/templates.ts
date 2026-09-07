@@ -1,9 +1,11 @@
 /**
  * KNOWLEDGE.md is the user's description of the knowledge base — what it covers,
- * how it is laid out — written once at setup and then theirs to edit. Knowlery's
- * own operating rules are *not* in it: they come from `generateOperatingRules`
- * and are rendered into AGENTS.md on every sync, so wording fixes reach every
- * vault without touching a user-owned file.
+ * how it is laid out — written once at setup and then theirs to edit. It is a
+ * standalone file and the source of truth: `.claude/CLAUDE.md` `@`-imports it,
+ * AGENTS.md carries a copy regenerated on every sync. Knowlery's own operating
+ * rules are *not* in it: they come from `generateOperatingRules` and are rendered
+ * into the entry files on every sync, so wording fixes reach every vault without
+ * touching a user-owned file.
  */
 export function generateKnowledgeMd(kbName: string): string {
   return `# ${kbName}
@@ -26,14 +28,16 @@ Agent pages are compiled from user notes. **User notes are never modified by the
 
 _Describe what this knowledge base covers — the domains, projects, people, and the
 questions it should be able to answer. Agents read this file first. Keep it about your
-knowledge; Knowlery supplies its operating rules separately (see \`AGENTS.md\`)._
+knowledge; Knowlery supplies its operating rules separately (in \`AGENTS.md\` and
+\`.claude/CLAUDE.md\`)._
 `;
 }
 
 /**
  * Knowlery's operating rules for agents — the tooling half of the fixed context.
- * Rendered into AGENTS.md by `renderAgentsMdBlock` (after the user's KNOWLEDGE.md,
- * before the rules), never written into a user-owned file.
+ * Rendered into both entry files (`renderAgentsMdBlock`, `renderClaudeMdBlock`)
+ * after the copy / import of the user's KNOWLEDGE.md, never written into a
+ * user-owned file.
  */
 export function generateOperatingRules(): string {
   return `## Operating Rules
@@ -331,13 +335,4 @@ views:
       - formula.backlink_count
     limit: 10
 `;
-}
-
-/**
- * Claude Code's documented way to share instructions with other agents: import
- * AGENTS.md (which holds the operating card and rules, see core/agents-md.ts).
- * Claude-specific additions belong below the import; `mergeClaudeMd` keeps them.
- */
-export function generateClaudeMd(): string {
-  return '@../AGENTS.md\n';
 }

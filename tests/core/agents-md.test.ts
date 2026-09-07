@@ -4,18 +4,18 @@ import {
   AGENTS_MD_MANAGED_START,
   RULES_DIR,
   collectRulePaths,
-  mergeAgentsMd,
   renderAgentsMdBlock,
   resetAgentsMd,
   syncAgentsMd,
 } from '../../src/core/agents-md';
+import { mergeManagedBlock } from '../../src/core/managed-block';
 import { RULE_TEMPLATES } from '../../src/assets/rules';
 import { generateOperatingRules } from '../../src/assets/templates';
 import { generatePlatformConfig } from '../../src/core/platform-adapter';
 import { deleteRule, installDefaultRules, writeRule } from '../../src/core/rule-manager';
 import { createMemoryFs } from '../mocks/memory-fs';
 
-const KNOWLEDGE = '# My KB\n\nOperating card body.\n';
+const KNOWLEDGE = '# My KB\n\nWhat this knowledge base is about.\n';
 
 function managedBlock(agentsMd: string): string {
   const start = agentsMd.indexOf(AGENTS_MD_MANAGED_START);
@@ -25,8 +25,8 @@ function managedBlock(agentsMd: string): string {
   return agentsMd.slice(start, end + AGENTS_MD_MANAGED_END.length);
 }
 
-describe('AGENTS.md is the single fixed context every platform ends up with', () => {
-  it('inlines KNOWLEDGE.md first, then every rule from .agents/rules in sorted order', async () => {
+describe('AGENTS.md is the Codex/OpenCode entry: the sources copied in, because those harnesses cannot import', () => {
+  it('inlines KNOWLEDGE.md first, then the operating rules, then every rule from .agents/rules in sorted order', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
@@ -34,8 +34,8 @@ describe('AGENTS.md is the single fixed context every platform ends up with', ()
     const block = managedBlock(fs.files.get('AGENTS.md')!);
     expect(block).toContain(KNOWLEDGE.trim());
 
-    // Order: the user's KNOWLEDGE.md, then Knowlery's operating rules (rendered from
-    // the template, not read from any user file), then the rules directory.
+    // KNOWLEDGE.md is the most important part of the prompt, so it leads; the
+    // operating rules render from the template, not from any user file.
     const opsAt = block.indexOf(generateOperatingRules().trim());
     expect(opsAt).toBeGreaterThan(block.indexOf(KNOWLEDGE.trim()));
     let cursor = opsAt;
@@ -46,36 +46,43 @@ describe('AGENTS.md is the single fixed context every platform ends up with', ()
       cursor = at;
     }
     expect(RULE_TEMPLATES.every((rule) => block.includes(rule.content.trim()))).toBe(true);
-    // SCHEMA.md stays an on-demand read (spec f4); nothing beyond the sources leaks in.
+    // Acceptance showed OpenCode never follows a "read these first" instruction — there is none.
+    expect(block).not.toContain('## Read First');
+    // No Claude import syntax leaks into a file Claude never reads.
     expect(block).not.toContain('@../');
   });
 
-  it('is written together with .claude/CLAUDE.md, which imports it — no opencode.json, no .claude/rules', async () => {
+  it('is written together with .claude/CLAUDE.md, which imports the same sources — no opencode.json, no .claude/rules', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
 
-    expect(fs.files.get('.claude/CLAUDE.md')).toBe('@../AGENTS.md\n');
+    const claudeMd = fs.files.get('.claude/CLAUDE.md')!;
+    expect(claudeMd).toContain('@../KNOWLEDGE.md');
+    expect(claudeMd).not.toContain('@../AGENTS.md');
+    expect(claudeMd).not.toContain('What this knowledge base is about.');
     expect(fs.files.has('opencode.json')).toBe(false);
     expect(fs.dirs.has('.claude/rules')).toBe(false);
     expect(fs.dirs.has(RULES_DIR)).toBe(true);
   });
 
-  it('stays current when KNOWLEDGE.md or a rule changes — the reason the block is regenerated, not copied once', async () => {
+  it('stays current when KNOWLEDGE.md or a rule changes, in both entry files — the reason the blocks are regenerated, not written once', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
 
     await writeRule(fs, 'team-glossary.md', '# Team Glossary\n\nMRR means monthly recurring revenue.\n');
     expect(fs.files.get('AGENTS.md')).toContain('MRR means monthly recurring revenue.');
+    expect(fs.files.get('.claude/CLAUDE.md')).toContain(`@../${RULES_DIR}/team-glossary.md`);
 
     await deleteRule(fs, 'citation-required.md');
     expect(fs.files.get('AGENTS.md')).not.toContain('# Citation Required');
+    expect(fs.files.get('.claude/CLAUDE.md')).not.toContain('citation-required.md');
 
     fs.files.set('KNOWLEDGE.md', '# My KB\n\nEdited by hand while Obsidian was closed.\n');
     await syncAgentsMd(fs);
     expect(fs.files.get('AGENTS.md')).toContain('Edited by hand while Obsidian was closed.');
-    expect(fs.files.get('AGENTS.md')).not.toContain('Operating card body.');
+    expect(fs.files.get('AGENTS.md')).not.toContain('What this knowledge base is about.');
   });
 
   it('restates a Claude path-scoped rule as prose instead of inlining its YAML frontmatter', () => {
@@ -118,8 +125,8 @@ describe('AGENTS.md is a managed block, not an owned file', () => {
     const v1 = renderAgentsMdBlock({ knowledgeMd: 'card v1', rules: [] });
     const v2 = renderAgentsMdBlock({ knowledgeMd: 'card v2', rules: [] });
 
-    const merged1 = mergeAgentsMd(`${before}${v1}${after}`, v1);
-    const merged2 = mergeAgentsMd(merged1, v2);
+    const merged1 = mergeManagedBlock(`${before}${v1}${after}`, v1);
+    const merged2 = mergeManagedBlock(merged1, v2);
 
     expect(merged2.startsWith(before)).toBe(true);
     expect(merged2.endsWith(after)).toBe(true);
@@ -132,7 +139,7 @@ describe('AGENTS.md is a managed block, not an owned file', () => {
     // Same order Claude documents for CLAUDE.md: shared instructions lead, additions trail.
     const existing = '# Hand-written instructions\n\nUse British spelling.\n';
     const block = renderAgentsMdBlock({ knowledgeMd: 'card', rules: [] });
-    const merged = mergeAgentsMd(existing, block);
+    const merged = mergeManagedBlock(existing, block);
     expect(merged).toBe(`${block}\n\n${existing.trim()}\n`);
   });
 

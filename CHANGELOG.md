@@ -1,70 +1,84 @@
 # Changelog
 
-## [Unreleased]
+## [1.5.0] — 2026-09-07
 
-### One fixed context for every agent
+### Every agent gets the same fixed context
 
-- **`AGENTS.md` is now the single source of the fixed context.** Until now
-  only Claude Code received the operating card and rules (via
-  `.claude/CLAUDE.md` `@` imports); Codex got nothing, and OpenCode V2
-  ignores the `opencode.json` `instructions` array Knowlery wrote. Knowlery
-  now writes a vault-root `AGENTS.md` — the cross-vendor standard read
-  natively by Codex, OpenCode, Cursor, Gemini CLI and others — with
-  `KNOWLEDGE.md` and the rules inlined inside a
-  `<!-- Knowlery managed:start/end -->` block, and `.claude/CLAUDE.md`
-  becomes the one-line `@../AGENTS.md` import Claude Code documents for
-  exactly this purpose. Both files are written whichever platform is
-  selected; the block is regenerated write-on-change on init, rule
-  add/remove, plugin load, and `knowlery sync`. Text outside the markers
-  (and below the import in `CLAUDE.md`) is preserved; a pre-existing
-  hand-written `AGENTS.md` gets the block placed first and its own text
-  after it (the same order Claude Code documents for `CLAUDE.md`). A new
+- **Codex and OpenCode now receive Knowlery's instructions.** Until now only
+  Claude Code got the operating card and rules (via `.claude/CLAUDE.md`
+  `@` imports); Codex got nothing, and OpenCode V2 ignores the
+  `opencode.json` `instructions` array Knowlery wrote. Knowlery now writes a
+  vault-root `AGENTS.md` — the cross-vendor file read natively by Codex,
+  OpenCode, Cursor, Gemini CLI and others — with a
+  `<!-- Knowlery managed:start/end -->` block that carries your
+  `KNOWLEDGE.md`, Knowlery's operating rules for the installed version, and
+  every rule in `.agents/rules/`. Those harnesses cannot import files (Codex
+  concatenates the `AGENTS.md` chain only; OpenCode V2 resolves neither `@`
+  references nor `instructions`), so the sources are copied in and the block
+  is regenerated from them on init, rule add/remove, plugin load, and
+  `knowlery sync`. Edit `KNOWLEDGE.md` or the rule files, never the block.
+  Text outside the markers is preserved; a pre-existing hand-written
+  `AGENTS.md` gets the block placed first and its own text after it. A new
   **Reset AGENTS.md** button in settings discards everything outside the
-  block — the explicit way to drop pre-Knowlery instructions; sync never
-  does that on its own.
+  block — the explicit way to drop pre-Knowlery instructions; sync never does
+  that on its own. Codex caps the chain at 32 KiB; the block is ~10 KB.
+- **Claude Code imports the sources instead of copying them.** Claude's `@`
+  imports are hard injection, so `.claude/CLAUDE.md` gets its own managed
+  block: `@../KNOWLEDGE.md` first (the most important part of the prompt),
+  the operating rules inlined, then one `@../.agents/rules/<file>.md` import
+  per rule (Claude has no glob import, so the list is regenerated on rule
+  add/remove). It does not import `AGENTS.md`, which would put a second copy
+  of the same text in front of Claude. An existing `CLAUDE.md` converges in
+  place — the pre-1.5 `@../KNOWLEDGE.md`, managed `@rules/*.md` block, and
+  stale `@../SCHEMA.md` / `@../INDEX.base` imports are replaced by the block;
+  your own text stays after it. This also removes the double-loading of rules
+  Claude had (auto-load + import).
 - **One rules directory: `.agents/rules/`.** Rules are no longer split per
   platform. Existing `.claude/rules/*.md` are **copied** into
   `.agents/rules/` on the first sync (nothing is deleted). Claude Code also
-  auto-loads `.claude/rules/`, so until you remove that directory Claude
-  sees those rules twice — harmless; delete it once `.agents/rules/` holds
-  everything. Rules carrying Claude's `paths:` frontmatter are inlined with
-  the scope restated as an "Applies to files matching" line.
-- **`.claude/CLAUDE.md` converges in place**: `@../KNOWLEDGE.md`, the
-  managed `@rules/*.md` block, and stale `@../SCHEMA.md` / `@../INDEX.base`
-  imports become the single `@../AGENTS.md`; your own text stays. This also
-  removes the double-loading of rules Claude had (auto-load + import).
-- **Vault-level `opencode.json` retired.** New inits no longer write it;
-  sync removes the two Knowlery `instructions` entries from an existing one
-  and deletes the file when nothing user-added remains.
-- The platform switch in settings no longer regenerates or migrates config
-  (there is nothing platform-specific left); it only changes CLI detection
-  and labels. Health check, setup-wizard copy, settings strings, and the
-  `vault-conventions` skill describe the new layout.
-- **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as
-  a new optional file (1.0 f5 §4.1, minor).
+  auto-loads `.claude/rules/`, so until you remove that directory Claude sees
+  those rules twice — harmless; delete it once `.agents/rules/` holds
+  everything. Rules carrying Claude's `paths:` frontmatter are inlined into
+  `AGENTS.md` with the scope restated as an "Applies to files matching" line.
+- Both entry files are written whichever platform is selected, and neither
+  is written for an uninitialized vault. The platform switch in settings no
+  longer regenerates or migrates config (there is nothing platform-specific
+  left); it only changes CLI detection and labels.
+- **Vault-level `opencode.json` retired.** New inits no longer write it; sync
+  removes the two Knowlery `instructions` entries from an existing one and
+  deletes the file when nothing user-added remains.
+- **Scaffold contract**: `AGENTS.md` joins the frozen top-level surface as a
+  new optional file (1.0 f5 §4.1, minor). Health check, setup-wizard copy,
+  settings strings, and the `vault-conventions` skill describe the new layout.
 
 ### KNOWLEDGE.md is yours; the operating rules are Knowlery's
 
-- **Operating rules move out of `KNOWLEDGE.md` into the `AGENTS.md` block.**
-  `KNOWLEDGE.md` is written once at setup and never migrated — which meant
-  every fix to the Obsidian CLI rules, the retrieval procedure, or the
-  skills table reached new vaults only (three such fixes landed during this
-  release's acceptance alone). Those sections now render from the template
-  into `AGENTS.md` on every sync, after your `KNOWLEDGE.md` and before the
-  rules. The `KNOWLEDGE.md` template shrinks to what is genuinely yours:
-  title, intro, Vault Structure, and an "About This Knowledge Base"
-  section to fill in. Result: the two files stop duplicating ~90 lines of
-  Knowlery boilerplate, and `KNOWLEDGE.md` becomes a note worth opening.
-- **Existing vaults**: the old `## Operating Rules` / `## Knowledge
-  Retrieval` / `## Available Skills` sections stay in your `KNOWLEDGE.md`
-  (it is your file) but are now stale duplicates — `knowlery health` and
-  the Health tab warn until you delete them.
+- **Operating rules move out of `KNOWLEDGE.md`.** `KNOWLEDGE.md` was written
+  once at setup and never migrated — which meant every fix to the Obsidian
+  CLI rules, the retrieval procedure, or the skills table reached new vaults
+  only. Those sections now render from the template into the entry files on
+  every sync. The `KNOWLEDGE.md` template shrinks to what is genuinely yours:
+  title, intro, Vault Structure, and an "About This Knowledge Base" section
+  to fill in — the description agents read first.
+- **Existing vaults are cleaned up on upgrade.** The pre-1.5
+  `## Operating Rules` / `## Knowledge Retrieval` / `## Available Skills`
+  sections in your `KNOWLEDGE.md` are stale (they still told agents to query
+  `INDEX.base`) and would now come *ahead* of the current rules. Sync — and
+  every plugin load, so it happens even without a version change — removes
+  the three sections together with the template's own subsections (Obsidian
+  CLI Only, Writing Conventions, Knowledge Workflows, Quick Reference).
+  Anything you added under them as an `###` of your own is kept and promoted
+  to `##` in the same position; the installed-bundles block is re-placed at
+  the end; every other line is untouched. The original file is copied once to
+  `.knowlery/backups/KNOWLEDGE.pre-1.5.md` before the first write.
+  `knowlery health` warns while a vault the CLI has not synced yet still
+  carries the sections.
 - **Renaming the knowledge base no longer overwrites `KNOWLEDGE.md`.** The
   settings rename used to regenerate the whole file from the template,
   discarding your edits; it now retitles the first heading only.
-- **Installed-bundles hint fixed.** The `KNOWLERY:INSTALLED_BUNDLES` block
-  in `KNOWLEDGE.md` was hard-coded as list item "9." from a retrieval list
-  that has had five steps since 0.6; it is now a standalone paragraph, and a
+- **Installed-bundles hint fixed.** The `KNOWLERY:INSTALLED_BUNDLES` block in
+  `KNOWLEDGE.md` was hard-coded as list item "9." from a retrieval list that
+  has had five steps since 0.6; it is now a standalone paragraph, and a
   leftover block is removed when no bundles are installed.
 
 ### Retrieval guidance
@@ -73,25 +87,29 @@
   request-shaped question (`…方案是什么？请返回相关的最新原始记录、决策上下文…`)
   to `knowlery:query` and the engine abstained on a topic the vault covers
   thoroughly: request words can never be covered by a page, and weighted by
-  CJK length they sank coverage to ~15%. `/ask` now says to pass 2–6 subject
-  terms in the user's own language and to retry once with keywords before
-  declaring the vault silent; the `KNOWLEDGE.md` operating card carries the
-  same rule. Vaults initialized before this release keep their own
-  `KNOWLEDGE.md` (it is user-owned) — refresh its Knowledge Retrieval
-  section by hand to pick up the wording.
+  CJK length they sank coverage to ~15%. `/ask` and the operating rules now
+  say to pass 2–6 subject terms in the user's own language and to retry once
+  with keywords before declaring the vault silent.
 - **The dot-directory boundary is on the operating card.** A Codex session
-  tried `obsidian read` on `~/.agents/skills/ask/SKILL.md` (wrong tool,
-  wrong path) and took the CLI's `Error: … not found` / exit 0 as success.
-  `KNOWLEDGE.md` now states what the `obsidian-cli` skill already did:
+  tried `obsidian read` on `~/.agents/skills/ask/SKILL.md` (wrong tool, wrong
+  path) and took the CLI's `Error: … not found` / exit 0 as success. The
+  operating rules now state what the `obsidian-cli` skill already did:
   Obsidian CLI reaches only notes in the vault index; skills, rules, and
-  config under `.agents/`, `.claude/`, `.knowlery/` are read with file
-  tools; `Error:` output is failure regardless of exit code; skills live at
-  the vault-relative `.agents/skills/<name>/SKILL.md`.
+  config under `.agents/`, `.claude/`, `.knowlery/` are read with file tools;
+  `Error:` output is failure regardless of exit code; skills live at the
+  vault-relative `.agents/skills/<name>/SKILL.md`.
 - **`INDEX.base` is a human preview, not a retrieval step.** Since 0.6 the
   deterministic engine replaced index-driven discovery; the remaining
   "check / read `INDEX.base`" instructions in `/ask`, `/cook`, `/explore`,
   `/ideas` and the operating card's CLI table are gone. The file itself is
   unchanged and still renders in Obsidian.
+
+### Fixes
+
+- The `mcp serve` smoke test no longer races the second startup line.
+- Settings: the Reset button uses the `mod-warning` class directly instead of
+  the deprecated `setWarning()` (the replacement API needs Obsidian 1.13,
+  above `minAppVersion`).
 
 ### Removed
 

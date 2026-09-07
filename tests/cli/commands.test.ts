@@ -8,7 +8,8 @@ import { runHealth } from '../../src/cli/commands/health';
 import { CliError } from '../../src/cli/commands/shared';
 import { nodeVaultFs } from '../../src/platform/node-fs';
 import { executeSetup } from '../../src/core/setup-executor';
-import { generateClaudeMd } from '../../src/assets/templates';
+import { readAgentsMdSource } from '../../src/core/agents-md';
+import { renderClaudeMdBlock } from '../../src/core/claude-md';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
 const silent = () => {};
@@ -83,7 +84,6 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
       const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
       expect(agentsMd).toContain('# Prompted KB');
       expect(agentsMd).toContain('# Citation Required');
-      expect(agentsMd).toContain('.agents/rules/*.md');
       await expect(readFile(join(root, 'opencode.json'), 'utf8')).rejects.toThrow();
     });
   });
@@ -150,14 +150,16 @@ describe('knowlery health (spec 0.7 f2, §6.3)', () => {
 });
 
 describe('shared sync surface (spec 0.7 f2, §6.4)', () => {
-  it('generateClaudeMd stays consistent with what sync converges to', async () => {
+  it('renderClaudeMdBlock stays consistent with what sync converges to', async () => {
     await withTempDir(async (root) => {
       const fs = nodeVaultFs(root);
       await runInit(fs, { platform: 'claude-code', name: 'KB', prompt: null, log: silent });
       await runSync(fs, { log: silent });
       const converged = await fs.read('.claude/CLAUDE.md');
-      expect(converged).toBe(generateClaudeMd());
-      expect(converged).toContain('@../AGENTS.md');
+      const source = await readAgentsMdSource(fs);
+      expect(converged).toBe(`${renderClaudeMdBlock(source!)}\n`);
+      expect(converged).toContain('@../KNOWLEDGE.md');
+      expect(converged).not.toContain('@../AGENTS.md');
     });
   });
 });

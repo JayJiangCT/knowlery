@@ -157,12 +157,12 @@ Knowledge bundle 是一个便携的、review 过的知识切片，用 OKF 格式
 
 Knowlery 支持两个 agent 平台：
 
-| 平台 | 如何加载固定上下文 |
-| --- | --- |
-| Claude Code | `.claude/CLAUDE.md`，只有一行 `@../AGENTS.md` import |
-| OpenCode（以及 Codex、Cursor 等） | 直接读取 vault 根目录的 `AGENTS.md` |
+| 平台 | 入口文件 | 如何拿到 `KNOWLEDGE.md` 和 rules |
+| --- | --- | --- |
+| Claude Code | `.claude/CLAUDE.md` | `@../KNOWLEDGE.md` 加每个 rule 文件一行 `@` import（硬注入）；操作规则内联 |
+| OpenCode（以及 Codex、Cursor 等） | `AGENTS.md` | `KNOWLEDGE.md` 和每个 rule 文件复制进受管区块（这些 harness 没有 import 语法）；操作规则内联 |
 
-固定上下文只有一份：`AGENTS.md`（跨厂商标准）内联了 `KNOWLEDGE.md` 和 `.agents/rules/` 下的 rules，sync 时重新生成。无论选哪个平台，两个文件都会写入；平台选项只影响 CLI 检测和界面标签。
+所有平台的来源都一样——你的 `KNOWLEDGE.md`、`.agents/rules/` 下的 rules、Knowlery 的操作规则——入口文件在 sync 时由它们重新生成。无论选哪个平台，两个入口文件都会写入；平台选项只影响 CLI 检测和界面标签。
 
 ## Companion Chat
 

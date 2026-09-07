@@ -1828,11 +1828,11 @@ Obsidian's vault index. Obsidian CLI commands that depend on the vault index —
 including \`read\` and \`create\` — cannot reach them even with \`path=\`; use
 your file tools directly.
 
-Every platform receives the same fixed context at session start: the
-vault-root \`AGENTS.md\`, where Knowlery inlines \`KNOWLEDGE.md\` and the rules
-from \`.agents/rules/\`. Codex and OpenCode read it directly; Claude Code loads
-it through \`.claude/CLAUDE.md\`, which imports it. \`AGENTS.md\` is
-regenerated from its sources on sync: change \`KNOWLEDGE.md\` or a rule file,
+Every platform starts from the same sources: the user's \`KNOWLEDGE.md\` and
+the rules in \`.agents/rules/\`, plus Knowlery's operating rules. Codex and
+OpenCode read the vault-root \`AGENTS.md\`, where those sources are copied in;
+Claude Code reads \`.claude/CLAUDE.md\`, which \`@\`-imports the same files. Both
+entry files are regenerated on sync: change \`KNOWLEDGE.md\` or a rule file,
 never the managed block itself.
 
 ## Required Frontmatter

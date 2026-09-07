@@ -11,6 +11,7 @@ import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
 import { syncAgentsMd } from './core/agents-md';
 import { syncClaudeMd } from './core/claude-md';
+import { migrateKnowledgeMdLegacyOperatingRules } from './core/knowledge-md-migration';
 import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
@@ -177,8 +178,11 @@ export default class KnowleryPlugin extends Plugin {
         const pluginVersion = this.manifest.version;
         const previousSyncedVersion = this.settings.lastSyncedVersion;
 
-        // Every load, not only on version change: picks up hand edits to
-        // KNOWLEDGE.md or the rules made while Obsidian was closed.
+        // Every load, not only on version change: picks up rule files added while
+        // Obsidian was closed, and clears the pre-1.5 operating-rule sections from
+        // KNOWLEDGE.md even when the version sync below does not run (same plugin
+        // version, or a vault last synced by a newer shell).
+        await migrateKnowledgeMdLegacyOperatingRules(this.fs);
         await syncAgentsMd(this.fs);
         await syncClaudeMd(this.fs);
 

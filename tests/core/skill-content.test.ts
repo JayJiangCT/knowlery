@@ -55,7 +55,7 @@ describe('query phrasing is taught (field finding: a request-shaped question abs
   });
 });
 
-describe('KNOWLEDGE.md is the user\'s description; the operating rules are Knowlery\'s and render into AGENTS.md', () => {
+describe('KNOWLEDGE.md is the user\'s description; the operating rules are Knowlery\'s and render into the entry files', () => {
   it('the KNOWLEDGE.md template carries no operating-rule sections, so template fixes never need a user-file migration again', () => {
     const knowledgeMd = generateKnowledgeMd('KB');
     expect(knowledgeMd).toContain('# KB');
@@ -71,7 +71,7 @@ describe('KNOWLEDGE.md is the user\'s description; the operating rules are Knowl
     expect(hasLegacyOperatingRules('# KB\n\n## About This Knowledge Base\n\n### Freshness Review\n')).toBe(false);
   });
 
-  it('the operating rules start at the H2 level so they nest under the KNOWLEDGE.md title in AGENTS.md', () => {
+  it('the operating rules start at the H2 level so they nest under the KNOWLEDGE.md title Claude imports above them', () => {
     expect(generateOperatingRules().startsWith('## Operating Rules')).toBe(true);
     expect(generateOperatingRules()).not.toMatch(/^# /m);
   });
@@ -382,10 +382,11 @@ describe('the dot-directory boundary is taught (field finding, verified on Obsid
     expect(content).toContain('Mermaid or other charts');
   });
 
-  it('vault-conventions: AGENTS.md is the one fixed context — Codex/OpenCode read it, Claude imports it', () => {
+  it('vault-conventions: two entry files, same sources — AGENTS.md copies them for Codex/OpenCode, CLAUDE.md imports them', () => {
     const content = skill('vault-conventions').replace(/\s+/g, ' ');
-    expect(content).toContain('Every platform receives the same fixed context');
-    expect(content).toContain('Codex and OpenCode read it directly; Claude Code loads it through `.claude/CLAUDE.md`, which imports it');
+    expect(content).toContain('Every platform starts from the same sources');
+    expect(content).toContain('Codex and OpenCode read the vault-root `AGENTS.md`, where those sources are copied in');
+    expect(content).toContain('Claude Code reads `.claude/CLAUDE.md`, which `@`-imports the same files');
     expect(content).toContain('never the managed block itself');
   });
 });

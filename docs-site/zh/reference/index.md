@@ -39,10 +39,10 @@
 | `queries/` | 是 | Agent-maintained research threads |
 | `.knowlery/manifest.json` | 是 | Setup state |
 | `.agents/skills/` | 是 | Canonical skills |
-| `.agents/rules/` | 是 | 所有平台共用的 rules（内联进 AGENTS.md） |
+| `.agents/rules/` | 是 | 所有平台共用的 rules（内联进 AGENTS.md，.claude/CLAUDE.md 逐个 import） |
 | `.claude/skills/` | 是 | 为 Claude Code 镜像的内置 skills |
-| `AGENTS.md` | 是 | 内联 KNOWLEDGE.md + Knowlery 操作规则 + rules（受管区块）；Codex、OpenCode、Cursor 等直接读取 |
-| `.claude/CLAUDE.md` | 是 | 供 Claude Code 使用的一行 `@../AGENTS.md` import |
+| `AGENTS.md` | 是 | Codex、OpenCode、Cursor 等的入口文件：KNOWLEDGE.md + Knowlery 操作规则 + rules 复制进受管区块 |
+| `.claude/CLAUDE.md` | 是 | Claude Code 的入口文件：`@../KNOWLEDGE.md`、操作规则、每个 rule 一行 `@` import（受管区块） |
 | `skills-lock.json` | 是 | Skill lock state |
 | `.knowlery/activity/` | Activity logging | 私有 activity receipts |
 | `.knowlery/reports/` | Weekly summary | 本地 HTML report 输出 |

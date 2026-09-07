@@ -52,7 +52,7 @@ Setup wizard 会要求你选择一个平台：
 | Claude Code | 检测 `claude` CLI；界面标签显示 Claude Code |
 | OpenCode | 检测 `opencode` CLI；界面标签显示 OpenCode |
 
-Agent 配置本身两者完全相同：vault 根目录的 `AGENTS.md`（跨厂商标准），内联了 `KNOWLEDGE.md` 和 `.agents/rules/` 下的 rules；再加一份 `.claude/CLAUDE.md`，只有 Claude Code 官方推荐的一行 `@../AGENTS.md` import。Claude Code、Codex、OpenCode、Cursor 每次会话开始时拿到的指令完全一致。
+Agent 配置本身两者完全相同：供 Codex、OpenCode、Cursor 使用的 vault 根目录 `AGENTS.md`，以及供 Claude Code 使用的 `.claude/CLAUDE.md`。两者都包含 Knowlery 的操作规则，并由同样的两个来源生成——你的 `KNOWLEDGE.md` 和 `.agents/rules/` 下的 rules：`AGENTS.md` 把它们复制进来（这些 harness 没有 import 语法），`CLAUDE.md` 则用 `@` 硬 import。`KNOWLEDGE.md` 始终是你唯一需要编辑的那一份。
 
 如果你是从旧版本升级，v0.5.0 新增了 knowledge bundle 的分享与安装：dashboard 的 Bundles 区块、**Share knowledge bundle** 和 **Install knowledge bundle** 命令、存放已安装 bundle 的 `Library/` 文件夹，以及能感知 bundle 的 `/ask` skill。v0.4.0 把 dashboard 收敛成一个行动优先的首页，并把 diagnostics、rules、schema shortcuts 和 Skills library 移到 Knowlery settings tab。Bundled skills 仍会在版本变化时自动同步，`SCHEMA.md` 缺少 anchor sections 时也会就地迁移。custom 和 forked skills 不会被覆盖。
 
@@ -71,10 +71,10 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `queries/` | 保存的问题和研究线索 |
 | `.knowlery/manifest.json` | Knowlery setup 元数据 |
 | `.agents/skills/` | skills 的 canonical 存放位置 |
-| `.agents/rules/` | 所有平台共用的 rules（内联进 `AGENTS.md`） |
+| `.agents/rules/` | 所有平台共用的 rules（内联进 `AGENTS.md`，`.claude/CLAUDE.md` 逐个 import） |
 | `.claude/skills/` | 为 Claude Code 镜像的内置 skills |
-| `AGENTS.md` | 内联 `KNOWLEDGE.md` + Knowlery 操作规则 + 你的 rules（受管区块，sync 时重新生成）；Codex、OpenCode 等直接读取 |
-| `.claude/CLAUDE.md` | 供 Claude Code 使用的一行 `@../AGENTS.md` import；后面可追加 Claude 专属说明 |
+| `AGENTS.md` | Codex、OpenCode 等的入口文件：`KNOWLEDGE.md`、Knowlery 操作规则、你的 rules 复制进受管区块（sync 时重新生成） |
+| `.claude/CLAUDE.md` | Claude Code 的入口文件：`@../KNOWLEDGE.md`、Knowlery 操作规则、每个 rule 一行 `@` import（受管区块）；区块之外的 Claude 专属说明会保留 |
 | `skills-lock.json` | skill 来源、版本、禁用状态 |
 
 正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports 和 daily review request/result 文件。

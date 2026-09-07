@@ -62,7 +62,8 @@ describe('executeSetup over nodeVaultFs (spec 0.7 f1, §6.2)', () => {
         await stat(join(root, '.agents/rules', rule.filename));
       }
       const claudeMd = await readFile(join(root, '.claude/CLAUDE.md'), 'utf8');
-      expect(claudeMd).toBe('@../AGENTS.md\n');
+      expect(claudeMd).toContain('@../KNOWLEDGE.md');
+      expect(claudeMd).toContain('@../.agents/rules/activity-ledger.md');
       const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
       expect(agentsMd).toContain('# Test KB');
       expect(agentsMd).toContain('# Activity Ledger');

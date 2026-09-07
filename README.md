@@ -176,8 +176,8 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `inbox/`, when the MCP `capture` tool saves conversation notes
 - `.knowlery/manifest.json`
 - `.agents/skills/` and `.agents/rules/` (the one rules directory, for every platform)
-- `AGENTS.md` — `KNOWLEDGE.md` and the rules inlined; read directly by Codex, OpenCode, and other agents
-- `.claude/skills/` and `.claude/CLAUDE.md` (a one-line `@../AGENTS.md` import for Claude Code)
+- `AGENTS.md` — the entry file for Codex, OpenCode, and other agents (no import syntax there): `KNOWLEDGE.md`, Knowlery's operating rules, and the rule files copied into a managed block, regenerated on sync
+- `.claude/skills/` and `.claude/CLAUDE.md` (the entry file for Claude Code: `@`-imports `KNOWLEDGE.md` and each rule, operating rules inlined)
 - `skills-lock.json`
 - `.knowlery/activity/`, when activity logging is enabled
 - `.knowlery/reports/`, when Weekly summary generates an HTML report

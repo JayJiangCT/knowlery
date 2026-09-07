@@ -451,7 +451,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
         setting.addButton((btn) =>
           btn
             .setButtonText(t('settings.regenerate.resetButton'))
-            .setWarning()
+            .setClass('mod-warning')
             .onClick(() => {
               new ConfirmModal(
                 this.plugin.app,

@@ -84,10 +84,13 @@ describe('sync copies pre-1.5 Claude rules into the shared rules directory', () 
     // An existing shared rule wins over the Claude copy.
     expect(fs.files.get('.agents/rules/citation-required.md')).toBe('# Citation Required (already shared, edited)\n');
 
+    // AGENTS.md inlines the copied rules; CLAUDE.md imports them.
     const agentsMd = fs.files.get('AGENTS.md')!;
     expect(agentsMd).toContain('# JIRA Ticket Writing');
     expect(agentsMd).toContain('# Citation Required (already shared, edited)');
-    expect(fs.files.get('.claude/CLAUDE.md')).toBe('@../AGENTS.md\n');
+    const claudeMd = fs.files.get('.claude/CLAUDE.md')!;
+    expect(claudeMd).toContain('@../.agents/rules/jira-ticket-writing.md');
+    expect(claudeMd).not.toContain('@../AGENTS.md');
   });
 
   it('is a no-op the second time', async () => {

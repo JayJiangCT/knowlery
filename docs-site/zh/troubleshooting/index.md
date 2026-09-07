@@ -57,7 +57,7 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 无论选择哪个平台，Knowlery 都预期存在：
 
 - vault 根目录的 `AGENTS.md`
-- `.claude/CLAUDE.md`（只有一行 `@../AGENTS.md` import）
+- `.claude/CLAUDE.md`
 - `.agents/rules/`
 - `.agents/skills/`
 
@@ -65,24 +65,33 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 
 ## Agent 没有遵守 vault 规则
 
-所有 agent 的固定上下文都来自 vault 根目录的 `AGENTS.md`，Knowlery 会把三
-部分内联到其中的 `<!-- Knowlery managed:start/end -->` 区块里：你的
-`KNOWLEDGE.md`（这个知识库是什么）、当前版本 Knowlery 的操作规则（Obsidian
-CLI 用法、检索流程、skills——由模板渲染，修正能到达每个 vault）、以及
-`.agents/rules/` 下的 rules。Codex、OpenCode、Cursor 直接读取它；Claude Code
-通过 `.claude/CLAUDE.md` 读取它。该区块会在插件加载和 `knowlery sync` 时重新
-生成，请修改 `KNOWLEDGE.md` 或 rule 文件，不要直接修改区块。你写在标记之外
-（或 `CLAUDE.md` 里 import 之后）的内容都会保留。
+所有 agent 都从同样三个来源出发：你的 `KNOWLEDGE.md`（这个知识库是什么）、
+`.agents/rules/` 下的 rules、以及当前版本 Knowlery 的操作规则（Obsidian CLI
+用法、检索流程、skills——由模板渲染，修正能到达每个 vault）。入口文件有两
+个，各自带一个 `<!-- Knowlery managed:start/end -->` 区块：
+
+- `AGENTS.md`，Codex、OpenCode、Cursor 读取。这些 harness 没有 import 语法，
+  所以区块把来源**复制**进来：先是 `KNOWLEDGE.md`，再是操作规则，然后是每个
+  rule 文件（"先去读这些文件"的做法试过，OpenCode 不照做）。副本在每次 sync
+  时根据源文件重新生成。
+- `.claude/CLAUDE.md`，Claude Code 读取。区块先 `@` import `KNOWLEDGE.md`，
+  再内联操作规则，然后逐个 `@` import 每个 rule 文件，因此 Claude 拿到的是
+  硬注入的同一份上下文。它不再 import `AGENTS.md`。
+
+两个区块都会在插件加载、增删 rule 和 `knowlery sync` 时重新生成，请修改
+`KNOWLEDGE.md` 或 rule 文件，不要直接修改区块。你写在标记之外的内容都会保留。
 
 从 1.5 之前的 vault 升级时：
 
-- **`KNOWLEDGE.md` 仍含旧的操作规则。** 1.5 之前的模板把 `## Operating
+- **`KNOWLEDGE.md` 曾含旧的操作规则。** 1.5 之前的模板把 `## Operating
   Rules`、`## Knowledge Retrieval`、`## Available Skills` 写进了
-  `KNOWLEDGE.md`；现在这些由 Knowlery 直接写入 `AGENTS.md`，留在
-  `KNOWLEDGE.md` 里的是过时的重复。它们存在期间 health 会显示警告。请删除这
-  三节（保留标题、简介、Vault Structure 和你自己的段落——如果你把自己的内容
-  嵌套在其中某一节下面，先移出来）。`KNOWLEDGE.md` 是你的文件，Knowlery 不
-  会代劳。
+  `KNOWLEDGE.md`；现在这些由 Knowlery 直接写入入口文件，而 `KNOWLEDGE.md` 又
+  是最先被读取/import 的文件，旧副本会把过时指令排在新指令前面。sync（以及每
+  次插件加载）会移除这三节及模板自带的小节。你自己写在其中某节下的 `###`
+  小节会保留并提升为 `##`，位置不变；其他每一行都不会动。原文件会在第一次
+  写入前备份到 `.knowlery/backups/KNOWLEDGE.pre-1.5.md`。如果 health 仍显示
+  "仍含旧的操作规则"，说明这个 vault 还没被当前版本 sync 过——重新加载插件或
+  运行 `knowlery sync`。
 - 如果 vault 里已有手写的 `AGENTS.md`，受管区块会放在最前面，你的内容接在
   后面。这些旧内容通常已与 `KNOWLEDGE.md` 重复；**设置 → 重新生成 Agent 配置
   → 重置 AGENTS.md** 会（确认后）丢弃区块之外的全部内容。之后再把值得保留的
@@ -91,14 +100,15 @@ CLI 用法、检索流程、skills——由模板渲染，修正能到达每个 
   删除）。Claude Code 也会自动加载 `.claude/rules/`，所以在你删除该目录之前
   Claude 会看到这些 rules 两遍——无害但冗余。确认 `.agents/rules/` 已齐全后
   可以删掉 `.claude/rules/`。
-- `.claude/CLAUDE.md` 就地收敛：旧的 `@../KNOWLEDGE.md` 和 `@rules/*.md`
-  import 变成 `@../AGENTS.md`；你自己写的内容保留。
+- `.claude/CLAUDE.md` 就地收敛：零散的 `@../KNOWLEDGE.md` / `@rules/*.md`
+  import（以及 1.5 预发布构建写入的 `@../AGENTS.md`）都被受管区块取代；你自己
+  写的内容保留在区块之后。
 - Knowlery 写入的 `opencode.json` 被退役：OpenCode V2 不再加载它的
   `instructions` 数组，`knowlery sync` 会删掉那两条 Knowlery 条目（若没有
   你自己添加的内容，会连文件一起删除）。
 
 Codex 默认把项目指令总量限制在 32 KiB（`project_doc_max_bytes`）；生成的
-区块约 9 KB。
+区块约 10 KB。
 
 ## Broken Wikilinks
 
