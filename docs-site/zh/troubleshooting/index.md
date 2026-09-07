@@ -100,9 +100,9 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
   删除）。Claude Code 也会自动加载 `.claude/rules/`，所以在你删除该目录之前
   Claude 会看到这些 rules 两遍——无害但冗余。确认 `.agents/rules/` 已齐全后
   可以删掉 `.claude/rules/`。
-- `.claude/CLAUDE.md` 就地收敛：1.5 的 `@../AGENTS.md` import，以及更早的
-  零散 `@../KNOWLEDGE.md` / `@rules/*.md` import，都被受管区块取代；你自己写
-  的内容保留在区块之后。
+- `.claude/CLAUDE.md` 就地收敛：零散的 `@../KNOWLEDGE.md` / `@rules/*.md`
+  import（以及 1.5 预发布构建写入的 `@../AGENTS.md`）都被受管区块取代；你自己
+  写的内容保留在区块之后。
 - Knowlery 写入的 `opencode.json` 被退役：OpenCode V2 不再加载它的
   `instructions` 数组，`knowlery sync` 会删掉那两条 Knowlery 条目（若没有
   你自己添加的内容，会连文件一起删除）。

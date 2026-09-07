@@ -10,6 +10,30 @@ export interface ReleaseNote {
 }
 
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  '1.5.0': {
+    version: '1.5.0',
+    date: 'Sep 7',
+    title: 'Every agent, the same context',
+    summary: 'Codex and OpenCode now start from the same KNOWLEDGE.md and rules Claude Code gets, and KNOWLEDGE.md is back to being your description of the knowledge base — nothing else.',
+    highlights: [
+      {
+        title: 'AGENTS.md for Codex and OpenCode',
+        description: 'A vault-root AGENTS.md carries your KNOWLEDGE.md, Knowlery\'s operating rules, and your rules in a managed block, regenerated on every sync. .claude/CLAUDE.md imports the same files for Claude Code.',
+      },
+      {
+        title: 'KNOWLEDGE.md cleaned up',
+        description: 'The old Operating Rules, Knowledge Retrieval, and Available Skills sections were removed from your KNOWLEDGE.md — they now come from Knowlery. Your own sections were kept; the original is saved at .knowlery/backups/KNOWLEDGE.pre-1.5.md.',
+      },
+      {
+        title: 'One rules directory',
+        description: 'Rules live in .agents/rules/ for every platform. Existing .claude/rules/ files were copied there; delete that directory once you have checked the copy.',
+      },
+      {
+        title: 'Retrieval that asks the right question',
+        description: '/ask and the operating rules now query with subject terms, never the request phrasing, and no longer treat INDEX.base as a retrieval step.',
+      },
+    ],
+  },
   '0.7.0': {
     version: '0.7.0',
     date: 'Jul 4',

@@ -110,9 +110,9 @@ Upgrading from a pre-1.5 vault:
   remove that directory Claude sees those rules twice — harmless, but noisy.
   Delete `.claude/rules/` once you have confirmed `.agents/rules/` holds
   everything.
-- `.claude/CLAUDE.md` is converged in place: the 1.5 `@../AGENTS.md` import
-  and the older loose `@../KNOWLEDGE.md` / `@rules/*.md` imports are replaced
-  by the managed block; your own text stays after it.
+- `.claude/CLAUDE.md` is converged in place: the loose `@../KNOWLEDGE.md` /
+  `@rules/*.md` imports (and a `@../AGENTS.md` line from a 1.5 pre-release
+  build) are replaced by the managed block; your own text stays after it.
 - A Knowlery-written `opencode.json` is retired: OpenCode V2 no longer loads
   its `instructions` array, so `knowlery sync` removes the two Knowlery
   entries (and the file when nothing you added remains).
