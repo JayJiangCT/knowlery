@@ -15,14 +15,14 @@ const LEGACY_IMPORTS = new Set([CLAUDE_KNOWLEDGE_IMPORT, '@../AGENTS.md', '@../S
 
 /**
  * Claude Code reads CLAUDE.md, not AGENTS.md, and it is the one harness whose
- * `@` imports are hard injection. So its block is the same fixed context the
- * AGENTS.md block asks Codex/OpenCode to go and read, but pulled in for real:
- * `@../KNOWLEDGE.md` first (the user's description of the knowledge base — the
- * most important part of the prompt), then Knowlery's operating rules inlined,
- * then one `@` import per rule file (Claude has no glob import, so the list is
- * regenerated whenever a rule is added or removed). AGENTS.md is deliberately
- * not imported: it exists for harnesses without imports and would only repeat
- * the operating rules.
+ * `@` imports are hard injection. So its block reaches the same sources the
+ * AGENTS.md block copies, without copying: `@../KNOWLEDGE.md` first (the user's
+ * description of the knowledge base — the most important part of the prompt),
+ * then Knowlery's operating rules inlined, then one `@` import per rule file
+ * (Claude has no glob import, so the list is regenerated whenever a rule is
+ * added or removed). AGENTS.md is deliberately not imported: it exists for
+ * harnesses without imports and would put a copy of KNOWLEDGE.md and the rules
+ * into Claude's context a second time.
  */
 export function renderClaudeMdBlock(source: AgentsMdSource): string {
   return wrapManagedBlock(
@@ -30,7 +30,7 @@ export function renderClaudeMdBlock(source: AgentsMdSource): string {
     [
       CLAUDE_KNOWLEDGE_IMPORT,
       generateOperatingRules().trim(),
-      source.rulePaths.map((path) => `@../${RULES_DIR}/${path}`).join('\n'),
+      source.rules.map((rule) => `@../${RULES_DIR}/${rule.path}`).join('\n'),
     ],
   );
 }

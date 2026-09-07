@@ -160,9 +160,9 @@ Knowlery 支持两个 agent 平台：
 | 平台 | 入口文件 | 如何拿到 `KNOWLEDGE.md` 和 rules |
 | --- | --- | --- |
 | Claude Code | `.claude/CLAUDE.md` | `@../KNOWLEDGE.md` 加每个 rule 文件一行 `@` import（硬注入）；操作规则内联 |
-| OpenCode（以及 Codex、Cursor 等） | `AGENTS.md` | "Read First" 指令列出 `KNOWLEDGE.md` 和每个 rule 路径（这些 harness 没有 import 语法）；操作规则内联 |
+| OpenCode（以及 Codex、Cursor 等） | `AGENTS.md` | `KNOWLEDGE.md` 和每个 rule 文件复制进受管区块（这些 harness 没有 import 语法）；操作规则内联 |
 
-所有平台的来源都一样——你的 `KNOWLEDGE.md`、`.agents/rules/` 下的 rules、Knowlery 的操作规则——而且 `KNOWLEDGE.md` 不会被复制进任何入口文件。无论选哪个平台，两个入口文件都会写入；平台选项只影响 CLI 检测和界面标签。
+所有平台的来源都一样——你的 `KNOWLEDGE.md`、`.agents/rules/` 下的 rules、Knowlery 的操作规则——入口文件在 sync 时由它们重新生成。无论选哪个平台，两个入口文件都会写入；平台选项只影响 CLI 检测和界面标签。
 
 ## Companion Chat
 

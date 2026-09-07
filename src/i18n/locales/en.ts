@@ -76,7 +76,7 @@ export const en = {
   'settings.activityRule.refresh': 'Refresh rule',
   'settings.activityRule.refreshed': 'Activity ledger rule refreshed.',
   'settings.regenerate.name': 'Regenerate agent config',
-  'settings.regenerate.desc': 'Rebuild AGENTS.md (for Codex and OpenCode) and .claude/CLAUDE.md (for Claude Code): Knowlery\'s operating rules plus references to KNOWLEDGE.md and .agents/rules/.',
+  'settings.regenerate.desc': 'Rebuild AGENTS.md (for Codex and OpenCode) and .claude/CLAUDE.md (for Claude Code) from KNOWLEDGE.md, Knowlery\'s operating rules, and .agents/rules/.',
   'settings.regenerate.button': 'Regenerate',
   'settings.regenerate.done': 'Agent config regenerated',
   'settings.regenerate.resetButton': 'Reset AGENTS.md',

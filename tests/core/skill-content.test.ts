@@ -382,10 +382,10 @@ describe('the dot-directory boundary is taught (field finding, verified on Obsid
     expect(content).toContain('Mermaid or other charts');
   });
 
-  it('vault-conventions: two entry files, same sources — AGENTS.md tells Codex/OpenCode to read them, CLAUDE.md imports them', () => {
+  it('vault-conventions: two entry files, same sources — AGENTS.md copies them for Codex/OpenCode, CLAUDE.md imports them', () => {
     const content = skill('vault-conventions').replace(/\s+/g, ' ');
     expect(content).toContain('Every platform starts from the same sources');
-    expect(content).toContain('Codex and OpenCode read the vault-root `AGENTS.md`, which tells them to read `KNOWLEDGE.md` and each rule file first');
+    expect(content).toContain('Codex and OpenCode read the vault-root `AGENTS.md`, where those sources are copied in');
     expect(content).toContain('Claude Code reads `.claude/CLAUDE.md`, which `@`-imports the same files');
     expect(content).toContain('never the managed block itself');
   });

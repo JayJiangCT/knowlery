@@ -8,7 +8,7 @@ import { runHealth } from '../../src/cli/commands/health';
 import { CliError } from '../../src/cli/commands/shared';
 import { nodeVaultFs } from '../../src/platform/node-fs';
 import { executeSetup } from '../../src/core/setup-executor';
-import { collectRulePaths } from '../../src/core/agents-md';
+import { readAgentsMdSource } from '../../src/core/agents-md';
 import { renderClaudeMdBlock } from '../../src/core/claude-md';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
@@ -82,9 +82,8 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
       expect(knowledge).toMatch(/^# Prompted KB/m);
       // OpenCode loads the vault-root AGENTS.md; no opencode.json is written.
       const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
-      expect(agentsMd).toContain('## Read First');
-      expect(agentsMd).toContain('`.agents/rules/citation-required.md`');
-      expect(agentsMd).not.toContain('# Prompted KB');
+      expect(agentsMd).toContain('# Prompted KB');
+      expect(agentsMd).toContain('# Citation Required');
       await expect(readFile(join(root, 'opencode.json'), 'utf8')).rejects.toThrow();
     });
   });
@@ -157,7 +156,8 @@ describe('shared sync surface (spec 0.7 f2, §6.4)', () => {
       await runInit(fs, { platform: 'claude-code', name: 'KB', prompt: null, log: silent });
       await runSync(fs, { log: silent });
       const converged = await fs.read('.claude/CLAUDE.md');
-      expect(converged).toBe(`${renderClaudeMdBlock({ rulePaths: await collectRulePaths(fs) })}\n`);
+      const source = await readAgentsMdSource(fs);
+      expect(converged).toBe(`${renderClaudeMdBlock(source!)}\n`);
       expect(converged).toContain('@../KNOWLEDGE.md');
       expect(converged).not.toContain('@../AGENTS.md');
     });

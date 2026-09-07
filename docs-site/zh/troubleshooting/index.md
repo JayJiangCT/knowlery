@@ -71,17 +71,15 @@ Built-in skills 预期位于 `.agents/skills/<name>/SKILL.md`。
 个，各自带一个 `<!-- Knowlery managed:start/end -->` 区块：
 
 - `AGENTS.md`，Codex、OpenCode、Cursor 读取。这些 harness 没有 import 语法，
-  所以区块以 **Read First** 段开头，要求 agent 在做任何事之前先读
-  `KNOWLEDGE.md` 和列出的每个 rule 文件，随后是操作规则。如果某次
-  Codex/OpenCode 会话跳过了这一步，知识库描述就不在它的上下文里——检查会话
-  最初的几次工具调用。
+  所以区块把来源**复制**进来：先是 `KNOWLEDGE.md`，再是操作规则，然后是每个
+  rule 文件（"先去读这些文件"的做法试过，OpenCode 不照做）。副本在每次 sync
+  时根据源文件重新生成。
 - `.claude/CLAUDE.md`，Claude Code 读取。区块先 `@` import `KNOWLEDGE.md`，
   再内联操作规则，然后逐个 `@` import 每个 rule 文件，因此 Claude 拿到的是
   硬注入的同一份上下文。它不再 import `AGENTS.md`。
 
-`KNOWLEDGE.md` 不会被复制进任何一个入口文件。两个区块都会在插件加载、增删
-rule 和 `knowlery sync` 时重新生成，请修改 `KNOWLEDGE.md` 或 rule 文件，不要
-直接修改区块。你写在标记之外的内容都会保留。
+两个区块都会在插件加载、增删 rule 和 `knowlery sync` 时重新生成，请修改
+`KNOWLEDGE.md` 或 rule 文件，不要直接修改区块。你写在标记之外的内容都会保留。
 
 从 1.5 之前的 vault 升级时：
 
@@ -110,7 +108,7 @@ rule 和 `knowlery sync` 时重新生成，请修改 `KNOWLEDGE.md` 或 rule 文
   你自己添加的内容，会连文件一起删除）。
 
 Codex 默认把项目指令总量限制在 32 KiB（`project_doc_max_bytes`）；生成的
-区块约 6 KB。
+区块约 10 KB。
 
 ## Broken Wikilinks
 

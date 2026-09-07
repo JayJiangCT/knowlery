@@ -72,20 +72,18 @@ skills — rendered from the template, so fixes reach every vault). There are
 two entry files, each with a `<!-- Knowlery managed:start/end -->` block:
 
 - `AGENTS.md`, read by Codex, OpenCode, and Cursor. Those harnesses have no
-  import syntax, so the block opens with a **Read First** section telling the
-  agent to read `KNOWLEDGE.md` and each listed rule file before anything
-  else, then carries the operating rules. If a Codex/OpenCode session skips
-  that read, the vault description is simply not in its context — check the
-  session's first tool calls.
+  import syntax, so the block *copies* the sources in: `KNOWLEDGE.md` first,
+  then the operating rules, then every rule file (a "read these first"
+  instruction was tried and OpenCode ignored it). The copy is regenerated
+  from the files on every sync.
 - `.claude/CLAUDE.md`, read by Claude Code. Its block `@`-imports
   `KNOWLEDGE.md` first, inlines the operating rules, and `@`-imports every
   rule file, so Claude gets the same context as hard injection. It does not
   import `AGENTS.md`.
 
-`KNOWLEDGE.md` is never copied into either file. Both blocks are regenerated
-on plugin load, rule add/remove, and `knowlery sync`, so edit `KNOWLEDGE.md`
-or the rule files, not the blocks. Anything you write outside the markers is
-kept.
+Both blocks are regenerated on plugin load, rule add/remove, and
+`knowlery sync`, so edit `KNOWLEDGE.md` or the rule files, not the blocks.
+Anything you write outside the markers is kept.
 
 Upgrading from a pre-1.5 vault:
 
@@ -120,7 +118,7 @@ Upgrading from a pre-1.5 vault:
   entries (and the file when nothing you added remains).
 
 Codex caps the combined project instructions at 32 KiB by default
-(`project_doc_max_bytes`); the generated block is around 6 KB.
+(`project_doc_max_bytes`); the generated block is around 10 KB.
 
 ## Broken Wikilinks
 

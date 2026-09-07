@@ -7,9 +7,11 @@ import { createMemoryFs } from '../mocks/memory-fs';
 
 const KNOWLEDGE = '# My KB\n\nWhat this knowledge base is about.\n';
 
+const src = (...paths: string[]) => ({ knowledgeMd: KNOWLEDGE, rules: paths.map((path) => ({ path, content: `# ${path}\n` })) });
+
 describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and the rules, operating rules inlined', () => {
   it('imports KNOWLEDGE.md first, inlines the operating rules, then imports each rule — and never AGENTS.md', () => {
-    const block = renderClaudeMdBlock({ rulePaths: ['agent-pages.md', 'nested/style.md'] });
+    const block = renderClaudeMdBlock(src('agent-pages.md', 'nested/style.md'));
 
     const knowledgeAt = block.indexOf(CLAUDE_KNOWLEDGE_IMPORT);
     const opsAt = block.indexOf(generateOperatingRules().trim());
@@ -30,13 +32,13 @@ describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and t
   });
 
   it('renders no dangling import list when the vault has no rules', () => {
-    const block = renderClaudeMdBlock({ rulePaths: [] });
+    const block = renderClaudeMdBlock(src());
     expect(block).not.toContain(`@../${RULES_DIR}`);
     expect(block).toContain(CLAUDE_KNOWLEDGE_IMPORT);
   });
 
   it('converges a 1.5 file: the AGENTS.md import goes, the block leads, user text stays', () => {
-    const block = renderClaudeMdBlock({ rulePaths: ['a.md'] });
+    const block = renderClaudeMdBlock(src('a.md'));
     const merged = mergeClaudeMd('@../AGENTS.md\n\n# Claude only\n\nUse the Task tool for long searches.\n', block);
     expect(merged).toBe(`${block}\n\n# Claude only\n\nUse the Task tool for long searches.\n`);
     expect(merged.split('@../AGENTS.md').length - 1).toBe(0);
@@ -56,7 +58,7 @@ describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and t
       '<!-- Knowlery rule imports:end -->',
       '',
     ].join('\n');
-    const block = renderClaudeMdBlock({ rulePaths: ['activity-ledger.md'] });
+    const block = renderClaudeMdBlock(src('activity-ledger.md'));
 
     const merged = mergeClaudeMd(legacy, block);
 
@@ -72,14 +74,14 @@ describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and t
   });
 
   it('puts the block first in a hand-written CLAUDE.md that never had Knowlery imports', () => {
-    const block = renderClaudeMdBlock({ rulePaths: [] });
+    const block = renderClaudeMdBlock(src());
     const merged = mergeClaudeMd('# Claude-only notes\n\nPrefer terse replies.\n', block);
     expect(merged).toBe(`${block}\n\n# Claude-only notes\n\nPrefer terse replies.\n`);
   });
 
   it('replaces the block in place and keeps text around it', () => {
-    const v1 = renderClaudeMdBlock({ rulePaths: ['a.md'] });
-    const v2 = renderClaudeMdBlock({ rulePaths: ['a.md', 'b.md'] });
+    const v1 = renderClaudeMdBlock(src('a.md'));
+    const v2 = renderClaudeMdBlock(src('a.md', 'b.md'));
     const merged = mergeClaudeMd(`# Before\n${v1}\n\n# After\n`, v2);
     expect(merged).toBe(`# Before\n${v2}\n\n# After\n`);
     expect(merged.split(MANAGED_BLOCK_START).length - 1).toBe(1);
@@ -92,7 +94,7 @@ describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and t
       [`${RULES_DIR}/a.md`]: '# A\n',
     });
     await syncClaudeMd(fs);
-    expect(fs.files.get('.claude/CLAUDE.md')).toBe(`${renderClaudeMdBlock({ rulePaths: ['a.md'] })}\n`);
+    expect(fs.files.get('.claude/CLAUDE.md')).toBe(`${renderClaudeMdBlock(src('a.md'))}\n`);
 
     const writes = fs.writeLog.length;
     await syncClaudeMd(fs);
@@ -102,7 +104,7 @@ describe('CLAUDE.md is the Claude Code entry: hard imports of KNOWLEDGE.md and t
   it('creates the file (and .claude/) when missing, for every platform', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await syncClaudeMd(fs);
-    expect(fs.files.get('.claude/CLAUDE.md')).toBe(`${renderClaudeMdBlock({ rulePaths: [] })}\n`);
+    expect(fs.files.get('.claude/CLAUDE.md')).toBe(`${renderClaudeMdBlock(src())}\n`);
   });
 
   it('does nothing in an uninitialized vault — the block would import a KNOWLEDGE.md that does not exist', async () => {

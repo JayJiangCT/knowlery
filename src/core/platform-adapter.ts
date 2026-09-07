@@ -4,9 +4,9 @@ import { syncClaudeMd } from './claude-md';
 
 /**
  * Two entry files, one fixed context. AGENTS.md is the entry for Codex and
- * OpenCode (no import syntax there, so it *points at* KNOWLEDGE.md and the rules
- * and carries the operating rules); `.claude/CLAUDE.md` is the entry for Claude
- * Code (`@` imports of KNOWLEDGE.md and each rule, operating rules inlined).
+ * OpenCode (no import syntax there, so KNOWLEDGE.md, the operating rules, and
+ * the rules are copied in); `.claude/CLAUDE.md` is the entry for Claude Code
+ * (`@` imports of KNOWLEDGE.md and each rule, operating rules inlined).
  * Both are written regardless of the selected platform, so a vault opened in
  * any agent starts every session from the same sources. The platform setting
  * only steers CLI detection and labels.

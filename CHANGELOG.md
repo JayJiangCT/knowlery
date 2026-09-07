@@ -2,34 +2,33 @@
 
 ## [Unreleased]
 
-### KNOWLEDGE.md is referenced, not copied
+### KNOWLEDGE.md is the source; each harness gets it the way it can
 
-- **The entry files point at `KNOWLEDGE.md` and the rules instead of
-  inlining them.** Local testing of the layout below showed `AGENTS.md`
-  repeating most of `KNOWLEDGE.md`, and a file that is copied wholesale into
-  another stops being the one place agents look. `KNOWLEDGE.md` is now a
-  standalone file that nothing copies, and each harness reaches it the way
-  that harness allows:
-  - **Codex / OpenCode → `AGENTS.md`.** Neither supports an import syntax
-    (Codex concatenates the `AGENTS.md` chain only; OpenCode V2 does not
-    resolve `@` references or its `instructions` array), so the managed block
-    opens with a **Read First** section: read `KNOWLEDGE.md` in full before
-    anything else (`obsidian read` when Obsidian is running, file tools
-    otherwise), then read each listed `.agents/rules/<file>.md` with file
-    tools and follow them for the session. Knowlery's operating rules follow.
-    This is a soft reference — it depends on the agent doing the read — which
-    is the trade-off accepted for keeping `KNOWLEDGE.md` single-sourced.
+- **`KNOWLEDGE.md` stays a standalone, user-owned file and the entry files
+  are derived from it.** Local testing of the layout below showed `AGENTS.md`
+  repeating most of `KNOWLEDGE.md` — mostly because the pre-1.5 file still
+  carried Knowlery's own operating rules (fixed separately, see below) — and
+  `.claude/CLAUDE.md` importing `AGENTS.md` put the same text in front of
+  Claude twice. Each harness now reaches the sources the way that harness
+  allows:
   - **Claude Code → `.claude/CLAUDE.md`.** Claude's `@` imports are hard
     injection, so its managed block imports `@../KNOWLEDGE.md` first (the
     most important part of the prompt), inlines the operating rules, and
     imports each rule file individually (`@../.agents/rules/<file>.md`;
     Claude has no glob import, so the list is regenerated on rule
-    add/remove). It **no longer imports `AGENTS.md`** — that file exists for
-    harnesses without imports and would only repeat the operating rules.
-- `AGENTS.md` shrinks from ~9 KB to ~6 KB (well under Codex's 32 KiB
-  `project_doc_max_bytes`). Rule bodies are no longer inlined anywhere, so the
-  "Applies to files matching" restatement of Claude `paths:` frontmatter is
-  gone with them; Claude sees the frontmatter itself through the import.
+    add/remove). It **no longer imports `AGENTS.md`**.
+  - **Codex / OpenCode → `AGENTS.md`.** Neither supports an import syntax
+    (Codex concatenates the `AGENTS.md` chain only; OpenCode V2 does not
+    resolve `@` references or its `instructions` array). A "read
+    `KNOWLEDGE.md` and the rule files first" instruction was tried and failed
+    acceptance twice — OpenCode went straight to a skill and never read
+    either — so for these harnesses the block *copies* the sources:
+    `KNOWLEDGE.md`, then the operating rules, then every rule in
+    `.agents/rules/` (Claude `paths:` frontmatter restated as "Applies to
+    files matching"). The copy is regenerated from the files on every sync;
+    edit `KNOWLEDGE.md` or the rules, never the block. With the pre-1.5
+    sections gone from `KNOWLEDGE.md`, the block is ~10 KB (Codex caps the
+    chain at 32 KiB).
 - **Existing vaults converge on sync.** A 1.5 `.claude/CLAUDE.md` (`@../AGENTS.md`)
   and a pre-1.5 one (`@../KNOWLEDGE.md` + `@rules/*.md` block) both become the
   managed block; your own text stays after it. `AGENTS.md` keeps text outside

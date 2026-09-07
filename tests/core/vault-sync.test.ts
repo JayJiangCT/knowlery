@@ -84,11 +84,10 @@ describe('sync copies pre-1.5 Claude rules into the shared rules directory', () 
     // An existing shared rule wins over the Claude copy.
     expect(fs.files.get('.agents/rules/citation-required.md')).toBe('# Citation Required (already shared, edited)\n');
 
-    // Both entry files point at the copied rules; neither inlines them.
+    // AGENTS.md inlines the copied rules; CLAUDE.md imports them.
     const agentsMd = fs.files.get('AGENTS.md')!;
-    expect(agentsMd).toContain('`.agents/rules/jira-ticket-writing.md`');
-    expect(agentsMd).toContain('`.agents/rules/nested/style.md`');
-    expect(agentsMd).not.toContain('# JIRA Ticket Writing');
+    expect(agentsMd).toContain('# JIRA Ticket Writing');
+    expect(agentsMd).toContain('# Citation Required (already shared, edited)');
     const claudeMd = fs.files.get('.claude/CLAUDE.md')!;
     expect(claudeMd).toContain('@../.agents/rules/jira-ticket-writing.md');
     expect(claudeMd).not.toContain('@../AGENTS.md');
@@ -119,7 +118,7 @@ describe('sync retires the Knowlery-written opencode.json in favour of AGENTS.md
     });
     expect(await runVaultSync(fs)).toEqual({ skipped: false });
     expect(fs.files.has('opencode.json')).toBe(false);
-    expect(fs.files.get('AGENTS.md')).toContain('## Read First');
+    expect(fs.files.get('AGENTS.md')).toContain('# My KB');
   });
 
   it('keeps user keys and user instructions, dropping only the two Knowlery entries', async () => {

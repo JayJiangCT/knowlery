@@ -159,9 +159,9 @@ Knowlery supports two agent platforms:
 | Platform | Entry file | How it reaches `KNOWLEDGE.md` and the rules |
 | --- | --- | --- |
 | Claude Code | `.claude/CLAUDE.md` | `@../KNOWLEDGE.md` and one `@` import per rule file (hard injection); operating rules inlined |
-| OpenCode (and Codex, Cursor…) | `AGENTS.md` | A "Read First" instruction naming `KNOWLEDGE.md` and each rule path (no import syntax on these harnesses); operating rules inlined |
+| OpenCode (and Codex, Cursor…) | `AGENTS.md` | `KNOWLEDGE.md` and every rule file copied into the managed block (no import syntax on these harnesses); operating rules inlined |
 
-The sources are the same for every platform — your `KNOWLEDGE.md`, the rules in `.agents/rules/`, Knowlery's operating rules — and `KNOWLEDGE.md` is never copied into an entry file. Both entry files are written whichever platform you pick; the choice only steers CLI detection and labels.
+The sources are the same for every platform — your `KNOWLEDGE.md`, the rules in `.agents/rules/`, Knowlery's operating rules — and the entry files are regenerated from them on sync. Both entry files are written whichever platform you pick; the choice only steers CLI detection and labels.
 
 ## Companion Chat
 

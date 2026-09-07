@@ -117,9 +117,9 @@ args = ["-y", "knowlery@^1", "mcp"]
 Restart `codex` after changing the config. Since Codex has a shell, the
 `knowlery` CLI works alongside the MCP tools — the `knowlery-cli` skill
 teaches the command surface. Opened inside a Knowlery vault, Codex also
-loads the vault-root `AGENTS.md`, which carries Knowlery's operating rules
-and tells it to read `KNOWLEDGE.md` and the rule files first — the same
-sources Claude Code gets through `.claude/CLAUDE.md`.
+loads the vault-root `AGENTS.md` — `KNOWLEDGE.md`, Knowlery's operating
+rules, and the rule files copied in — the same sources Claude Code gets
+through `.claude/CLAUDE.md`.
 
 ## Codex Desktop
 
@@ -163,8 +163,8 @@ Add this to the **global** config at `~/.config/opencode/opencode.json`
 ::: tip The vault's instructions live in `AGENTS.md`
 OpenCode is a first-class Knowlery platform: `knowlery init --platform
 opencode` writes rules under `.agents/rules/` and a vault-root `AGENTS.md`
-that carries Knowlery's operating rules and points at `KNOWLEDGE.md` and
-those rules — the same sources Claude Code `@`-imports through
+that copies in `KNOWLEDGE.md`, Knowlery's operating rules, and those
+rules — the same sources Claude Code `@`-imports through
 `.claude/CLAUDE.md`. OpenCode loads `AGENTS.md` at
 session start (its `opencode.json` `instructions` array is no longer
 resolved in V2, so Knowlery stopped writing a vault-level `opencode.json`;

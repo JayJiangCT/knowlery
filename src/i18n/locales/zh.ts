@@ -71,7 +71,7 @@ export const zh: Record<TranslationKey, string> = {
   'settings.activityRule.refresh': '刷新规则',
   'settings.activityRule.refreshed': '活动账本规则已刷新。',
   'settings.regenerate.name': '重新生成 Agent 配置',
-  'settings.regenerate.desc': '重建 AGENTS.md（供 Codex、OpenCode 使用）和 .claude/CLAUDE.md（供 Claude Code 使用）：Knowlery 的操作规则，加上对 KNOWLEDGE.md 和 .agents/rules/ 的引用。',
+  'settings.regenerate.desc': '根据 KNOWLEDGE.md、Knowlery 的操作规则和 .agents/rules/ 重建 AGENTS.md（供 Codex、OpenCode 使用）和 .claude/CLAUDE.md（供 Claude Code 使用）。',
   'settings.regenerate.button': '重新生成',
   'settings.regenerate.done': 'Agent 配置已重新生成',
   'settings.regenerate.resetButton': '重置 AGENTS.md',

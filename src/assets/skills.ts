@@ -1830,15 +1830,10 @@ your file tools directly.
 
 Every platform starts from the same sources: the user's \`KNOWLEDGE.md\` and
 the rules in \`.agents/rules/\`, plus Knowlery's operating rules. Codex and
-OpenCode read the vault-root \`AGENTS.md\`, which tells them to read
-\`KNOWLEDGE.md\` and each rule file first; Claude Code reads
-\`.claude/CLAUDE.md\`, which \`@\`-imports the same files. Both entry files are
-regenerated on sync: change \`KNOWLEDGE.md\` or a rule file, never the managed
-block itself.
-
-**If this session has not yet read \`KNOWLEDGE.md\` and every
-\`.agents/rules/*.md\`, do that now, before continuing with this skill.** On
-Codex and OpenCode nothing injects them for you; this skill is not a substitute.
+OpenCode read the vault-root \`AGENTS.md\`, where those sources are copied in;
+Claude Code reads \`.claude/CLAUDE.md\`, which \`@\`-imports the same files. Both
+entry files are regenerated on sync: change \`KNOWLEDGE.md\` or a rule file,
+never the managed block itself.
 
 ## Required Frontmatter
 

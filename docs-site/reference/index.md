@@ -39,9 +39,9 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `queries/` | Setup | Agent-maintained research threads |
 | `.knowlery/manifest.json` | Setup | Setup state |
 | `.agents/skills/` | Setup | Canonical skills |
-| `.agents/rules/` | Setup | Rules, for every platform (listed in AGENTS.md, imported by .claude/CLAUDE.md) |
+| `.agents/rules/` | Setup | Rules, for every platform (inlined into AGENTS.md, imported by .claude/CLAUDE.md) |
 | `.claude/skills/` | Setup | Mirrored built-in skills for Claude Code |
-| `AGENTS.md` | Setup | Entry file for Codex, OpenCode, Cursor…: "Read First" pointer to KNOWLEDGE.md and each rule file + Knowlery operating rules (managed block) |
+| `AGENTS.md` | Setup | Entry file for Codex, OpenCode, Cursor…: KNOWLEDGE.md + Knowlery operating rules + rules copied into a managed block |
 | `.claude/CLAUDE.md` | Setup | Entry file for Claude Code: `@../KNOWLEDGE.md`, operating rules, one `@` import per rule (managed block) |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |

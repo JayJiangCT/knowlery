@@ -1,8 +1,8 @@
 /**
  * KNOWLEDGE.md is the user's description of the knowledge base — what it covers,
  * how it is laid out — written once at setup and then theirs to edit. It is a
- * standalone file: the entry files point at it (AGENTS.md by instruction,
- * `.claude/CLAUDE.md` by `@` import) and never copy it. Knowlery's own operating
+ * standalone file and the source of truth: `.claude/CLAUDE.md` `@`-imports it,
+ * AGENTS.md carries a copy regenerated on every sync. Knowlery's own operating
  * rules are *not* in it: they come from `generateOperatingRules` and are rendered
  * into the entry files on every sync, so wording fixes reach every vault without
  * touching a user-owned file.
@@ -36,7 +36,7 @@ knowledge; Knowlery supplies its operating rules separately (in \`AGENTS.md\` an
 /**
  * Knowlery's operating rules for agents — the tooling half of the fixed context.
  * Rendered into both entry files (`renderAgentsMdBlock`, `renderClaudeMdBlock`)
- * after the pointer to / import of the user's KNOWLEDGE.md, never written into a
+ * after the copy / import of the user's KNOWLEDGE.md, never written into a
  * user-owned file.
  */
 export function generateOperatingRules(): string {

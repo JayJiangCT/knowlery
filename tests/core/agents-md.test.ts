@@ -5,7 +5,6 @@ import {
   RULES_DIR,
   collectRulePaths,
   renderAgentsMdBlock,
-  renderReadFirst,
   resetAgentsMd,
   syncAgentsMd,
 } from '../../src/core/agents-md';
@@ -26,76 +25,96 @@ function managedBlock(agentsMd: string): string {
   return agentsMd.slice(start, end + AGENTS_MD_MANAGED_END.length);
 }
 
-describe('AGENTS.md is the Codex/OpenCode entry: it points at KNOWLEDGE.md and the rules, and carries the operating rules', () => {
-  it('tells the agent to read KNOWLEDGE.md first, then lists every rule path in sorted order, then the operating rules', async () => {
+describe('AGENTS.md is the Codex/OpenCode entry: the sources copied in, because those harnesses cannot import', () => {
+  it('inlines KNOWLEDGE.md first, then the operating rules, then every rule from .agents/rules in sorted order', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
 
     const block = managedBlock(fs.files.get('AGENTS.md')!);
+    expect(block).toContain(KNOWLEDGE.trim());
 
-    // Referenced, not copied: KNOWLEDGE.md stays the one standalone description.
-    expect(block).not.toContain('What this knowledge base is about.');
-    expect(block).toContain('obsidian read file="KNOWLEDGE.md"');
-
-    const readFirstAt = block.indexOf('## Read First');
+    // KNOWLEDGE.md is the most important part of the prompt, so it leads; the
+    // operating rules render from the template, not from any user file.
     const opsAt = block.indexOf(generateOperatingRules().trim());
-    expect(readFirstAt).toBeGreaterThan(-1);
-    expect(opsAt).toBeGreaterThan(readFirstAt);
-
-    let cursor = readFirstAt;
+    expect(opsAt).toBeGreaterThan(block.indexOf(KNOWLEDGE.trim()));
+    let cursor = opsAt;
     for (const rulePath of await collectRulePaths(fs)) {
-      const at = block.indexOf(`- \`${RULES_DIR}/${rulePath}\``, cursor);
-      expect(at, `${rulePath} listed in order`).toBeGreaterThan(cursor);
-      expect(at).toBeLessThan(opsAt);
+      const ruleBody = fs.files.get(`${RULES_DIR}/${rulePath}`)!.trim();
+      const at = block.indexOf(ruleBody, cursor);
+      expect(at, `${rulePath} inlined after the preceding source`).toBeGreaterThan(cursor);
       cursor = at;
     }
-    // Rule bodies are not inlined either — Codex/OpenCode are told to read the files.
-    expect(RULE_TEMPLATES.some((rule) => block.includes(rule.content.trim()))).toBe(false);
+    expect(RULE_TEMPLATES.every((rule) => block.includes(rule.content.trim()))).toBe(true);
+    // Acceptance showed OpenCode never follows a "read these first" instruction — there is none.
+    expect(block).not.toContain('## Read First');
     // No Claude import syntax leaks into a file Claude never reads.
     expect(block).not.toContain('@../');
   });
 
-  it('skips the rule paragraph when the vault has no rules', () => {
-    const readFirst = renderReadFirst([]);
-    expect(readFirst).toContain('KNOWLEDGE.md');
-    expect(readFirst).not.toContain(RULES_DIR);
-  });
-
-  it('is written together with .claude/CLAUDE.md — no opencode.json, no .claude/rules', async () => {
+  it('is written together with .claude/CLAUDE.md, which imports the same sources — no opencode.json, no .claude/rules', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
 
-    expect(fs.files.get('.claude/CLAUDE.md')).toContain('@../KNOWLEDGE.md');
-    expect(fs.files.get('.claude/CLAUDE.md')).not.toContain('@../AGENTS.md');
+    const claudeMd = fs.files.get('.claude/CLAUDE.md')!;
+    expect(claudeMd).toContain('@../KNOWLEDGE.md');
+    expect(claudeMd).not.toContain('@../AGENTS.md');
+    expect(claudeMd).not.toContain('What this knowledge base is about.');
     expect(fs.files.has('opencode.json')).toBe(false);
     expect(fs.dirs.has('.claude/rules')).toBe(false);
     expect(fs.dirs.has(RULES_DIR)).toBe(true);
   });
 
-  it('both entry files follow a rule add/remove — the reason the blocks are regenerated, not written once', async () => {
+  it('stays current when KNOWLEDGE.md or a rule changes, in both entry files — the reason the blocks are regenerated, not written once', async () => {
     const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
     await installDefaultRules(fs);
     await generatePlatformConfig(fs);
 
     await writeRule(fs, 'team-glossary.md', '# Team Glossary\n\nMRR means monthly recurring revenue.\n');
-    expect(fs.files.get('AGENTS.md')).toContain(`\`${RULES_DIR}/team-glossary.md\``);
+    expect(fs.files.get('AGENTS.md')).toContain('MRR means monthly recurring revenue.');
     expect(fs.files.get('.claude/CLAUDE.md')).toContain(`@../${RULES_DIR}/team-glossary.md`);
 
     await deleteRule(fs, 'citation-required.md');
-    expect(fs.files.get('AGENTS.md')).not.toContain('citation-required.md');
+    expect(fs.files.get('AGENTS.md')).not.toContain('# Citation Required');
     expect(fs.files.get('.claude/CLAUDE.md')).not.toContain('citation-required.md');
-  });
-
-  it('does not change when KNOWLEDGE.md changes — nothing of it is copied', async () => {
-    const fs = createMemoryFs({ 'KNOWLEDGE.md': KNOWLEDGE });
-    await generatePlatformConfig(fs);
-    const before = fs.files.get('AGENTS.md');
 
     fs.files.set('KNOWLEDGE.md', '# My KB\n\nEdited by hand while Obsidian was closed.\n');
     await syncAgentsMd(fs);
-    expect(fs.files.get('AGENTS.md')).toBe(before);
+    expect(fs.files.get('AGENTS.md')).toContain('Edited by hand while Obsidian was closed.');
+    expect(fs.files.get('AGENTS.md')).not.toContain('What this knowledge base is about.');
+  });
+
+  it('restates a Claude path-scoped rule as prose instead of inlining its YAML frontmatter', () => {
+    const scoped = [
+      '---',
+      'paths:',
+      '  - "entities/**/*.md"',
+      '  - "!SCHEMA.md"',
+      '---',
+      '# Agent-Maintained Pages',
+      '',
+      'You can create and update them.',
+      '',
+    ].join('\n');
+    const block = renderAgentsMdBlock({
+      knowledgeMd: 'card',
+      rules: [{ path: 'agent-pages.md', content: scoped }],
+    });
+
+    expect(block).not.toMatch(/^---$/m);
+    expect(block).not.toContain('paths:');
+    expect(block).toContain(
+      '# Agent-Maintained Pages\n\n_Applies to files matching: `entities/**/*.md`, `!SCHEMA.md`_\n\nYou can create and update them.',
+    );
+  });
+
+  it('also understands the comma-separated paths form Claude actually parses', () => {
+    const block = renderAgentsMdBlock({
+      knowledgeMd: 'card',
+      rules: [{ path: 'r.md', content: '---\npaths: src/**/*.ts, lib/**/*.ts\n---\n# R\n\nBody.\n' }],
+    });
+    expect(block).toContain('_Applies to files matching: `src/**/*.ts`, `lib/**/*.ts`_');
   });
 });
 
@@ -103,23 +122,23 @@ describe('AGENTS.md is a managed block, not an owned file', () => {
   it('preserves user prose around the block and replaces the block in place', () => {
     const before = '# Team notes\n\nAlways run the linter.\n';
     const after = '\n## Appendix\n\nMore of mine.\n';
-    const v1 = renderAgentsMdBlock({ rulePaths: ['v1.md'] });
-    const v2 = renderAgentsMdBlock({ rulePaths: ['v2.md'] });
+    const v1 = renderAgentsMdBlock({ knowledgeMd: 'card v1', rules: [] });
+    const v2 = renderAgentsMdBlock({ knowledgeMd: 'card v2', rules: [] });
 
     const merged1 = mergeManagedBlock(`${before}${v1}${after}`, v1);
     const merged2 = mergeManagedBlock(merged1, v2);
 
     expect(merged2.startsWith(before)).toBe(true);
     expect(merged2.endsWith(after)).toBe(true);
-    expect(merged2).toContain('v2.md');
-    expect(merged2).not.toContain('v1.md');
+    expect(merged2).toContain('card v2');
+    expect(merged2).not.toContain('card v1');
     expect(merged2.split(AGENTS_MD_MANAGED_START).length - 1).toBe(1);
   });
 
   it('puts the block first in a pre-existing AGENTS.md without markers, keeping the user text after it', () => {
     // Same order Claude documents for CLAUDE.md: shared instructions lead, additions trail.
     const existing = '# Hand-written instructions\n\nUse British spelling.\n';
-    const block = renderAgentsMdBlock({ rulePaths: [] });
+    const block = renderAgentsMdBlock({ knowledgeMd: 'card', rules: [] });
     const merged = mergeManagedBlock(existing, block);
     expect(merged).toBe(`${block}\n\n${existing.trim()}\n`);
   });
@@ -136,7 +155,7 @@ describe('AGENTS.md is a managed block, not an owned file', () => {
     const reset = fs.files.get('AGENTS.md')!;
     expect(reset).not.toContain('Run /wiki.');
     expect(reset.startsWith(AGENTS_MD_MANAGED_START)).toBe(true);
-    expect(reset).toContain('## Read First');
+    expect(reset).toContain(KNOWLEDGE.trim());
   });
 
   it('does not rewrite an already-synced file (no mtime churn on plugin load)', async () => {
