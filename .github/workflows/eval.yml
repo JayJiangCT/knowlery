@@ -2,6 +2,9 @@ name: Retrieval eval
 
 on:
   pull_request:
+    # `edited` included: the cook-skill drift guard reads the PR body for
+    # `cook-eval-waiver`, so adding the waiver must re-evaluate the gate.
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   assert-baseline:
