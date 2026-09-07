@@ -9,7 +9,9 @@ import { ExportBundleModal } from './modals/export-bundle';
 import { InstallBundleModal } from './modals/install-bundle';
 import { KnowlerySettingTab } from './settings';
 import { isVaultInitialized } from './core/setup-executor';
-import { syncClaudeRuleImports } from './core/rule-imports';
+import { syncAgentsMd } from './core/agents-md';
+import { syncClaudeMd } from './core/claude-md';
+import { migrateKnowledgeMdLegacyOperatingRules } from './core/knowledge-md-migration';
 import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
@@ -176,12 +178,16 @@ export default class KnowleryPlugin extends Plugin {
         const pluginVersion = this.manifest.version;
         const previousSyncedVersion = this.settings.lastSyncedVersion;
 
-        if (this.settings.platform === 'claude-code') {
-          await syncClaudeRuleImports(this.fs);
-        }
+        // Every load, not only on version change: picks up rule files added while
+        // Obsidian was closed, and clears the pre-1.5 operating-rule sections from
+        // KNOWLEDGE.md even when the version sync below does not run (same plugin
+        // version, or a vault last synced by a newer shell).
+        await migrateKnowledgeMdLegacyOperatingRules(this.fs);
+        await syncAgentsMd(this.fs);
+        await syncClaudeMd(this.fs);
 
         if (this.settings.lastSyncedVersion !== pluginVersion) {
-          const syncResult = await runVaultSync(this.fs, this.settings.platform, pluginVersion);
+          const syncResult = await runVaultSync(this.fs, pluginVersion);
           if (syncResult.skipped === 'newer-shell') {
             new Notice(t('main.notice.newerShell', { version: syncResult.lastSyncedBy ?? '' }), 10000);
           } else {

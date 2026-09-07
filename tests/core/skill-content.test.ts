@@ -1,7 +1,8 @@
 import matter from 'gray-matter';
 import { describe, expect, it } from 'vitest';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
-import { generateKnowledgeMd, generateSchemaMd } from '../../src/assets/templates';
+import { generateKnowledgeMd, generateOperatingRules, generateSchemaMd } from '../../src/assets/templates';
+import { hasLegacyOperatingRules } from '../../src/core/vault-config-health';
 
 /**
  * Spec 0.7 f5, §4.1-4: the acceptance criteria for this feature are skill-content
@@ -23,8 +24,66 @@ describe('frontmatter identity', () => {
     },
   );
 
-  it('vault-conventions keeps the legacy BYOAO pointer so old vaults still activate it', () => {
-    expect(matter(skill('vault-conventions')).data.description).toContain('formerly BYOAO');
+  it('vault-conventions points agents at KNOWLEDGE.md, the operating card every platform loads', () => {
+    const content = skill('vault-conventions');
+    expect(content).toContain('Read `KNOWLEDGE.md`');
+    expect(content).not.toContain('BYOAO');
+  });
+});
+
+describe('query phrasing is taught (field finding: a request-shaped question abstained on a well-covered topic)', () => {
+  it('/ask: pass subject terms, not the request; retry once on abstention; INDEX.base is not a retrieval step', () => {
+    const content = skill('ask').replace(/\s+/g, ' ');
+    expect(content).toContain('never the request itself');
+    expect(content).toContain('2–6 terms is the sweet spot');
+    expect(content).toContain('retry **once** with 2–6 subject keywords only');
+    expect(content).toContain('`INDEX.base` is a human preview of compiled pages, not a retrieval step');
+  });
+
+  it('no skill treats INDEX.base as a lookup or retrieval source any more', () => {
+    for (const name of ['cook', 'explore', 'ideas']) {
+      const content = skill(name).replace(/\s+/g, ' ');
+      expect(content, name).not.toMatch(/Check `INDEX\.base`|Read `INDEX\.base` if it exists|Uses INDEX\.base/);
+    }
+  });
+
+  it('the operating rules say the same', () => {
+    const card = generateOperatingRules().replace(/\s+/g, ' ');
+    expect(card).toContain('Pass the subject only');
+    expect(card).toContain('`INDEX.base` is a human preview of compiled pages, not a retrieval step');
+    expect(card).not.toContain('base:query');
+  });
+});
+
+describe('KNOWLEDGE.md is the user\'s description; the operating rules are Knowlery\'s and render into the entry files', () => {
+  it('the KNOWLEDGE.md template carries no operating-rule sections, so template fixes never need a user-file migration again', () => {
+    const knowledgeMd = generateKnowledgeMd('KB');
+    expect(knowledgeMd).toContain('# KB');
+    expect(knowledgeMd).toContain('## Vault Structure');
+    expect(knowledgeMd).toContain('## About This Knowledge Base');
+    expect(hasLegacyOperatingRules(knowledgeMd)).toBe(false);
+    expect(knowledgeMd).not.toContain('obsidian ');
+  });
+
+  it('health flags a pre-1.5 KNOWLEDGE.md that still carries those sections', () => {
+    expect(hasLegacyOperatingRules('# KB\n\n## Operating Rules\n\n### Obsidian CLI Only\n')).toBe(true);
+    expect(hasLegacyOperatingRules('# KB\n\n## Knowledge Retrieval\n')).toBe(true);
+    expect(hasLegacyOperatingRules('# KB\n\n## About This Knowledge Base\n\n### Freshness Review\n')).toBe(false);
+  });
+
+  it('the operating rules start at the H2 level so they nest under the KNOWLEDGE.md title Claude imports above them', () => {
+    expect(generateOperatingRules().startsWith('## Operating Rules')).toBe(true);
+    expect(generateOperatingRules()).not.toMatch(/^# /m);
+  });
+});
+
+describe('the dot-directory boundary is on the operating card (field finding: Codex ran `obsidian read` on ~/.agents/skills/ask/SKILL.md)', () => {
+  it('the operating rules name the boundary, the Error:-with-exit-0 trait, and where skills actually live', () => {
+    const card = generateOperatingRules().replace(/\s+/g, ' ');
+    expect(card).toContain('Obsidian CLI reaches only notes in the vault index');
+    expect(card).toContain('treat any `Error:` output as failure');
+    expect(card).toContain('`.agents/skills/<name>/SKILL.md`');
+    expect(card).toContain('never `obsidian read` and never a home-directory path');
   });
 });
 
@@ -47,9 +106,9 @@ describe('three-transport ladder (spec 0.7 f5, §4.1)', () => {
   });
 
   it('KNOWLEDGE.md template teaches the ladder', () => {
-    const knowledgeMd = generateKnowledgeMd('KB');
+    const knowledgeMd = generateOperatingRules();
     expect(knowledgeMd).toContain('obsidian knowlery:query');
-    expect(knowledgeMd).toContain('knowlery query "<question>"');
+    expect(knowledgeMd).toContain('knowlery query "<subject terms>"');
     expect(knowledgeMd).toContain('node .knowlery/bin/query.mjs');
   });
 });
@@ -62,7 +121,7 @@ describe('headless write branch (spec 0.7 f5, §4.2)', () => {
   });
 
   it('KNOWLEDGE.md operating rules cover headless environments', () => {
-    expect(generateKnowledgeMd('KB')).toContain('headless environments');
+    expect(generateOperatingRules()).toContain('headless environments');
   });
 });
 
@@ -323,10 +382,12 @@ describe('the dot-directory boundary is taught (field finding, verified on Obsid
     expect(content).toContain('Mermaid or other charts');
   });
 
-  it('vault-conventions: rules loading is platform-scoped — Codex reads hidden rule files itself', () => {
+  it('vault-conventions: two entry files, same sources — AGENTS.md copies them for Codex/OpenCode, CLAUDE.md imports them', () => {
     const content = skill('vault-conventions').replace(/\s+/g, ' ');
-    expect(content).toContain('Codex does not automatically receive');
-    expect(content).toContain('AGENTS.md');
+    expect(content).toContain('Every platform starts from the same sources');
+    expect(content).toContain('Codex and OpenCode read the vault-root `AGENTS.md`, where those sources are copied in');
+    expect(content).toContain('Claude Code reads `.claude/CLAUDE.md`, which `@`-imports the same files');
+    expect(content).toContain('never the managed block itself');
   });
 });
 

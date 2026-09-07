@@ -10,11 +10,12 @@ import { readInstalledBundles } from './registry';
 export const INSTALLED_BUNDLES_BEGIN_MARKER = '<!-- KNOWLERY:INSTALLED_BUNDLES:BEGIN -->';
 export const INSTALLED_BUNDLES_END_MARKER = '<!-- KNOWLERY:INSTALLED_BUNDLES:END -->';
 
+// A standalone paragraph, not a list item: the block is appended at the end of
+// KNOWLEDGE.md, nowhere near the retrieval steps it once continued as "9.".
 const BLOCK_BODY = [
-  '9. If the question might be answered by an installed knowledge bundle,',
-  "   check `.knowlery/bundles.json` and read the relevant bundle's",
-  '   `Library/<id>/agent-index.json` (`index.md` in the same directory',
-  '   is the human-readable equivalent).',
+  'Installed knowledge bundles: if the question might be answered by one, check',
+  "`.knowlery/bundles.json` and read the relevant bundle's `Library/<id>/agent-index.json`",
+  '(`index.md` in the same directory is the human-readable equivalent).',
 ].join('\n');
 
 export function ensureInstalledBundlesBlock(knowledgeMd: string): string {
@@ -33,13 +34,15 @@ export function ensureInstalledBundlesBlock(knowledgeMd: string): string {
 // Called on plugin-version change so existing vaults pick up wording
 // updates without waiting for the next bundle install.
 export async function refreshInstalledBundlesBlock(fs: VaultFs): Promise<void> {
-  const registry = await readInstalledBundles(fs);
-  if (Object.keys(registry.bundles).length === 0) return;
-
   if (!(await fs.exists('KNOWLEDGE.md'))) return;
-
   const current = await fs.read('KNOWLEDGE.md');
-  const updated = ensureInstalledBundlesBlock(current);
+
+  const registry = await readInstalledBundles(fs);
+  // No bundles: a leftover block (e.g. from before an uninstall that predates this
+  // guard) is Knowlery-owned and marker-delimited, so removing it is safe.
+  const updated = Object.keys(registry.bundles).length === 0
+    ? removeInstalledBundlesBlock(current)
+    : ensureInstalledBundlesBlock(current);
   if (updated !== current) await fs.write('KNOWLEDGE.md', updated);
 }
 

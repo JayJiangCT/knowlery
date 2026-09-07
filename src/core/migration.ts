@@ -1,6 +1,7 @@
 import type { VaultFs } from './vault-fs';
 import { BUNDLED_SKILLS } from '../assets/skills';
 import { loadSkillsLock, saveSkillsLock, copySkillToClaudeDir } from './skill-manager';
+import { RULES_DIR, collectRulePaths } from './agents-md';
 
 const SKILLS_DIR = '.agents/skills';
 const CLAUDE_SKILLS_DIR = '.claude/skills';
@@ -221,29 +222,15 @@ function headingLevel(line: string): number {
   return match ? match[1].length : 0;
 }
 
-const STALE_CLAUDE_IMPORTS = new Set(['@../SCHEMA.md', '@../INDEX.base']);
 const STALE_OPENCODE_INSTRUCTIONS = new Set(['SCHEMA.md', 'INDEX.base']);
 
 /**
- * Fixed-context slim-down migration (spec f4, §4.2). Removes exactly the two stale
- * import lines / instruction entries, preserves everything else, writes only on
- * change (idempotent), and leaves malformed opencode.json untouched. Runs from the
- * once-per-version sync block, so a user who deliberately re-adds the imports after
- * upgrading keeps them (spec f4, R3).
+ * Fixed-context slim-down migration (spec f4, §4.2), opencode.json half: removes
+ * exactly the two stale instruction entries, preserves everything else, writes
+ * only on change, and leaves malformed JSON untouched. The CLAUDE.md half moved
+ * into `mergeClaudeMd` (core/claude-md.ts), which converges the whole file.
  */
 export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
-  const claudePath = '.claude/CLAUDE.md';
-  if (await fs.exists(claudePath)) {
-    const content = await fs.read(claudePath);
-    const filtered = content
-      .split(/\r?\n/)
-      .filter((line) => !STALE_CLAUDE_IMPORTS.has(line.trim()))
-      .join('\n');
-    if (filtered !== content) {
-      await fs.write(claudePath, filtered);
-    }
-  }
-
   const openCodePath = 'opencode.json';
   if (await fs.exists(openCodePath)) {
     const raw = await fs.read(openCodePath);
@@ -261,6 +248,71 @@ export async function migrateFixedContextImports(fs: VaultFs): Promise<void> {
       config.instructions = filtered;
       await fs.write(openCodePath, JSON.stringify(config, null, 2));
     }
+  }
+}
+
+const LEGACY_CLAUDE_RULES_DIR = '.claude/rules';
+
+/**
+ * Pre-1.5 Claude Code vaults kept their rules in `.claude/rules/`. The rules now
+ * live in `.agents/rules/` for every platform (they reach Claude through
+ * AGENTS.md). Copies each rule that `.agents/rules/` does not already have —
+ * copy, not move: the maintainer chose not to delete anything from existing
+ * vaults. Claude Code still auto-loads `.claude/rules/`, so until the user
+ * removes that directory Claude sees those rules twice; the changelog says so.
+ */
+export async function migrateClaudeRulesToAgentsRules(fs: VaultFs): Promise<void> {
+  const legacyPaths = await collectRulePaths(fs, LEGACY_CLAUDE_RULES_DIR);
+  if (legacyPaths.length === 0) return;
+
+  for (const relative of legacyPaths) {
+    const target = `${RULES_DIR}/${relative}`;
+    if (await fs.exists(target)) continue;
+    const parent = target.slice(0, target.lastIndexOf('/'));
+    await fs.mkdir(parent);
+    await fs.write(target, await fs.read(`${LEGACY_CLAUDE_RULES_DIR}/${relative}`));
+  }
+}
+
+/** The two entries Knowlery used to write into vault-level opencode.json (pre-1.5). */
+const RETIRED_OPENCODE_INSTRUCTIONS = new Set(['KNOWLEDGE.md', '.agents/rules/*.md']);
+
+/**
+ * The operating card and rules now reach OpenCode through the vault-root
+ * AGENTS.md (which OpenCode V2 reads; its `instructions` array it does not),
+ * so the old entries would only double-inject on V1. Removes exactly those two,
+ * drops an emptied `instructions` key, and deletes the file when nothing the
+ * user added remains. Malformed JSON is left untouched.
+ */
+export async function migrateOpenCodeInstructionsToAgentsMd(fs: VaultFs): Promise<void> {
+  const openCodePath = 'opencode.json';
+  if (!(await fs.exists(openCodePath))) return;
+
+  const raw = await fs.read(openCodePath);
+  let config: Record<string, unknown>;
+  try {
+    config = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return;
+  }
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return;
+  if (!Array.isArray(config.instructions)) return;
+
+  const filtered = config.instructions.filter(
+    (entry) => typeof entry !== 'string' || !RETIRED_OPENCODE_INSTRUCTIONS.has(entry),
+  );
+  if (filtered.length === config.instructions.length) return;
+
+  if (filtered.length === 0) {
+    delete config.instructions;
+  } else {
+    config.instructions = filtered;
+  }
+
+  if (Object.keys(config).length === 0) {
+    await fs.remove(openCodePath);
+  } else {
+    await fs.write(openCodePath, JSON.stringify(config, null, 2));
   }
 }
 

@@ -89,7 +89,7 @@ When user provides a URL:
 - Identify entities (named things), concepts (abstract ideas), decisions, contradictions
 
 ### Step 2: Match Against Existing Pages
-- Check `INDEX.base` (Bases index in Obsidian) or scan `entities/`, `concepts/` for existing pages; use `obsidian properties` by `type` for a fast listing
+- Find existing pages by running the retrieval engine on the candidate entity and concept names (`obsidian knowlery:query question="<names>"` — the same ladder **`/ask`** uses), or `obsidian properties` by `type` for a fast listing; `INDEX.base` is a human preview, not a lookup
 - Determine: create new vs. update existing
 - Read `SCHEMA.md` (Obsidian CLI) for current tag and domain taxonomy so new pages prefer existing tags when they fit
 
@@ -138,7 +138,7 @@ After Step 3–4, reconcile agent pages touched this cycle with `SCHEMA.md`:
 - Stay consistent with SCHEMA rules: singular tags, 2–5 tags per page on agent pages, new tags documented here before (or as soon as) use.
 
 ### Step 6: Update Navigation
-- `INDEX.base` stays current in Obsidian via its Base query — if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
+- `INDEX.base` (the human preview of compiled pages) stays current in Obsidian on its own via its Base query — nothing to maintain; only if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
 - Append entry to `log.md` (human-readable history only — incremental scope comes from the staleness report, never from this file)
 
 ### Step 7: Report

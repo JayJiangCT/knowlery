@@ -105,7 +105,7 @@ When user provides a URL:
 - Identify entities (named things), concepts (abstract ideas), decisions, contradictions
 
 ### Step 2: Match Against Existing Pages
-- Check \`INDEX.base\` (Bases index in Obsidian) or scan \`entities/\`, \`concepts/\` for existing pages; use \`obsidian properties\` by \`type\` for a fast listing
+- Find existing pages by running the retrieval engine on the candidate entity and concept names (\`obsidian knowlery:query question="<names>"\` — the same ladder **\`/ask\`** uses), or \`obsidian properties\` by \`type\` for a fast listing; \`INDEX.base\` is a human preview, not a lookup
 - Determine: create new vs. update existing
 - Read \`SCHEMA.md\` (Obsidian CLI) for current tag and domain taxonomy so new pages prefer existing tags when they fit
 
@@ -154,7 +154,7 @@ After Step 3–4, reconcile agent pages touched this cycle with \`SCHEMA.md\`:
 - Stay consistent with SCHEMA rules: singular tags, 2–5 tags per page on agent pages, new tags documented here before (or as soon as) use.
 
 ### Step 6: Update Navigation
-- \`INDEX.base\` stays current in Obsidian via its Base query — if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
+- \`INDEX.base\` (the human preview of compiled pages) stays current in Obsidian on its own via its Base query — nothing to maintain; only if views, filters, or columns need tuning after large cooks, edit the file per the **obsidian-bases** skill
 - Append entry to \`log.md\` (human-readable history only — incremental scope comes from the staleness report, never from this file)
 
 ### Step 7: Report
@@ -283,7 +283,17 @@ is how a 160-page vault gets reported as 99).
 
 ### Step 2: Locate Relevant Pages
 
-Run the deterministic retrieval command **once**, using the first transport available:
+Run the deterministic retrieval command **once**, using the first transport available.
+
+**What to pass as \`<question>\`:** the *subject* of the user's question — names,
+terms, nouns — never the request itself. \`Rob Dimensions Weight Eligibility Check\`,
+not \`Rob 最近提出的 Dimensions & Weight Eligibility Check 方案是什么？请返回相关的最新
+原始记录、决策上下文…\`. The engine scores how much of the query a page covers; words
+that describe what you want back (return, summarize, latest, context, 请返回, 相关,
+最新, 记录, 上下文…) can never be covered by any page and push a correct page under the
+confidence gate. Keep the user's own language for the terms themselves; 2–6 terms is
+the sweet spot. \`INDEX.base\` is a human preview of compiled pages, not a retrieval
+step — do not read or query it to find candidates.
 
 **Transport 0 — Knowlery MCP tools present (check first):** if a \`query\` tool
 from the knowlery MCP server is available, it *is* the ladder — call it with the
@@ -316,9 +326,10 @@ the question — read those source notes too.
 
 - Treat the ranked list as your candidate set. Do not re-run per-keyword searches to
   second-guess it; your judgment belongs in choosing what to read and how to synthesize.
-- If it prints \`No confident matches in this vault for: ...\`, tell the user the vault
-  does not cover this question and suggest running \`/cook\` on relevant material.
-  Do not answer from general knowledge.
+- If it prints \`No confident matches in this vault for: ...\` and your query carried
+  any request phrasing, retry **once** with 2–6 subject keywords only. If that also
+  abstains, tell the user the vault does not cover this question and suggest running
+  \`/cook\` on relevant material. Do not answer from general knowledge.
 - If transport 1 prints \`Snapshot warming up\`, retry once after a moment or use
   the next transport.
 - Broad or exploratory questions: add \`k=20\` (transport 1) / \`--k 20\` (transports 2-3).
@@ -585,7 +596,7 @@ Rate the overall case:
 name: ideas
 description: >
   Deep vault scan to generate actionable ideas by combining insights across domains, finding gaps,
-  and proposing concrete next steps. Uses INDEX.base (Bases wiki index) and agent directories (\`entities/\`, \`concepts/\`,
+  and proposing concrete next steps. Uses the retrieval engine (the \`/ask\` ladder) and agent directories (\`entities/\`, \`concepts/\`,
   \`comparisons/\`, \`queries/\`) for compiled knowledge. Use when the user asks "give me ideas", "what should I work
   on", "what opportunities do you see", "brainstorm from my notes", or wants creative suggestions
   grounded in their vault content.
@@ -631,7 +642,7 @@ Read notes across domains, prioritizing:
 - Recent notes (last 30 days) — what the user is actively thinking about
 - Highly connected notes (many backlinks) — central concepts
 - Notes with \`status: active\` — current work
-- \`INDEX.base\` and \`obsidian properties\` / \`search\` — same compiled knowledge scope as **\`/ask\`**
+- The **\`/ask\`** retrieval ladder (\`obsidian knowlery:query\` on subject terms) plus \`obsidian properties\` / \`search\` — same compiled knowledge scope
 - Agent pages in \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\` — for compiled knowledge
 
 For each domain, read 5-10 representative notes to understand the landscape.
@@ -923,7 +934,7 @@ obsidian read file="comparisons/<topic>.md"
 obsidian read file="queries/<topic>.md"
 \`\`\`
 
-Read \`INDEX.base\` if it exists, then use \`obsidian properties\` by \`type\` and \`obsidian search\` to find compiled pages (see **\`/ask\`**).
+Run the **\`/ask\`** retrieval ladder on the topic terms (\`obsidian knowlery:query question="<topic>"\`), then use \`obsidian properties\` by \`type\` and \`obsidian search\` to widen the candidate set. \`INDEX.base\` is a human preview, not a retrieval step.
 
 ### Step 2: Build Timeline
 
@@ -1766,7 +1777,7 @@ formulas:
     description: 'Vault-specific note-writing conventions',
     content: `---
 name: vault-conventions
-description: Use when creating or modifying notes in a Knowlery-structured vault (formerly BYOAO). Enforces frontmatter requirements, wikilinks, and naming conventions.
+description: Use when creating or modifying notes in a Knowlery-structured vault. Enforces frontmatter requirements, wikilinks, and naming conventions.
 ---
 
 # Vault Document Conventions
@@ -1777,7 +1788,7 @@ You MUST follow these conventions when creating or modifying any note in this va
 
 Before creating any note:
 
-1. Read \`AGENTS.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
+1. Read \`KNOWLEDGE.md\` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. \`Projects/\`, \`Daily/\`); **agent knowledge pages** live only under \`entities/\`, \`concepts/\`, \`comparisons/\`, or \`queries/\`
 3. Pick the writing tool by the operation (see Creating Notes below), following every convention in this skill
 
@@ -1817,11 +1828,12 @@ Obsidian's vault index. Obsidian CLI commands that depend on the vault index —
 including \`read\` and \`create\` — cannot reach them even with \`path=\`; use
 your file tools directly.
 
-Claude Code and OpenCode load Knowlery rules through their platform
-configuration at session start (\`.claude/CLAUDE.md\` imports /
-\`opencode.json\` instructions). Codex does not automatically receive
-per-vault rule contents; follow the workspace \`AGENTS.md\` and read the
-relevant hidden rule files directly with your file tools.
+Every platform starts from the same sources: the user's \`KNOWLEDGE.md\` and
+the rules in \`.agents/rules/\`, plus Knowlery's operating rules. Codex and
+OpenCode read the vault-root \`AGENTS.md\`, where those sources are copied in;
+Claude Code reads \`.claude/CLAUDE.md\`, which \`@\`-imports the same files. Both
+entry files are regenerated on sync: change \`KNOWLEDGE.md\` or a rule file,
+never the managed block itself.
 
 ## Required Frontmatter
 

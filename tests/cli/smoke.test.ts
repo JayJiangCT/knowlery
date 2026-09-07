@@ -290,7 +290,9 @@ describe('knowlery-cli.mjs smoke (spec 0.7 f2, §6.5)', () => {
       serveChild.stderr.on('data', (chunk: Buffer) => { serveOutput += chunk.toString(); });
       try {
         await new Promise<void>((resolveReady, rejectReady) => {
-          const poll = setInterval(() => { if (serveOutput.includes('serving on')) { clearInterval(poll); resolveReady(); } }, 50);
+          // The access line is logged right after "serving on"; waiting for it too keeps the
+          // assertion below from racing the second write into the pipe.
+          const poll = setInterval(() => { if (serveOutput.includes('serving on') && serveOutput.includes('Access: ')) { clearInterval(poll); resolveReady(); } }, 50);
           serveChild.once('exit', () => { clearInterval(poll); rejectReady(new Error(`serve exited early:\n${serveOutput}`)); });
         });
         expect(serveOutput).toContain('Access: reads only.');

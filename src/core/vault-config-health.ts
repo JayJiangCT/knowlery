@@ -1,6 +1,7 @@
 import type { ConfigIntegrity, Platform } from '../types';
 import { BUILTIN_SKILL_NAMES, KNOWLEDGE_DIRS } from '../types';
-import { getRulesDir } from './platform-adapter';
+import { AGENTS_MD_PATH, RULES_DIR } from './agents-md';
+import { CLAUDE_MD_PATH } from './claude-md';
 import { QUERY_SCRIPT_PATH } from './query-script';
 import type { VaultFs } from './vault-fs';
 import { normalizeVaultPath } from './vault-fs';
@@ -27,8 +28,7 @@ export async function checkVaultConfigFiles(
     }
   }
 
-  const rulesDir = getRulesDir(platform);
-  const rulesDirPath = normalizeVaultPath(rulesDir);
+  const rulesDirPath = normalizeVaultPath(RULES_DIR);
   let rulesConfigured = false;
   if (await fs.exists(rulesDirPath)) {
     const listing = await fs.list(rulesDirPath);
@@ -46,13 +46,16 @@ export async function checkVaultConfigFiles(
     }
   }
 
-  const agentConfigPath = platform === 'claude-code'
-    ? normalizeVaultPath('.claude/CLAUDE.md')
-    : normalizeVaultPath('opencode.json');
-  const agentConfigExists = await fs.exists(agentConfigPath);
+  // Both files are written for every platform; the config is only whole with both.
+  const agentConfigExists = (await fs.exists(AGENTS_MD_PATH))
+    && (await fs.exists(normalizeVaultPath(CLAUDE_MD_PATH)));
+
+  const knowledgeMdExists = await fs.exists('KNOWLEDGE.md');
+  const knowledgeMdLegacyOperatingRules = knowledgeMdExists
+    && hasLegacyOperatingRules(await fs.read('KNOWLEDGE.md'));
 
   return {
-    knowledgeMdExists: await fs.exists('KNOWLEDGE.md'),
+    knowledgeMdExists,
     schemaMdExists: await fs.exists('SCHEMA.md'),
     indexBaseExists: await fs.exists('INDEX.base'),
     queryScriptExists: await fs.exists(normalizeVaultPath(QUERY_SCRIPT_PATH)),
@@ -62,7 +65,20 @@ export async function checkVaultConfigFiles(
     },
     agentConfigExists,
     rulesConfigured,
+    knowledgeMdLegacyOperatingRules,
     skillsComplete: { present: presentSkills, missing: missingSkills },
     platform,
   };
+}
+
+/** The H2 headings the pre-1.5 KNOWLEDGE.md template wrote; now rendered into AGENTS.md and .claude/CLAUDE.md instead. */
+export const LEGACY_OPERATING_RULE_HEADINGS = [
+  '## Operating Rules',
+  '## Knowledge Retrieval',
+  '## Available Skills',
+] as const;
+
+export function hasLegacyOperatingRules(knowledgeMd: string): boolean {
+  const lines = knowledgeMd.split(/\r?\n/).map((line) => line.trimEnd());
+  return LEGACY_OPERATING_RULE_HEADINGS.some((heading) => lines.includes(heading));
 }

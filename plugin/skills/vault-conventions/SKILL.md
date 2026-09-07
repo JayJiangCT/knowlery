@@ -1,6 +1,6 @@
 ---
 name: vault-conventions
-description: Use when creating or modifying notes in a Knowlery-structured vault (formerly BYOAO). Enforces frontmatter requirements, wikilinks, and naming conventions.
+description: Use when creating or modifying notes in a Knowlery-structured vault. Enforces frontmatter requirements, wikilinks, and naming conventions.
 ---
 
 # Vault Document Conventions
@@ -11,7 +11,7 @@ You MUST follow these conventions when creating or modifying any note in this va
 
 Before creating any note:
 
-1. Read `AGENTS.md` — check the knowledge base structure (user notes vs agent-maintained pages)
+1. Read `KNOWLEDGE.md` — check the knowledge base structure (user notes vs agent-maintained pages)
 2. Decide where the note belongs: **user notes** stay in their existing areas (e.g. `Projects/`, `Daily/`); **agent knowledge pages** live only under `entities/`, `concepts/`, `comparisons/`, or `queries/`
 3. Pick the writing tool by the operation (see Creating Notes below), following every convention in this skill
 
@@ -51,11 +51,12 @@ Obsidian's vault index. Obsidian CLI commands that depend on the vault index —
 including `read` and `create` — cannot reach them even with `path=`; use
 your file tools directly.
 
-Claude Code and OpenCode load Knowlery rules through their platform
-configuration at session start (`.claude/CLAUDE.md` imports /
-`opencode.json` instructions). Codex does not automatically receive
-per-vault rule contents; follow the workspace `AGENTS.md` and read the
-relevant hidden rule files directly with your file tools.
+Every platform starts from the same sources: the user's `KNOWLEDGE.md` and
+the rules in `.agents/rules/`, plus Knowlery's operating rules. Codex and
+OpenCode read the vault-root `AGENTS.md`, where those sources are copied in;
+Claude Code reads `.claude/CLAUDE.md`, which `@`-imports the same files. Both
+entry files are regenerated on sync: change `KNOWLEDGE.md` or a rule file,
+never the managed block itself.
 
 ## Required Frontmatter
 

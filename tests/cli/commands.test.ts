@@ -8,7 +8,8 @@ import { runHealth } from '../../src/cli/commands/health';
 import { CliError } from '../../src/cli/commands/shared';
 import { nodeVaultFs } from '../../src/platform/node-fs';
 import { executeSetup } from '../../src/core/setup-executor';
-import { generateClaudeMd } from '../../src/assets/templates';
+import { readAgentsMdSource } from '../../src/core/agents-md';
+import { renderClaudeMdBlock } from '../../src/core/claude-md';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
 const silent = () => {};
@@ -79,9 +80,11 @@ describe('knowlery init (spec 0.7 f2, §6.1)', () => {
       });
       const knowledge = await readFile(join(root, 'KNOWLEDGE.md'), 'utf8');
       expect(knowledge).toMatch(/^# Prompted KB/m);
-      const opencode = JSON.parse(await readFile(join(root, 'opencode.json'), 'utf8')) as { name?: string; instructions: string[] };
-      expect(opencode).not.toHaveProperty('name');
-      expect(opencode.instructions).toEqual(['KNOWLEDGE.md', '.agents/rules/*.md']);
+      // OpenCode loads the vault-root AGENTS.md; no opencode.json is written.
+      const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(agentsMd).toContain('# Prompted KB');
+      expect(agentsMd).toContain('# Citation Required');
+      await expect(readFile(join(root, 'opencode.json'), 'utf8')).rejects.toThrow();
     });
   });
 });
@@ -147,14 +150,16 @@ describe('knowlery health (spec 0.7 f2, §6.3)', () => {
 });
 
 describe('shared sync surface (spec 0.7 f2, §6.4)', () => {
-  it('generateClaudeMd stays consistent with what sync converges to', async () => {
+  it('renderClaudeMdBlock stays consistent with what sync converges to', async () => {
     await withTempDir(async (root) => {
       const fs = nodeVaultFs(root);
       await runInit(fs, { platform: 'claude-code', name: 'KB', prompt: null, log: silent });
-      await runSync(fs, { log: silent }); // normalizes plain imports into the managed block
+      await runSync(fs, { log: silent });
       const converged = await fs.read('.claude/CLAUDE.md');
+      const source = await readAgentsMdSource(fs);
+      expect(converged).toBe(`${renderClaudeMdBlock(source!)}\n`);
       expect(converged).toContain('@../KNOWLEDGE.md');
-      expect(converged).toContain(generateClaudeMd([]).trim());
+      expect(converged).not.toContain('@../AGENTS.md');
     });
   });
 });

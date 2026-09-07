@@ -89,6 +89,13 @@ export interface ConfigIntegrity {
   knowledgeDirsComplete: { exists: string[]; missing: string[] };
   agentConfigExists: boolean;
   rulesConfigured: boolean;
+  /**
+   * KNOWLEDGE.md still carries the Knowlery-authored operating-rule sections that
+   * pre-1.5 templates wrote there. They now render into AGENTS.md and .claude/CLAUDE.md from the template,
+   * so leftover copies are stale duplicates the user should delete (a warning, not
+   * a failure — the file is theirs).
+   */
+  knowledgeMdLegacyOperatingRules: boolean;
   skillsComplete: { present: string[]; missing: string[] };
   obsidianCli: boolean;
   claudeCodeCli: boolean;

@@ -30,7 +30,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 
 | Path | Created by | Notes |
 | --- | --- | --- |
-| `KNOWLEDGE.md` | Setup | Vault operating guide |
+| `KNOWLEDGE.md` | Setup | Your description of the knowledge base; user-owned |
 | `SCHEMA.md` | Setup | Knowledge taxonomy and page conventions |
 | `INDEX.base` | Setup | Bases index |
 | `entities/` | Setup | Agent-maintained entity pages |
@@ -39,11 +39,10 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `queries/` | Setup | Agent-maintained research threads |
 | `.knowlery/manifest.json` | Setup | Setup state |
 | `.agents/skills/` | Setup | Canonical skills |
-| `.agents/rules/` | OpenCode | Rules for OpenCode |
+| `.agents/rules/` | Setup | Rules, for every platform (inlined into AGENTS.md, imported by .claude/CLAUDE.md) |
 | `.claude/skills/` | Setup | Mirrored built-in skills for Claude Code |
-| `.claude/CLAUDE.md` | Claude Code | Claude instructions |
-| `.claude/rules/` | Claude Code | Rules for Claude Code |
-| `opencode.json` | OpenCode | OpenCode config |
+| `AGENTS.md` | Setup | Entry file for Codex, OpenCode, Cursor…: KNOWLEDGE.md + Knowlery operating rules + rules copied into a managed block |
+| `.claude/CLAUDE.md` | Setup | Entry file for Claude Code: `@../KNOWLEDGE.md`, operating rules, one `@` import per rule (managed block) |
 | `skills-lock.json` | Setup | Skill lock state |
 | `.knowlery/activity/` | Activity logging | Private activity receipts |
 | `.knowlery/reports/` | Weekly summary | Local HTML report output |

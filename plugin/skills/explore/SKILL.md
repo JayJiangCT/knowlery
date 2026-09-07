@@ -40,7 +40,7 @@ obsidian read file="comparisons/<topic>.md"
 obsidian read file="queries/<topic>.md"
 ```
 
-Read `INDEX.base` if it exists, then use `obsidian properties` by `type` and `obsidian search` to find compiled pages (see **`/ask`**).
+Run the **`/ask`** retrieval ladder on the topic terms (`obsidian knowlery:query question="<topic>"`), then use `obsidian properties` by `type` and `obsidian search` to widen the candidate set. `INDEX.base` is a human preview, not a retrieval step.
 
 ### Step 2: Build Timeline
 

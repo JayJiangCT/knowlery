@@ -2,7 +2,7 @@ import { App, Modal } from 'obsidian';
 import { StrictMode, useState } from 'react';
 import { Root, createRoot } from 'react-dom/client';
 import type KnowleryPlugin from '../main';
-import { PluginContext, usePlugin, useSettings } from '../context';
+import { PluginContext, usePlugin } from '../context';
 import type { RuleInfo } from '../types';
 import { writeRule, getRuleTemplates } from '../core/rule-manager';
 import { IconFileText, IconPlus, IconChevronRight } from '../views/Icons';
@@ -64,7 +64,6 @@ function RuleEditorContent(props: {
   onCancel: () => void;
 }) {
   const plugin = usePlugin();
-  const [settings] = useSettings();
 
   const [showTemplates, setShowTemplates] = useState(props.mode === 'add');
   const [filename, setFilename] = useState(props.rule?.filename ?? '');
@@ -86,7 +85,7 @@ function RuleEditorContent(props: {
 
   const handleSave = async () => {
     const fname = filename.endsWith('.md') ? filename : `${filename}.md`;
-    await writeRule(plugin.fs, settings.platform, fname, content);
+    await writeRule(plugin.fs, fname, content);
     props.onSave();
   };
 

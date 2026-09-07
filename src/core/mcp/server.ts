@@ -18,7 +18,6 @@ import { collectOrientationMap } from '../orientation-source';
 import { renderOrientationMap } from '../query/orientation';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
-import { resolvePlatform } from '../../cli/commands/shared';
 import { BUNDLED_SKILLS } from '../../assets/skills';
 
 /**
@@ -36,7 +35,7 @@ import { BUNDLED_SKILLS } from '../../assets/skills';
  */
 
 /** Exported for the version-coherence contract test (spec 1.0 f5, §5.3). */
-export const SERVER_INFO = { name: 'knowlery', version: '1.4.1' };
+export const SERVER_INFO = { name: 'knowlery', version: '1.5.0' };
 
 /** Skills whose content stands without Obsidian (spec 1.0 f2 §4.3, curated
  * set; knowlery-mcp added by spec 1.1 f2 §4.3 — the front-door skill). */
@@ -390,7 +389,7 @@ function registerSync(server: McpServer, options: McpServerOptions): void {
       throw new Error(`"${kb}" is not an initialized Knowlery workspace (no KNOWLEDGE.md or .knowlery/manifest.json).`);
     }
     const { fs: logged, writes } = loggingVaultFs(fs);
-    const result = await runVaultSync(logged, await resolvePlatform(fs), options.toolVersion);
+    const result = await runVaultSync(logged, options.toolVersion);
     if (result.skipped === 'newer-shell') {
       // The downgrade guard is a tool error, not a finding (spec §4.4): the
       // tool's point is the write it refused to make.

@@ -59,11 +59,14 @@ describe('executeSetup over nodeVaultFs (spec 0.7 f1, §6.2)', () => {
 
       // Rules and platform config
       for (const rule of RULE_TEMPLATES) {
-        await stat(join(root, '.claude/rules', rule.filename));
+        await stat(join(root, '.agents/rules', rule.filename));
       }
       const claudeMd = await readFile(join(root, '.claude/CLAUDE.md'), 'utf8');
       expect(claudeMd).toContain('@../KNOWLEDGE.md');
-      expect(claudeMd).toContain('@rules/activity-ledger.md');
+      expect(claudeMd).toContain('@../.agents/rules/activity-ledger.md');
+      const agentsMd = await readFile(join(root, 'AGENTS.md'), 'utf8');
+      expect(agentsMd).toContain('# Test KB');
+      expect(agentsMd).toContain('# Activity Ledger');
 
       // Lock, manifest, retrieval script
       const lock = JSON.parse(await readFile(join(root, 'skills-lock.json'), 'utf8')) as { skills: Record<string, unknown> };
@@ -79,7 +82,7 @@ describe('executeSetup over nodeVaultFs (spec 0.7 f1, §6.2)', () => {
       expect(rootEntries).toEqual(
         [
           '.agents', '.claude', '.knowlery',
-          'INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md',
+          'AGENTS.md', 'INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md',
           ...KNOWLEDGE_DIRS,
           'skills-lock.json',
         ].sort(),

@@ -72,12 +72,23 @@ describe('refreshInstalledBundlesBlock', () => {
     expect(app.writes['KNOWLEDGE.md']).not.toContain('Old wording');
   });
 
-  it('does nothing when no bundles are installed', async () => {
-    const app = createOkfMockApp({
+  it('removes a leftover block when no bundles are installed, and otherwise leaves the file alone', async () => {
+    const leftover = createOkfMockApp({
       'KNOWLEDGE.md': `${BASE_KNOWLEDGE_MD}\n${STALE_BLOCK}\n`,
     });
-    await refreshInstalledBundlesBlock(okfVaultFs(app));
-    expect(app.writes['KNOWLEDGE.md']).toBeUndefined();
+    await refreshInstalledBundlesBlock(okfVaultFs(leftover));
+    expect(leftover.writes['KNOWLEDGE.md']).not.toContain(INSTALLED_BUNDLES_BEGIN_MARKER);
+    expect(leftover.writes['KNOWLEDGE.md']).toContain(BASE_KNOWLEDGE_MD.trim());
+
+    const clean = createOkfMockApp({ 'KNOWLEDGE.md': BASE_KNOWLEDGE_MD });
+    await refreshInstalledBundlesBlock(okfVaultFs(clean));
+    expect(clean.writes['KNOWLEDGE.md']).toBeUndefined();
+  });
+
+  it('the block reads as a standalone paragraph, not an orphaned list item "9."', () => {
+    const block = ensureInstalledBundlesBlock(BASE_KNOWLEDGE_MD);
+    expect(block).toContain('Installed knowledge bundles:');
+    expect(block).not.toMatch(/^9\. /m);
   });
 
   it('does nothing when the block is already current', async () => {

@@ -108,7 +108,10 @@ args = ["-y", "knowlery@^1", "mcp"]
 ```
 
 修改配置后重启 `codex`。Codex 有 shell，所以 `knowlery` CLI 与 MCP 工具
-并存——`knowlery-cli` 技能教它命令表面。
+并存——`knowlery-cli` 技能教它命令表面。在 Knowlery vault 里打开时，Codex
+还会加载 vault 根目录的 `AGENTS.md`——其中复制了 `KNOWLEDGE.md`、Knowlery
+的操作规则和 rule 文件——因此起步时的来源与 Claude Code 通过
+`.claude/CLAUDE.md` 拿到的一致。
 
 ## Codex Desktop
 
@@ -145,16 +148,19 @@ OpenCode 的配置形状与 Claude 系不同——顶层键是 `mcp`（不是 `m
 加到**全局**配置 `~/.config/opencode/opencode.json`（或用交互式的
 `opencode mcp add`）。用 `opencode mcp list` 验证连接状态。
 
-::: warning MCP 配置放全局，不要放 vault 里的那份
-OpenCode 是 Knowlery 的一等平台：`knowlery init --platform opencode` 会生成
-工作区自己的 `opencode.json`（以及 `.agents/rules/` 下的规则），且 Knowlery
-在"重新生成 agent 配置"和平台切换时会**重写这个文件**。加在 vault 级
-`opencode.json` 里的 MCP 配置会被覆盖——全局配置才是持久的家，而且一份
-配置服务所有项目。
+::: tip vault 的指令放在 `AGENTS.md`
+OpenCode 是 Knowlery 的一等平台：`knowlery init --platform opencode` 会写入
+`.agents/rules/` 下的规则，以及 vault 根目录的 `AGENTS.md`——其中是 Knowlery
+的操作规则、复制进来的 `KNOWLEDGE.md` 和这些规则，与 Claude Code 通过
+`.claude/CLAUDE.md` `@` import 的来源相同。OpenCode 在会话开始时加载 `AGENTS.md`（V2 已不再
+解析 `opencode.json` 的 `instructions` 数组，所以 Knowlery 不再写 vault 级
+`opencode.json`；`knowlery sync` 会清理旧文件）。上面的全局配置才是 MCP
+配置该放的地方——一份配置服务所有项目。
 :::
 
 OpenCode 的 agent 有 shell，所以 `knowlery` CLI 与 MCP 工具并存；vault 里
-由 `init`/`sync` 安装的 `.agents/rules/` 和技能已经在教检索行为准则。
+由 `init`/`sync` 安装的 `AGENTS.md`、`.agents/rules/` 和技能已经在教检索
+行为准则。
 
 ## Cursor
 

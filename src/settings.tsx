@@ -5,9 +5,9 @@ import type KnowleryPlugin from './main';
 import type { Platform } from './types';
 import { PluginContext } from './context';
 import { SettingsAdvanced } from './views/SettingsAdvanced';
-import { generatePlatformConfig, migratePlatform } from './core/platform-adapter';
+import { generatePlatformConfig } from './core/platform-adapter';
+import { resetAgentsMd } from './core/agents-md';
 import { detectNode } from './core/node-detect';
-import { generateKnowledgeMd } from './assets/templates';
 import { executeSetup, isVaultInitialized, writeManifestUpdate } from './core/setup-executor';
 import { SetupWizardModal } from './modals/setup-wizard';
 import { installActivityLedgerRule } from './core/rule-manager';
@@ -403,24 +403,15 @@ export class KnowlerySettingTab extends PluginSettingTab {
       render: (setting) => {
         setting.addButton((btn) =>
           btn.setButtonText(t('settings.platform.switchTo', { platform: otherLabel })).onClick(() => {
-            new ConfirmModal(
-              this.plugin.app,
-              t('settings.platform.confirmTitle'),
-              t('settings.platform.confirmMessage', { platform: otherLabel }),
-              async () => {
-                await migratePlatform(
-                  this.plugin.fs,
-                  this.plugin.settings.platform,
-                  otherPlatform,
-                  this.plugin.settings.kbName,
-                  true,
-                );
-                this.plugin.settings.platform = otherPlatform;
-                await this.plugin.saveSettings();
-                new Notice(t('settings.platform.switched', { platform: otherLabel }));
-                this.requestRender();
-              },
-            ).open();
+            void (async () => {
+              // Agent config (AGENTS.md + .claude/CLAUDE.md) is shared by every
+              // platform; the switch only changes CLI detection and labels.
+              this.plugin.settings.platform = otherPlatform;
+              await this.plugin.saveSettings();
+              await writeManifestUpdate(this.plugin.fs, { platform: otherPlatform });
+              new Notice(t('settings.platform.switched', { platform: otherLabel }));
+              this.requestRender();
+            })();
           }),
         );
       },
@@ -435,7 +426,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
         setting.addButton((button) =>
           button.setButtonText(t('settings.activityRule.refresh')).onClick(() => {
             void (async () => {
-              await installActivityLedgerRule(this.plugin.fs, this.plugin.settings.platform);
+              await installActivityLedgerRule(this.plugin.fs);
               new Notice(t('settings.activityRule.refreshed'));
             })();
           }),
@@ -447,22 +438,31 @@ export class KnowlerySettingTab extends PluginSettingTab {
   private regenerateConfigItem(): SettingDefinition {
     return {
       name: t('settings.regenerate.name'),
-      desc:
-        this.plugin.settings.platform === 'claude-code'
-          ? t('settings.regenerate.descClaude')
-          : t('settings.regenerate.descOpencode'),
+      desc: t('settings.regenerate.desc'),
       render: (setting) => {
         setting.addButton((btn) =>
           btn.setButtonText(t('settings.regenerate.button')).onClick(() => {
             void (async () => {
-              await generatePlatformConfig(
-                this.plugin.fs,
-                this.plugin.settings.platform,
-                this.plugin.settings.kbName,
-              );
+              await generatePlatformConfig(this.plugin.fs);
               new Notice(t('settings.regenerate.done'));
             })();
           }),
+        );
+        setting.addButton((btn) =>
+          btn
+            .setButtonText(t('settings.regenerate.resetButton'))
+            .setClass('mod-warning')
+            .onClick(() => {
+              new ConfirmModal(
+                this.plugin.app,
+                t('settings.regenerate.resetConfirmTitle'),
+                t('settings.regenerate.resetConfirmMessage'),
+                async () => {
+                  await resetAgentsMd(this.plugin.fs);
+                  new Notice(t('settings.regenerate.resetDone'));
+                },
+              ).open();
+            }),
         );
       },
     };
@@ -524,19 +524,17 @@ export class KnowlerySettingTab extends PluginSettingTab {
   }
 
   private async updateKbName(): Promise<void> {
+    // KNOWLEDGE.md is the user's file: retitle the first heading, never regenerate it.
     const knowledgeMd = this.plugin.app.vault.getFileByPath('KNOWLEDGE.md');
     if (knowledgeMd) {
-      await this.plugin.app.vault.modify(
-        knowledgeMd,
-        generateKnowledgeMd(this.plugin.settings.kbName),
-      );
+      const content = await this.plugin.app.vault.read(knowledgeMd);
+      const retitled = content.replace(/^# .*$/m, `# ${this.plugin.settings.kbName}`);
+      if (retitled !== content) {
+        await this.plugin.app.vault.modify(knowledgeMd, retitled);
+      }
     }
 
-    await generatePlatformConfig(
-      this.plugin.fs,
-      this.plugin.settings.platform,
-      this.plugin.settings.kbName,
-    );
+    await generatePlatformConfig(this.plugin.fs);
 
     await writeManifestUpdate(this.plugin.fs, {
       kbName: this.plugin.settings.kbName,

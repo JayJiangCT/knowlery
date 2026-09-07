@@ -109,8 +109,9 @@ describe('the workspace scaffold is 1.0-frozen', () => {
 
     // Top-level surface (spec f5, §4.1.1). Skill payloads under the skill dirs
     // are content, not surface — presence of the dirs is what is frozen.
+    // AGENTS.md joined in 1.5 as a new optional file — a minor under f5 §4.1(1).
     const topLevelFiles = [...fs.files.keys()].filter((path) => !path.includes('/')).sort();
-    expect(topLevelFiles).toEqual(['INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md', 'skills-lock.json']);
+    expect(topLevelFiles).toEqual(['AGENTS.md', 'INDEX.base', 'KNOWLEDGE.md', 'SCHEMA.md', 'skills-lock.json']);
 
     for (const dir of ['entities', 'concepts', 'comparisons', 'queries', '.agents/skills', '.claude/skills', '.knowlery']) {
       expect(fs.dirs.has(dir), dir).toBe(true);

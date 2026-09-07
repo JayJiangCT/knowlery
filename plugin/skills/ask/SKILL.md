@@ -36,7 +36,17 @@ is how a 160-page vault gets reported as 99).
 
 ### Step 2: Locate Relevant Pages
 
-Run the deterministic retrieval command **once**, using the first transport available:
+Run the deterministic retrieval command **once**, using the first transport available.
+
+**What to pass as `<question>`:** the *subject* of the user's question — names,
+terms, nouns — never the request itself. `Rob Dimensions Weight Eligibility Check`,
+not `Rob 最近提出的 Dimensions & Weight Eligibility Check 方案是什么？请返回相关的最新
+原始记录、决策上下文…`. The engine scores how much of the query a page covers; words
+that describe what you want back (return, summarize, latest, context, 请返回, 相关,
+最新, 记录, 上下文…) can never be covered by any page and push a correct page under the
+confidence gate. Keep the user's own language for the terms themselves; 2–6 terms is
+the sweet spot. `INDEX.base` is a human preview of compiled pages, not a retrieval
+step — do not read or query it to find candidates.
 
 **Transport 0 — Knowlery MCP tools present (check first):** if a `query` tool
 from the knowlery MCP server is available, it *is* the ladder — call it with the
@@ -69,9 +79,10 @@ the question — read those source notes too.
 
 - Treat the ranked list as your candidate set. Do not re-run per-keyword searches to
   second-guess it; your judgment belongs in choosing what to read and how to synthesize.
-- If it prints `No confident matches in this vault for: ...`, tell the user the vault
-  does not cover this question and suggest running `/cook` on relevant material.
-  Do not answer from general knowledge.
+- If it prints `No confident matches in this vault for: ...` and your query carried
+  any request phrasing, retry **once** with 2–6 subject keywords only. If that also
+  abstains, tell the user the vault does not cover this question and suggest running
+  `/cook` on relevant material. Do not answer from general knowledge.
 - If transport 1 prints `Snapshot warming up`, retry once after a moment or use
   the next transport.
 - Broad or exploratory questions: add `k=20` (transport 1) / `--k 20` (transports 2-3).

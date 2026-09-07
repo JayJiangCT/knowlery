@@ -1,3 +1,12 @@
+/**
+ * KNOWLEDGE.md is the user's description of the knowledge base — what it covers,
+ * how it is laid out — written once at setup and then theirs to edit. It is a
+ * standalone file and the source of truth: `.claude/CLAUDE.md` `@`-imports it,
+ * AGENTS.md carries a copy regenerated on every sync. Knowlery's own operating
+ * rules are *not* in it: they come from `generateOperatingRules` and are rendered
+ * into the entry files on every sync, so wording fixes reach every vault without
+ * touching a user-owned file.
+ */
 export function generateKnowledgeMd(kbName: string): string {
   return `# ${kbName}
 
@@ -15,11 +24,32 @@ This vault is an agent-assisted knowledge base. Your notes are the raw material 
 
 Agent pages are compiled from user notes. **User notes are never modified by the agent.**
 
-## Operating Rules
+## About This Knowledge Base
+
+_Describe what this knowledge base covers — the domains, projects, people, and the
+questions it should be able to answer. Agents read this file first. Keep it about your
+knowledge; Knowlery supplies its operating rules separately (in \`AGENTS.md\` and
+\`.claude/CLAUDE.md\`)._
+`;
+}
+
+/**
+ * Knowlery's operating rules for agents — the tooling half of the fixed context.
+ * Rendered into both entry files (`renderAgentsMdBlock`, `renderClaudeMdBlock`)
+ * after the copy / import of the user's KNOWLEDGE.md, never written into a
+ * user-owned file.
+ */
+export function generateOperatingRules(): string {
+  return `## Operating Rules
 
 ### Obsidian CLI Only
 
 **Use Obsidian CLI for note-centric vault operations when Obsidian is running.** Do not start vault discovery with raw Bash commands such as \`ls\`, \`find\`, \`grep\`, or \`cat\`. Use Bash only when Obsidian CLI is unavailable, a verified Obsidian CLI command fails, or the task is non-note environment diagnostics. State the fallback reason before using Bash.
+
+Obsidian CLI reaches only notes in the vault index. Skills, rules, and config under
+dot-directories (\`.agents/\`, \`.claude/\`, \`.knowlery/\`) and anything outside the vault
+are read with your file tools — that is the boundary, not a fallback. The CLI may print
+\`Error:\` and still exit 0; treat any \`Error:\` output as failure.
 
 In headless environments (Obsidian closed, CLI-initialized workspaces), work with files
 directly under the same conventions, use the Knowlery retrieval commands below for
@@ -29,7 +59,7 @@ discovery, and run \`knowlery health\` after bulk changes.
 |------|---------|
 | Read a note | \`obsidian read file="..."\` |
 | Search vault | \`obsidian search query="..."\` |
-| Query the knowledge index | \`obsidian base:query path="INDEX.base" view="All Pages" format=paths\` |
+| Find knowledge on a topic | \`obsidian knowlery:query question="<subject terms>"\` |
 | Read a note property | \`obsidian property:read name="type" path="entities/example.md"\` |
 | Create a note | \`obsidian create path="queries/example.md" content="..."\` |
 | List files | \`obsidian files folder="..."\` |
@@ -60,10 +90,14 @@ Do not start routine work by running \`obsidian help\`. Use the verified command
 
 When answering questions from this vault (not general knowledge):
 
-1. Run the retrieval engine once — \`obsidian knowlery:query question="<question>"\`
-   when Obsidian is running, else \`knowlery query "<question>"\` (global CLI), else
-   \`node .knowlery/bin/query.mjs "<question>"\`; all three scan compiled pages, user
-   notes, and installed bundles, and print the same ranked candidate list
+1. Run the retrieval engine once — \`obsidian knowlery:query question="<subject terms>"\`
+   when Obsidian is running, else \`knowlery query "<subject terms>"\` (global CLI), else
+   \`node .knowlery/bin/query.mjs "<subject terms>"\`; all three scan compiled pages, user
+   notes, and installed bundles, and print the same ranked candidate list. Pass the
+   subject only (names, terms, nouns — 2–6 of them), never the request phrasing:
+   words like "return", "latest", "context", 请返回, 相关 can never be covered by a
+   page and push a correct page under the confidence gate. \`INDEX.base\` is a human
+   preview of compiled pages, not a retrieval step
 2. Read promising candidates with \`obsidian read\` — prefer \`status: reviewed\` over
    \`draft\`, recent \`updated\`, and any \`evidence via source:\` notes it flags
 3. If it prints \`No confident matches\`, say the vault does not cover the question and
@@ -76,11 +110,16 @@ Every claim must be backed by vault notes. See \`/ask\` for the full specificati
 
 ## Available Skills
 
+Skills are installed in this vault at \`.agents/skills/<name>/SKILL.md\` (mirrored to
+\`.claude/skills/\` for Claude Code). Your platform discovers them there — invoke a skill
+by name; if you must read one, use your file tools on that vault-relative path, never
+\`obsidian read\` and never a home-directory path.
+
 ### Knowledge Workflows
 
 | Skill | Purpose |
 |-------|---------|
-| \`/cook\` | Digest notes and sources into knowledge pages, maintain INDEX.base |
+| \`/cook\` | Digest notes and sources into knowledge pages |
 | \`/ask\` | Answer questions from vault content with citations |
 | \`/explore\` | Trace idea timelines or find connections between topics |
 | \`/challenge\` | Pressure-test beliefs or track intention-vs-action gaps |
@@ -296,28 +335,4 @@ views:
       - formula.backlink_count
     limit: 10
 `;
-}
-
-export function generateClaudeMd(ruleImportPaths: string[] = []): string {
-  const ruleImports = [...new Set(ruleImportPaths)]
-    .filter((path) => path.endsWith('.md'))
-    .sort((a, b) => a.localeCompare(b))
-    .map((path) => `@rules/${path}`);
-
-  // Fixed context is the operating card plus rules only (spec f4): SCHEMA.md is an
-  // on-demand read (it grows forever) and INDEX.base is Base view YAML, useless inline.
-  return [
-    '@../KNOWLEDGE.md',
-    ...ruleImports,
-    '',
-  ].join('\n');
-}
-
-export function generateOpenCodeJson(_kbName?: string): string {
-  // OpenCode's config schema is additionalProperties:false. A top-level
-  // `name` is rejected at startup (`Unrecognized key: name`, issue #72).
-  // The KB name lives in KNOWLEDGE.md / the Knowlery manifest, not here.
-  return JSON.stringify({
-    instructions: ['KNOWLEDGE.md', '.agents/rules/*.md'],
-  }, null, 2);
 }
