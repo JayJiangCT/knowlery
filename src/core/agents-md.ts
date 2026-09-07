@@ -54,8 +54,8 @@ export function renderReadFirst(rulePaths: string[]): string {
   const lines = [
     '## Read First',
     '',
-    `Do ${hasRules ? 'these two steps' : 'this'} before your first reply in this session — before answering, planning,`,
-    `or invoking any skill. ${hasRules ? 'These files are' : 'This file is'} **not** injected automatically, and no skill`,
+    `Do ${hasRules ? 'these two steps' : 'this'} before answering, planning, or invoking any skill in this session;`,
+    `a one-line note that you are reading is fine. ${hasRules ? 'These files are' : 'This file is'} **not** injected automatically, and no skill`,
     `substitutes for reading ${hasRules ? 'them' : 'it'}.`,
     '',
     '1. Read `KNOWLEDGE.md` at the vault root in full: `obsidian read file="KNOWLEDGE.md"` when',
