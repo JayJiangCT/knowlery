@@ -96,7 +96,7 @@ Since 0.6.0, finding candidate pages for a question is one deterministic command
 | In-app CLI | Obsidian running (1.12.2+, CLI enabled) | `obsidian knowlery:query question="..." [k=<n>] [json]` |
 | Headless script | Obsidian closed, plain Node | `node .knowlery/bin/query.mjs "..." [--k <n>] [--json]` |
 
-The engine scans compiled pages, user notes, and installed bundles; scores with field weights (title/aliases over tags, description, then body); matches light word variants and Chinese phrases; credits a compiled page when a raw note it cites matches the question (so cross-language questions reach the compiled answer); and returns an explicit `No confident matches` verdict instead of noise.
+The engine scans compiled pages, user notes, and installed bundles; scores with field weights (title/aliases over tags, description, then body); matches light word variants and Chinese phrases; credits a compiled page when a raw note it cites matches the question (so cross-language questions reach the compiled answer); and returns an explicit `No confident matches` verdict instead of noise. Hidden directories and build or dependency folders (`node_modules`, `dist`, `build`, `outputs`, `vendor`, `target`, `coverage`, `__pycache__`) are never scanned, so a vault that doubles as a project workspace does not surface vendored READMEs as notes or as uncooked material.
 
 The same machinery reports mechanical staleness:
 

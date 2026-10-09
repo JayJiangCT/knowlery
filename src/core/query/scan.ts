@@ -20,6 +20,30 @@ export const AGENT_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as 
  */
 export const SYSTEM_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md', 'log.md']);
 
+/**
+ * Directory names that hold build output or vendored dependencies, never notes. A vault
+ * that doubles as a project workspace carries these next to its Markdown; without this
+ * list their READMEs and changelogs rank as user notes and flood the uncooked list
+ * (observed: 871 of 4,108 "uncooked notes" in one vault were under node_modules).
+ * Matched by exact segment name at any depth, in both transports.
+ */
+export const IGNORED_DIRS = new Set([
+  'node_modules', 'dist', 'build', 'outputs', 'vendor', 'target', 'coverage', '__pycache__',
+]);
+
+/** True when any directory segment of a vault-relative path is hidden or in IGNORED_DIRS. */
+export function isIgnoredPath(path: string): boolean {
+  const segments = path.split('/');
+  for (let i = 0; i < segments.length - 1; i++) {
+    if (isIgnoredDir(segments[i])) return true;
+  }
+  return false;
+}
+
+function isIgnoredDir(name: string): boolean {
+  return name.startsWith('.') || IGNORED_DIRS.has(name); // .obsidian, .knowlery, .claude, .agents, ...
+}
+
 export type PageTier = 'agent' | 'bundle' | 'user';
 
 /** One scoreable field group, prepared for both latin token and CJK substring matching. */
@@ -213,7 +237,7 @@ function* walkMarkdown(dir: string): Generator<string> {
       continue;
     }
     if (stats.isDirectory()) {
-      if (name.startsWith('.')) continue; // .obsidian, .knowlery, .claude, .agents, ...
+      if (isIgnoredDir(name)) continue;
       yield* walkMarkdown(full);
     } else if (name.endsWith('.md')) {
       yield full;

@@ -97,7 +97,7 @@ Health diagnostics 仍然只检查知识页面的最小必需字段：
 | 应用内 CLI | Obsidian 运行中（1.12.2+，已启用 CLI） | `obsidian knowlery:query question="..." [k=<n>] [json]` |
 | 无头脚本 | Obsidian 关闭，仅需 Node | `node .knowlery/bin/query.mjs "..." [--k <n>] [--json]` |
 
-引擎会扫描编译页面、用户笔记和已安装的 bundles；按字段权重评分（标题/别名 > 标签 > 描述 > 正文）；匹配轻量词形变体和中文短语；当页面引用的原始笔记命中问题时，把分数传导给编译页面（跨语言提问也能找到编译后的答案）；没有可信匹配时返回明确的 `No confident matches`，而不是一堆噪音。
+引擎会扫描编译页面、用户笔记和已安装的 bundles；按字段权重评分（标题/别名 > 标签 > 描述 > 正文）；匹配轻量词形变体和中文短语；当页面引用的原始笔记命中问题时，把分数传导给编译页面（跨语言提问也能找到编译后的答案）；没有可信匹配时返回明确的 `No confident matches`，而不是一堆噪音。隐藏目录以及构建产物和依赖目录（`node_modules`、`dist`、`build`、`outputs`、`vendor`、`target`、`coverage`、`__pycache__`）永远不会被扫描，因此兼作项目工作区的 vault 不会把第三方 README 当成笔记或未编译材料。
 
 同一套机制还负责机械性的过期检测：
 

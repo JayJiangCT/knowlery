@@ -3,6 +3,7 @@ import {
   SYSTEM_FILES,
   buildPageFromContent,
   bundleEntriesFromIndex,
+  isIgnoredPath,
   type BundleRegistryEntry,
   type ScannedBundleEntry,
   type ScannedPage,
@@ -106,7 +107,7 @@ export class LiveQuerySnapshot {
   }
 
   async refreshFile(path: string): Promise<void> {
-    if (SYSTEM_FILES.has(path)) return;
+    if (SYSTEM_FILES.has(path) || isIgnoredPath(path)) return;
     const file = this.app.vault.getFileByPath(path);
     if (!file) {
       this.pages.delete(path);

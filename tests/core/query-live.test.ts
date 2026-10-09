@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import type { App } from 'obsidian';
 import {
   buildPageFromContent,
+  isIgnoredPath,
   scanVault,
   type VaultSnapshot,
 } from '../../src/core/query/scan';
@@ -194,5 +196,51 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
     const snapshot = live.snapshot()!;
     expect(snapshot.bundleEntries).toHaveLength(1);
     expect(snapshot.bundleEntries[0].path).toBe('Library/pack/concepts/thing.md');
+  });
+});
+
+/**
+ * Build output and vendored dependencies are not notes. Left in, their READMEs rank as
+ * user-tier query candidates and swamp the staleness report's uncooked list, which
+ * makes incremental cook unusable — so both transports must drop them identically.
+ */
+describe('ignored directories', () => {
+  const files: Record<string, string> = {
+    'Projects/note.md': PAGE_B,
+    'Projects/build.md': PAGE_B, // a *file* named like an ignored dir is a note
+    'node_modules/pkg/README.md': PAGE_B,
+    'Projects/node_modules/pkg/README.md': PAGE_B,
+    'outputs/report.md': PAGE_B,
+    'dist/index.md': PAGE_B,
+  };
+  const expectedPaths = ['Projects/build.md', 'Projects/note.md'];
+
+  it('isIgnoredPath matches directory segments only, at any depth', () => {
+    expect(isIgnoredPath('node_modules/pkg/README.md')).toBe(true);
+    expect(isIgnoredPath('Projects/node_modules/pkg/README.md')).toBe(true);
+    expect(isIgnoredPath('.obsidian/plugins/x/README.md')).toBe(true);
+    expect(isIgnoredPath('Projects/build.md')).toBe(false);
+    expect(isIgnoredPath('Projects/note.md')).toBe(false);
+  });
+
+  it('the fs scanner skips them', () => {
+    const root = mkdtempSync(join(tmpdir(), 'knowlery-scan-ignore-'));
+    try {
+      for (const [path, content] of Object.entries(files)) {
+        mkdirSync(join(root, dirname(path)), { recursive: true });
+        writeFileSync(join(root, path), content);
+      }
+      const paths = scanVault(root).pages.map((page) => page.path).sort();
+      expect(paths).toEqual(expectedPaths);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('the live snapshot skips them (transport parity)', async () => {
+    const live = makeLive(stubApp(files), 1);
+    await live.build();
+    const paths = live.snapshot()!.pages.map((page) => page.path).sort();
+    expect(paths).toEqual(expectedPaths);
   });
 });
