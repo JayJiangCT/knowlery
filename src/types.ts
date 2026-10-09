@@ -120,6 +120,11 @@ export interface KnowlerySettings {
   bundleCreatorName: string;
   bundleCreatorUrl: string;
   bundleDefaultLicense: string;
+  /**
+   * Optional TypeSafe AI key for Jev cook triage. Empty disables the feature entirely;
+   * nothing else in Knowlery talks to the network on the user's behalf.
+   */
+  jevApiKey: string;
 }
 
 export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
@@ -183,6 +188,7 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   bundleCreatorName: '',
   bundleCreatorUrl: '',
   bundleDefaultLicense: 'personal',
+  jevApiKey: '',
 };
 
 export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {

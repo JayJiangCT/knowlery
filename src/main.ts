@@ -16,6 +16,7 @@ import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
+import type { TriageScore } from './core/jev/triage';
 import {
   QUERY_CLI_COMMAND,
   QUERY_CLI_DESCRIPTION,
@@ -49,6 +50,8 @@ export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
   events = new Events();
   liveSnapshot: LiveQuerySnapshot | null = null;
+  /** Session-only Jev scores keyed by note path@mtime; never persisted (spec: Jev is opt-in and stateless). */
+  jevTriageCache = new Map<string, TriageScore>();
   /** Obsidian-shell VaultFs, shared with core lifecycle modules (spec 0.7 f1). */
   fs: VaultFs = obsidianVaultFs(this.app);
 
@@ -85,11 +88,7 @@ export default class KnowleryPlugin extends Plugin {
     this.addCommand({
       id: 'run-vault-diagnosis',
       name: t('main.command.openDiagnostics'),
-      callback: () => {
-        const appWithSettings = this.app as typeof this.app & SettingApp;
-        appWithSettings.setting.open();
-        appWithSettings.setting.openTabById(this.manifest.id);
-      },
+      callback: () => this.openSettingsTab(),
     });
 
     this.addCommand({
@@ -282,6 +281,12 @@ export default class KnowleryPlugin extends Plugin {
       }
       await workspace.revealLeaf(leaf);
     }
+  }
+
+  openSettingsTab(): void {
+    const appWithSettings = this.app as typeof this.app & SettingApp;
+    appWithSettings.setting.open();
+    appWithSettings.setting.openTabById(this.manifest.id);
   }
 
   onSetupComplete() {

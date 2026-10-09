@@ -18,6 +18,8 @@ function makeTab() {
     settings: { ...DEFAULT_SETTINGS },
     saveSettings: vi.fn().mockResolvedValue(undefined),
     app: {},
+    jevTriageCache: new Map<string, unknown>(),
+    events: { trigger: vi.fn() },
   };
   const tab = new KnowlerySettingTab({} as never, plugin as never);
   return { tab, plugin, fs };
@@ -58,6 +60,20 @@ describe('settings control persistence (spec 0.8 f4, §4.3)', () => {
     await tab.setControlValue('activityLoggingEnabled', true);
     expect(plugin.settings.activityLoggingEnabled).toBe(true);
     expect(await fs.exists(ACTIVITY_DISABLED_PATH)).toBe(false);
+  });
+
+  it('Jev key is optional: trimmed on save, empty clears, and cached scores are dropped', async () => {
+    const { tab, plugin } = makeTab();
+    plugin.jevTriageCache.set('a.md@1', {});
+
+    await tab.setControlValue('jevApiKey', '  ts-abc  ');
+    expect(plugin.settings.jevApiKey).toBe('ts-abc');
+    expect(plugin.jevTriageCache.size).toBe(0);
+    expect(plugin.events.trigger).toHaveBeenCalledWith('dashboard-refresh');
+
+    await tab.setControlValue('jevApiKey', '');
+    expect(plugin.settings.jevApiKey).toBe('');
+    expect(plugin.saveSettings).toHaveBeenCalledTimes(2);
   });
 
   it('unknown keys are ignored without writing', async () => {

@@ -3457,6 +3457,56 @@
   line-height: var(--line-height-normal);
 }
 
+/* Jev cook triage (optional) */
+.knowlery-jev__hint {
+  display: flex;
+  align-items: center;
+  gap: var(--knowlery-space-sm);
+  flex-wrap: wrap;
+  margin: 0 0 var(--knowlery-space-sm);
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-muted);
+}
+
+.knowlery-jev__hint--error {
+  color: var(--text-error);
+}
+
+.knowlery-jev__row {
+  align-items: baseline;
+}
+
+.knowlery-jev__score {
+  flex-shrink: 0;
+  min-width: 3.2em;
+  padding: 0 var(--knowlery-space-xs);
+  border-radius: var(--radius-s);
+  font-size: var(--knowlery-meta-size);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.knowlery-jev__score--yes {
+  background: rgba(var(--color-green-rgb), 0.18);
+  color: var(--color-green);
+}
+
+.knowlery-jev__score--no {
+  background: var(--background-secondary);
+  color: var(--text-faint);
+}
+
+.knowlery-settings-jev-intro .setting-item-control {
+  align-self: flex-start;
+}
+
+.knowlery-settings-jev-intro__list {
+  margin: var(--knowlery-space-xs) 0;
+  padding-left: 1.2em;
+}
+
 /* Activity section */
 .knowlery-home__activity {
   display: flex;
