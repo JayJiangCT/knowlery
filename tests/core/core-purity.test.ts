@@ -55,6 +55,8 @@ const INVERTED_MODULES = [
   'core/okf/uninstall.ts',
   'core/okf/knowledge-md-bundles.ts',
   'core/query/engine.ts',
+  'core/jev/client.ts',
+  'core/jev/triage.ts',
   'core/query/scan.ts',
   'core/query/tokenize.ts',
   'core/query/format.ts',
