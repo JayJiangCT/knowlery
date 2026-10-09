@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
@@ -8,14 +8,22 @@ import { runQuery, type QueryCandidate } from '../../src/core/query/engine';
 import { scanVault, type VaultSnapshot } from '../../src/core/query/scan';
 
 /**
- * Jev cook-triage experiment (exploration, not product code).
+ * Jev cook-triage experiment, v2 (exploration, not product code).
  *
- * For every labeled uncooked note, sends Jev the note's *preview* (title, frontmatter,
- * first PREVIEW_LINES body lines) plus the top retrieved compiled pages, and asks three
- * typed questions: is it worth compiling (Noul), which existing page it should update
- * (Choice), and which page type it would be (Choice). Reports precision inside Jev's
- * confident bands against the human labels — the number that decides whether a
- * confidence-gated triage step in front of /cook is viable.
+ * v1 showed Jev is usable as a *ranker* over uncooked notes (its confident-yes band was
+ * clean) but not as a filter, and that supersession is a cross-note property it cannot
+ * see from one preview. v2 measures exactly those two roles:
+ *
+ *   1. Ranking — order uncooked notes by Jev's worth_compiling score and compare the
+ *      yes-share in the top-k against the mtime order /cook uses today.
+ *   2. Update target — a shortlist of up to CANDIDATES compiled pages from a richer
+ *      retrieval query, then one Noul per candidate ("same subject?"); the argmax wins,
+ *      `new` when nothing clears NEW_THRESHOLD.
+ *
+ * Deterministic dedupe of `bridge/trusted-read-<doc>-<date>/` snapshots happens in code
+ * before any call; only the latest snapshot per document reaches Jev. page_type was
+ * dropped: for ticket-shaped notes the question is ill-posed and Jev answered `query`
+ * for every note.
  *
  * Runs against a real vault, so it runs on the machine that has the vault:
  *
@@ -28,50 +36,52 @@ import { scanVault, type VaultSnapshot } from '../../src/core/query/scan';
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
+const ENDPOINT = process.env.JEV_ENDPOINT ?? 'https://api.typesafe.ai/v1/systemone';
 const PRICE_PER_MTOK = 0.042;
 const PREVIEW_LINES = 15;
 const PREVIEW_MAX_CHARS = 3000;
-const CANDIDATES = 5;
+const CANDIDATES = 8;
+/** Highest per-candidate "same subject" probability below this means `new`. */
+const NEW_THRESHOLD = 0.5;
+const RANK_KS = [5, 10, 20];
 /** Jev's own guidance: act at the ends, escalate the middle. Two bands reported. */
 const BANDS = [
   { name: 'strict', yes: 0.9, no: 0.1 },
   { name: 'loose', yes: 0.8, no: 0.2 },
 ];
-
-const PAGE_TYPES: Record<string, string> = {
-  entity: 'A named thing: a system, service, team, person, product, or tool. The page describes what it is, who owns it, and how it relates to others.',
-  concept: 'An abstract idea, principle, pattern, policy, or rule that is explained and applies across more than one situation.',
-  comparison: 'Two or more options weighed against each other, with the trade-offs and the choice made.',
-  query: 'An answer to a specific question, decision record, or alignment outcome tied to a particular date, meeting, ticket, or project milestone.',
-};
+const BRIDGE_SNAPSHOT = /^bridge\/trusted-read-(.+?)-(\d{8})(?:-[^/]+)?\/document-text\.md$/;
 
 type YesNo = 'yes' | 'no';
 
 interface LabeledNote {
   path: string;
   worth_compiling: YesNo;
-  type_if_yes?: keyof typeof PAGE_TYPES;
+  /** Kept in labels.yaml for the record; not scored in v2. */
+  type_if_yes?: string;
   /** Vault-relative path of the compiled page this note should update, or "new". */
   matches_existing_page?: string;
 }
 
-interface ChoiceAnswer { type: 'choice'; choice: string; probabilities: Record<string, number>; confidence: number }
 interface NoulAnswer { type: 'noul'; noul: number }
 interface JevResponse {
   model: string;
-  answers: Record<string, ChoiceAnswer | NoulAnswer>;
+  answers: Record<string, NoulAnswer>;
   usage: { input_tokens: number; output_tokens: number };
 }
 
 interface NoteResult {
   path: string;
   label: LabeledNote;
+  mtimeMs: number;
+  /** Set by the code-side dedupe; such notes never reach Jev. */
+  supersededBy?: string;
   candidates: string[];
   targetInCandidates: boolean | null;
   worth: number;
-  target?: { choice: string; confidence: number };
-  pageType?: { choice: string; confidence: number };
+  /** Per-candidate "same subject" probabilities, aligned with `candidates`. */
+  sameSubject: number[];
+  /** Undefined only for superseded notes, which never reach Jev. */
+  target?: { choice: string; score: number };
   inputTokens: number;
   cached: boolean;
 }
@@ -85,22 +95,48 @@ function sha(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
-function preview(raw: string): { frontmatter: string; body: string; data: Record<string, unknown> } {
+function preview(raw: string): { frontmatter: string; body: string; firstLine: string; data: Record<string, unknown> } {
   const parsed = matter(raw);
   // gray-matter caches by input string and the cached object drops `.matter`
   // (scanVault parsed this same content first), so take the raw block ourselves.
   const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(raw)?.[1]?.trim() ?? '';
-  const lines = parsed.content.split('\n');
+  const lines = parsed.content.split('\n').filter((line) => line.trim().length > 0);
   let body = lines.slice(0, PREVIEW_LINES).join('\n');
   if (body.length > PREVIEW_MAX_CHARS) body = `${body.slice(0, PREVIEW_MAX_CHARS)}\n…`;
-  return { frontmatter, body, data: parsed.data as Record<string, unknown> };
+  return { frontmatter, body, firstLine: lines[0] ?? '', data: parsed.data as Record<string, unknown> };
 }
 
 function compiledCandidates(question: string, snapshot: VaultSnapshot): QueryCandidate[] {
   // debug mode returns candidates even when the gate abstains — we want the shortlist regardless.
-  const result = runQuery(question, snapshot, 20, { debug: true });
+  const result = runQuery(question, snapshot, 30, { debug: true });
   const list = result.debugCandidates ?? result.candidates;
   return list.filter((candidate) => candidate.tier === 'agent').slice(0, CANDIDATES);
+}
+
+/**
+ * Among `bridge/trusted-read-<doc>-<date>[-suffix]/document-text.md` notes, keep the
+ * latest snapshot per document (date in the path, mtime as tiebreak). Returns a map
+ * from superseded path to the path that supersedes it.
+ */
+function dedupeBridgeSnapshots(notes: { path: string; mtimeMs: number }[]): Map<string, string> {
+  const latest = new Map<string, { path: string; date: string; mtimeMs: number }>();
+  for (const note of notes) {
+    const match = BRIDGE_SNAPSHOT.exec(note.path);
+    if (!match) continue;
+    const [, doc, date] = match;
+    const current = latest.get(doc);
+    if (!current || date > current.date || (date === current.date && note.mtimeMs > current.mtimeMs)) {
+      latest.set(doc, { path: note.path, date, mtimeMs: note.mtimeMs });
+    }
+  }
+  const superseded = new Map<string, string>();
+  for (const note of notes) {
+    const match = BRIDGE_SNAPSHOT.exec(note.path);
+    if (!match) continue;
+    const winner = latest.get(match[1])!;
+    if (winner.path !== note.path) superseded.set(note.path, winner.path);
+  }
+  return superseded;
 }
 
 async function askJev(
@@ -135,6 +171,7 @@ async function askJev(
 
 async function evaluateNote(
   label: LabeledNote,
+  mtimeMs: number,
   kbRoot: string,
   snapshot: VaultSnapshot,
   model: string,
@@ -145,7 +182,7 @@ async function evaluateNote(
   const view = preview(raw);
   const title = typeof view.data.title === 'string' ? view.data.title : basename(label.path, '.md');
   const tags = Array.isArray(view.data.tags) ? view.data.tags.join(' ') : '';
-  const candidates = compiledCandidates(`${title} ${tags}`.trim(), snapshot);
+  const candidates = compiledCandidates(`${title} ${tags} ${view.firstLine}`.trim(), snapshot);
 
   const state = {
     note: { path: label.path, title, frontmatter: view.frontmatter, preview: view.body },
@@ -163,43 +200,45 @@ async function evaluateNote(
       instructions: 'Does `note` contain durable knowledge worth compiling into a knowledge-base page: facts, decisions, requirements, rationale, definitions, or specifications about a named system, project, person, or concept?',
       criteria: {
         true: 'The note records decisions, requirements, rationale, definitions, or specifications that would still be useful to someone asking about this subject later.',
-        false: 'The note is transient or raw (an agenda with no outcomes, a log, a scratch draft, generated output, boilerplate, a template) or is a superseded duplicate of another note.',
+        false: 'The note is transient or raw (an agenda with no outcomes, a log, a scratch draft, generated output, boilerplate, a template).',
       },
     },
-    page_type: {
-      type: 'choice',
-      instructions: 'If `note` were compiled into a knowledge page, which page type fits best?',
-      criteria: PAGE_TYPES,
-    },
   };
-  if (candidates.length > 0) {
-    const criteria: Record<string, string> = {};
-    for (const page of state.existing_pages) criteria[page.id] = `${page.title} — ${page.description}`;
-    criteria.new = 'None of the existing pages covers the subject of `note`; a new page would be needed.';
-    questions.update_target = {
-      type: 'choice',
-      instructions: 'Which entry in `existing_pages` should be updated with the information in `note`? Answer `new` if none of them is about the same subject.',
-      criteria,
+  for (const page of state.existing_pages) {
+    questions[`same_subject_${page.id}`] = {
+      type: 'noul',
+      instructions: `Is the page \`existing_pages\` entry with id ${page.id} about the same subject as \`note\`, so that the information in \`note\` belongs on that page rather than on a new one?`,
+      criteria: {
+        true: 'The page and the note describe the same system, project, decision thread, or concept; a reader looking for the note\'s information would open this page.',
+        false: 'The page merely shares a domain, team, or a few keywords with the note; its subject is different and the note\'s information would be out of place there.',
+      },
     };
   }
 
   const { response, cached } = await askJev({ state, model, questions }, apiKey, cache);
-  const worth = response.answers.worth_compiling as NoulAnswer;
-  const pageType = response.answers.page_type as ChoiceAnswer;
-  const target = response.answers.update_target as ChoiceAnswer | undefined;
+  const worth = response.answers.worth_compiling.noul;
+  const candidatePaths = candidates.map((candidate) => candidate.path);
+  const sameSubject = state.existing_pages.map((page) => response.answers[`same_subject_${page.id}`].noul);
+
+  // No shortlist at all means retrieval found nothing on the subject: that is `new` by definition.
+  let target: NoteResult['target'] = { choice: 'new', score: 1 };
+  if (candidatePaths.length > 0) {
+    const best = sameSubject.reduce((bestIndex, score, index) => (score > sameSubject[bestIndex] ? index : bestIndex), 0);
+    target = sameSubject[best] >= NEW_THRESHOLD
+      ? { choice: candidatePaths[best], score: sameSubject[best] }
+      : { choice: 'new', score: 1 - sameSubject[best] };
+  }
 
   const labelTarget = label.matches_existing_page;
-  const candidatePaths = candidates.map((candidate) => candidate.path);
   return {
     path: label.path,
     label,
+    mtimeMs,
     candidates: candidatePaths,
     targetInCandidates: labelTarget && labelTarget !== 'new' ? candidatePaths.includes(labelTarget) : null,
-    worth: worth.noul,
-    pageType: { choice: pageType.choice, confidence: pageType.confidence },
-    target: target
-      ? { choice: target.choice === 'new' ? 'new' : candidatePaths[Number(target.choice.slice(1)) - 1], confidence: target.confidence }
-      : undefined,
+    worth,
+    sameSubject,
+    target,
     inputTokens: response.usage.input_tokens,
     cached,
   };
@@ -209,42 +248,85 @@ function pct(numerator: number, denominator: number): string {
   return denominator === 0 ? '—' : `${((100 * numerator) / denominator).toFixed(1)}% (${numerator}/${denominator})`;
 }
 
+function isYes(r: NoteResult): boolean {
+  return r.label.worth_compiling === 'yes';
+}
+
+/** Average precision of the positive labels under `order` (1.0 = every yes ranked above every no). */
+function averagePrecision(order: NoteResult[]): number {
+  let hits = 0;
+  let sum = 0;
+  order.forEach((r, index) => {
+    if (!isYes(r)) return;
+    hits += 1;
+    sum += hits / (index + 1);
+  });
+  return hits === 0 ? 0 : sum / hits;
+}
+
 function report(results: NoteResult[]): string {
   const lines: string[] = [];
-  const positives = results.filter((r) => r.label.worth_compiling === 'yes').length;
-  lines.push(`## Jev cook-triage experiment — ${results.length} notes (${positives} labeled yes, ${results.length - positives} labeled no)`, '');
+  const positives = results.filter(isYes).length;
+  lines.push(`## Jev cook-triage experiment v2 — ${results.length} notes (${positives} labeled yes, ${results.length - positives} labeled no)`, '');
 
-  lines.push('### worth_compiling (Noul) — precision inside the confident bands', '');
+  const superseded = results.filter((r) => r.supersededBy);
+  lines.push('### Code-side dedupe of bridge snapshots', '');
+  lines.push(`- superseded snapshots skipped: ${superseded.length}; labeled no: ${pct(superseded.filter((r) => !isYes(r)).length, superseded.length)}`);
+  for (const r of superseded) lines.push(`  - ${r.path} → ${r.supersededBy} (label: ${r.label.worth_compiling})`);
+
+  const evaluated = results.filter((r) => !r.supersededBy);
+  lines.push('', '### Ranking — yes-share in the top-k when ordered by…', '');
+  const orders: [string, NoteResult[]][] = [
+    ['mtime, newest first (today\'s /cook order)', [...results].sort((a, b) => b.mtimeMs - a.mtimeMs)],
+    ['Jev worth_compiling (superseded notes pinned to 0)', [...results].sort((a, b) => b.worth - a.worth || b.mtimeMs - a.mtimeMs)],
+    ['Jev worth_compiling, Jev-evaluated notes only', [...evaluated].sort((a, b) => b.worth - a.worth || b.mtimeMs - a.mtimeMs)],
+  ];
+  lines.push(`| order | ${RANK_KS.map((k) => `top-${k}`).join(' | ')} | avg precision |`, `|---|${RANK_KS.map(() => '---').join('|')}|---|`);
+  for (const [name, order] of orders) {
+    const cells = RANK_KS.map((k) => {
+      const head = order.slice(0, k);
+      return pct(head.filter(isYes).length, head.length);
+    });
+    lines.push(`| ${name} | ${cells.join(' | ')} | ${averagePrecision(order).toFixed(3)} |`);
+  }
+  lines.push(`| (random expectation) | ${RANK_KS.map(() => `${((100 * positives) / results.length).toFixed(1)}%`).join(' | ')} | — |`);
+
+  lines.push('', '### worth_compiling (Noul) — precision inside the confident bands (Jev-evaluated notes)', '');
   lines.push('| band | thresholds | confident-yes precision | confident-no precision | uncertain share |', '|---|---|---|---|---|');
   for (const band of BANDS) {
-    const yes = results.filter((r) => r.worth >= band.yes);
-    const no = results.filter((r) => r.worth <= band.no);
-    const uncertain = results.length - yes.length - no.length;
+    const yes = evaluated.filter((r) => r.worth >= band.yes);
+    const no = evaluated.filter((r) => r.worth <= band.no);
+    const uncertain = evaluated.length - yes.length - no.length;
     lines.push(
-      `| ${band.name} | ≥${band.yes} / ≤${band.no} | ${pct(yes.filter((r) => r.label.worth_compiling === 'yes').length, yes.length)} | ${pct(no.filter((r) => r.label.worth_compiling === 'no').length, no.length)} | ${pct(uncertain, results.length)} |`,
+      `| ${band.name} | ≥${band.yes} / ≤${band.no} | ${pct(yes.filter(isYes).length, yes.length)} | ${pct(no.filter((r) => !isYes(r)).length, no.length)} | ${pct(uncertain, evaluated.length)} |`,
     );
   }
 
-  const withTarget = results.filter((r) => r.label.matches_existing_page && r.target);
+  const withTarget = evaluated.filter((r) => r.label.matches_existing_page && r.target);
   const reachable = withTarget.filter((r) => r.label.matches_existing_page === 'new' || r.targetInCandidates);
   const targetCorrect = (r: NoteResult) => r.target!.choice === r.label.matches_existing_page;
-  lines.push('', '### update_target (Choice) — which existing page to update', '');
-  lines.push(`- labeled target retrievable in top-${CANDIDATES}: ${pct(results.filter((r) => r.targetInCandidates === true).length, results.filter((r) => r.targetInCandidates !== null).length)} (a miss here is a retrieval gap, not a Jev error)`);
+  const labeledNew = withTarget.filter((r) => r.label.matches_existing_page === 'new');
+  lines.push('', `### update_target — argmax of per-candidate "same subject" Noul, \`new\` below ${NEW_THRESHOLD}`, '');
+  lines.push(`- labeled target retrievable in top-${CANDIDATES}: ${pct(evaluated.filter((r) => r.targetInCandidates === true).length, evaluated.filter((r) => r.targetInCandidates !== null).length)} (a miss here is a retrieval gap, not a Jev error)`);
   lines.push(`- accuracy where the target was reachable: ${pct(reachable.filter(targetCorrect).length, reachable.length)}`);
-  lines.push(`- accuracy where reachable and confidence ≥ 0.5: ${pct(reachable.filter((r) => r.target!.confidence >= 0.5 && targetCorrect(r)).length, reachable.filter((r) => r.target!.confidence >= 0.5).length)}`);
-
-  const typed = results.filter((r) => r.label.type_if_yes && r.pageType);
-  lines.push('', '### page_type (Choice)', '');
-  lines.push(`- accuracy vs label: ${pct(typed.filter((r) => r.pageType!.choice === r.label.type_if_yes).length, typed.length)} (labels themselves disagreed between annotators on query vs concept — read this as consistency, not truth)`);
+  for (const gate of [0.7, 0.9]) {
+    const confident = reachable.filter((r) => r.target!.score >= gate);
+    lines.push(`- accuracy where reachable and winning score ≥ ${gate}: ${pct(confident.filter(targetCorrect).length, confident.length)}`);
+  }
+  lines.push(`- \`new\` recall (labeled new → answered new): ${pct(labeledNew.filter(targetCorrect).length, labeledNew.length)}`);
+  lines.push(`- \`new\` precision (answered new → labeled new): ${pct(withTarget.filter((r) => r.target!.choice === 'new' && targetCorrect(r)).length, withTarget.filter((r) => r.target!.choice === 'new').length)}`);
 
   const tokens = results.reduce((sum, r) => sum + r.inputTokens, 0);
-  lines.push('', `### Cost: ${tokens.toLocaleString()} input tokens ≈ $${((tokens / 1e6) * PRICE_PER_MTOK).toFixed(4)} (${results.filter((r) => r.cached).length} cached)`);
+  lines.push('', `### Cost: ${tokens.toLocaleString()} input tokens ≈ $${((tokens / 1e6) * PRICE_PER_MTOK).toFixed(4)} (${evaluated.filter((r) => r.cached).length} cached, ${superseded.length} skipped by dedupe)`);
 
   lines.push('', '### Per note (sorted by worth_compiling)', '');
-  lines.push('| worth | label | type (conf) | target (conf) | path |', '|---|---|---|---|---|');
-  for (const r of [...results].sort((a, b) => b.worth - a.worth)) {
-    const target = r.target ? `${r.target.choice === 'new' ? 'new' : basename(r.target.choice)} (${r.target.confidence.toFixed(2)})` : '—';
-    lines.push(`| ${r.worth.toFixed(2)} | ${r.label.worth_compiling} | ${r.pageType!.choice} (${r.pageType!.confidence.toFixed(2)}) | ${target} | ${r.path} |`);
+  lines.push('| worth | label | target (score) | labeled target | path |', '|---|---|---|---|---|');
+  for (const r of [...results].sort((a, b) => b.worth - a.worth || b.mtimeMs - a.mtimeMs)) {
+    const target = r.supersededBy
+      ? `superseded by ${basename(dirname(r.supersededBy))}`
+      : r.target ? `${r.target.choice === 'new' ? 'new' : basename(r.target.choice)} (${r.target.score.toFixed(2)})` : '—';
+    const labeled = r.label.matches_existing_page ? (r.label.matches_existing_page === 'new' ? 'new' : basename(r.label.matches_existing_page)) : '—';
+    lines.push(`| ${r.worth.toFixed(2)} | ${r.label.worth_compiling} | ${target} | ${labeled} | ${r.path} |`);
   }
   return lines.join('\n');
 }
@@ -267,10 +349,19 @@ async function main(): Promise<void> {
     : {};
   const snapshot = scanVault(kbRoot);
 
+  const mtimes = new Map(labels.map((label) => [label.path, statSync(join(kbRoot, label.path)).mtimeMs]));
+  const superseded = dedupeBridgeSnapshots(labels.map((label) => ({ path: label.path, mtimeMs: mtimes.get(label.path)! })));
+
   const results: NoteResult[] = [];
   for (const label of labels) {
+    const mtimeMs = mtimes.get(label.path)!;
+    const supersededBy = superseded.get(label.path);
+    if (supersededBy) {
+      results.push({ path: label.path, label, mtimeMs, supersededBy, candidates: [], targetInCandidates: null, worth: 0, sameSubject: [], inputTokens: 0, cached: false });
+      continue;
+    }
     try {
-      results.push(await evaluateNote(label, kbRoot, snapshot, model, apiKey, cache));
+      results.push(await evaluateNote(label, mtimeMs, kbRoot, snapshot, model, apiKey, cache));
     } catch (error) {
       console.error(`skip ${label.path}: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
