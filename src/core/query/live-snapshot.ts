@@ -8,6 +8,7 @@ import {
   type ScannedPage,
   type VaultSnapshot,
 } from './scan';
+import { CONFIG_PATH, parseConfig } from '../reference-config';
 
 /**
  * In-memory vault snapshot backing the `obsidian knowlery:query` CLI handler
@@ -40,6 +41,7 @@ export interface SnapshotTimers {
 export class LiveQuerySnapshot {
   private pages = new Map<string, ScannedPage>();
   private bundleEntries: ScannedBundleEntry[] = [];
+  private referenceDirs: string[] = [];
   private isReady = false;
   private pendingRefresh = new Map<string, unknown>();
   private timers: SnapshotTimers;
@@ -66,6 +68,7 @@ export class LiveQuerySnapshot {
       root: '',
       pages: [...this.pages.values()],
       bundleEntries: this.bundleEntries,
+      referenceDirs: this.referenceDirs,
     };
   }
 
@@ -122,12 +125,18 @@ export class LiveQuerySnapshot {
   }
 
   /**
-   * Bundle registry files are hidden (.knowlery/), so vault events do not fire for
-   * them; callers re-invoke this on the plugin's dashboard-refresh event, which
-   * Knowlery triggers after bundle install/uninstall.
+   * Bundle registry and config files are hidden (.knowlery/), so vault events do not
+   * fire for them; callers re-invoke this on the plugin's dashboard-refresh event,
+   * which Knowlery triggers after bundle install/uninstall and reference-dir edits.
    */
   async refreshBundles(): Promise<void> {
     const adapter = this.app.vault.adapter;
+    try {
+      const raw = (await adapter.exists(CONFIG_PATH)) ? await adapter.read(CONFIG_PATH) : null;
+      this.referenceDirs = parseConfig(raw).referenceDirs;
+    } catch {
+      // Malformed config — keep the previous reference dirs; the CLI/dashboard surface the error.
+    }
     const registryPath = '.knowlery/bundles.json';
     const entries: ScannedBundleEntry[] = [];
     try {

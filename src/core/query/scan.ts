@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, basename } from 'node:path';
 import matter from 'gray-matter';
+import { CONFIG_PATH, parseConfig } from '../reference-config';
 
 /**
  * Live vault scanner for the deterministic retrieval engine (spec f2, §5.1 step 1).
@@ -66,6 +67,11 @@ export interface VaultSnapshot {
   root: string;
   pages: ScannedPage[];
   bundleEntries: ScannedBundleEntry[];
+  /**
+   * Directories of imported, read-only knowledge (`.knowlery/config.json`): scanned
+   * and queryable like any user note, never listed as uncooked. Absent means none.
+   */
+  referenceDirs?: string[];
 }
 
 export function scanVault(root: string): VaultSnapshot {
@@ -76,7 +82,18 @@ export function scanVault(root: string): VaultSnapshot {
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }
-  return { root, pages, bundleEntries: loadBundleEntries(root) };
+  return { root, pages, bundleEntries: loadBundleEntries(root), referenceDirs: loadReferenceDirs(root) };
+}
+
+/** Malformed config degrades to "no reference dirs" here; `knowlery reference list` reports the error loudly. */
+function loadReferenceDirs(root: string): string[] {
+  const configPath = join(root, CONFIG_PATH);
+  if (!existsSync(configPath)) return [];
+  try {
+    return parseConfig(readFileSync(configPath, 'utf8')).referenceDirs;
+  } catch {
+    return [];
+  }
 }
 
 function loadPage(file: string, path: string): ScannedPage | null {

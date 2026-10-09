@@ -1,4 +1,5 @@
 import type { ScannedPage, VaultSnapshot } from './scan';
+import { isUnderReferenceDir } from '../reference-config';
 
 /**
  * Mechanical staleness tier (spec f3, §4.2). Pure computation over a VaultSnapshot —
@@ -78,8 +79,9 @@ export function computeStaleness(snapshot: VaultSnapshot): StalenessReport {
   );
   danglingSources.sort((a, b) => a.page.localeCompare(b.page) || a.source.localeCompare(b.source));
 
+  const referenceDirs = snapshot.referenceDirs ?? [];
   const uncookedNotes = snapshot.pages
-    .filter((page) => isUncookedCandidate(page) && !citedPaths.has(page.path))
+    .filter((page) => isUncookedCandidate(page, referenceDirs) && !citedPaths.has(page.path))
     .map((page) => ({ path: page.path, title: page.title, mtimeMs: page.mtimeMs }))
     .sort((a, b) => b.mtimeMs - a.mtimeMs || a.path.localeCompare(b.path));
 
@@ -88,10 +90,11 @@ export function computeStaleness(snapshot: VaultSnapshot): StalenessReport {
 
 /**
  * Uncooked candidates are the user's own notes: bundle reference material under
- * Library/ is read-only by design and never expected to be compiled.
+ * Library/ is read-only by design and never expected to be compiled, and the same
+ * holds for the directories the user marked as reference in `.knowlery/config.json`.
  */
-function isUncookedCandidate(page: ScannedPage): boolean {
-  return page.tier === 'user' && !page.path.startsWith('Library/');
+function isUncookedCandidate(page: ScannedPage, referenceDirs: readonly string[]): boolean {
+  return page.tier === 'user' && !page.path.startsWith('Library/') && !isUnderReferenceDir(page.path, referenceDirs);
 }
 
 function normalize(path: string): string {
