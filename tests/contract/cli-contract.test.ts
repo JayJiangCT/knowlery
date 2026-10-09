@@ -31,6 +31,7 @@ describe('commands and arities are 1.0-frozen', () => {
       query: 1,
       stale: 0,
       index: 0,  // added 1.2.0 — additive, sanctioned (spec 1.2 f1, §4.4)
+      reference: 2,  // added 1.6.0 — additive (reference directories)
       bundle: 2,
     });
   });
