@@ -20,6 +20,9 @@ plan.md
 # Eval harness: timestamped run reports stay local, only the frozen baseline is tracked.
 evals/reports/*
 !evals/reports/baseline.json
+# Jev triage experiment: API response cache and run reports stay local.
+evals/jev-triage/cache.json
+evals/jev-triage/report.json
 # The fixture vault's .knowlery/ must be tracked despite the global .knowlery/ ignore.
 !evals/fixtures/vault/.knowlery/
 !evals/fixtures/vault/.knowlery/**

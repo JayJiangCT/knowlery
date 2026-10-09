@@ -5,6 +5,7 @@
     "src/**/*.tsx",
     "tests/**/*.ts",
     "evals/src/**/*.ts",
-    "evals/perf/**/*.ts"
+    "evals/perf/**/*.ts",
+    "evals/jev-triage/**/*.ts"
   ]
 }
