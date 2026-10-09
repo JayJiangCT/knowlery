@@ -21,7 +21,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Install knowledge bundle | Manifest and conformance preview, install, and installed-bundle list |
 | Move drill-ins | Full suggested-move list and individual move prompts |
 | Activity drill-in | Full recent activity list |
-| Knowledge health drill-in | Stale pages, never-compiled notes, dangling sources, and the re-cook prompt |
+| Knowledge health drill-in | Stale pages, never-compiled notes, dangling sources, and the re-cook prompt; optional Jev ranking of never-compiled notes |
 | Settings: Diagnostics | Vault health, content stats, configuration integrity, and diagnosis |
 | Settings: Rules & schema | Agent rules, schema shortcuts, and config maintenance |
 | Settings: Skills | Built-in, registry, custom, and disabled skill management |
@@ -81,6 +81,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Platform | Claude Code / OpenCode switching |
 | Activity | Activity logging and activity ledger rule |
 | Knowledge bundle defaults | Creator name, creator URL, and default license for exported bundles |
+| Jev cook triage (optional) | TypeSafe AI API key; unlocks Jev ranking in Knowledge health. Empty by default; nothing else depends on it |
 | Maintenance | Regenerate agent config and re-initialize vault |
 | Advanced | Diagnostics, rules & schema, and the skills library |
 

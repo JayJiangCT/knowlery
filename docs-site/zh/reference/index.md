@@ -21,7 +21,7 @@
 | Install knowledge bundle | Manifest 和 conformance 预览、安装和已安装 bundle 列表 |
 | Move drill-ins | 完整 suggested-move 列表和单个 move prompt |
 | Activity drill-in | 完整 recent activity 列表 |
-| Knowledge health drill-in | 过期页面、从未编译的笔记、悬空来源和 re-cook prompt |
+| Knowledge health drill-in | 过期页面、从未编译的笔记、悬空来源和 re-cook prompt；可选的 Jev 对未编译笔记排序 |
 | Settings: Diagnostics | Vault health、content stats、configuration integrity 和 diagnosis |
 | Settings: Rules & schema | Agent rules、schema shortcuts 和 config maintenance |
 | Settings: Skills | Built-in、registry、custom 和 disabled skill 管理 |
@@ -81,6 +81,7 @@
 | Platform | Claude Code / OpenCode 切换 |
 | Activity | Activity logging 和 activity ledger rule |
 | Knowledge bundle defaults | 导出 bundle 的创建者名称、URL 和默认许可协议 |
+| Jev cook 分诊（可选） | TypeSafe AI API 密钥；开启 Knowledge health 中的 Jev 排序。默认为空，其他功能不依赖它 |
 | Maintenance | 重新生成 agent config 和重新初始化 vault |
 | Advanced | 诊断、规则与结构、技能库 |
 

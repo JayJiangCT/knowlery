@@ -144,6 +144,8 @@ Those receipts feed:
 
 Staleness is computed mechanically, never guessed: a compiled page is stale when a source it cites changed after the page was last written, and a user note is uncooked when no compiled page cites it. The dashboard's Knowledge health section, `knowlery stale`, `obsidian knowlery:stale`, and the MCP `stale` tool all render the same deterministic report — it is the exact work list a `/cook` session should scope from.
 
+Optionally, the never-compiled list can be ranked by [Jev](https://typesafe.ai), TypeSafe AI's decision model, when you add an API key in settings. Jev scores each note's likelihood of holding durable knowledge from its title, frontmatter and first 15 lines, and suggests which compiled page it should update; the result is a reordered list and a ready-to-paste `/cook` prompt, never a filter. It runs only when you click, costs on the order of $0.0001 per note, and nothing in retrieval or the CLI depends on it.
+
 ## Knowledge Bundles
 
 A knowledge bundle is a portable, reviewed slice of a vault's compiled knowledge, packaged in the OKF format.
