@@ -231,6 +231,15 @@ export const en = {
   'config.fileNotFound': 'File not found: {path}',
   'config.ruleDeleted': 'Deleted rule "{name}"',
   'config.noRules': 'No rules configured yet.',
+  'config.referenceDirs': 'Reference directories ({count})',
+  'config.referenceDirsHint': 'Imported knowledge you read but never compile: stays queryable, never listed as uncooked.',
+  'config.addReferenceDir': 'Add reference directory',
+  'config.chooseReferenceDir': 'Choose a vault folder…',
+  'config.referenceDirNotes': '{count} notes',
+  'config.removeReferenceDir': 'Remove {dir} from reference directories',
+  'config.referenceDirAdded': 'Marked {dir}/ as reference material',
+  'config.referenceDirRemoved': 'Removed {dir}/ from reference directories',
+  'config.noReferenceDirs': 'No reference directories.',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': 'Knowledge',

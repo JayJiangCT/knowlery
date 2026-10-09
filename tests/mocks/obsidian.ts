@@ -13,6 +13,13 @@ export class Modal {
   contentEl = undefined as unknown as HTMLElement;
 }
 
+export class FuzzySuggestModal {
+  constructor(public app: unknown) {}
+  open(): void {}
+  close(): void {}
+  setPlaceholder(): void {}
+}
+
 export class Notice {
   constructor() {}
 }
