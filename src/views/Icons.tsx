@@ -433,3 +433,13 @@ export function SkillIcon(props: IconProps & { name: string }) {
   const Icon = SKILL_ICON_MAP[name] ?? IconCircle;
   return <Icon {...iconProps} />;
 }
+
+export function IconSparkles(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />
+      <path d="M19 17l.8 2.2L22 20l-2.2.8L19 23l-.8-2.2L16 20l2.2-.8z" />
+      <path d="M4 15l.6 1.4L6 17l-1.4.6L4 19l-.6-1.4L2 17l1.4-.6z" />
+    </Svg>
+  );
+}

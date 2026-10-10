@@ -146,6 +146,8 @@ Staleness is computed mechanically, never guessed: a compiled page is stale when
 
 Not every note is meant to be cooked. Directories listed under `referenceDirs` in `.knowlery/config.json` (for example an imported team knowledge base) remain fully queryable but are never reported as uncooked — the same treatment installed bundles under `Library/` get. Manage the list from the dashboard's Config tab or with `knowlery reference list|add|remove <dir>`.
 
+Optionally, the never-compiled list can be ranked by [Jev](https://typesafe.ai), TypeSafe AI's decision model, when you add an API key in settings. Jev scores each note's likelihood of holding durable knowledge from its title, frontmatter and first 15 lines, and suggests which compiled page it should update; the result is a reordered list and a ready-to-paste `/cook` prompt, never a filter. It runs only when you click, costs on the order of $0.0001 per note, and nothing in retrieval or the CLI depends on it.
+
 ## Knowledge Bundles
 
 A knowledge bundle is a portable, reviewed slice of a vault's compiled knowledge, packaged in the OKF format.

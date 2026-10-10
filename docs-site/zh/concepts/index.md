@@ -147,6 +147,8 @@ Staleness 是机械计算出来的，从不靠猜：当已编译页面引用的�
 
 并非每篇笔记都该被 cook。写入 `.knowlery/config.json` 中 `referenceDirs` 的目录（例如导入的团队知识库）仍可被完整检索，但永远不会被报告为 uncooked——与 `Library/` 下已安装 bundle 的处理方式一致。可在 Dashboard 的 Config 标签页管理该列表，或使用 `knowlery reference list|add|remove <dir>`。
 
+可选地，在设置中添加 API 密钥后，可以用 TypeSafe AI 的决策模型 [Jev](https://typesafe.ai) 对从未编译的笔记排序。Jev 根据每篇笔记的标题、frontmatter 和前 15 行，给出其包含值得沉淀知识的概率，并建议应更新哪个已编译页面；结果是一份重新排序的列表和一段可直接粘贴的 `/cook` 提示词，而不是过滤。它只在你点击时运行，每篇约 $0.0001，检索与 CLI 均不依赖它。
+
 ## Knowledge Bundles
 
 Knowledge bundle 是一个便携的、review 过的知识切片，用 OKF 格式打包，来自某个 vault 的 compiled knowledge。

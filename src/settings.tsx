@@ -209,6 +209,12 @@ export class KnowlerySettingTab extends PluginSettingTab {
       },
       {
         type: 'group',
+        heading: t('settings.heading.jev'),
+        visible: () => this.initialized === true,
+        items: [this.jevIntroItem(), this.jevApiKeyItem()],
+      },
+      {
+        type: 'group',
         heading: t('settings.heading.maintenance'),
         visible: () => this.initialized === true,
         items: [this.regenerateConfigItem(), this.reinitializeItem()],
@@ -278,6 +284,14 @@ export class KnowlerySettingTab extends PluginSettingTab {
       case 'bundleDefaultLicense':
         settings.bundleDefaultLicense = typeof value === 'string' && value ? value : 'personal';
         break;
+      case 'jevApiKey': {
+        const key = typeof value === 'string' ? value.trim() : '';
+        settings.jevApiKey = key;
+        // Scores were produced under the old key; a new key may be a different account/model tier.
+        this.plugin.jevTriageCache.clear();
+        this.plugin.events.trigger('dashboard-refresh');
+        break;
+      }
       default:
         return;
     }
@@ -428,6 +442,60 @@ export class KnowlerySettingTab extends PluginSettingTab {
             void (async () => {
               await installActivityLedgerRule(this.plugin.fs);
               new Notice(t('settings.activityRule.refreshed'));
+            })();
+          }),
+        );
+      },
+    };
+  }
+
+  /**
+   * Jev is opt-in: not every user can get a key, so the group explains what the key
+   * unlocks and what leaves the machine before asking for anything.
+   */
+  private jevIntroItem(): SettingDefinition {
+    return {
+      name: t('settings.jev.intro.name'),
+      desc: t('settings.jev.intro.desc'),
+      searchable: false,
+      render: (setting) => {
+        setting.settingEl.addClass('knowlery-settings-jev-intro');
+        const list = setting.descEl.createEl('ul', { cls: 'knowlery-settings-jev-intro__list' });
+        for (const key of ['settings.jev.intro.benefitRank', 'settings.jev.intro.benefitTarget', 'settings.jev.intro.benefitCost'] as const) {
+          list.createEl('li', { text: t(key) });
+        }
+        setting.descEl.createEl('p', { text: t('settings.jev.intro.privacy') });
+        setting.addButton((btn) =>
+          btn.setButtonText(t('settings.jev.intro.getKey')).onClick(() => {
+            window.open('https://typesafe.ai', '_blank');
+          }),
+        );
+      },
+    };
+  }
+
+  private jevApiKeyItem(): SettingDefinition {
+    return {
+      name: t('settings.jev.apiKey.name'),
+      desc: t('settings.jev.apiKey.desc', { configDir: this.plugin.app.vault.configDir }),
+      aliases: ['jev', 'typesafe', 'api key'],
+      render: (setting) => {
+        setting.addText((text) => {
+          text.inputEl.type = 'password';
+          text.inputEl.autocomplete = 'off';
+          text
+            .setPlaceholder(t('settings.jev.apiKey.placeholder'))
+            .setValue(this.plugin.settings.jevApiKey)
+            .onChange((value) => {
+              void this.setControlValue('jevApiKey', value);
+            });
+        });
+        setting.addButton((btn) =>
+          btn.setButtonText(t('settings.jev.apiKey.clear')).onClick(() => {
+            void (async () => {
+              await this.setControlValue('jevApiKey', '');
+              new Notice(t('settings.jev.apiKey.cleared'));
+              this.requestRender();
             })();
           }),
         );
