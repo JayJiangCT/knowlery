@@ -57,6 +57,19 @@ The report has three parts:
 3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
    report; fixing them is /audit territory.
 
+**Jev-ranked uncooked notes.** When the workspace has Jev triage (the user added a
+TypeSafe key in the plugin, or ran `knowlery stale` with `TYPESAFE_API_KEY` set),
+uncooked notes carry a `jev` field — `{ worth, target }` in JSON, `jev 0.92 → update
+<page>` in text — read from `.knowlery/triage.json`; the list is then ordered scored
+notes by `worth` first, unscored notes most-recent-first, and notes Jev rates ≤ 0.2
+last. `worth` is the probability, from the note's title, frontmatter and first lines,
+that it holds durable knowledge; `target` is the compiled page Jev judged to be about
+the same subject (null = a new page is the better fit). Use it to decide where to
+start, not what to skip: work down the list in order, open `target` before creating
+a new page and fold the note in if the subject really matches, and still glance at the
+≤ 0.2 band — a short preview can miss a decision buried further down. Never ask the
+user for the key and never call Jev yourself; the scores arrive through the report.
+
 Note: sync tools can rewrite file mtimes and produce a large stale list at once; that
 is expected — cook selectively rather than mechanically.
 
