@@ -73,9 +73,8 @@ The report has three parts:
 3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
    report; fixing them is /audit territory.
 
-**Jev-ranked uncooked notes.** When the workspace has Jev triage (the user added a
-TypeSafe key in the plugin, or ran \`knowlery stale\` with \`TYPESAFE_API_KEY\` set),
-uncooked notes carry a \`jev\` field — \`{ worth, target }\` in JSON, \`jev 0.92 → update
+**Jev-ranked uncooked notes.** When the user has configured a Jev key (in the
+Knowlery plugin settings, or as \`TYPESAFE_API_KEY\` in their shell), uncooked notes carry a \`jev\` field — \`{ worth, target }\` in JSON, \`jev 0.92 → update
 <page>\` in text — read from \`.knowlery/triage.json\`; the list is then ordered scored
 notes by \`worth\` first, unscored notes most-recent-first, and notes Jev rates ≤ 0.2
 last. \`worth\` is the probability, from the note's title, frontmatter and first lines,
@@ -85,6 +84,9 @@ start, not what to skip: work down the list in order, open \`target\` before cre
 a new page and fold the note in if the subject really matches, and still glance at the
 ≤ 0.2 band — a short preview can miss a decision buried further down. Never ask the
 user for the key and never call Jev yourself; the scores arrive through the report.
+\`stale\` only tops up 40 unscored notes per call, so when most of a long list is
+unscored, suggest \`knowlery triage\` (scores the whole backlog, about $0.0001 a note)
+rather than running it — it spends the user's money, so it is their call.
 
 Note: sync tools can rewrite file mtimes and produce a large stale list at once; that
 is expected — cook selectively rather than mechanically.
@@ -1333,7 +1335,8 @@ skill — the same operations are one tool call away.
 | \`knowlery sync\` | Refresh built-in skills and instruction files to this tool version | After upgrading knowlery |
 | \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) and list skipped directories | **After any bulk change** — verify before moving on; when a note seems missing from query/stale |
 | \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
-| \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes (Jev-ranked when \`.knowlery/triage.json\` has scores; with \`TYPESAFE_API_KEY\` in the environment it scores unscored notes first) | Deciding what to re-cook |
+| \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes (Jev-ranked when \`.knowlery/triage.json\` has scores; with a Jev key configured — plugin settings or \`TYPESAFE_API_KEY\` — it scores up to 40 unscored notes first) | Deciding what to re-cook |
+| \`knowlery triage [--json]\` | Score every unscored uncooked note with Jev and save the ranking to \`.knowlery/triage.json\`; prints bands and cost | The user asks to rank the backlog — suggest it, do not run it unasked; it spends their Jev budget |
 | \`knowlery reference list [--json]\` / \`reference add <dir>\` / \`reference remove <dir>\` | Mark directories as reference material: queryable, never reported as uncooked | Imported/external notes keep flooding the uncooked list |
 | \`knowlery ignore list [--json]\` / \`ignore add <dir>\` / \`ignore remove <dir>\` | Exclude directories from scanning entirely: invisible to query and stale | Generated output or archives that are not knowledge (node_modules/ and build output beside a project manifest are skipped automatically) |
 | \`knowlery bundle install <zip-folder-or-url>\` | Install a shared knowledge bundle into Library/ | User received a bundle or a link to one |

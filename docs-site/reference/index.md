@@ -81,7 +81,7 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Platform | Claude Code / OpenCode switching |
 | Activity | Activity logging and activity ledger rule |
 | Knowledge bundle defaults | Creator name, creator URL, and default license for exported bundles |
-| Jev cook triage (optional) | TypeSafe AI API key; unlocks Jev ranking in Knowledge health and an optional background-scoring toggle (off by default). Scores persist in `.knowlery/triage.json`; CLI and MCP `stale` score on their own when `TYPESAFE_API_KEY` is exported. Empty by default; nothing else depends on it |
+| Jev cook triage (optional) | TypeSafe AI API key; unlocks Jev ranking in Knowledge health and an optional background-scoring toggle (off by default). Scores persist in `.knowlery/triage.json`; `knowlery stale`, `knowlery triage` and MCP `stale` read the key from here (or `TYPESAFE_API_KEY`) and score on their own. Empty by default; nothing else depends on it |
 | Maintenance | Regenerate agent config and re-initialize vault |
 | Advanced | Diagnostics, rules & schema, and the skills library |
 

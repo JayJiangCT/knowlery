@@ -81,7 +81,7 @@
 | Platform | Claude Code / OpenCode 切换 |
 | Activity | Activity logging 和 activity ledger rule |
 | Knowledge bundle defaults | 导出 bundle 的创建者名称、URL 和默认许可协议 |
-| Jev cook 分诊（可选） | TypeSafe AI API 密钥；开启 Knowledge health 中的 Jev 排序和可选的后台评分开关（默认关闭）。评分保存在 `.knowlery/triage.json`；导出 `TYPESAFE_API_KEY` 后 CLI 与 MCP 的 `stale` 会自行评分。默认为空，其他功能不依赖它 |
+| Jev cook 分诊（可选） | TypeSafe AI API 密钥；开启 Knowledge health 中的 Jev 排序和可选的后台评分开关（默认关闭）。评分保存在 `.knowlery/triage.json`；`knowlery stale`、`knowlery triage` 与 MCP `stale` 会从这里（或 `TYPESAFE_API_KEY`）读取密钥并自行评分。默认为空，其他功能不依赖它 |
 | Maintenance | 重新生成 agent config 和重新初始化 vault |
 | Advanced | 诊断、规则与结构、技能库 |
 
