@@ -84,17 +84,17 @@ export async function runTriageCommand(root: string, options: TriageCommandOptio
 }
 
 function renderSummary(summary: TriageSummary): string {
-  const lines: string[] = [];
   if (summary.scored === 0 && summary.failed === 0) {
-    lines.push('Jev triage: every uncooked note already has a current score — nothing sent.');
-  } else {
-    const cost = summary.costUsd < 0.0001 ? '<0.0001' : summary.costUsd.toFixed(4);
-    lines.push(`Jev triage: ${summary.scored} note(s) scored in ${summary.passes} pass(es), ${summary.inputTokens} input tokens ≈ $${cost}.`);
-    lines.push(`  > ${CONFIDENT_YES} likely knowledge: ${summary.bands.likely}`);
-    lines.push(`  ${CONFIDENT_NO}–${CONFIDENT_YES} uncertain:      ${summary.bands.uncertain}`);
-    lines.push(`  ≤ ${CONFIDENT_NO} unlikely:         ${summary.bands.unlikely}`);
-    if (summary.failed > 0) lines.push(`  ${summary.failed} note(s) failed; ${summary.remaining} left unscored — rerun to retry.`);
+    return 'Jev triage: every uncooked note already has a current score — nothing sent.';
   }
+  const cost = summary.costUsd < 0.0001 ? '<0.0001' : summary.costUsd.toFixed(4);
+  const lines = [
+    `Jev triage: ${summary.scored} note(s) scored in ${summary.passes} pass(es), ${summary.inputTokens} input tokens ≈ $${cost}.`,
+    `  > ${CONFIDENT_YES} likely knowledge: ${summary.bands.likely}`,
+    `  ${CONFIDENT_NO}–${CONFIDENT_YES} uncertain:      ${summary.bands.uncertain}`,
+    `  ≤ ${CONFIDENT_NO} unlikely:         ${summary.bands.unlikely}`,
+  ];
+  if (summary.failed > 0) lines.push(`  ${summary.failed} note(s) failed; ${summary.remaining} left unscored — rerun to retry.`);
   lines.push(`Key from ${summary.keySource === 'env' ? JEV_API_KEY_ENV : 'plugin settings'}. Scores saved to .knowlery/triage.json; knowlery stale, the MCP stale tool, and the dashboard now show this ranking.`);
   return lines.join('\n');
 }

@@ -127,6 +127,13 @@ function MoveDetailScreen(props: {
 
 function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?: unknown) => void }) {
   const plugin = usePlugin();
+  // The report is derived at render time; a Jev pass (or any other writer) announces
+  // itself with dashboard-refresh, so re-render on it rather than cache the report.
+  const [, setRefreshTick] = useState(0);
+  useEffect(() => {
+    const ref = plugin.events.on('dashboard-refresh', () => setRefreshTick((tick) => tick + 1));
+    return () => plugin.events.offref(ref);
+  }, [plugin]);
   const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
   const report: StalenessReport | null = snapshot ? computeStaleness(snapshot) : null;
 

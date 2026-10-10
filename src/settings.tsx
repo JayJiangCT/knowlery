@@ -470,7 +470,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
       render: (setting) => {
         setting.settingEl.addClass('knowlery-settings-jev-intro');
         const list = setting.descEl.createEl('ul', { cls: 'knowlery-settings-jev-intro__list' });
-        for (const key of ['settings.jev.intro.benefitRank', 'settings.jev.intro.benefitTarget', 'settings.jev.intro.benefitAgents', 'settings.jev.intro.benefitCost'] as const) {
+        for (const key of ['settings.jev.intro.benefitAgents', 'settings.jev.intro.benefitRank', 'settings.jev.intro.benefitTarget', 'settings.jev.intro.benefitCost'] as const) {
           list.createEl('li', { text: t(key) });
         }
         setting.descEl.createEl('p', { text: t('settings.jev.intro.privacy') });
