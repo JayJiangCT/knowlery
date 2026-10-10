@@ -22,8 +22,8 @@
 | Move drill-ins | 完整 suggested-move 列表和单个 move prompt |
 | Activity drill-in | 完整 recent activity 列表 |
 | Knowledge health drill-in | 过期页面、从未编译的笔记、悬空来源和 re-cook prompt；可选的 Jev 对未编译笔记排序 |
-| Settings: Diagnostics | Vault health、content stats、configuration integrity 和 diagnosis |
-| Settings: Rules & schema | Agent rules、schema shortcuts 和 config maintenance |
+| Settings: Diagnostics | Vault health、content stats、configuration integrity、diagnosis，以及 Indexing 区块里被跳过的目录列表（附原因） |
+| Settings: Rules & schema | Agent rules、schema shortcuts、config maintenance，以及参考目录 / 忽略目录两份列表 |
 | Settings: Skills | Built-in、registry、custom 和 disabled skill 管理 |
 
 ## 创建的文件和文件夹
@@ -52,6 +52,9 @@
 | `.knowlery/export-scope.json` | Share knowledge bundle | 按主题保存的 review scope |
 | `Library/<bundle-id>/` | Install knowledge bundle | 已安装 bundle 的内容 |
 | `.knowlery/bundles.json` | Install knowledge bundle | 已安装 bundle 的注册表 |
+| `.knowlery/bin/query.mjs` | 是，sync 时刷新 | 离线检索与过期报告脚本（`node .knowlery/bin/query.mjs`） |
+| `.knowlery/config.json` | 参考 / 忽略目录 | `referenceDirs`（可检索、永不列为未编译）与 `ignoreDirs`（永不扫描）；schemaVersion 1 |
+| `.knowlery/triage.json` | Jev cook 分诊 | 每条未编译笔记的 Jev 评分（路径、分数、建议目标页、mtime）；绝不含密钥或笔记正文 |
 
 ## Built-In Skills
 
@@ -125,6 +128,10 @@ Knowlery 不收集 telemetry。
 
 当你显式使用 skill registry 功能时，Knowlery 可能通过 `npx skills ...` 访问网络。这个命令可能连接外部 skills tooling 使用的服务。
 
+Jev cook 分诊（可选，在你于插件设置里填入 TypeSafe AI API 密钥之前一直关闭）会在给未编译笔记评分时调用 `api.typesafe.ai`：Rank 按钮、`knowlery triage`、`knowlery stale` / MCP `stale` 内部有上限的补评，或你主动打开的后台评分开关。每次请求携带一条笔记的路径、标题、frontmatter 和前 15 个非空行，以及最多五个候选编译页面的标题与描述——绝不发送完整正文。密钥只保存在 vault 配置目录下插件的 `data.json` 里（或从 shell 的 `TYPESAFE_API_KEY` 读取），永远不会写进 vault、`.knowlery/triage.json` 或注册表。检索从不调用 Jev。
+
+知识包的 install、publish、update 与 check-updates 会连接你指定的 URL 和 GitHub 仓库；私有访问走你自己的 `gh` 登录。
+
 ## Local Command Use
 
 当你显式使用 CLI 相关功能或可选 setup preparation 时，Knowlery 可以运行本地命令。
@@ -141,7 +148,7 @@ Knowlery 不收集 telemetry。
 
 ## 升级行为
 
-当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`，并在有已安装 bundles 时刷新 `KNOWLEDGE.md` 中的 installed-bundles 指引块。
+当插件版本变化时，Knowlery 会刷新 `.agents/skills/` 和 `.claude/skills/` 里的 bundled skills，通过插入缺失的 anchor sections 来迁移 `SCHEMA.md`，并在有已安装 bundles 时刷新 `KNOWLEDGE.md` 中的 installed-bundles 指引块。1.6.0 起，生成的 `.knowlery/bin/query.mjs` 还会在每次插件加载时按内容重新同步，所以同版本重载（例如原地替换一个 beta 构建）不会留下过期脚本；skills 仍然只在版本变化或 `knowlery sync` 时刷新。
 
 在 v0.5.0 中，knowledge bundle 的分享与安装上线：dashboard 的 Bundles 区块、`Library/` 文件夹和 `.knowlery/bundles.json` 是新增的表面。在 v0.4.0 中，dashboard maintenance 已移到 Obsidian settings：diagnostics、rules/schema shortcuts 和 Skills library 不再是单独的 dashboard tabs。
 

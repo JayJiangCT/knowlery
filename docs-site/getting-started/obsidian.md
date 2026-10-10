@@ -76,7 +76,7 @@ Knowlery creates the knowledge workspace and agent configuration in your vault:
 | `.claude/CLAUDE.md` | Entry file for Claude Code: `@../KNOWLEDGE.md`, Knowlery's operating rules, and one `@` import per rule (managed block); Claude-specific notes outside the block are kept |
 | `skills-lock.json` | Skill source, version, and disabled-state metadata |
 
-Normal use can also create private activity receipts, weekly summary reports, and daily review request/result files under `.knowlery/`.
+Normal use can also create private activity receipts, weekly summary reports, and daily review request/result files under `.knowlery/`, plus `.knowlery/config.json` when you name reference or ignored directories and `.knowlery/triage.json` when Jev cook triage scores never-compiled notes.
 
 ## Optional Tool Preparation
 

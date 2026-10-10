@@ -27,7 +27,7 @@ Cursor、Antigravity Desktop/CLI/IDE）见
 | --- | --- | --- |
 | `list_kbs` | — | 列出所有已注册知识库及其路径与实时状态 |
 | `query` | `kb`、`question`、`k?` | 确定性检索；`kb: "*"` 跨全部知识库联邦检索，逐条标注来源 |
-| `stale` | `kb` | 比来源更旧的编译页面，以及从未编译的笔记 |
+| `stale` | `kb` | 比来源更旧的编译页面，以及从未编译的笔记；配置了 Jev 密钥时，每条笔记可带可选的 `jev` 评分和建议目标页（1.6） |
 | `health` | `kb` | 工作区完整性检查 |
 | `list_bundles` | `kb` | 已安装的知识包及其来源信息 |
 | `init_kb` | `name`、`path`、`platform?` | 创建并注册一个新知识库——从对话中冷启动 |

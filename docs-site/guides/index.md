@@ -159,6 +159,11 @@ The dashboard's Knowledge health section is driven by the staleness report: comp
 
 The same report is available without Obsidian: `knowlery stale`, `obsidian knowlery:stale`, or the MCP `stale` tool.
 
+Two optional refinements keep the never-compiled list useful on a large vault:
+
+- **Reference and ignored directories** (Settings → Advanced → Rules & schema, or `knowlery reference` / `knowlery ignore`). Imported knowledge you read but never compile stays queryable without being listed as uncooked; folders that are not knowledge at all are not scanned. `node_modules/` and build output beside a project manifest are skipped automatically, and Diagnostics → Indexing lists every skipped directory with its reason.
+- **Jev ranking** (Settings → Jev cook triage, needs a TypeSafe AI key). **Rank N with Jev** in the drill-in scores each never-compiled note's likelihood of holding durable knowledge and suggests which compiled page it should update; the ranking is saved to `.knowlery/triage.json`, so `knowlery stale` and agents cooking from Codex, Claude Code or Cursor read the same order. It is a reading order, not a filter: low-confidence notes sink to the bottom but stay listed.
+
 ## Capture Reflection
 
 Use **Add reflection** from the command palette or dashboard when you want to capture a private summary of what happened in an agent session or a manual review.
