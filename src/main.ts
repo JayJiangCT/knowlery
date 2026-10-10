@@ -12,7 +12,7 @@ import { isVaultInitialized } from './core/setup-executor';
 import { syncAgentsMd } from './core/agents-md';
 import { syncClaudeMd } from './core/claude-md';
 import { migrateKnowledgeMdLegacyOperatingRules } from './core/knowledge-md-migration';
-import { runVaultSync } from './core/vault-sync';
+import { runVaultSync, syncQueryScriptIfCurrent } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
@@ -193,6 +193,10 @@ export default class KnowleryPlugin extends Plugin {
             this.settings.lastSyncedVersion = pluginVersion;
             await this.saveSettings();
           }
+        } else {
+          // Same version, possibly a different build (beta main.js swapped in place):
+          // the generated retrieval script follows the bundle, not the version.
+          await syncQueryScriptIfCurrent(this.fs, pluginVersion);
         }
 
         await this.maybeShowReleaseNotes(pluginVersion, previousSyncedVersion !== '');
@@ -217,10 +221,19 @@ export default class KnowleryPlugin extends Plugin {
       if (snapshot) {
         // Home renders a warming placeholder until the first build lands; refresh it then.
         void snapshot.build().then(() => this.events.trigger('dashboard-refresh'));
-        this.registerEvent(this.app.vault.on('create', (file) => snapshot.scheduleRefresh(file.path)));
+        this.registerEvent(this.app.vault.on('create', (file) => {
+          snapshot.scheduleRefresh(file.path);
+          void snapshot.handleMarkerChange(file.path);
+        }));
         this.registerEvent(this.app.vault.on('modify', (file) => snapshot.scheduleRefresh(file.path)));
-        this.registerEvent(this.app.vault.on('delete', (file) => snapshot.handleDelete(file.path)));
-        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => snapshot.handleRename(oldPath, file.path)));
+        this.registerEvent(this.app.vault.on('delete', (file) => {
+          snapshot.handleDelete(file.path);
+          void snapshot.handleMarkerChange(file.path);
+        }));
+        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
+          snapshot.handleRename(oldPath, file.path);
+          void snapshot.handleMarkerChange(oldPath).then(() => snapshot.handleMarkerChange(file.path));
+        }));
         // Bundle registry files are hidden, so vault events never fire for them; the
         // dashboard-refresh event fires after bundle install/uninstall.
         this.events.on('dashboard-refresh', () => void snapshot.refreshBundles());

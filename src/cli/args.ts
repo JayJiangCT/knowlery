@@ -22,6 +22,8 @@ Usage:
   knowlery index  [--dir <path> | --kb <name>] [--json]   # orientation map (live view)
   knowlery reference list [--json] | reference add <dir> | reference remove <dir>
                      [--dir <path> | --kb <name>]   # read-only dirs: queryable, never uncooked
+  knowlery ignore list [--json] | ignore add <dir> | ignore remove <dir>
+                     [--dir <path> | --kb <name>]   # dirs excluded from indexing entirely
   knowlery bundle install <zip-or-folder-or-url> [--dir <path>] [--verify <sha256>]
                           [--force] [--skip-conformance] [--acknowledge-risks]
   knowlery bundle list      [--dir <path>] [--json]
@@ -85,6 +87,7 @@ export const POSITIONAL_LIMITS: Record<string, number> = {
   stale: 0,
   index: 0,
   reference: 2,
+  ignore: 2,
   bundle: 2,
 };
 

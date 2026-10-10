@@ -60,6 +60,7 @@ const INVERTED_MODULES = [
   'core/jev/client.ts',
   'core/jev/triage.ts',
   'core/query/scan.ts',
+  'core/query/exclusions.ts',
   'core/query/tokenize.ts',
   'core/query/format.ts',
   'core/query/staleness.ts',

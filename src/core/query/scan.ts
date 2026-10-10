@@ -2,6 +2,13 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, basename } from 'node:path';
 import matter from 'gray-matter';
 import { CONFIG_PATH, parseConfig } from '../reference-config';
+import {
+  PROJECT_MARKERS,
+  ignoreReasonForDir,
+  isHiddenName,
+  type ExclusionContext,
+  type IgnoredDir,
+} from './exclusions';
 
 /**
  * Live vault scanner for the deterministic retrieval engine (spec f2, §5.1 step 1).
@@ -72,36 +79,47 @@ export interface VaultSnapshot {
    * and queryable like any user note, never listed as uncooked. Absent means none.
    */
   referenceDirs?: string[];
-  /** Set when `.knowlery/config.json` could not be parsed; reference dirs are then treated as none. */
+  /** Directories the user excluded from indexing (`.knowlery/config.json` `ignoreDirs`), as configured. */
+  ignoreDirs?: string[];
+  /** Set when `.knowlery/config.json` could not be parsed; both directory lists are then treated as empty. */
   referenceConfigError?: string;
+  /**
+   * Directories the scan skipped on purpose (see query/exclusions.ts), outermost only.
+   * Hidden directories are not listed. Surfaces: `knowlery health`, Diagnostics.
+   */
+  ignoredDirs?: IgnoredDir[];
 }
 
 export function scanVault(root: string): VaultSnapshot {
+  const config = loadConfig(root);
+  const walk = walkMarkdown(root, { projectRoots: new Set<string>(), ignoreDirs: config.ignoreDirs });
   const pages: ScannedPage[] = [];
-  for (const file of walkMarkdown(root)) {
+  for (const file of walk.files) {
     const path = relative(root, file).split('\\').join('/');
     if (SYSTEM_FILES.has(path)) continue;
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }
-  const reference = loadReferenceDirs(root);
   return {
     root,
     pages,
     bundleEntries: loadBundleEntries(root),
-    referenceDirs: reference.referenceDirs,
-    ...(reference.error ? { referenceConfigError: reference.error } : {}),
+    referenceDirs: config.referenceDirs,
+    ignoreDirs: config.ignoreDirs,
+    ...(config.error ? { referenceConfigError: config.error } : {}),
+    ignoredDirs: walk.ignored,
   };
 }
 
-/** Malformed config degrades to "no reference dirs" here, with the error carried on the snapshot for surfaces to show. */
-function loadReferenceDirs(root: string): { referenceDirs: string[]; error?: string } {
+/** Malformed config degrades to empty lists here, with the error carried on the snapshot for surfaces to show. */
+function loadConfig(root: string): { referenceDirs: string[]; ignoreDirs: string[]; error?: string } {
   const configPath = join(root, CONFIG_PATH);
-  if (!existsSync(configPath)) return { referenceDirs: [] };
+  if (!existsSync(configPath)) return { referenceDirs: [], ignoreDirs: [] };
   try {
-    return { referenceDirs: parseConfig(readFileSync(configPath, 'utf8')).referenceDirs };
+    const config = parseConfig(readFileSync(configPath, 'utf8'));
+    return { referenceDirs: config.referenceDirs, ignoreDirs: config.ignoreDirs };
   } catch (error) {
-    return { referenceDirs: [], error: error instanceof Error ? error.message : String(error) };
+    return { referenceDirs: [], ignoreDirs: [], error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -223,28 +241,47 @@ export function bundleEntriesFromIndex(
   return entries;
 }
 
-function* walkMarkdown(dir: string): Generator<string> {
-  let names: string[];
-  try {
-    names = readdirSync(dir).sort();
-  } catch {
-    return;
-  }
-  for (const name of names) {
-    const full = join(dir, name);
-    let stats;
+/**
+ * Walks the vault, collecting Markdown files and the directories skipped by the
+ * exclusion rules. Project roots are discovered from each directory's own listing on
+ * the way down, so a `dist/` is judged against the `package.json` beside it with no
+ * extra I/O. `context.projectRoots` must be a mutable Set owned by the caller.
+ */
+function walkMarkdown(root: string, context: ExclusionContext & { projectRoots: Set<string> }): { files: string[]; ignored: IgnoredDir[] } {
+  const files: string[] = [];
+  const ignored: IgnoredDir[] = [];
+  const visit = (dir: string, relDir: string): void => {
+    let names: string[];
     try {
-      stats = statSync(full);
+      names = readdirSync(dir).sort();
     } catch {
-      continue;
+      return;
     }
-    if (stats.isDirectory()) {
-      if (name.startsWith('.')) continue; // .obsidian, .knowlery, .claude, .agents, ...
-      yield* walkMarkdown(full);
-    } else if (name.endsWith('.md')) {
-      yield full;
+    if (names.some((name) => PROJECT_MARKERS.has(name))) context.projectRoots.add(relDir);
+    for (const name of names) {
+      const full = join(dir, name);
+      let stats;
+      try {
+        stats = statSync(full);
+      } catch {
+        continue;
+      }
+      if (stats.isDirectory()) {
+        if (isHiddenName(name)) continue; // .obsidian, .knowlery, .claude, .agents, ...
+        const relPath = relDir === '' ? name : `${relDir}/${name}`;
+        const reason = ignoreReasonForDir(relPath, context);
+        if (reason) {
+          ignored.push({ path: relPath, reason });
+          continue;
+        }
+        visit(full, relPath);
+      } else if (name.endsWith('.md')) {
+        files.push(full);
+      }
     }
-  }
+  };
+  visit(root, '');
+  return { files, ignored };
 }
 
 export function fieldText(text: string): FieldText {

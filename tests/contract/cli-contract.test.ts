@@ -32,6 +32,7 @@ describe('commands and arities are 1.0-frozen', () => {
       stale: 0,
       index: 0,  // added 1.2.0 — additive, sanctioned (spec 1.2 f1, §4.4)
       reference: 2,  // added 1.6.0 — additive (reference directories)
+      ignore: 2,  // added 1.6.0 — additive (ignored directories)
       bundle: 2,
     });
   });
@@ -124,10 +125,11 @@ describe('--json key sets are 1.0-frozen', () => {
     expect(Object.keys(jsonOf(stale)).sort()).toEqual(['danglingSources', 'stalePages', 'uncookedNotes']);
 
     const health = await buildHealthReport(nodeVaultFs(root), root);
-    expect(Object.keys(health).sort()).toEqual(['config', 'healthy', 'knowledgePages']);
+    // `skipped` added 1.6.0 — additive (skipped-directory report)
+    expect(Object.keys(health).sort()).toEqual(['config', 'healthy', 'knowledgePages', 'skipped']);
     const healthLines: string[] = [];
     await runHealth(nodeVaultFs(root), { root, json: true, log: (l) => healthLines.push(l) });
-    expect(Object.keys(jsonOf(healthLines)).sort()).toEqual(['config', 'healthy', 'knowledgePages']);
+    expect(Object.keys(jsonOf(healthLines)).sort()).toEqual(['config', 'healthy', 'knowledgePages', 'skipped']);
 
     const kbList: string[] = [];
     await runKbCommand({ sub: 'list', json: true, log: (l) => kbList.push(l) });

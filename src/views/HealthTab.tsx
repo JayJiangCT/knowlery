@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePlugin, useSettings } from '../context';
 import type { VaultStats, DiagnosisResult, ConfigIntegrity, DashboardRefreshPayload } from '../types';
 import { getVaultStats, runDiagnosis, checkConfigIntegrity } from '../core/vault-health';
+import type { IgnoredDir, IgnoreReason } from '../core/query/exclusions';
 import {
   IconChevronRight,
   IconChevronDown,
@@ -111,6 +112,12 @@ function IntegrityRow(props: {
 /*  HealthTab                                                          */
 /* ------------------------------------------------------------------ */
 
+const SKIP_REASON_KEY: Record<IgnoreReason, 'health.skipReason.builtin' | 'health.skipReason.projectOutput' | 'health.skipReason.config'> = {
+  'builtin': 'health.skipReason.builtin',
+  'project-output': 'health.skipReason.projectOutput',
+  'config': 'health.skipReason.config',
+};
+
 export function HealthTab() {
   const plugin = usePlugin();
   const [settings] = useSettings();
@@ -120,10 +127,15 @@ export function HealthTab() {
   const [diagnosisRunning, setDiagnosisRunning] = useState(false);
   const [diagnosisTime, setDiagnosisTime] = useState<Date | null>(null);
   const [integrity, setIntegrity] = useState<ConfigIntegrity | null>(null);
+  const [skippedDirs, setSkippedDirs] = useState<IgnoredDir[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   const loadStats = useCallback(() => {
     const s = getVaultStats(plugin.app);
     setStats(s);
+    // Same list `knowlery health` prints: every non-hidden directory retrieval never sees.
+    setSkippedDirs(plugin.liveSnapshot?.ignoredDirs() ?? []);
+    setConfigError(plugin.liveSnapshot?.configError() ?? null);
   }, [plugin]);
 
   const loadIntegrity = useCallback(async (payload?: DashboardRefreshPayload) => {
@@ -260,7 +272,27 @@ export function HealthTab() {
         </div>
       )}
 
-      {/* 2. Content Stats */}
+      {/* 2. Indexing — what retrieval and the staleness report never see */}
+      <div className="knowlery-section-label">
+        <span>{t('health.indexing')}</span>
+      </div>
+      <p className="knowlery-health__hint">{t('health.skippedDirsHint')}</p>
+      {configError && (
+        <div className="knowlery-health__integrity-card is-loaded">
+          <IntegrityRow
+            state="warn"
+            label={t('health.configFile')}
+            detail={t('home.health.configWarning', { error: configError })}
+          />
+        </div>
+      )}
+      <ExpandableList
+        title={t('health.skippedDirs')}
+        items={skippedDirs.map((entry) => `${entry.path}/ — ${t(SKIP_REASON_KEY[entry.reason])}`)}
+        defaultOpen={skippedDirs.length > 0}
+      />
+
+      {/* 3. Content Stats */}
       <div className="knowlery-section-label">
         <span>{t('health.content')}</span>
       </div>
@@ -275,7 +307,7 @@ export function HealthTab() {
         </div>
       )}
 
-      {/* 3. Structure */}
+      {/* 4. Structure */}
       <div className="knowlery-section-label">
         <span>{t('health.structure')}</span>
       </div>

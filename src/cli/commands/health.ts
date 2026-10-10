@@ -1,6 +1,7 @@
 import type { VaultFs } from '../../core/vault-fs';
 import { checkVaultConfigFiles } from '../../core/vault-config-health';
 import { scanVault, AGENT_DIRS } from '../../core/query/scan';
+import type { IgnoredDir, IgnoreReason } from '../../core/query/exclusions';
 import { CliError, resolvePlatform } from './shared';
 
 export interface HealthOptions {
@@ -10,9 +11,25 @@ export interface HealthOptions {
   log: (line: string) => void;
 }
 
+/**
+ * What the scanner left out and why (added 1.6.0). Informational: none of it
+ * affects `healthy`, because skipping `node_modules/` is the point, not a fault.
+ */
+export interface SkippedReport {
+  /** Directories excluded from indexing, outermost only; hidden directories are not listed. */
+  dirs: IgnoredDir[];
+  /** Configured reference directories that no longer exist on disk. */
+  missingReferenceDirs: string[];
+  /** Configured ignored directories that no longer exist on disk. */
+  missingIgnoreDirs: string[];
+  /** Set when `.knowlery/config.json` is malformed; both directory lists were treated as empty. */
+  configError?: string;
+}
+
 export interface HealthReport {
   config: Awaited<ReturnType<typeof checkVaultConfigFiles>>;
   knowledgePages: Record<string, number>;
+  skipped: SkippedReport;
   healthy: boolean;
 }
 
@@ -21,13 +38,26 @@ export interface HealthReport {
 export async function buildHealthReport(fs: VaultFs, root: string): Promise<HealthReport> {
   const config = await checkVaultConfigFiles(fs, await resolvePlatform(fs));
 
+  const snapshot = scanVault(root);
   const knowledgePages: Record<string, number> = {};
   for (const dir of AGENT_DIRS) knowledgePages[dir] = 0;
-  for (const page of scanVault(root).pages) {
+  for (const page of snapshot.pages) {
     if (page.tier !== 'agent') continue;
     const dir = page.path.split('/')[0];
     knowledgePages[dir] = (knowledgePages[dir] ?? 0) + 1;
   }
+
+  const missing = async (dirs: readonly string[]): Promise<string[]> => {
+    const gone: string[] = [];
+    for (const dir of dirs) if (!(await fs.exists(dir))) gone.push(dir);
+    return gone;
+  };
+  const skipped: SkippedReport = {
+    dirs: snapshot.ignoredDirs ?? [],
+    missingReferenceDirs: await missing(snapshot.referenceDirs ?? []),
+    missingIgnoreDirs: await missing(snapshot.ignoreDirs ?? []),
+    ...(snapshot.referenceConfigError ? { configError: snapshot.referenceConfigError } : {}),
+  };
 
   const healthy =
     config.knowledgeMdExists &&
@@ -39,7 +69,7 @@ export async function buildHealthReport(fs: VaultFs, root: string): Promise<Heal
     config.rulesConfigured &&
     config.skillsComplete.missing.length === 0;
 
-  return { config, knowledgePages, healthy };
+  return { config, knowledgePages, skipped, healthy };
 }
 
 export async function runHealth(fs: VaultFs, options: HealthOptions): Promise<void> {
@@ -90,5 +120,36 @@ function renderReport(report: HealthReport, log: (line: string) => void): void {
   log('Knowledge pages:');
   for (const [dir, count] of Object.entries(report.knowledgePages)) {
     log(`  ${String(count).padStart(4)}  ${dir}/`);
+  }
+
+  renderSkipped(report.skipped, log);
+}
+
+const REASON_LABEL: Record<IgnoreReason, string> = {
+  'builtin': 'always skipped',
+  'project-output': 'build output beside a project manifest',
+  'config': '.knowlery/config.json ignoreDirs',
+};
+
+/**
+ * Every non-hidden directory the scanner left out is listed, so a real notes folder
+ * that happens to be called `build/` next to a `package.json` is one `knowlery health`
+ * away from being noticed rather than silently missing from retrieval.
+ */
+function renderSkipped(skipped: SkippedReport, log: (line: string) => void): void {
+  if (skipped.configError) {
+    log(`  WARNING  ${skipped.configError} — reference and ignored directories are treated as empty until it is fixed`);
+  }
+  if (skipped.dirs.length > 0) {
+    log('Skipped directories (not indexed):');
+    for (const entry of skipped.dirs) {
+      log(`  ${entry.path}/ — ${REASON_LABEL[entry.reason]}`);
+    }
+  }
+  for (const dir of skipped.missingReferenceDirs) {
+    log(`  WARNING  reference directory ${dir}/ is configured but does not exist — run \`knowlery reference remove ${dir}\``);
+  }
+  for (const dir of skipped.missingIgnoreDirs) {
+    log(`  WARNING  ignored directory ${dir}/ is configured but does not exist — run \`knowlery ignore remove ${dir}\``);
   }
 }

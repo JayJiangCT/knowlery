@@ -192,7 +192,7 @@ export const en = {
   'screens.allCited': 'Every user note is cited by a compiled page.',
   'screens.danglingSources': 'Dangling sources ({count})',
   'screens.citesMissing': 'cites missing note: {path}',
-  'home.health.configWarning': 'Reference directories are off until .knowlery/config.json is fixed: {error}',
+  'home.health.configWarning': 'Reference and ignored directories are off until .knowlery/config.json is fixed: {error}',
 
   // Dashboard — Jev triage (optional)
   'jev.hint.noKey': 'Add a Jev API key to rank these notes by compile-worthiness.',
@@ -252,6 +252,13 @@ export const en = {
   'health.orphanNotes': 'Orphan notes',
   'health.brokenWikilinks': 'Broken wikilinks',
   'health.missingFrontmatter': 'Missing frontmatter',
+  'health.indexing': 'Indexing',
+  'health.skippedDirsHint': 'Directories retrieval and the staleness report never see. A real notes folder listed here can be rescued: move or rename it, or remove it from the ignored directories if you added it. Hidden folders are not listed.',
+  'health.configFile': '.knowlery/config.json',
+  'health.skippedDirs': 'Skipped directories',
+  'health.skipReason.builtin': 'always skipped',
+  'health.skipReason.projectOutput': 'build output beside a project manifest',
+  'health.skipReason.config': 'ignored in .knowlery/config.json',
 
   // Settings — Rules & schema (ConfigTab)
   'config.schemaGuidance': 'Schema & Guidance',
@@ -270,11 +277,20 @@ export const en = {
   'config.referenceDirsHint': 'Imported knowledge you read but never compile: stays queryable, never listed as uncooked.',
   'config.addReferenceDir': 'Add reference directory',
   'config.chooseReferenceDir': 'Choose a vault folder…',
+  'config.referenceDirNote': '{count} note',
   'config.referenceDirNotes': '{count} notes',
   'config.removeReferenceDir': 'Remove {dir} from reference directories',
   'config.referenceDirAdded': 'Marked {dir}/ as reference material',
   'config.referenceDirRemoved': 'Removed {dir}/ from reference directories',
   'config.noReferenceDirs': 'No reference directories.',
+  'config.ignoreDirs': 'Ignored directories ({count})',
+  'config.ignoreDirsHint': 'Not knowledge at all (generated output, archives): never scanned, so invisible to retrieval and to the staleness report. node_modules/ and build output beside a project manifest are skipped automatically — see Diagnostics.',
+  'config.addIgnoreDir': 'Add ignored directory',
+  'config.chooseIgnoreDir': 'Choose a vault folder to ignore…',
+  'config.removeIgnoreDir': 'Remove {dir} from ignored directories',
+  'config.ignoreDirAdded': 'Ignoring {dir}/ from now on',
+  'config.ignoreDirRemoved': 'Indexing {dir}/ again',
+  'config.noIgnoreDirs': 'No ignored directories.',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': 'Knowledge',

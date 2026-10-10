@@ -1012,11 +1012,13 @@
   background: var(--background-modifier-hover);
 }
 
-.knowlery-home__health-warning {
+.knowlery-home__health-warning,
+.knowlery-config__warning {
   color: var(--text-warning);
 }
 
-.knowlery-config__hint {
+.knowlery-config__hint,
+.knowlery-health__hint {
   font-size: var(--knowlery-meta-size);
   color: var(--text-muted);
   margin: 0 0 var(--knowlery-space-sm);
