@@ -134,33 +134,54 @@ describe('triage store file contract', () => {
 });
 
 describe('mtime precision across shells', () => {
-  it('matches whole-millisecond entries (Obsidian file.stat.mtime) against fractional mtimes (node statSync) and vice versa', () => {
-    const fractional = { path: 'notes/a.md', mtimeMs: 1791619688991.1772 };
-    const whole = { path: 'notes/a.md', mtimeMs: 1791619688991 };
-    const writtenByPlugin = recordScores(emptyTriageStore(JEV_MODEL), [{ ...whole, worth: 0.9, target: null }], [whole as UncookedNote]);
-    expect(currentEntry(writtenByPlugin, fractional)).not.toBeNull();
+  // node statSync on APFS: fractional. Obsidian file.stat.mtime: the same instant, rounded.
+  const cases = [
+    { fs: 1783090433413.4277, obsidian: 1783090433413 },
+    { fs: 1783090433413.5247, obsidian: 1783090433414 }, // rounds up — the half Math.floor got wrong
+    { fs: 1783090433413.6033, obsidian: 1783090433414 },
+    { fs: 1783090433413.9999, obsidian: 1783090433414 },
+  ];
 
-    const writtenByCli = recordScores(emptyTriageStore(JEV_MODEL), [{ ...fractional, worth: 0.9, target: null }], [fractional as UncookedNote]);
-    expect(writtenByCli.entries['notes/a.md'].mtimeMs).toBe(1791619688991);
-    expect(currentEntry(writtenByCli, whole)).not.toBeNull();
+  it('entries written by either shell are current for the other, for every fractional part', () => {
+    for (const { fs: fsMtime, obsidian } of cases) {
+      const byPlugin = recordScores(emptyTriageStore(JEV_MODEL), [{ path: 'n.md', mtimeMs: obsidian, worth: 0.9, target: null }], [{ path: 'n.md', mtimeMs: obsidian } as UncookedNote]);
+      expect(currentEntry(byPlugin, { path: 'n.md', mtimeMs: fsMtime }), `plugin→cli ${fsMtime}`).not.toBeNull();
 
-    // Pruning uses the same key: a plugin-written entry survives a CLI write and the reverse.
-    const merged = recordScores(writtenByPlugin, [], [fractional as UncookedNote]);
-    expect(Object.keys(merged.entries)).toEqual(['notes/a.md']);
+      const byCli = recordScores(emptyTriageStore(JEV_MODEL), [{ path: 'n.md', mtimeMs: fsMtime, worth: 0.9, target: null }], [{ path: 'n.md', mtimeMs: fsMtime } as UncookedNote]);
+      expect(byCli.entries['n.md'].mtimeMs).toBe(obsidian); // stored the way Obsidian reports it
+      expect(currentEntry(byCli, { path: 'n.md', mtimeMs: obsidian }), `cli→plugin ${fsMtime}`).not.toBeNull();
 
-    // A file written before normalization still parses to the shared precision.
-    const legacy = parseTriageStore(JSON.stringify({
-      schemaVersion: 1, model: JEV_MODEL,
-      entries: { 'notes/a.md': { mtimeMs: 1791619688991.1772, worth: 0.5, target: null, scoredAt: '' } },
-    }), JEV_MODEL);
-    expect(currentEntry(legacy, whole)).not.toBeNull();
-
-    // A genuinely different mtime still misses.
-    expect(currentEntry(writtenByPlugin, { path: 'notes/a.md', mtimeMs: 1791619688992 })).toBeNull();
+      // Pruning uses the same comparison: a plugin-written entry survives a CLI write and the reverse.
+      expect(Object.keys(recordScores(byPlugin, [], [{ path: 'n.md', mtimeMs: fsMtime } as UncookedNote]).entries)).toEqual(['n.md']);
+      expect(Object.keys(recordScores(byCli, [], [{ path: 'n.md', mtimeMs: obsidian } as UncookedNote]).entries)).toEqual(['n.md']);
+    }
   });
 
-  it('the fs scanner itself reports whole milliseconds, so CLI and plugin JSON agree', () => {
-    for (const page of scanVault(root).pages) expect(Number.isInteger(page.mtimeMs)).toBe(true);
+  it('reads files written before normalisation (fractional, or floored) as current', () => {
+    for (const legacyMtime of [1783090433413.6033, 1783090433413 /* floored by the first fix */]) {
+      const legacy = parseTriageStore(JSON.stringify({
+        schemaVersion: 1, model: JEV_MODEL,
+        entries: { 'n.md': { mtimeMs: legacyMtime, worth: 0.5, target: null, scoredAt: '' } },
+      }), JEV_MODEL);
+      expect(currentEntry(legacy, { path: 'n.md', mtimeMs: 1783090433413.6033 }), `legacy ${legacyMtime} vs fs`).not.toBeNull();
+    }
+    // A floored legacy value against Obsidian's rounded-up value is exactly 1 ms apart: the one case
+    // we accept re-scoring, since no released build ever wrote floored values.
+  });
+
+  it('a genuinely different mtime still misses', () => {
+    const store = recordScores(emptyTriageStore(JEV_MODEL), [{ path: 'n.md', mtimeMs: 1783090433413, worth: 0.9, target: null }], [{ path: 'n.md', mtimeMs: 1783090433413 } as UncookedNote]);
+    expect(currentEntry(store, { path: 'n.md', mtimeMs: 1783090433415 })).toBeNull();
+    expect(currentEntry(store, { path: 'n.md', mtimeMs: 1783090433412 })).toBeNull();
+  });
+
+  it('the fs scanner itself reports rounded whole milliseconds, so CLI and plugin JSON agree', () => {
+    write('notes/frac.md', NOTE('Frac'), 1783090433413.6033);
+    const page = scanVault(root).pages.find((p) => p.path === 'notes/frac.md');
+    expect(page).toBeDefined();
+    expect(Number.isInteger(page!.mtimeMs)).toBe(true);
+    // utimes may truncate sub-ms precision on some filesystems; whichever it kept, we round it.
+    expect(Math.abs(page!.mtimeMs - 1783090433413.6033) < 1).toBe(true);
   });
 });
 

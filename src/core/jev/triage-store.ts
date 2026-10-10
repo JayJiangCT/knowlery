@@ -79,11 +79,18 @@ export function parseTriageStore(raw: string | null | undefined, model: string):
 
 /**
  * The cache key must agree across producers: node's `statSync().mtimeMs` carries a
- * fractional part (1791619688991.1772) while Obsidian's `file.stat.mtime` is whole
- * milliseconds (1791619688991). Whole milliseconds is the shared precision.
+ * fractional part (1791619688991.5247) while Obsidian's `file.stat.mtime` is the same
+ * instant rounded to whole milliseconds (1791619688992). Values are stored rounded the
+ * way Obsidian rounds, and compared with a sub-millisecond tolerance so that neither
+ * side's rounding convention — nor a file written before this normalisation — can
+ * make the two shells disagree about whether a note is already scored.
  */
 export function triageMtime(mtimeMs: number): number {
-  return Math.floor(mtimeMs);
+  return Math.round(mtimeMs);
+}
+
+export function sameMtime(a: number, b: number): boolean {
+  return Math.abs(a - b) < 1;
 }
 
 function parseEntry(value: unknown): TriageEntry | null {
@@ -128,7 +135,7 @@ export async function writeTriageStore(fs: VaultFs, store: TriageStore): Promise
 /** The entry for a note, if it was scored at the note's current mtime. */
 export function currentEntry(store: TriageStore, note: Pick<UncookedNote, 'path' | 'mtimeMs'>): TriageEntry | null {
   const entry = store.entries[note.path];
-  return entry && entry.mtimeMs === triageMtime(note.mtimeMs) ? entry : null;
+  return entry && sameMtime(entry.mtimeMs, note.mtimeMs) ? entry : null;
 }
 
 /** Uncooked notes with no current score — what a producer should send to Jev. */
@@ -154,9 +161,10 @@ export function recordScores(
   now: Date = new Date(),
 ): TriageStore {
   const entries: Record<string, TriageEntry> = {};
-  const live = new Map(uncooked.map((note) => [note.path, triageMtime(note.mtimeMs)]));
+  const live = new Map(uncooked.map((note) => [note.path, note.mtimeMs]));
   for (const [path, entry] of Object.entries(store.entries)) {
-    if (live.get(path) === triageMtime(entry.mtimeMs)) entries[path] = entry;
+    const liveMtime = live.get(path);
+    if (liveMtime !== undefined && sameMtime(liveMtime, entry.mtimeMs)) entries[path] = entry;
   }
   const scoredAt = now.toISOString();
   for (const score of scores) {

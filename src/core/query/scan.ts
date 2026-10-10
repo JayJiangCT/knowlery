@@ -147,8 +147,9 @@ function loadPage(file: string, path: string): ScannedPage | null {
   let mtimeMs: number;
   try {
     raw = readFileSync(file, 'utf8');
-    // Whole milliseconds, like Obsidian's `file.stat.mtime`, so both transports agree.
-    mtimeMs = Math.floor(statSync(file).mtimeMs);
+    // Rounded to whole milliseconds exactly as Obsidian's `file.stat.mtime` is, so both
+    // transports report the same value for the same file.
+    mtimeMs = Math.round(statSync(file).mtimeMs);
   } catch {
     return null;
   }

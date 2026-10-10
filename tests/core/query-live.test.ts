@@ -96,7 +96,8 @@ describe('transport parity (spec f5, §5.1/§5.2)', () => {
     const livePage = buildPageFromContent(
       path,
       readFileSync(join(FIXTURE_VAULT, path), 'utf8'),
-      statSync(join(FIXTURE_VAULT, path)).mtimeMs,
+      // Obsidian's file.stat.mtime is whole milliseconds; node's statSync is fractional on APFS.
+      Math.round(statSync(join(FIXTURE_VAULT, path)).mtimeMs),
     );
     expect(livePage).toEqual(fsPage);
   });
