@@ -135,6 +135,10 @@ const DIR_LIST_TEXT: Record<DirListKind, DirListText> = {
   },
 };
 
+function notesCountLabel(count: number): string {
+  return t(count === 1 ? 'config.referenceDirNote' : 'config.referenceDirNotes', { count });
+}
+
 function DirListSection(props: {
   kind: DirListKind;
   dirs: string[];
@@ -194,7 +198,7 @@ function DirListSection(props: {
             <span className="knowlery-config__file-row-icon"><IconFolder size={16} /></span>
             <span className="knowlery-config__file-row-label">{dir}/</span>
             <span className="knowlery-config__ref-count">
-              {t('config.referenceDirNotes', { count: notesUnder(dir) })}
+              {notesCountLabel(notesUnder(dir))}
             </span>
             <button
               type="button"
@@ -222,15 +226,19 @@ export function ConfigTab() {
   const plugin = usePlugin();
   const [rules, setRules] = useState<RuleInfo[]>([]);
   const [config, setConfig] = useState(emptyConfig());
+  const [configError, setConfigError] = useState<string | null>(null);
 
   const refreshRules = useCallback(async (payload?: DashboardRefreshPayload) => {
     const result = await listRules(plugin.fs);
     setRules(result);
     try {
       setConfig(await readConfig(plugin.fs));
+      setConfigError(null);
     } catch (error) {
-      // Malformed .knowlery/config.json: say so once rather than hide the section.
-      new Notice(error instanceof Error ? error.message : String(error));
+      // Malformed .knowlery/config.json: both lists render empty, so the warning has to
+      // stay on screen — "(0)" alone is indistinguishable from "never configured".
+      setConfig(emptyConfig());
+      setConfigError(error instanceof Error ? error.message : String(error));
     }
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
@@ -308,6 +316,11 @@ export function ConfigTab() {
         </button>
       </div>
 
+      {configError && (
+        <p className="knowlery-config__hint knowlery-config__warning">
+          {t('home.health.configWarning', { error: configError })}
+        </p>
+      )}
       <DirListSection kind="referenceDirs" dirs={config.referenceDirs} taken={taken} />
       <DirListSection kind="ignoreDirs" dirs={config.ignoreDirs} taken={taken} />
 

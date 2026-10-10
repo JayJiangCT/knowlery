@@ -97,6 +97,11 @@ export class LiveQuerySnapshot {
     return listIgnoredDirs(folders.map((folder) => folder.path), this.exclusions());
   }
 
+  /** Why `.knowlery/config.json` could not be read, while both directory lists are treated as empty. */
+  configError(): string | null {
+    return this.referenceConfigError;
+  }
+
   async build(): Promise<void> {
     // Config (ignoreDirs) and project roots must be known before the first file is
     // judged, so they load ahead of the page walk.
