@@ -53,17 +53,17 @@ describe('knowlery query (spec 0.7 f3, §5.1)', () => {
 });
 
 describe('knowlery stale (spec 0.7 f3, §5.2)', () => {
-  it('is byte-identical to the staleness module + shared renderer', () => {
+  it('is byte-identical to the staleness module + shared renderer', async () => {
     const { log, output } = capture();
-    runStaleCommand(FIXTURE_VAULT, { log });
+    await runStaleCommand(FIXTURE_VAULT, { log });
 
     const direct = formatStalenessReport(computeStaleness(scanVault(FIXTURE_VAULT))).trimEnd();
     expect(output()).toBe(direct);
   });
 
-  it('emits parseable json', () => {
+  it('emits parseable json', async () => {
     const { log, output } = capture();
-    runStaleCommand(FIXTURE_VAULT, { json: true, log });
+    await runStaleCommand(FIXTURE_VAULT, { json: true, log });
     const parsed = JSON.parse(output()) as { verdict: string; candidates: unknown[] };
     expect(parsed).toHaveProperty('stalePages');
     expect(parsed).toHaveProperty('uncookedNotes');

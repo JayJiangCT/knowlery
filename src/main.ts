@@ -16,7 +16,7 @@ import { runVaultSync } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
-import type { TriageScore } from './core/jev/triage';
+import { JevBackgroundScorer } from './jev-scorer';
 import {
   QUERY_CLI_COMMAND,
   QUERY_CLI_DESCRIPTION,
@@ -50,8 +50,8 @@ export default class KnowleryPlugin extends Plugin {
   settings: KnowlerySettings = DEFAULT_SETTINGS;
   events = new Events();
   liveSnapshot: LiveQuerySnapshot | null = null;
-  /** Session-only Jev scores keyed by note path@mtime; never persisted (spec: Jev is opt-in and stateless). */
-  jevTriageCache = new Map<string, TriageScore>();
+  /** Writes `.knowlery/triage.json` for every transport when the user opts in to automatic Jev scoring. */
+  jevScorer = new JevBackgroundScorer(this);
   /** Obsidian-shell VaultFs, shared with core lifecycle modules (spec 0.7 f1). */
   fs: VaultFs = obsidianVaultFs(this.app);
 
@@ -216,12 +216,19 @@ export default class KnowleryPlugin extends Plugin {
       const snapshot = this.liveSnapshot;
       if (snapshot) {
         // Home renders a warming placeholder until the first build lands; refresh it then.
-        void snapshot.build().then(() => this.events.trigger('dashboard-refresh'));
+        void snapshot.build().then(() => {
+          this.events.trigger('dashboard-refresh');
+          this.jevScorer.schedule();
+        });
         this.registerEvent(this.app.vault.on('create', (file) => {
           snapshot.scheduleRefresh(file.path);
           void snapshot.handleMarkerChange(file.path);
+          if (file.path.endsWith('.md')) this.jevScorer.schedule();
         }));
-        this.registerEvent(this.app.vault.on('modify', (file) => snapshot.scheduleRefresh(file.path)));
+        this.registerEvent(this.app.vault.on('modify', (file) => {
+          snapshot.scheduleRefresh(file.path);
+          if (file.path.endsWith('.md')) this.jevScorer.schedule();
+        }));
         this.registerEvent(this.app.vault.on('delete', (file) => {
           snapshot.handleDelete(file.path);
           void snapshot.handleMarkerChange(file.path);
@@ -263,6 +270,10 @@ export default class KnowleryPlugin extends Plugin {
     } catch {
       // Older or changed CLI hosts — the headless query.mjs transport remains available.
     }
+  }
+
+  onunload() {
+    this.jevScorer.cancel();
   }
 
   async loadSettings() {

@@ -5,7 +5,7 @@ import { getRecipeBook } from '../core/moves';
 import { readRecentActivityRecords } from '../core/activity-ledger';
 import { buildRecookPrompt, computeStaleness, type StalenessReport } from '../core/query/staleness';
 import { sendPromptToAgent, copyPrompt } from './request-actions';
-import { JevTriagePanel } from './JevTriagePanel';
+import { JevScore, JevTarget, JevTriagePanel } from './JevTriagePanel';
 import { IconChevronLeft, IconChevronRight, IconClipboard } from './Icons';
 import { t } from '../i18n';
 
@@ -175,12 +175,16 @@ function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?:
               <p className="knowlery-screen__empty">{t('screens.allCited')}</p>
             ) : (
               <JevTriagePanel
-                uncooked={report.uncookedNotes}
-                renderPlainList={() => (
+                report={report}
+                renderList={() => (
                   <>
                     {report.uncookedNotes.map((note) => (
-                      <div key={note.path} className="knowlery-home__act">
-                        <span className="knowlery-home__act-summary">{note.path}</span>
+                      <div key={note.path} className={`knowlery-home__act${note.jev ? ' knowlery-jev__row' : ''}`}>
+                        <JevScore note={note} />
+                        <span className="knowlery-home__act-summary">
+                          {note.path}
+                          <JevTarget note={note} />
+                        </span>
                         <span className="knowlery-home__act-meta">{new Date(note.mtimeMs).toISOString().slice(0, 10)}</span>
                       </div>
                     ))}

@@ -211,7 +211,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
         type: 'group',
         heading: t('settings.heading.jev'),
         visible: () => this.initialized === true,
-        items: [this.jevIntroItem(), this.jevApiKeyItem()],
+        items: [this.jevIntroItem(), this.jevApiKeyItem(), this.jevAutoRankItem()],
       },
       {
         type: 'group',
@@ -286,10 +286,19 @@ export class KnowlerySettingTab extends PluginSettingTab {
         break;
       case 'jevApiKey': {
         const key = typeof value === 'string' ? value.trim() : '';
+        const hadKey = settings.jevApiKey !== '';
         settings.jevApiKey = key;
-        // Scores were produced under the old key; a new key may be a different account/model tier.
-        this.plugin.jevTriageCache.clear();
+        if (!key) this.plugin.jevScorer.cancel();
         this.plugin.events.trigger('dashboard-refresh');
+        // The auto-rank toggle is visible only with a key; re-render on that transition alone,
+        // not per keystroke (the fallback renderer would steal focus from the field).
+        if (hadKey !== (key !== '')) this.requestRender();
+        break;
+      }
+      case 'jevAutoRank': {
+        settings.jevAutoRank = value === true;
+        if (settings.jevAutoRank) this.plugin.jevScorer.schedule();
+        else this.plugin.jevScorer.cancel();
         break;
       }
       default:
@@ -461,7 +470,7 @@ export class KnowlerySettingTab extends PluginSettingTab {
       render: (setting) => {
         setting.settingEl.addClass('knowlery-settings-jev-intro');
         const list = setting.descEl.createEl('ul', { cls: 'knowlery-settings-jev-intro__list' });
-        for (const key of ['settings.jev.intro.benefitRank', 'settings.jev.intro.benefitTarget', 'settings.jev.intro.benefitCost'] as const) {
+        for (const key of ['settings.jev.intro.benefitRank', 'settings.jev.intro.benefitTarget', 'settings.jev.intro.benefitAgents', 'settings.jev.intro.benefitCost'] as const) {
           list.createEl('li', { text: t(key) });
         }
         setting.descEl.createEl('p', { text: t('settings.jev.intro.privacy') });
@@ -500,6 +509,21 @@ export class KnowlerySettingTab extends PluginSettingTab {
           }),
         );
       },
+    };
+  }
+
+  /**
+   * The nudge for users whose workbench is Codex / Claude Code / Cursor rather than
+   * Obsidian: with this on, the ranking reaches their agent through `.knowlery/triage.json`
+   * without them ever opening the dashboard. Shown only once a key exists.
+   */
+  private jevAutoRankItem(): SettingDefinition {
+    return {
+      name: t('settings.jev.autoRank.name'),
+      desc: t('settings.jev.autoRank.desc'),
+      aliases: ['jev', 'automatic', 'background'],
+      visible: () => this.plugin.settings.jevApiKey !== '',
+      control: { type: 'toggle', key: 'jevAutoRank' },
     };
   }
 

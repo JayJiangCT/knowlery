@@ -11,6 +11,7 @@ import { runKbCommand } from './commands/kb';
 import { runMcpCommand, runMcpServeCommand } from './commands/mcp';
 import { KbRegistryError, resolveKb } from '../core/kb-registry';
 import { runStaleCommand } from './commands/stale';
+import { jevApiKeyFromEnv } from '../core/jev/auto-triage';
 import { runIgnoreCommand, runReferenceCommand } from './commands/reference';
 import { runIndexCommand } from './commands/index-map';
 import { runBundleCommand } from './commands/bundle';
@@ -147,7 +148,12 @@ async function main(): Promise<void> {
       }
       break;
     case 'stale':
-      runStaleCommand(root, { json: args.json, log });
+      await runStaleCommand(root, {
+        json: args.json,
+        log,
+        warn: (line) => process.stderr.write(`${line}\n`),
+        jevApiKey: jevApiKeyFromEnv(),
+      });
       break;
     case 'reference':
       await runReferenceCommand(fs, { sub: args.positionals[0], dir: args.positionals[1], json: args.json, log });

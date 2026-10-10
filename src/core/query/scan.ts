@@ -2,6 +2,8 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative, basename } from 'node:path';
 import matter from 'gray-matter';
 import { CONFIG_PATH, parseConfig } from '../reference-config';
+import { TRIAGE_PATH, parseTriageStore, type TriageStore } from '../jev/triage-store';
+import { JEV_MODEL } from '../jev/model';
 import {
   PROJECT_MARKERS,
   ignoreReasonForDir,
@@ -88,6 +90,11 @@ export interface VaultSnapshot {
    * Hidden directories are not listed. Surfaces: `knowlery health`, Diagnostics.
    */
   ignoredDirs?: IgnoredDir[];
+  /**
+   * Persisted Jev triage scores (`.knowlery/triage.json`), when a producer has written
+   * any. Read-only here: the scanner never calls Jev. Absent means no file.
+   */
+  triage?: TriageStore;
 }
 
 export function scanVault(root: string): VaultSnapshot {
@@ -100,6 +107,7 @@ export function scanVault(root: string): VaultSnapshot {
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }
+  const triage = loadTriage(root);
   return {
     root,
     pages,
@@ -108,7 +116,18 @@ export function scanVault(root: string): VaultSnapshot {
     ignoreDirs: config.ignoreDirs,
     ...(config.error ? { referenceConfigError: config.error } : {}),
     ignoredDirs: walk.ignored,
+    ...(triage ? { triage } : {}),
   };
+}
+
+function loadTriage(root: string): TriageStore | null {
+  const path = join(root, TRIAGE_PATH);
+  if (!existsSync(path)) return null;
+  try {
+    return parseTriageStore(readFileSync(path, 'utf8'), JEV_MODEL);
+  } catch {
+    return null;
+  }
 }
 
 /** Malformed config degrades to empty lists here, with the error carried on the snapshot for surfaces to show. */

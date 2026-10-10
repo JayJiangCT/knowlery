@@ -34,17 +34,17 @@ describe('knowlery reference', () => {
     const root = makeWorkspace(true);
     const fs = nodeVaultFs(root);
     try {
-      const uncooked = () => {
+      const uncooked = async () => {
         const { log, output } = capture();
-        runStaleCommand(root, { json: true, log });
+        await runStaleCommand(root, { json: true, log });
         return (JSON.parse(output()) as { uncookedNotes: { path: string }[] }).uncookedNotes.map((note) => note.path);
       };
-      expect(uncooked()).toEqual(['Projects/mine.md', 'teams/team-a-kb/shared.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md', 'teams/team-a-kb/shared.md']);
 
       const added = capture();
       await runReferenceCommand(fs, { sub: 'add', dir: 'teams/', log: added.log });
       expect(added.output()).toContain('Marked teams/ as reference material');
-      expect(uncooked()).toEqual(['Projects/mine.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md']);
 
       const listed = capture();
       await runReferenceCommand(fs, { sub: 'list', json: true, log: listed.log });
@@ -53,7 +53,7 @@ describe('knowlery reference', () => {
       const removed = capture();
       await runReferenceCommand(fs, { sub: 'remove', dir: 'teams', log: removed.log });
       expect(removed.output()).toContain('Removed teams/');
-      expect(uncooked()).toEqual(['Projects/mine.md', 'teams/team-a-kb/shared.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md', 'teams/team-a-kb/shared.md']);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

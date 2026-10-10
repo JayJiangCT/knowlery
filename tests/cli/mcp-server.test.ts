@@ -3,8 +3,10 @@ import { chmod, mkdir, mkdtemp, readdir, readFile, realpath, rm, stat, symlink, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
-import { buildMcpServer, MCP_PROMPT_SKILLS } from '../../src/core/mcp/server';
+import { buildMcpServer, MCP_PROMPT_SKILLS, type McpServerOptions } from '../../src/core/mcp/server';
 import { addKb } from '../../src/core/kb-registry';
+import { JEV_MODEL, type JevRequest, type JevResponse } from '../../src/core/jev/client';
+import { TRIAGE_PATH } from '../../src/core/jev/triage-store';
 import { runFederatedQuery } from '../../src/core/federated-query';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
@@ -39,7 +41,7 @@ async function makeKb(name: string): Promise<string> {
   return dir;
 }
 
-async function connect(options: { toolVersion?: string } = {}): Promise<Client> {
+async function connect(options: McpServerOptions = {}): Promise<Client> {
   const server = buildMcpServer(options);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
@@ -75,6 +77,59 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
 
     const bundles = await client.callTool({ name: 'list_bundles', arguments: { kb: 'work' } });
     expect(bundles.structuredContent).toEqual({ bundles: {} });
+  });
+
+  // Added 1.6.0: `stale` carries Jev scores from .knowlery/triage.json and, with a key
+  // in the environment, refreshes them — the path by which agents in Codex / Claude
+  // Code / Cursor get the ranking without the dashboard.
+  it('stale reads Jev scores from the triage store and scores unscored notes when TYPESAFE_API_KEY is set', async () => {
+    const dir = await makeKb('work');
+    await addKb('work', dir);
+    await mkdir(join(dir, '.knowlery'), { recursive: true });
+    const noteMtime = (await stat(join(dir, 'Projects', 'secret-notes.md'))).mtimeMs;
+    await writeFile(join(dir, TRIAGE_PATH), JSON.stringify({
+      schemaVersion: 1,
+      model: JEV_MODEL,
+      entries: { 'Projects/secret-notes.md': { mtimeMs: noteMtime, worth: 0.91, target: null, scoredAt: '' } },
+    }));
+    await writeFile(join(dir, 'Projects', 'fresh.md'), '---\ntitle: Fresh\n---\n\nNew material.\n');
+
+    const calls: JevRequest[] = [];
+    client = await connect({
+      jevTransport: (_url, headers, body) => {
+        expect(headers.Authorization).toBe('Bearer ts-env');
+        const request = JSON.parse(body) as JevRequest;
+        calls.push(request);
+        const answers: JevResponse['answers'] = {};
+        for (const name of Object.keys(request.questions)) answers[name] = { type: 'noul', noul: name === 'worth_compiling' ? 0.3 : 0 };
+        return Promise.resolve({ status: 200, text: JSON.stringify({ model: JEV_MODEL, answers, usage: { input_tokens: 10, output_tokens: 0 } }) });
+      },
+    });
+
+    // Without a key: a pure read — the stored score is served, nothing is sent.
+    delete process.env.TYPESAFE_API_KEY;
+    const read = await client.callTool({ name: 'stale', arguments: { kb: 'work' } });
+    expect(read.isError).toBeFalsy();
+    let notes = (read.structuredContent as { uncookedNotes: Array<{ path: string; jev?: { worth: number } }> }).uncookedNotes;
+    expect(notes[0]).toMatchObject({ path: 'Projects/secret-notes.md', jev: { worth: 0.91, target: null } });
+    expect(notes[1].jev).toBeUndefined();
+    expect(calls).toHaveLength(0);
+
+    process.env.TYPESAFE_API_KEY = 'ts-env';
+    try {
+      const scored = await client.callTool({ name: 'stale', arguments: { kb: 'work' } });
+      expect(scored.isError).toBeFalsy();
+      notes = (scored.structuredContent as typeof notes & { uncookedNotes: typeof notes }).uncookedNotes;
+      expect(calls.map((c) => (c.state as { note: { path: string } }).note.path)).toEqual(['Projects/fresh.md']);
+      expect(notes.map((n) => n.path)).toEqual(['Projects/secret-notes.md', 'Projects/fresh.md']);
+      expect(notes[1].jev?.worth).toBe(0.3);
+      expect((scored.content as Array<{ text: string }>)[0].text).toContain('(2 Jev-scored)');
+      const written = await readFile(join(dir, TRIAGE_PATH), 'utf8');
+      expect(written).toContain('Projects/fresh.md');
+      expect(written).not.toContain('ts-env');
+    } finally {
+      delete process.env.TYPESAFE_API_KEY;
+    }
   });
 
   // Spec 1.3 f3, §4.3/§5.4 — the conduct counterweight in the tool and

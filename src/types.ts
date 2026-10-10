@@ -125,6 +125,12 @@ export interface KnowlerySettings {
    * nothing else in Knowlery talks to the network on the user's behalf.
    */
   jevApiKey: string;
+  /**
+   * Score uncooked notes in the background and persist the ranking to
+   * `.knowlery/triage.json` for every transport (CLI, MCP, query.mjs). Off by
+   * default: it is the one place Knowlery would spend the user's money without a click.
+   */
+  jevAutoRank: boolean;
 }
 
 export type InstallItemId = 'platform-cli' | 'claudian' | 'skills-tooling';
@@ -189,6 +195,7 @@ export const DEFAULT_SETTINGS: KnowlerySettings = {
   bundleCreatorUrl: '',
   bundleDefaultLicense: 'personal',
   jevApiKey: '',
+  jevAutoRank: false,
 };
 
 export const DEFAULT_OPTIONAL_INSTALL_SELECTION: OptionalInstallSelection = {

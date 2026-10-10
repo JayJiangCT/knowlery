@@ -51,11 +51,16 @@ export function formatStalenessReport(
     lines.push('Uncooked notes: none.');
   } else {
     const shown = report.uncookedNotes.slice(0, UNCOOKED_DISPLAY_CAP);
-    lines.push(
-      `Uncooked notes (most recent first, ${shown.length} of ${report.uncookedNotes.length}):`,
-    );
+    const scored = report.uncookedNotes.filter((note) => note.jev).length;
+    const order = scored > 0
+      ? `Jev-ranked, ${scored} of ${report.uncookedNotes.length} scored; unscored in mtime order`
+      : 'most recent first';
+    lines.push(`Uncooked notes (${order}, ${shown.length} of ${report.uncookedNotes.length}):`);
     shown.forEach((note, index) => {
-      lines.push(`${index + 1}. ${note.path} (${formatTime(note.mtimeMs).slice(0, 10)})`);
+      const jev = note.jev
+        ? `  jev ${note.jev.worth.toFixed(2)} → ${note.jev.target ? `update ${note.jev.target.path}` : 'new page'}`
+        : '';
+      lines.push(`${index + 1}. ${note.path} (${formatTime(note.mtimeMs).slice(0, 10)})${jev}`);
     });
   }
 
