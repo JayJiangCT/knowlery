@@ -77,6 +77,15 @@ export function parseTriageStore(raw: string | null | undefined, model: string):
   return { schemaVersion: 1, model, entries };
 }
 
+/**
+ * The cache key must agree across producers: node's `statSync().mtimeMs` carries a
+ * fractional part (1791619688991.1772) while Obsidian's `file.stat.mtime` is whole
+ * milliseconds (1791619688991). Whole milliseconds is the shared precision.
+ */
+export function triageMtime(mtimeMs: number): number {
+  return Math.floor(mtimeMs);
+}
+
 function parseEntry(value: unknown): TriageEntry | null {
   if (typeof value !== 'object' || value === null) return null;
   const record = value as Record<string, unknown>;
@@ -84,7 +93,7 @@ function parseEntry(value: unknown): TriageEntry | null {
   const target = parseTarget(record.target);
   if (target === undefined) return null;
   return {
-    mtimeMs: record.mtimeMs,
+    mtimeMs: triageMtime(record.mtimeMs),
     worth: Math.min(1, Math.max(0, record.worth)),
     target,
     scoredAt: typeof record.scoredAt === 'string' ? record.scoredAt : '',
@@ -119,7 +128,7 @@ export async function writeTriageStore(fs: VaultFs, store: TriageStore): Promise
 /** The entry for a note, if it was scored at the note's current mtime. */
 export function currentEntry(store: TriageStore, note: Pick<UncookedNote, 'path' | 'mtimeMs'>): TriageEntry | null {
   const entry = store.entries[note.path];
-  return entry && entry.mtimeMs === note.mtimeMs ? entry : null;
+  return entry && entry.mtimeMs === triageMtime(note.mtimeMs) ? entry : null;
 }
 
 /** Uncooked notes with no current score — what a producer should send to Jev. */
@@ -145,13 +154,13 @@ export function recordScores(
   now: Date = new Date(),
 ): TriageStore {
   const entries: Record<string, TriageEntry> = {};
-  const live = new Map(uncooked.map((note) => [note.path, note.mtimeMs]));
+  const live = new Map(uncooked.map((note) => [note.path, triageMtime(note.mtimeMs)]));
   for (const [path, entry] of Object.entries(store.entries)) {
-    if (live.get(path) === entry.mtimeMs) entries[path] = entry;
+    if (live.get(path) === triageMtime(entry.mtimeMs)) entries[path] = entry;
   }
   const scoredAt = now.toISOString();
   for (const score of scores) {
-    entries[score.path] = { mtimeMs: score.mtimeMs, worth: score.worth, target: score.target, scoredAt };
+    entries[score.path] = { mtimeMs: triageMtime(score.mtimeMs), worth: score.worth, target: score.target, scoredAt };
   }
   return { schemaVersion: 1, model: store.model, entries };
 }

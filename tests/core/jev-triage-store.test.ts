@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scanVault } from '../../src/core/query/scan';
-import { computeStaleness, type StalenessReport } from '../../src/core/query/staleness';
+import { computeStaleness, type StalenessReport, type UncookedNote } from '../../src/core/query/staleness';
 import { formatStalenessReport } from '../../src/core/query/format';
 import { JEV_MODEL, type JevRequest, type JevResponse, type JevTransport } from '../../src/core/jev/client';
 import {
@@ -130,6 +130,37 @@ describe('triage store file contract', () => {
     // b.md got cooked (no longer uncooked) and a.md changed: both entries go on the next write.
     store = recordScores(store, [{ path: 'c.md', mtimeMs: 3, worth: 0.6, target: null }], edited);
     expect(Object.keys(store.entries)).toEqual(['c.md']);
+  });
+});
+
+describe('mtime precision across shells', () => {
+  it('matches whole-millisecond entries (Obsidian file.stat.mtime) against fractional mtimes (node statSync) and vice versa', () => {
+    const fractional = { path: 'notes/a.md', mtimeMs: 1791619688991.1772 };
+    const whole = { path: 'notes/a.md', mtimeMs: 1791619688991 };
+    const writtenByPlugin = recordScores(emptyTriageStore(JEV_MODEL), [{ ...whole, worth: 0.9, target: null }], [whole as UncookedNote]);
+    expect(currentEntry(writtenByPlugin, fractional)).not.toBeNull();
+
+    const writtenByCli = recordScores(emptyTriageStore(JEV_MODEL), [{ ...fractional, worth: 0.9, target: null }], [fractional as UncookedNote]);
+    expect(writtenByCli.entries['notes/a.md'].mtimeMs).toBe(1791619688991);
+    expect(currentEntry(writtenByCli, whole)).not.toBeNull();
+
+    // Pruning uses the same key: a plugin-written entry survives a CLI write and the reverse.
+    const merged = recordScores(writtenByPlugin, [], [fractional as UncookedNote]);
+    expect(Object.keys(merged.entries)).toEqual(['notes/a.md']);
+
+    // A file written before normalization still parses to the shared precision.
+    const legacy = parseTriageStore(JSON.stringify({
+      schemaVersion: 1, model: JEV_MODEL,
+      entries: { 'notes/a.md': { mtimeMs: 1791619688991.1772, worth: 0.5, target: null, scoredAt: '' } },
+    }), JEV_MODEL);
+    expect(currentEntry(legacy, whole)).not.toBeNull();
+
+    // A genuinely different mtime still misses.
+    expect(currentEntry(writtenByPlugin, { path: 'notes/a.md', mtimeMs: 1791619688992 })).toBeNull();
+  });
+
+  it('the fs scanner itself reports whole milliseconds, so CLI and plugin JSON agree', () => {
+    for (const page of scanVault(root).pages) expect(Number.isInteger(page.mtimeMs)).toBe(true);
   });
 });
 
