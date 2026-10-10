@@ -49,6 +49,33 @@ knowlery query --kb '*' "我在哪写过 backpressure？"
 弃答（`No confident matches`）是结果，exit 0。脚本可以依赖 `--json`——
 所有报告类命令都有稳定的输出形状。
 
+## 让待办清单诚实
+
+一长串从未编译的笔记只有在两个前提下才有用：上面的每一条都是你自己该 cook
+的材料，而且排在最前面的值得先读。
+
+```bash
+# 导入的知识（比如拉进来的团队知识库）：保持可检索，但永远不列为未编译
+knowlery reference add teams --kb research
+
+# 根本不是知识（生成产物、归档）：永不扫描
+knowlery ignore add archive --kb research
+
+# 哪些目录被跳过、为什么——node_modules/、项目清单旁边的构建产物，
+# 以及你忽略的目录都会列在这里
+knowlery health --kb research
+
+# 可选：用 Jev 给整个积压排序（需要 TypeSafe AI 密钥——在 Obsidian 插件
+# 设置里填一次，或 export TYPESAFE_API_KEY）
+knowlery triage --kb research
+```
+
+两份列表都存在 `.knowlery/config.json` 里；一个目录最多只能出现在其中一份。
+之后 `knowlery stale` 会先打印已评分的笔记（值得编译的概率，以及 Jev 找到时
+应更新的编译页面），再是未评分的，最后是低置信区间——什么都不会被隐藏。
+`triage` 幂等且可续跑：一条笔记只评一次，直到它被修改，每条约 $0.0001。
+没有密钥时 `stale` 行为不变，`triage` 以 exit 1 退出并给出说明。
+
 ## 升级之后
 
 ```bash

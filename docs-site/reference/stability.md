@@ -26,6 +26,9 @@ by 1.0.0.
   `queries/`), `inbox/`, and `Library/<bundle-id>/`.
 - `.knowlery/manifest.json` (existing fields) and `.knowlery/bundles.json`
   (schemaVersion 1). Any 1.x reads state written by 1.0.0, forever.
+- `.knowlery/config.json` (schemaVersion 1; `referenceDirs`, `ignoreDirs`),
+  added as an optional file in 1.6.0: its keys keep their meaning, a vault
+  without it behaves exactly as before.
 - The page tier rules (compiled dirs are agent-tier; everything else is
   user-tier).
 
@@ -42,16 +45,18 @@ by 1.0.0.
 
 ### MCP contracts
 
-- The eight tool names (`list_kbs`, `query`, `stale`, `health`,
-  `list_bundles`, `init_kb`, `capture`, `sync`), their input schemas
+- The tool names — the eight shipped in 1.0 (`list_kbs`, `query`, `stale`,
+  `health`, `list_bundles`, `init_kb`, `capture`, `sync`) plus `register_kb`
+  (added 1.1) — their input schemas
   (required fields and types; new *optional* inputs are minor), and their
   `structuredContent` shapes (existing keys). The advertised schemas carry
   the frozen keys — what a client introspects via `tools/list` is the
   contract, and the server validates every result against it at runtime.
 - Findings-vs-errors semantics: abstention, `healthy: false`, and stale-heavy
   reports are successful results; tool errors are reserved for broken calls.
-- The nine prompt names, the `knowlery://{kb}/{+path}` resource scheme, and
-  the readable-surface allowlist boundary.
+- The prompt names (nine shipped in 1.0, `knowlery-mcp` added 1.1), the
+  `knowlery://{kb}/{+path}` resource scheme, and the readable-surface
+  allowlist boundary.
 - `knowlery mcp serve` flags and the auth contract (bearer token, 401 shape).
 
 ### Bundle format (OKF)
@@ -83,7 +88,9 @@ Stated just as plainly, so absence of a promise is never mistaken for one:
 - **Plugin UI** (dashboard layout, modals, settings organization), **docs**,
   and **eval thresholds**.
 - Private state under `.knowlery/` not listed above (activity receipts,
-  reports).
+  reports, the Jev score cache `.knowlery/triage.json` — a cache that any
+  release may rebuild; the optional `uncookedNotes[].jev` field it feeds is
+  additive and may be absent).
 - **The Node.js runtime floor.** Knowlery follows maintained Node.js LTS
   releases, so a minor release may raise the minimum. Knowlery 1.4 requires
   Node.js 20 or newer.

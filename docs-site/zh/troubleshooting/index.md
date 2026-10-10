@@ -169,6 +169,23 @@ Optional installs 会在你的机器上运行本地命令。
 3. `KNOWLEDGE.md` 中存在 installed-bundles 指引块。
 4. Vault 里的 `/ask` skill 是最新的——插件版本变化时 bundled skills 会自动刷新。
 
+## "从未编译"列表被淹没
+
+Knowledge health（以及 `knowlery stale`）会列出所有没有被任何编译页面引用的用户笔记。如果 vault 里同时放着代码、导入内容或归档，列表就会被不该由你 cook 的笔记填满。
+
+- **`node_modules/` 下的 README、`dist/` 或 `build/` 下的文件。** `node_modules/` 和 `__pycache__/` 总是跳过；`dist/`、`build/`、`target/`、`outputs/`、`coverage/`、`vendor/` 只在项目清单（`package.json`、`Cargo.toml`、`pyproject.toml`……）旁边才跳过，且永远不在 vault 根目录跳过。到 **Settings → Advanced → Diagnostics → Indexing** 或 `knowlery health` 查看哪些目录被跳过、为什么。如果某个文件夹仍然被索引，把它加进去：`knowlery ignore add <dir>` 或 **Rules & schema → 忽略目录**。
+- **你只读不编译的导入知识库。** 设为参考目录（`knowlery reference add <dir>` 或 **Rules & schema → 参考目录**）：仍然可检索，但不再列为未编译。
+- **一个真正的笔记文件夹从检索里消失了。** 到被跳过的目录里找它。如果是被当成构建产物跳过的，改名或移走清单文件；如果是你加进忽略列表的，在那里移除。
+- **`.knowlery/config.json` 格式有误。** 此时两份列表都按空处理，Diagnostics、Config 区块和 `knowlery health` 会一直显示解析错误，直到文件修好。
+- **列表没错，只是长到读不完。** 有 TypeSafe AI 密钥时（Settings → Jev cook 分诊），**Rank N with Jev** 或 `knowlery triage` 会按每条笔记含有持久知识的可能性排序；排序会保存下来，所有传输方式共享。
+
+## 看不到 Jev 评分
+
+- `knowlery stale` 打印的是普通列表：没有找到密钥。Node 侧先读 `TYPESAFE_API_KEY`，再读 `.obsidian/plugins/knowlery/data.json`；配置目录非默认的 vault 必须用环境变量。`knowlery triage` 会以 exit 1 退出并指出这两个位置。
+- 插件仍然显示"添加 Jev API 密钥"的提示：字段去掉空白后为空。重新粘贴密钥，字段非空后 Rank 按钮立即出现。
+- 插件和 CLI 对哪些笔记已评分意见不一：1.6.0 起两边都把修改时间规整到整毫秒；跑一次 `knowlery triage` 即可让旧的存储对齐。
+- Obsidian 和 `knowlery stale` 里有评分，但 `node .knowlery/bin/query.mjs --stale` 里没有：生成的脚本还是 1.6.0 之前的。跑一次 `knowlery sync`（或重载插件，它会重新同步脚本）再重跑。
+
 ## 什么时候提交 Issue
 
 当你能在 clean test vault 中稳定复现问题时，可以提交 GitHub issue，并附上：

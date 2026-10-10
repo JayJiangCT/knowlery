@@ -50,6 +50,36 @@ never compiled. Cook selectively — many notes are legitimately never compiled.
 Abstention (`No confident matches`) is a result, exit 0. Scripts can rely on
 `--json` for stable shapes on every command that reports.
 
+## Keep the work list honest
+
+A long never-compiled list is only useful if everything on it is yours to
+cook, and if the top of it is worth reading first.
+
+```bash
+# Imported knowledge (a team KB you pulled in): keep it searchable,
+# never list it as uncooked
+knowlery reference add teams --kb research
+
+# Not knowledge at all (generated output, archives): never scanned
+knowlery ignore add archive --kb research
+
+# What is being skipped, and why — node_modules/, build output beside a
+# project manifest, and your ignored directories all show up here
+knowlery health --kb research
+
+# Optional: rank the whole backlog with Jev (TypeSafe AI key required —
+# add it once in the Obsidian plugin settings, or export TYPESAFE_API_KEY)
+knowlery triage --kb research
+```
+
+Both lists live in `.knowlery/config.json`; a directory can be in at most
+one. `knowlery stale` then prints scored notes first (worth-compiling
+probability and, when Jev found one, the compiled page to update), unscored
+notes next, and the low-confidence band last — nothing is hidden. `triage`
+is idempotent and resumable: a note is scored once until it changes, about
+$0.0001 each. Without a key, `stale` is unchanged and `triage` exits 1 with
+instructions.
+
 ## After an upgrade
 
 ```bash

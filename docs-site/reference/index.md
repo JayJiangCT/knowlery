@@ -22,8 +22,8 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | Move drill-ins | Full suggested-move list and individual move prompts |
 | Activity drill-in | Full recent activity list |
 | Knowledge health drill-in | Stale pages, never-compiled notes, dangling sources, and the re-cook prompt; optional Jev ranking of never-compiled notes |
-| Settings: Diagnostics | Vault health, content stats, configuration integrity, and diagnosis |
-| Settings: Rules & schema | Agent rules, schema shortcuts, and config maintenance |
+| Settings: Diagnostics | Vault health, content stats, configuration integrity, diagnosis, and the Indexing list of skipped directories (with reasons) |
+| Settings: Rules & schema | Agent rules, schema shortcuts, config maintenance, and the reference / ignored directory lists |
 | Settings: Skills | Built-in, registry, custom, and disabled skill management |
 
 ## Created Files and Folders
@@ -52,6 +52,9 @@ This reference lists the files, commands, skills, and safety boundaries used by 
 | `.knowlery/export-scope.json` | Share knowledge bundle | Saved per-topic review scope |
 | `Library/<bundle-id>/` | Install knowledge bundle | Installed bundle contents |
 | `.knowlery/bundles.json` | Install knowledge bundle | Installed bundle registry |
+| `.knowlery/bin/query.mjs` | Setup, refreshed on sync | Offline retrieval and staleness script (`node .knowlery/bin/query.mjs`) |
+| `.knowlery/config.json` | Reference / ignored directories | `referenceDirs` (queryable, never uncooked) and `ignoreDirs` (never scanned); schemaVersion 1 |
+| `.knowlery/triage.json` | Jev cook triage | Jev scores per never-compiled note (path, score, suggested target, mtime); never the key or note text |
 
 ## Built-In Skills
 
@@ -133,6 +136,10 @@ Knowlery does not collect telemetry.
 
 Network access can happen when you explicitly use skill registry features through `npx skills ...`. That command may contact services used by the external skills tooling.
 
+Jev cook triage (optional, off until you add a TypeSafe AI API key) calls `api.typesafe.ai` when never-compiled notes are scored: the Rank button, `knowlery triage`, the capped top-up inside `knowlery stale` / MCP `stale`, or the background toggle if you switch it on. Each request carries a note's path, title, frontmatter and first 15 non-empty lines, plus the titles and descriptions of up to five shortlisted compiled pages — never full note bodies. The key lives only in the plugin's `data.json` under the vault config folder (or in `TYPESAFE_API_KEY` in your shell) and is never written into the vault, `.knowlery/triage.json`, or the registry. Retrieval never calls Jev.
+
+Bundle install, publish, update and check-updates contact the URLs and GitHub repositories you point them at; private access goes through your own `gh` login.
+
 ## Local Command Use
 
 Knowlery can run local commands when you explicitly use CLI-related features or optional setup preparation.
@@ -149,7 +156,7 @@ These commands run on your computer with your user permissions.
 
 ## Upgrade Behavior
 
-When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, migrates `SCHEMA.md` by inserting any missing anchor sections, and refreshes the installed-bundles pointer block in `KNOWLEDGE.md` when bundles are installed.
+When the plugin version changes, Knowlery refreshes bundled skills in `.agents/skills/` and `.claude/skills/`, migrates `SCHEMA.md` by inserting any missing anchor sections, and refreshes the installed-bundles pointer block in `KNOWLEDGE.md` when bundles are installed. Since 1.6.0 the generated `.knowlery/bin/query.mjs` is also re-synced by content on every plugin load, so a same-version reload (for example a beta build swapped in place) never leaves a stale script behind; skills still refresh only on a version change or `knowlery sync`.
 
 In v0.5.0, knowledge bundle sharing and installing arrived: the Bundles section on the dashboard, the `Library/` folder, and `.knowlery/bundles.json` are new surfaces. In v0.4.0, dashboard maintenance moved into Obsidian settings: diagnostics, rules and schema shortcuts, and the Skills library are no longer separate dashboard tabs.
 

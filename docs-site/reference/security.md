@@ -22,6 +22,15 @@ These hold by code, and are pinned by contract tests:
   only the registry file. Bundle install checks every file path against the
   destination before writing, and stages + swaps so a failed install never
   destroys the previous copy.
+- **Outbound to Jev (optional, since 1.6).** Nothing leaves the machine until
+  you add a TypeSafe AI key. With one, scoring a never-compiled note sends
+  its path, title, frontmatter, first 15 non-empty lines, and the titles and
+  descriptions of up to five shortlisted compiled pages — never a full body,
+  never a compiled page's content. The key is read from the plugin's
+  `data.json` or `TYPESAFE_API_KEY` and is never written into the vault,
+  `.knowlery/triage.json`, or the registry; retrieval never calls Jev. The
+  `/cook` skill is told never to ask you for the key and never to call Jev
+  itself. Pinned by tests on the request body and on the store's contents.
 
 ## What is detected at boundaries — and what that does not mean
 
@@ -65,3 +74,6 @@ whose bundles you install the way you choose whose code you run.
   see the flagged items.
 - The registry: agents resolve only KBs you registered.
 - Remote access: off by default; token + per-capability flags when on.
+- Jev triage: off until you add a key; background scoring is a separate
+  toggle, also off by default; Rank and `knowlery triage` run only when you
+  invoke them.

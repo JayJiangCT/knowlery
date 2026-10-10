@@ -77,7 +77,7 @@ Knowlery 会在 vault 中创建知识工作区和 agent 配置：
 | `.claude/CLAUDE.md` | Claude Code 的入口文件：`@../KNOWLEDGE.md`、Knowlery 操作规则、每个 rule 一行 `@` import（受管区块）；区块之外的 Claude 专属说明会保留 |
 | `skills-lock.json` | skill 来源、版本、禁用状态 |
 
-正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports 和 daily review request/result 文件。
+正常使用过程中，Knowlery 还可能在 `.knowlery/` 下创建私有 activity receipts、weekly summary reports 和 daily review request/result 文件；当你设置参考目录或忽略目录时会创建 `.knowlery/config.json`，当 Jev cook 分诊给未编译笔记评分时会创建 `.knowlery/triage.json`。
 
 ## 可选工具准备
 

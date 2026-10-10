@@ -24,6 +24,9 @@ CI 强制，而不是靠善意。
   的含义和位置。
 - `.knowlery/manifest.json`（既有字段）和 `.knowlery/bundles.json`
   （schemaVersion 1）。任何 1.x 永远能读取 1.0.0 写下的状态。
+- `.knowlery/config.json`（schemaVersion 1；`referenceDirs`、`ignoreDirs`），
+  1.6.0 作为可选文件加入：各键含义保持不变，没有这个文件的 vault 行为与
+  之前完全一致。
 - 页面层级规则（编译目录是 agent 层级；其余一切是用户层级）。
 
 ### CLI 表面
@@ -37,14 +40,16 @@ CI 强制，而不是靠善意。
 
 ### MCP 契约
 
-- 八个工具名（`list_kbs`、`query`、`stale`、`health`、`list_bundles`、
-  `init_kb`、`capture`、`sync`）、它们的输入 schema（必填字段和类型；新增
+- 工具名——1.0 发布的八个（`list_kbs`、`query`、`stale`、`health`、
+  `list_bundles`、`init_kb`、`capture`、`sync`）加上 1.1 新增的
+  `register_kb`——它们的输入 schema（必填字段和类型；新增
   *可选*输入属于 minor）以及 `structuredContent` 形状（既有键）。广播的
   schema 携带冻结的键——客户端通过 `tools/list` 内省到的就是契约本身，
   且服务器在运行时对每个结果做校验。
 - 发现与错误的语义：弃答、`healthy: false`、很长的 stale 报告是成功结果；
   工具错误只留给坏掉的调用。
-- 九个提示词名、`knowlery://{kb}/{+path}` 资源方案，以及可读层白名单边界。
+- 提示词名（1.0 发布九个，1.1 新增 `knowlery-mcp`）、`knowlery://{kb}/{+path}`
+  资源方案，以及可读层白名单边界。
 - `knowlery mcp serve` 的旗标和认证契约（bearer token、401 形状）。
 
 ### 知识包格式（OKF）
@@ -70,7 +75,9 @@ CI 强制，而不是靠善意。
   而增加、重命名或退役——冻结它们等于冻结检查本身。它的契约是 `healthy`
   （布尔值）加上 `config` 对象的存在。
 - **插件 UI**（dashboard 布局、弹窗、设置组织）、**文档**、**eval 阈值**。
-- 上面未列出的 `.knowlery/` 私有状态（活动回执、报告）。
+- 上面未列出的 `.knowlery/` 私有状态（活动回执、报告、Jev 评分缓存
+  `.knowlery/triage.json`——任何版本都可以重建的缓存；它喂给
+  `uncookedNotes[].jev` 的可选字段是增量的，可能不存在）。
 - **Node.js 最低运行版本。** Knowlery 跟随仍受维护的 Node.js LTS，因此 minor
   版本可以提高最低要求。Knowlery 1.4 要求 Node.js 20 或更高版本。
 - TypeScript 内部：`src/` 不是公开 API；从包中 import 不受支持。

@@ -179,6 +179,23 @@ Check:
 3. `KNOWLEDGE.md` contains the installed-bundles pointer block.
 4. The vault's `/ask` skill is current — bundled skills refresh automatically when the plugin version changes.
 
+## The Never-Compiled List Is Flooded
+
+Knowledge health (and `knowlery stale`) lists every user note no compiled page cites. On a vault that also holds code, imports, or archives, the list fills with notes that are not yours to cook.
+
+- **READMEs under `node_modules/`, files under `dist/` or `build/`.** `node_modules/` and `__pycache__/` are always skipped; `dist/`, `build/`, `target/`, `outputs/`, `coverage/`, `vendor/` are skipped only beside a project manifest (`package.json`, `Cargo.toml`, `pyproject.toml`, …) and never at the vault root. Check **Settings → Advanced → Diagnostics → Indexing** or `knowlery health` to see what is skipped and why. If a folder is still indexed, add it: `knowlery ignore add <dir>` or **Rules & schema → Ignored directories**.
+- **An imported knowledge base you read but never compile.** Make it a reference directory (`knowlery reference add <dir>` or **Rules & schema → Reference directories**): it stays searchable but is no longer listed as uncooked.
+- **A real notes folder went missing from retrieval.** Look for it under skipped directories. If it was skipped as build output, rename it or move the manifest; if you added it to the ignored list, remove it there.
+- **`.knowlery/config.json` is malformed.** Both lists are then treated as empty and Diagnostics, the Config section and `knowlery health` show the parse error until the file is fixed.
+- **The list is correct but too long to read.** With a TypeSafe AI key (Settings → Jev cook triage), **Rank N with Jev** or `knowlery triage` orders it by how likely each note holds durable knowledge; the ranking is saved and shared by every transport.
+
+## A Jev Score Never Appears
+
+- `knowlery stale` prints the plain list: no key was found. Node shells read `TYPESAFE_API_KEY` first, then `.obsidian/plugins/knowlery/data.json`; a vault with a non-default config folder must use the environment variable. `knowlery triage` exits 1 and names both places.
+- The plugin still shows the "Add a Jev API key" hint: the field is empty after trimming whitespace. Paste the key again; the Rank button appears as soon as the field is non-empty.
+- The plugin and the CLI disagree on which notes are scored: both normalise modification times to whole milliseconds since 1.6.0; run `knowlery triage` once to reconcile older stores.
+- Scores appear in Obsidian and `knowlery stale` but not in `node .knowlery/bin/query.mjs --stale`: the generated script predates 1.6.0. Run `knowlery sync` (or reload the plugin, which re-syncs it) and rerun.
+
 ## When to File an Issue
 
 Open a GitHub issue when you can reproduce the problem in a clean test vault and can include:

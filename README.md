@@ -129,6 +129,9 @@ knowlery health   # config integrity + knowledge-page counts; exit code for CI
 knowlery query --kb work "<question>"    # deterministic retrieval, from any directory
 knowlery query --kb '*' "<question>"     # federated search across every registered KB
 knowlery stale    # compiled pages whose sources changed; notes never compiled
+knowlery triage   # optional: rank the never-compiled backlog with Jev (needs a TypeSafe AI key)
+knowlery reference add <dir>   # imported knowledge: queryable, never listed as uncooked
+knowlery ignore add <dir>      # not knowledge at all: never scanned (health lists every skip)
 knowlery bundle install <zip-folder-or-url>  # install a shared knowledge bundle
 knowlery bundle publish <seed>               # review-gated publish to a GitHub Release
 knowlery mcp      # MCP server over stdio: 9 tools, 10 skill prompts, page resources
@@ -185,6 +188,8 @@ During setup and normal use, Knowlery can create or update these files and folde
 - `.knowlery/exports/`, when Share knowledge bundle compiles a bundle (plus an optional `.zip` next to it)
 - `Library/<bundle-id>/` and `.knowlery/bundles.json`, when Install knowledge bundle installs a shared bundle
 - `.knowlery/bin/query.mjs`, the local retrieval script (written on setup and refreshed on upgrades)
+- `.knowlery/config.json`, when you name reference or ignored directories (`knowlery reference` / `knowlery ignore`, or Settings → Advanced)
+- `.knowlery/triage.json`, when Jev cook triage scores never-compiled notes (paths, scores, and timestamps only — never your key or note text)
 - `~/.config/knowlery/registry.json`, the global registry of named knowledge bases (outside the vault)
 
 Knowlery may delete skill or rule files only when you use the corresponding delete or disable actions in the UI, and may delete an installed bundle's `Library/<bundle-id>/` folder when you uninstall that bundle.
@@ -195,7 +200,9 @@ Knowlery does not collect telemetry.
 
 Knowlery reads and writes files inside your workspace to create and maintain the knowledge base layout, bundled skills, rules, activity summaries, review requests, and generated reports listed above. It also reads Obsidian's configured plugin directory when detecting or installing optional companion plugins.
 
-Network access is opt-in and feature-specific. The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. Bundle install/publish/update can contact the URLs and GitHub repositories you point them at (private access delegates to your own `gh` login; Knowlery never asks for or stores tokens). The setup wizard can download the latest Claudian release from GitHub when you choose to install that optional companion plugin.
+Network access is opt-in and feature-specific. The skill browser can call the external `skills` registry through `npx skills ...` when you search for or install registry skills. Bundle install/publish/update can contact the URLs and GitHub repositories you point them at (private access delegates to your own `gh` login; Knowlery never asks for or stores GitHub tokens). The setup wizard can download the latest Claudian release from GitHub when you choose to install that optional companion plugin.
+
+Jev cook triage is optional and off until you add a TypeSafe AI API key in the plugin settings. With a key, ranking never-compiled notes (the Rank button, `knowlery triage`, the capped top-up in `knowlery stale` / MCP `stale`, or the background toggle you switch on) sends each note's path, title, frontmatter, and first 15 non-empty lines, plus the titles and descriptions of a few shortlisted compiled pages, to `api.typesafe.ai` — never full note bodies. The key is stored only in the plugin's `data.json` under your vault's config folder (or read from `TYPESAFE_API_KEY` in your shell); it is never written into the vault, the triage store, or the registry. Retrieval (`knowlery query`, `query.mjs`, the MCP `query` tool) never calls Jev.
 
 Knowlery can run local CLI commands such as `claude`, `opencode`, `node`, `npx`, `gh`, and `skills` when you explicitly use CLI-related features. These commands run on your computer with your user permissions. Knowlery does not send vault contents to those tools by itself; agent requests are created only from the actions you trigger.
 
@@ -203,7 +210,7 @@ The MCP server (`knowlery mcp`) runs locally over stdio and serves only the know
 
 On Obsidian 1.12.2+ with the command line interface enabled, Knowlery registers two read-only CLI commands, `knowlery:query` and `knowlery:stale`, which search and inspect vault content locally when you (or an agent you run) invoke them. The bundled `.knowlery/bin/query.mjs` script does the same offline with plain Node; neither makes network requests.
 
-Some companion tools or services used with Knowlery, including Claude Code, OpenCode, registry skills, or model providers configured outside Knowlery, may require separate accounts or paid usage. Knowlery itself is free and does not process payments.
+Some companion tools or services used with Knowlery, including Claude Code, OpenCode, registry skills, TypeSafe AI's Jev (for the optional cook triage), or model providers configured outside Knowlery, may require separate accounts or paid usage. Knowlery itself is free and does not process payments.
 
 ## Development
 

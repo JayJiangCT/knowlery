@@ -159,6 +159,11 @@ Dashboard 的 Knowledge health 区块由 staleness report 驱动：已编译页�
 
 同一份报告在 Obsidian 之外也能获取：`knowlery stale`、`obsidian knowlery:stale`，或 MCP 的 `stale` 工具。
 
+两个可选的细化手段，让大 vault 上的"从未编译"列表保持有用：
+
+- **参考目录与忽略目录**（Settings → Advanced → Rules & schema，或 `knowlery reference` / `knowlery ignore`）。你只读不编译的导入知识保持可检索，但不再列为未编译；根本不是知识的文件夹不会被扫描。`node_modules/` 和项目清单旁边的构建产物会自动跳过，Diagnostics → Indexing 会列出每个被跳过的目录及原因。
+- **Jev 排序**（Settings → Jev cook 分诊，需要 TypeSafe AI 密钥）。钻取页里的 **Rank N with Jev** 会给每条未编译笔记打一个"含有持久知识的可能性"分数，并建议它应更新哪个编译页面；排序保存在 `.knowlery/triage.json`，所以 `knowlery stale` 以及在 Codex、Claude Code、Cursor 里 cook 的 agent 读到的是同一个顺序。它是阅读顺序，不是过滤器：低置信的笔记沉到底部，但仍然列出。
+
 ## 记录 Reflection
 
 在 command palette 或 dashboard 中使用 **Add reflection**，可以把一次 agent 会话或人工 review 的简短总结写进 Activity Ledger。

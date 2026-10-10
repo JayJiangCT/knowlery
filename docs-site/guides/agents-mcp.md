@@ -32,7 +32,7 @@ the readable-surface boundary, and remote access.
 | --- | --- | --- |
 | `list_kbs` | — | Every registered KB with its path and live state |
 | `query` | `kb`, `question`, `k?` | Deterministic retrieval; `kb: "*"` searches every KB with per-KB attribution |
-| `stale` | `kb` | Compiled pages older than their sources, plus never-compiled notes |
+| `stale` | `kb` | Compiled pages older than their sources, plus never-compiled notes; with a Jev key configured, each note may carry an optional `jev` score and suggested target (1.6) |
 | `health` | `kb` | Workspace integrity check |
 | `list_bundles` | `kb` | Installed knowledge bundles with provenance |
 | `init_kb` | `name`, `path`, `platform?` | Create and register a new KB — cold start from a conversation |
