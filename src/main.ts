@@ -12,7 +12,7 @@ import { isVaultInitialized } from './core/setup-executor';
 import { syncAgentsMd } from './core/agents-md';
 import { syncClaudeMd } from './core/claude-md';
 import { migrateKnowledgeMdLegacyOperatingRules } from './core/knowledge-md-migration';
-import { runVaultSync } from './core/vault-sync';
+import { runVaultSync, syncQueryScriptIfCurrent } from './core/vault-sync';
 import type { VaultFs } from './core/vault-fs';
 import { obsidianVaultFs } from './platform/obsidian-fs';
 import { LiveQuerySnapshot } from './core/query/live-snapshot';
@@ -193,6 +193,10 @@ export default class KnowleryPlugin extends Plugin {
             this.settings.lastSyncedVersion = pluginVersion;
             await this.saveSettings();
           }
+        } else {
+          // Same version, possibly a different build (beta main.js swapped in place):
+          // the generated retrieval script follows the bundle, not the version.
+          await syncQueryScriptIfCurrent(this.fs, pluginVersion);
         }
 
         await this.maybeShowReleaseNotes(pluginVersion, previousSyncedVersion !== '');
