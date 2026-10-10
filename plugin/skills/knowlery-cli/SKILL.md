@@ -32,6 +32,7 @@ skill — the same operations are one tool call away.
 | `knowlery health [--json]` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
 | `knowlery query "<question>" [--k n] [--json]` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
 | `knowlery stale [--json]` | List compiled pages older than their sources, and uncooked notes | Deciding what to re-cook |
+| `knowlery reference list [--json]` / `reference add <dir>` / `reference remove <dir>` | Mark directories as reference material: queryable, never reported as uncooked | Imported/external notes keep flooding the uncooked list |
 | `knowlery bundle install <zip-folder-or-url>` | Install a shared knowledge bundle into Library/ | User received a bundle or a link to one |
 | `knowlery bundle list [--json]` | Show installed bundles | Checking what knowledge is available |
 | `knowlery bundle uninstall <bundle-id>` | Remove an installed bundle | Bundle no longer wanted |

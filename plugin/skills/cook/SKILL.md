@@ -49,7 +49,11 @@ The report has three parts:
    are candidate new material; use judgment (or ask) about which are worth compiling —
    many notes are legitimately never compiled. Notes under `inbox/` are the exception:
    they were captured from conversations (MCP `capture`) precisely to be compiled —
-   treat them as first-priority cook material.
+   treat them as first-priority cook material. Notes under installed bundles
+   (`Library/`) and under reference directories (`referenceDirs` in
+   `.knowlery/config.json`, e.g. an imported team KB) are never listed here —
+   if a whole directory of external material shows up as uncooked, suggest
+   `knowlery reference add <dir>` instead of cooking it.
 3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
    report; fixing them is /audit territory.
 

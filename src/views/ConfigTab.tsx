@@ -3,8 +3,10 @@ import { normalizePath, Notice } from 'obsidian';
 import { usePlugin } from '../context';
 import type { RuleInfo, DashboardRefreshPayload } from '../types';
 import { listRules, deleteRule } from '../core/rule-manager';
+import { ReferenceDirError, addReferenceDir, readConfig, removeReferenceDir } from '../core/reference-config';
 import { RuleEditorModal } from '../modals/rule-editor';
-import { IconFileText, IconPlus, IconArrowRight, IconMoreVertical, IconChevronRight } from './Icons';
+import { ReferenceDirSuggestModal } from '../modals/reference-dir-suggest';
+import { IconFileText, IconFolder, IconPlus, IconArrowRight, IconMoreVertical, IconChevronRight, IconX } from './Icons';
 import { t } from '../i18n';
 
 /* ------------------------------------------------------------------ */
@@ -111,10 +113,17 @@ function RuleCard(props: {
 export function ConfigTab() {
   const plugin = usePlugin();
   const [rules, setRules] = useState<RuleInfo[]>([]);
+  const [referenceDirs, setReferenceDirs] = useState<string[]>([]);
 
   const refreshRules = useCallback(async (payload?: DashboardRefreshPayload) => {
     const result = await listRules(plugin.fs);
     setRules(result);
+    try {
+      setReferenceDirs((await readConfig(plugin.fs)).referenceDirs);
+    } catch (error) {
+      // Malformed .knowlery/config.json: say so once rather than hide the section.
+      new Notice(error instanceof Error ? error.message : String(error));
+    }
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -153,6 +162,34 @@ export function ConfigTab() {
     new RuleEditorModal(plugin.app, plugin, 'add', null, () => void refreshRules()).open();
   };
 
+  const notesUnder = (dir: string) =>
+    plugin.app.vault.getMarkdownFiles().filter((file) => file.path.startsWith(`${dir}/`)).length;
+
+  const handleAddReferenceDir = () => {
+    new ReferenceDirSuggestModal(plugin.app, referenceDirs, (path) => {
+      void (async () => {
+        try {
+          const result = await addReferenceDir(plugin.fs, path);
+          if (result.added) new Notice(t('config.referenceDirAdded', { dir: result.dir }));
+          // Also makes the live query snapshot re-read the config (main.ts wires this event).
+          plugin.events.trigger('dashboard-refresh');
+        } catch (error) {
+          new Notice(error instanceof ReferenceDirError ? error.message : String(error));
+        }
+      })();
+    }).open();
+  };
+
+  const handleRemoveReferenceDir = async (dir: string) => {
+    try {
+      const result = await removeReferenceDir(plugin.fs, dir);
+      if (result.removed) new Notice(t('config.referenceDirRemoved', { dir: result.dir }));
+      plugin.events.trigger('dashboard-refresh');
+    } catch (error) {
+      new Notice(error instanceof ReferenceDirError ? error.message : String(error));
+    }
+  };
+
   return (
     <div className="knowlery-config">
       {/* Schema & Guidance section */}
@@ -187,6 +224,43 @@ export function ConfigTab() {
           <span className="knowlery-config__file-row-label">INDEX.base</span>
           <span className="knowlery-config__file-row-arrow"><IconArrowRight size={14} /></span>
         </button>
+      </div>
+
+      {/* Reference directories section */}
+      <div className="knowlery-section-label">
+        <span>{t('config.referenceDirs', { count: referenceDirs.length })}</span>
+        <button
+          className="knowlery-section-label__action"
+          aria-label={t('config.addReferenceDir')}
+          onClick={handleAddReferenceDir}
+        >
+          <IconPlus size={14} />
+        </button>
+      </div>
+
+      <p className="knowlery-config__hint">{t('config.referenceDirsHint')}</p>
+
+      <div className="knowlery-config__files">
+        {referenceDirs.map((dir) => (
+          <div key={dir} className="knowlery-config__file-row knowlery-config__ref-row">
+            <span className="knowlery-config__file-row-icon"><IconFolder size={16} /></span>
+            <span className="knowlery-config__file-row-label">{dir}/</span>
+            <span className="knowlery-config__ref-count">
+              {t('config.referenceDirNotes', { count: notesUnder(dir) })}
+            </span>
+            <button
+              type="button"
+              className="knowlery-config__ref-remove"
+              aria-label={t('config.removeReferenceDir', { dir })}
+              onClick={() => void handleRemoveReferenceDir(dir)}
+            >
+              <IconX size={14} />
+            </button>
+          </div>
+        ))}
+        {referenceDirs.length === 0 && (
+          <p className="knowlery-config__empty">{t('config.noReferenceDirs')}</p>
+        )}
       </div>
 
       {/* Agent Rules section */}

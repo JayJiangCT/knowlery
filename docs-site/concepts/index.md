@@ -144,6 +144,8 @@ Those receipts feed:
 
 Staleness is computed mechanically, never guessed: a compiled page is stale when a source it cites changed after the page was last written, and a user note is uncooked when no compiled page cites it. The dashboard's Knowledge health section, `knowlery stale`, `obsidian knowlery:stale`, and the MCP `stale` tool all render the same deterministic report — it is the exact work list a `/cook` session should scope from.
 
+Not every note is meant to be cooked. Directories listed under `referenceDirs` in `.knowlery/config.json` (for example an imported team knowledge base) remain fully queryable but are never reported as uncooked — the same treatment installed bundles under `Library/` get. Manage the list from the dashboard's Config tab or with `knowlery reference list|add|remove <dir>`.
+
 ## Knowledge Bundles
 
 A knowledge bundle is a portable, reviewed slice of a vault's compiled knowledge, packaged in the OKF format.

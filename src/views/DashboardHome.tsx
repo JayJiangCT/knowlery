@@ -94,6 +94,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
   } | null>(null);
   const [installedBundles, setInstalledBundles] = useState<InstalledBundlesFile | null>(null);
   const [staleness, setStaleness] = useState<StalenessReport | null>(null);
+  const [referenceConfigError, setReferenceConfigError] = useState<string | null>(null);
 
   const refresh = useCallback(async (payload?: DashboardRefreshPayload) => {
     const activity = await readRecentActivityRecords(plugin.fs, 14);
@@ -111,6 +112,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
     setInstalledBundles(await readInstalledBundles(plugin.fs));
     const snapshot = plugin.liveSnapshot?.snapshot() ?? null;
     setStaleness(snapshot ? computeStaleness(snapshot) : null);
+    setReferenceConfigError(snapshot?.referenceConfigError ?? null);
     if (payload) plugin.events.trigger('dashboard-refresh-complete', payload);
   }, [plugin]);
 
@@ -303,6 +305,7 @@ export function DashboardHome(props: { navigate: (screen: DashboardScreen, paylo
 
       <KnowledgeHealthSection
         report={staleness}
+        warning={referenceConfigError}
         onViewAll={() => props.navigate('knowledge-health')}
       />
 
@@ -667,10 +670,21 @@ const STALE_CAP = 3;
 
 function KnowledgeHealthSection(props: {
   report: StalenessReport | null;
+  /** Why reference directories are currently off (malformed .knowlery/config.json), if so. */
+  warning?: string | null;
   onViewAll: () => void;
 }) {
   const { report } = props;
-  if (!report) return null; // live snapshot still warming up — the section appears on the next refresh
+  if (!report) {
+    // Live snapshot still warming up (first build after load). Keep the section on
+    // screen so Knowledge health never silently vanishes; main.ts refreshes on ready.
+    return (
+      <section className="knowlery-home__activity" aria-label={t('home.knowledgeHealth')}>
+        <div className="knowlery-section-label">{t('home.knowledgeHealth')}</div>
+        <p className="knowlery-home__note-empty">{t('screens.snapshotWarming')}</p>
+      </section>
+    );
+  }
 
   const stale = report.stalePages;
   const uncooked = report.uncookedNotes;
@@ -683,6 +697,11 @@ function KnowledgeHealthSection(props: {
   return (
     <section className="knowlery-home__activity" aria-label={t('home.knowledgeHealth')}>
       <div className="knowlery-section-label">{t('home.knowledgeHealth')}</div>
+      {props.warning && (
+        <p className="knowlery-home__note-empty knowlery-home__health-warning">
+          {t('home.health.configWarning', { error: props.warning })}
+        </p>
+      )}
       {stale.length === 0 && uncooked.length === 0 ? (
         <p className="knowlery-home__note-empty">{t('home.health.upToDate')}</p>
       ) : (

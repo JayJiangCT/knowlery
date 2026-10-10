@@ -179,6 +179,7 @@ export const en = {
   'screens.allCited': 'Every user note is cited by a compiled page.',
   'screens.danglingSources': 'Dangling sources ({count})',
   'screens.citesMissing': 'cites missing note: {path}',
+  'home.health.configWarning': 'Reference directories are off until .knowlery/config.json is fixed: {error}',
 
   // Settings — Diagnostics (HealthTab)
   'health.configuration': 'Configuration',
@@ -231,6 +232,15 @@ export const en = {
   'config.fileNotFound': 'File not found: {path}',
   'config.ruleDeleted': 'Deleted rule "{name}"',
   'config.noRules': 'No rules configured yet.',
+  'config.referenceDirs': 'Reference directories ({count})',
+  'config.referenceDirsHint': 'Imported knowledge you read but never compile: stays queryable, never listed as uncooked.',
+  'config.addReferenceDir': 'Add reference directory',
+  'config.chooseReferenceDir': 'Choose a vault folder…',
+  'config.referenceDirNotes': '{count} notes',
+  'config.removeReferenceDir': 'Remove {dir} from reference directories',
+  'config.referenceDirAdded': 'Marked {dir}/ as reference material',
+  'config.referenceDirRemoved': 'Removed {dir}/ from reference directories',
+  'config.noReferenceDirs': 'No reference directories.',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': 'Knowledge',
