@@ -10,6 +10,30 @@ export interface ReleaseNote {
 }
 
 export const RELEASE_NOTES: Record<string, ReleaseNote> = {
+  '1.6.0': {
+    version: '1.6.0',
+    date: 'Oct 10',
+    title: 'A cook backlog you can actually work through',
+    summary: 'Uncooked notes are now ranked by how much they are worth compiling, the junk that used to flood the list is gone, and every agent — in Obsidian or in a terminal — reads the same order.',
+    highlights: [
+      {
+        title: 'Jev ranks the backlog, once',
+        description: 'Add a TypeSafe AI key in settings and press Rank in Knowledge health: every uncooked note gets a worth-compiling score and a suggested target page, saved to .knowlery/triage.json. Codex, Claude Code, Cursor and the CLI read the same file — knowlery stale and /cook follow the ranking without you doing anything else.',
+      },
+      {
+        title: 'Reference and ignored directories',
+        description: 'Imported knowledge you want searchable but never cooked goes in referenceDirs; folders that should not be indexed at all go in ignoreDirs. Both live in .knowlery/config.json and are editable from Dashboard → Config or knowlery reference / knowlery ignore.',
+      },
+      {
+        title: 'Build output stays out of the index',
+        description: 'node_modules and __pycache__ are always skipped; dist, build, target and friends are skipped only next to a project manifest, never at the vault root. Every skipped directory is listed in Diagnostics and knowlery health, with its reason.',
+      },
+      {
+        title: 'Generated files are not notes',
+        description: 'The AGENTS.md Knowlery writes for your agents no longer shows up as an uncooked note or a query result.',
+      },
+    ],
+  },
   '1.5.0': {
     version: '1.5.0',
     date: 'Sep 7',

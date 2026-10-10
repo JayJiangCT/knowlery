@@ -1,5 +1,158 @@
 # Changelog
 
+## [1.6.0] — 2026-10-10
+
+This release is about the cook backlog: which of your never-compiled notes
+an agent should read first, and which should never have been on the list.
+Everything here is additive under the 1.0 workspace contract — one new
+optional config file (`.knowlery/config.json`), one new optional store
+(`.knowlery/triage.json`), three new CLI subcommands, and optional keys on
+`health --json` / `stale --json`. A vault that uses none of it behaves as
+before.
+
+### Jev ranks the uncooked backlog (#79, #81)
+
+- **Optional Jev cook triage.** [Jev](https://typesafe.ai) is TypeSafe AI's
+  decision model. With a TypeSafe API key, Knowlery asks it two questions per
+  uncooked note — *is this worth compiling?* and *which existing compiled
+  page is about the same subject?* — and turns the answers into a reading
+  order for `/cook` plus a suggested update target per note. The experiments
+  in #77 showed Jev is a usable **ranker** (its confident-yes band was clean
+  on real notes) but not a filter, so nothing is ever hidden: scored notes
+  above 0.2 come first by score, unscored notes next (newest first), the
+  ≤ 0.2 band last — still listed, still read. Without a key nothing changes.
+- **Configure the key once.** The key goes in the plugin's settings (new
+  group *Jev cook triage (optional)*: what it unlocks, the privacy boundary,
+  a *Get a key* button, a password field with *Clear*). It is stored in the
+  plugin's `data.json` under the vault config folder — exclude that file
+  from sync/git if you share the vault. The Node shells read the same file:
+  `knowlery stale`, the MCP `stale` tool and `knowlery triage` resolve the
+  key as `TYPESAFE_API_KEY` → `.obsidian/plugins/knowlery/data.json`, so an
+  agent in Codex, Claude Code, Cursor or any MCP client gets the ranking
+  with no second setup step. Vaults with a non-default config folder use the
+  environment variable.
+- **Scores persist in `.knowlery/triage.json`** (schemaVersion 1): path →
+  `worth`, `target`, `mtimeMs`, `scoredAt`, plus the model id. A note is
+  scored once until it changes; entries for notes that are no longer
+  uncooked are pruned on write. The file holds paths and numbers only —
+  never the key, never note text. All four staleness transports (MCP
+  `stale`, `knowlery stale`, `obsidian knowlery:stale`, and the offline
+  `node .knowlery/bin/query.mjs --stale`) read it and print the same order;
+  `uncookedNotes[].jev = { worth, target }` is an additive optional field in
+  `stale --json` and the MCP result.
+- **Three ways to produce scores.**
+  - Dashboard → Knowledge health: **Rank N with Jev** scores the whole
+    backlog with overall progress, then shows the scored list (green ≥ 0.8,
+    faint ≤ 0.2) with `→ update <page>` / `→ new page`, skipped/failed
+    counts, a cost estimate, **Copy cook prompt** and **Re-rank**. Without a
+    key the screen shows a one-line hint with an *Open settings* link above
+    the unchanged list.
+  - **`knowlery triage [--json]`** (new) scores the whole backlog from a
+    terminal in passes of 40, printing progress, the confidence bands
+    (> 0.8 / 0.2–0.8 / ≤ 0.2), token count and cost. Idempotent and
+    resumable — the store is the cache. Refuses without a key and names
+    both places to put one.
+  - `knowlery stale` / MCP `stale` top up at most 40 unscored notes (newest
+    first) before rendering, so an agent's critical path never waits on a
+    long run; failures degrade to the mechanical report with diagnostics on
+    stderr, keeping `--json` clean.
+  - Optional **Score new notes automatically** toggle (default **off**):
+    about 30 s after notes settle, the plugin scores up to 40 unscored notes
+    in the background and writes the store — for people whose workbench is
+    an agent rather than Obsidian.
+- **Cost and privacy.** About $0.0001 per note; a 381-note backlog cost
+  ≈ $0.03 in ~42 s, a 4,000-note vault is on the order of $0.35. Jev
+  receives each note's path, title, frontmatter and first 15 non-empty
+  lines, plus the titles and descriptions of up to five shortlisted compiled
+  pages — never full bodies. Retrieval (`runQuery`, `query.mjs`) never calls
+  Jev. The model is pinned (`jev-1.13.0`).
+- **Cook skill.** Incremental Mode gains a *Jev-ranked uncooked notes*
+  paragraph: the `jev` field is a reading order, not a filter; open the
+  suggested target before writing; still glance at the ≤ 0.2 band; never
+  ask the user for the key or call Jev yourself; when most of a long list is
+  unscored, *suggest* `knowlery triage` rather than run it (it spends the
+  user's budget). The `knowlery-cli` skill documents `knowlery triage`.
+- **Cross-shell cache key.** Node reports fractional mtimes on APFS and
+  Obsidian reports the same instant rounded to whole milliseconds; the store
+  normalises to Obsidian's rounding and compares with a sub-millisecond
+  tolerance, so the plugin and the CLI/MCP recognise each other's scores
+  instead of re-scoring (and paying for) the same notes. The fs scanner now
+  reports whole-millisecond `mtimeMs` for the same reason (value precision
+  only).
+
+### What counts as uncooked (#78, #80, #82)
+
+- **Reference directories: queryable but never uncooked.** Imported
+  knowledge — a team KB pulled into the vault, say — must stay searchable
+  but is not your material to cook; on one work vault it put ~2,850 notes
+  on the uncooked list and buried the real work. `referenceDirs` in the new
+  `.knowlery/config.json` gives named directories the treatment `Library/`
+  bundles already had: scanned at user tier, excluded from the uncooked
+  report, in both the CLI scanner and the Obsidian live snapshot. Managed
+  with **`knowlery reference list [--json] | add <dir> | remove <dir>`** or
+  the new *Reference directories* section in Dashboard → Config (folder
+  picker, per-directory note count, remove). Absolute paths, `..`, hidden
+  directories and the reserved top-level directories are rejected.
+- **Scan exclusions that are safe for vaults that are not repos.** On one
+  vault 871 of 4,108 "uncooked notes" were READMEs under `node_modules/`.
+  The rules, shared by every transport, now layer as: hidden directories
+  (silent, as before) → `node_modules/`, `__pycache__/` always → `dist/
+  build/ target/ outputs/ coverage/ vendor/` **only beside a project
+  manifest** (`package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`,
+  `pom.xml`, `Makefile`, …) **and never at the vault root** — a notes folder
+  called `build/` stays indexed, and so does a top-level `outputs/` of
+  deliverables in a vault that happens to carry a root `package.json` →
+  **`ignoreDirs`**, whatever you name, in the same config file (a directory
+  may be in at most one list). Managed with **`knowlery ignore list
+  [--json] | add <dir> | remove <dir>`** or the *Ignored directories*
+  section in Config. The live snapshot re-judges siblings when a manifest
+  appears or disappears and prunes/re-reads pages the moment a list changes.
+- **Every skip is visible.** Because an excluded folder silently vanishes
+  from retrieval, every non-hidden skip is reported with its reason:
+  `knowlery health` prints a *Skipped directories (not indexed)* section
+  (`--json` gains an additive `skipped` key) and warns about configured
+  reference/ignored directories that no longer exist and about a malformed
+  `.knowlery/config.json`; Dashboard → Diagnostics gets an *Indexing*
+  section with the same list and a persistent warning row while the config
+  cannot be read; the Config tab shows that warning inline above both
+  lists. A malformed config degrades to "no reference or ignored
+  directories" identically in both transports, and says why.
+- **Generated agent files are not notes.** The vault-root `AGENTS.md` that
+  Knowlery regenerates from `KNOWLEDGE.md` and your rules joined the system
+  files (`KNOWLEDGE.md`, `SCHEMA.md`, `log.md`): it is never a page, an
+  uncooked note, or a query candidate — it used to rank first in
+  fresh-vault queries and get Jev-scored as uncooked. `.claude/CLAUDE.md`
+  and `.agents/` live under hidden directories and were never scanned.
+- **`/cook --all`** now states that it excludes `Library/`, reference
+  directories, ignored directories and the skipped directories; the
+  `knowlery-cli` skill documents `knowlery reference` and `knowlery ignore`.
+
+### Fixes
+
+- **Plugin reload refreshes `query.mjs` at the same version.** Swapping a
+  beta `main.js` in place used to leave the generated
+  `.knowlery/bin/query.mjs` stale until the version number changed; it is
+  now re-synced by content diff on every load, with the same newer-shell
+  downgrade guard as the full version sync.
+- Knowledge health: the home card no longer disappears while the live
+  snapshot is warming after a reload or while `.knowlery/config.json` is
+  malformed; the drill-in re-renders after a Rank run completes.
+- `knowlery triage` no longer prints "Scores saved" when every note already
+  had a current score and nothing was sent.
+- `tests/cli/ignore-commands.test.ts` no longer collides on
+  case-insensitive filesystems.
+
+### Contract
+
+- `POSITIONAL_LIMITS`: `reference: 2`, `ignore: 2`, `triage: 0` (added
+  1.6.0). `health --json` gains optional `skipped`; `stale --json` and the
+  MCP `stale` result gain optional `uncookedNotes[].jev`. No MCP write tool
+  for reference or ignored directories — agents observe the effect through
+  `stale` and `health`. Eval drift guard: the cook-skill edits in #78, #80
+  and #81 were prose-only for the existing fixtures and waived explicitly in
+  each PR; the agreed follow-up is to label a sample of the ≤ 0.2 band from
+  a real vault before hardening the skill's stance.
+
 ## [1.5.0] — 2026-09-07
 
 ### Every agent gets the same fixed context
