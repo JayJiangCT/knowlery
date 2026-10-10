@@ -11,6 +11,10 @@
  * 3. Conventional build-output names, but only when the directory sits inside a
  *    code project — i.e. its parent holds a project manifest (`package.json`,
  *    `Cargo.toml`, …). A plain `build/` or `target/` folder of notes is untouched.
+ *    The vault root never counts as such a project, even when it holds a manifest:
+ *    top-level folders are the user's primary organization (an `outputs/` of
+ *    deliverables, say), and a silent skip there is the costliest kind of mistake.
+ *    Use `ignoreDirs` for a vault that really is a repo with build output at the root.
  * 4. `ignoreDirs` from `.knowlery/config.json`: whatever the user names.
  *
  * Observed motivation: 871 of 4,108 "uncooked notes" in one vault were READMEs and
@@ -51,7 +55,10 @@ export interface IgnoredDir {
 }
 
 export interface ExclusionContext {
-  /** Vault-relative directories containing a PROJECT_MARKERS file; '' is the vault root. */
+  /**
+   * Vault-relative directories containing a PROJECT_MARKERS file; '' is the vault root,
+   * which may appear here but never triggers the build-output rule.
+   */
   projectRoots: ReadonlySet<string>;
   /** `ignoreDirs` from `.knowlery/config.json`, normalized. */
   ignoreDirs: readonly string[];
@@ -69,7 +76,7 @@ export function ignoreReasonForDir(dirPath: string, context: ExclusionContext): 
   const name = slash === -1 ? dirPath : dirPath.slice(slash + 1);
   const parent = slash === -1 ? '' : dirPath.slice(0, slash);
   if (ALWAYS_IGNORED_DIRS.has(name)) return 'builtin';
-  if (PROJECT_OUTPUT_DIRS.has(name) && context.projectRoots.has(parent)) return 'project-output';
+  if (PROJECT_OUTPUT_DIRS.has(name) && parent !== '' && context.projectRoots.has(parent)) return 'project-output';
   if (context.ignoreDirs.includes(dirPath)) return 'config';
   return null;
 }

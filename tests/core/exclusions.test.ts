@@ -47,6 +47,16 @@ describe('ignoreReasonForDir', () => {
     }
   });
 
+  it('never applies the build-output rule at the vault root, even when the root holds a manifest', () => {
+    const rootIsProject: ExclusionContext = { projectRoots: new Set(['', 'projects/app']), ignoreDirs: [] };
+    for (const name of PROJECT_OUTPUT_DIRS) {
+      expect(ignoreReasonForDir(name, rootIsProject)).toBeNull();
+      expect(ignoreReasonForDir(`projects/app/${name}`, rootIsProject)).toBe('project-output');
+    }
+    // node_modules at the root is still junk.
+    expect(ignoreReasonForDir('node_modules', rootIsProject)).toBe('builtin');
+  });
+
   it('ignores exactly the configured directories', () => {
     expect(ignoreReasonForDir('archive/2019', ctx)).toBe('config');
     expect(ignoreReasonForDir('archive', ctx)).toBeNull();
@@ -55,17 +65,18 @@ describe('ignoreReasonForDir', () => {
 });
 
 describe('isIgnoredPath', () => {
-  const ctx: ExclusionContext = { projectRoots: new Set(['']), ignoreDirs: ['archive'] };
+  const ctx: ExclusionContext = { projectRoots: new Set(['', 'app']), ignoreDirs: ['archive'] };
 
   it('excludes files under hidden, built-in, project-output, or configured ancestors', () => {
     expect(isIgnoredPath('.obsidian/plugins/x/README.md', ctx)).toBe(true);
     expect(isIgnoredPath('a/node_modules/b/README.md', ctx)).toBe(true);
-    expect(isIgnoredPath('dist/index.md', ctx)).toBe(true); // vault root is a project root here
+    expect(isIgnoredPath('app/dist/index.md', ctx)).toBe(true);
     expect(isIgnoredPath('archive/old/note.md', ctx)).toBe(true);
   });
 
   it('keeps everything else, including files whose own name matches an excluded directory name', () => {
     expect(isIgnoredPath('notes/dist.md', ctx)).toBe(false);
+    expect(isIgnoredPath('dist/index.md', ctx)).toBe(false); // root manifest does not make top-level dist/ build output
     expect(isIgnoredPath('src/dist/readme.md', ctx)).toBe(false); // src/ holds no manifest
     expect(isIgnoredPath('archived/note.md', ctx)).toBe(false);
   });
@@ -99,6 +110,7 @@ describe('scanVault exclusions end to end', () => {
   it('skips junk, keeps same-named notes folders, honors ignoreDirs, and reports every skip', () => {
     const root = makeVault({
       'Daily/note.md': NOTE('Daily'),
+      'package.json': '{}', // a vault that is also a repo: root manifest must not hide top-level folders
       'build/plan.md': NOTE('Build plan'),
       'projects/app/package.json': '{}',
       'projects/app/README.md': NOTE('App readme'),
