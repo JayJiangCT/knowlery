@@ -195,7 +195,7 @@ export const en = {
   'screens.allCited': 'Every user note is cited by a compiled page.',
   'screens.danglingSources': 'Dangling sources ({count})',
   'screens.citesMissing': 'cites missing note: {path}',
-  'home.health.configWarning': 'Reference directories are off until .knowlery/config.json is fixed: {error}',
+  'home.health.configWarning': 'Reference and ignored directories are off until .knowlery/config.json is fixed: {error}',
 
   // Dashboard — Jev triage (optional)
   'jev.hint.noKey': 'Add a Jev API key to rank these notes by compile-worthiness.',
@@ -258,7 +258,8 @@ export const en = {
   'health.brokenWikilinks': 'Broken wikilinks',
   'health.missingFrontmatter': 'Missing frontmatter',
   'health.indexing': 'Indexing',
-  'health.skippedDirsHint': 'Directories retrieval and the staleness report never see. A real notes folder listed here can be rescued by moving it or renaming it; hidden folders are not listed.',
+  'health.skippedDirsHint': 'Directories retrieval and the staleness report never see. A real notes folder listed here can be rescued: move or rename it, or remove it from the ignored directories if you added it. Hidden folders are not listed.',
+  'health.configFile': '.knowlery/config.json',
   'health.skippedDirs': 'Skipped directories',
   'health.skipReason.builtin': 'always skipped',
   'health.skipReason.projectOutput': 'build output beside a project manifest',
@@ -281,6 +282,7 @@ export const en = {
   'config.referenceDirsHint': 'Imported knowledge you read but never compile: stays queryable, never listed as uncooked.',
   'config.addReferenceDir': 'Add reference directory',
   'config.chooseReferenceDir': 'Choose a vault folder…',
+  'config.referenceDirNote': '{count} note',
   'config.referenceDirNotes': '{count} notes',
   'config.removeReferenceDir': 'Remove {dir} from reference directories',
   'config.referenceDirAdded': 'Marked {dir}/ as reference material',

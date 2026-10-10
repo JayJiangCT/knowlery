@@ -128,12 +128,14 @@ export function HealthTab() {
   const [diagnosisTime, setDiagnosisTime] = useState<Date | null>(null);
   const [integrity, setIntegrity] = useState<ConfigIntegrity | null>(null);
   const [skippedDirs, setSkippedDirs] = useState<IgnoredDir[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   const loadStats = useCallback(() => {
     const s = getVaultStats(plugin.app);
     setStats(s);
     // Same list `knowlery health` prints: every non-hidden directory retrieval never sees.
     setSkippedDirs(plugin.liveSnapshot?.ignoredDirs() ?? []);
+    setConfigError(plugin.liveSnapshot?.configError() ?? null);
   }, [plugin]);
 
   const loadIntegrity = useCallback(async (payload?: DashboardRefreshPayload) => {
@@ -275,6 +277,15 @@ export function HealthTab() {
         <span>{t('health.indexing')}</span>
       </div>
       <p className="knowlery-health__hint">{t('health.skippedDirsHint')}</p>
+      {configError && (
+        <div className="knowlery-health__integrity-card is-loaded">
+          <IntegrityRow
+            state="warn"
+            label={t('health.configFile')}
+            detail={t('home.health.configWarning', { error: configError })}
+          />
+        </div>
+      )}
       <ExpandableList
         title={t('health.skippedDirs')}
         items={skippedDirs.map((entry) => `${entry.path}/ — ${t(SKIP_REASON_KEY[entry.reason])}`)}

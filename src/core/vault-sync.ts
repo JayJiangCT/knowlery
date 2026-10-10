@@ -39,11 +39,8 @@ export async function runVaultSync(
   const manifest = await readManifest(fs);
   const guardActive = toolVersion !== undefined && parsesAsVersion(toolVersion);
 
-  if (guardActive && manifest?.lastSyncedBy && parsesAsVersion(manifest.lastSyncedBy)) {
-    if (compareVersions(toolVersion, manifest.lastSyncedBy) < 0) {
-      return { skipped: 'newer-shell', lastSyncedBy: manifest.lastSyncedBy };
-    }
-  }
+  const newerShell = guardActive ? newerShellThan(toolVersion, manifest?.lastSyncedBy) : null;
+  if (newerShell) return { skipped: 'newer-shell', lastSyncedBy: newerShell };
 
   await syncBuiltinSkills(fs);
   await syncQueryScript(fs);
@@ -65,6 +62,28 @@ export async function runVaultSync(
     await fs.write(normalizeVaultPath(MANIFEST_PATH), JSON.stringify(manifest, null, 2));
   }
 
+  return { skipped: false };
+}
+
+/** The version that last synced the vault when it is newer than `toolVersion`, else null. */
+function newerShellThan(toolVersion: string, lastSyncedBy: string | undefined): string | null {
+  if (!lastSyncedBy || !parsesAsVersion(lastSyncedBy)) return null;
+  return compareVersions(toolVersion, lastSyncedBy) < 0 ? lastSyncedBy : null;
+}
+
+/**
+ * The retrieval script alone, for a shell reload at an unchanged version (a beta build
+ * swapping main.js, a dev build): it is generated from the shell's own bundle, so a
+ * content diff — not the version — says whether the vault's copy is current. Same
+ * downgrade guard as the full sync.
+ */
+export async function syncQueryScriptIfCurrent(fs: VaultFs, toolVersion: string): Promise<VaultSyncResult> {
+  if (parsesAsVersion(toolVersion)) {
+    const manifest = await readManifest(fs);
+    const newerShell = newerShellThan(toolVersion, manifest?.lastSyncedBy);
+    if (newerShell) return { skipped: 'newer-shell', lastSyncedBy: newerShell };
+  }
+  await syncQueryScript(fs);
   return { skipped: false };
 }
 

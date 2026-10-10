@@ -22,9 +22,9 @@ function makeWorkspace(): string {
   const files: Record<string, string> = {
     'Projects/mine.md': NOTE('Mine'),
     'archive/old.md': NOTE('Old'),
-    'projects/app/package.json': '{}',
-    'projects/app/dist/README.md': NOTE('Built'),
-    'projects/app/node_modules/dep/README.md': NOTE('Dep'),
+    'code/app/package.json': '{}',
+    'code/app/dist/README.md': NOTE('Built'),
+    'code/app/node_modules/dep/README.md': NOTE('Dep'),
   };
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(join(root, path, '..'), { recursive: true });
@@ -115,8 +115,8 @@ describe('knowlery health — skipped directories (added 1.6.0)', () => {
       expect(report.skipped).toEqual({
         dirs: [
           { path: 'archive', reason: 'config' },
-          { path: 'projects/app/dist', reason: 'project-output' },
-          { path: 'projects/app/node_modules', reason: 'builtin' },
+          { path: 'code/app/dist', reason: 'project-output' },
+          { path: 'code/app/node_modules', reason: 'builtin' },
         ],
         missingReferenceDirs: [],
         missingIgnoreDirs: [],
@@ -133,8 +133,8 @@ describe('knowlery health — skipped directories (added 1.6.0)', () => {
       const { log, output } = capture();
       await runHealth(fs, { root, log }).catch(() => undefined); // exits 1: this bare workspace lacks skills etc.
       expect(output()).toContain('Skipped directories (not indexed):');
-      expect(output()).toContain('projects/app/node_modules/ — always skipped');
-      expect(output()).toContain('projects/app/dist/ — build output beside a project manifest');
+      expect(output()).toContain('code/app/node_modules/ — always skipped');
+      expect(output()).toContain('code/app/dist/ — build output beside a project manifest');
       expect(output()).toContain('reference directory Projects/ is configured but does not exist');
       expect(output()).toContain('ignored directory archive/ is configured but does not exist');
     } finally {

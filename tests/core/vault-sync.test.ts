@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryFs } from '../mocks/memory-fs';
-import { compareVersions, runVaultSync } from '../../src/core/vault-sync';
+import { compareVersions, runVaultSync, syncQueryScriptIfCurrent } from '../../src/core/vault-sync';
+import { QUERY_SCRIPT } from '../../src/assets/query-script.generated';
 
 function manifest(overrides: Record<string, unknown> = {}): string {
   return JSON.stringify({
@@ -12,6 +13,36 @@ function manifest(overrides: Record<string, unknown> = {}): string {
     ...overrides,
   });
 }
+
+describe('syncQueryScriptIfCurrent (same-version reload)', () => {
+  it('rewrites a stale retrieval script by content, without touching the manifest', async () => {
+    const fs = createMemoryFs({
+      '.knowlery/manifest.json': manifest({ lastSyncedBy: '1.5.0' }),
+      '.knowlery/bin/query.mjs': '// old build\n',
+    });
+    expect(await syncQueryScriptIfCurrent(fs, '1.5.0')).toEqual({ skipped: false });
+    expect(fs.files.get('.knowlery/bin/query.mjs')).toBe(QUERY_SCRIPT);
+    expect(fs.writeLog).toEqual(['.knowlery/bin/query.mjs']);
+  });
+
+  it('is a no-op when the vault copy is already current', async () => {
+    const fs = createMemoryFs({
+      '.knowlery/manifest.json': manifest({ lastSyncedBy: '1.5.0' }),
+      '.knowlery/bin/query.mjs': QUERY_SCRIPT,
+    });
+    await syncQueryScriptIfCurrent(fs, '1.5.0');
+    expect(fs.writeLog).toEqual([]);
+  });
+
+  it('refuses to downgrade a vault last synced by a newer shell', async () => {
+    const fs = createMemoryFs({
+      '.knowlery/manifest.json': manifest({ lastSyncedBy: '1.7.0' }),
+      '.knowlery/bin/query.mjs': '// newer build\n',
+    });
+    expect(await syncQueryScriptIfCurrent(fs, '1.5.0')).toEqual({ skipped: 'newer-shell', lastSyncedBy: '1.7.0' });
+    expect(fs.writeLog).toEqual([]);
+  });
+});
 
 describe('sync downgrade guard (spec 0.7 f5, §2.5)', () => {
   it('refuses an older tool and writes nothing', async () => {
