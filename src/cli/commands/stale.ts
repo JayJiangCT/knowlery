@@ -45,7 +45,7 @@ export async function runStaleCommand(root: string, options: StaleCommandOptions
         const { scores, failures, skipped } = result.outcome;
         const parts = [`Jev scored ${scores.length} note(s)`];
         if (skipped > 0) parts.push(`${skipped} beyond the per-run cap left for next time`);
-        if (failures.length > 0) parts.push(`${failures.length} failed: ${failures[0].message}`);
+        if (failures.length > 0) parts.push(`${failures.length} failed: ${failures[0].message.replace(/\.$/, '')}`);
         options.warn?.(`${parts.join('; ')}.`);
       }
     } catch (error) {
