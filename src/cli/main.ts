@@ -11,7 +11,7 @@ import { runKbCommand } from './commands/kb';
 import { runMcpCommand, runMcpServeCommand } from './commands/mcp';
 import { KbRegistryError, resolveKb } from '../core/kb-registry';
 import { runStaleCommand } from './commands/stale';
-import { runReferenceCommand } from './commands/reference';
+import { runIgnoreCommand, runReferenceCommand } from './commands/reference';
 import { runIndexCommand } from './commands/index-map';
 import { runBundleCommand } from './commands/bundle';
 
@@ -151,6 +151,9 @@ async function main(): Promise<void> {
       break;
     case 'reference':
       await runReferenceCommand(fs, { sub: args.positionals[0], dir: args.positionals[1], json: args.json, log });
+      break;
+    case 'ignore':
+      await runIgnoreCommand(fs, { sub: args.positionals[0], dir: args.positionals[1], json: args.json, log });
       break;
     case 'index':
       await runIndexCommand(root, { json: args.json, log });

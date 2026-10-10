@@ -9,6 +9,14 @@ import {
   type VaultSnapshot,
 } from './scan';
 import { CONFIG_PATH, parseConfig } from '../reference-config';
+import {
+  PROJECT_MARKERS,
+  isIgnoredPath,
+  listIgnoredDirs,
+  projectRootsFromFiles,
+  type ExclusionContext,
+  type IgnoredDir,
+} from './exclusions';
 
 /**
  * In-memory vault snapshot backing the `obsidian knowlery:query` CLI handler
@@ -43,6 +51,9 @@ export class LiveQuerySnapshot {
   private bundleEntries: ScannedBundleEntry[] = [];
   private referenceDirs: string[] = [];
   private referenceConfigError: string | null = null;
+  private ignoreDirs: string[] = [];
+  /** Directories holding a project manifest; rebuilt from the vault file list, kept current on marker events. */
+  private projectRoots = new Set<string>();
   private isReady = false;
   private pendingRefresh = new Map<string, unknown>();
   private timers: SnapshotTimers;
@@ -70,16 +81,59 @@ export class LiveQuerySnapshot {
       pages: [...this.pages.values()],
       bundleEntries: this.bundleEntries,
       referenceDirs: this.referenceDirs,
+      ignoreDirs: this.ignoreDirs,
       ...(this.referenceConfigError ? { referenceConfigError: this.referenceConfigError } : {}),
+      ignoredDirs: this.ignoredDirs(),
     };
   }
 
+  private exclusions(): ExclusionContext {
+    return { projectRoots: this.projectRoots, ignoreDirs: this.ignoreDirs };
+  }
+
+  /** Same list the fs scanner reports, derived from the vault's folder tree. */
+  ignoredDirs(): IgnoredDir[] {
+    const folders = this.app.vault.getAllFolders?.(false) ?? [];
+    return listIgnoredDirs(folders.map((folder) => folder.path), this.exclusions());
+  }
+
   async build(): Promise<void> {
+    // Config (ignoreDirs) and project roots must be known before the first file is
+    // judged, so they load ahead of the page walk.
+    await this.refreshBundles();
+    this.projectRoots = projectRootsFromFiles(this.app.vault.getFiles().map((file) => file.path));
     for (const file of this.app.vault.getMarkdownFiles()) {
       await this.refreshFile(file.path);
     }
-    await this.refreshBundles();
     this.isReady = true;
+  }
+
+  /**
+   * A project manifest appearing or disappearing changes which sibling directories
+   * are build output; recompute roots and drop pages that are now excluded.
+   */
+  async handleMarkerChange(path: string): Promise<void> {
+    const name = path.slice(path.lastIndexOf('/') + 1);
+    if (!PROJECT_MARKERS.has(name)) return;
+    this.projectRoots = projectRootsFromFiles(this.app.vault.getFiles().map((file) => file.path));
+    await this.reconcileExclusions();
+  }
+
+  /**
+   * After an exclusion input changes: newly excluded directories lose their pages,
+   * and Markdown files that are no longer excluded (and not yet held) are read in.
+   * Skipped before the initial build, which walks every file anyway.
+   */
+  private async reconcileExclusions(): Promise<void> {
+    if (!this.isReady) return;
+    const context = this.exclusions();
+    for (const path of [...this.pages.keys()]) {
+      if (isIgnoredPath(path, context)) this.pages.delete(path);
+    }
+    for (const file of this.app.vault.getMarkdownFiles()) {
+      if (this.pages.has(file.path) || SYSTEM_FILES.has(file.path)) continue;
+      if (!isIgnoredPath(file.path, context)) await this.refreshFile(file.path);
+    }
   }
 
   /** Debounced per path: rapid successive edits to one file collapse into one re-read. */
@@ -112,6 +166,10 @@ export class LiveQuerySnapshot {
 
   async refreshFile(path: string): Promise<void> {
     if (SYSTEM_FILES.has(path)) return;
+    if (isIgnoredPath(path, this.exclusions())) {
+      this.pages.delete(path);
+      return;
+    }
     const file = this.app.vault.getFileByPath(path);
     if (!file) {
       this.pages.delete(path);
@@ -133,16 +191,21 @@ export class LiveQuerySnapshot {
    */
   async refreshBundles(): Promise<void> {
     const adapter = this.app.vault.adapter;
+    const previousIgnoreDirs = this.ignoreDirs.join('\n');
     try {
       const raw = (await adapter.exists(CONFIG_PATH)) ? await adapter.read(CONFIG_PATH) : null;
-      this.referenceDirs = parseConfig(raw).referenceDirs;
+      const config = parseConfig(raw);
+      this.referenceDirs = config.referenceDirs;
+      this.ignoreDirs = config.ignoreDirs;
       this.referenceConfigError = null;
     } catch (error) {
-      // Same degradation as the fs scanner: malformed config means no reference dirs,
-      // and the error rides on the snapshot so the dashboard can say why.
+      // Same degradation as the fs scanner: malformed config means empty lists, and
+      // the error rides on the snapshot so the dashboard can say why.
       this.referenceDirs = [];
+      this.ignoreDirs = [];
       this.referenceConfigError = error instanceof Error ? error.message : String(error);
     }
+    if (this.ignoreDirs.join('\n') !== previousIgnoreDirs) await this.reconcileExclusions();
     const registryPath = '.knowlery/bundles.json';
     const entries: ScannedBundleEntry[] = [];
     try {

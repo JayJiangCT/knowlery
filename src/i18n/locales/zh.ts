@@ -247,6 +247,12 @@ export const zh: Record<TranslationKey, string> = {
   'health.orphanNotes': '孤立笔记',
   'health.brokenWikilinks': '失效双链',
   'health.missingFrontmatter': '缺失 frontmatter',
+  'health.indexing': '索引范围',
+  'health.skippedDirsHint': '检索和过期报告永远看不到的目录。如果这里列出了真正的笔记文件夹，可以移动或重命名它来恢复；隐藏目录不在此列。',
+  'health.skippedDirs': '已跳过的目录',
+  'health.skipReason.builtin': '始终跳过',
+  'health.skipReason.projectOutput': '项目清单旁的构建产物',
+  'health.skipReason.config': '在 .knowlery/config.json 中被忽略',
 
   // Settings — Rules & schema (ConfigTab)
   'config.schemaGuidance': '结构与指引',
@@ -270,6 +276,14 @@ export const zh: Record<TranslationKey, string> = {
   'config.referenceDirAdded': '已将 {dir}/ 标记为参考材料',
   'config.referenceDirRemoved': '已将 {dir}/ 从参考目录中移除',
   'config.noReferenceDirs': '还没有参考目录。',
+  'config.ignoreDirs': '忽略目录（{count}）',
+  'config.ignoreDirsHint': '完全不属于知识的内容（生成产物、归档）：不会被扫描，检索和过期报告都看不到。node_modules/ 以及项目清单旁的构建产物会自动跳过——见「诊断」。',
+  'config.addIgnoreDir': '添加忽略目录',
+  'config.chooseIgnoreDir': '选择要忽略的 vault 文件夹…',
+  'config.removeIgnoreDir': '将 {dir} 从忽略目录中移除',
+  'config.ignoreDirAdded': '此后忽略 {dir}/',
+  'config.ignoreDirRemoved': '重新索引 {dir}/',
+  'config.noIgnoreDirs': '还没有忽略目录。',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': '知识',

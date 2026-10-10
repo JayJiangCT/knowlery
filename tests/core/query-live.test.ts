@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import type { App } from 'obsidian';
 import {
   buildPageFromContent,
@@ -38,14 +39,29 @@ date: 2026-01-02
 Mentioned widgets in passing.
 `;
 
+/**
+ * `files` may hold non-Markdown entries (e.g. a `package.json` project marker); they
+ * show up in getFiles() but not getMarkdownFiles(), as in Obsidian. Folders are derived
+ * from the file paths, since Obsidian has no empty folders worth indexing here.
+ */
 function stubApp(
   files: Record<string, string>,
   hidden: Record<string, string> = {},
 ): App {
   const asFile = (path: string) => ({ path, stat: { mtime: 1000 } });
+  const folders = () => {
+    const found = new Set<string>();
+    for (const path of Object.keys(files)) {
+      const segments = path.split('/');
+      for (let i = 1; i < segments.length; i++) found.add(segments.slice(0, i).join('/'));
+    }
+    return [...found].map((path) => ({ path }));
+  };
   return {
     vault: {
-      getMarkdownFiles: () => Object.keys(files).map(asFile),
+      getFiles: () => Object.keys(files).map(asFile),
+      getMarkdownFiles: () => Object.keys(files).filter((path) => path.endsWith('.md')).map(asFile),
+      getAllFolders: () => folders(),
       getFileByPath: (path: string) => (path in files ? asFile(path) : null),
       cachedRead: async (file: { path: string }) => files[file.path],
       adapter: {
@@ -214,5 +230,105 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
     await live.refreshBundles();
     expect(live.snapshot()!.referenceDirs).toEqual(['teams']);
     expect(live.snapshot()!.referenceConfigError).toBeUndefined();
+  });
+});
+
+describe('LiveQuerySnapshot exclusions (parity with query/exclusions.ts)', () => {
+  const paths = (live: LiveQuerySnapshot) => live.snapshot()!.pages.map((page) => page.path).sort();
+
+  it('skips node_modules anywhere, and build output only beside a project manifest', async () => {
+    const live = makeLive(
+      stubApp({
+        'Daily/note.md': PAGE_B,
+        'projects/app/package.json': '{}',
+        'projects/app/dist/README.md': PAGE_B,
+        'projects/app/node_modules/dep/README.md': PAGE_B,
+        'projects/app/src/notes.md': PAGE_B,
+        'build/plan.md': PAGE_B, // a notes folder that happens to be called build/
+      }),
+      1,
+    );
+    await live.build();
+    expect(paths(live)).toEqual(['Daily/note.md', 'build/plan.md', 'projects/app/src/notes.md']);
+    expect(live.snapshot()!.ignoredDirs).toEqual([
+      { path: 'projects/app/dist', reason: 'project-output' },
+      { path: 'projects/app/node_modules', reason: 'builtin' },
+    ]);
+  });
+
+  it('applies config ignoreDirs, drops pages when a dir is added and re-reads when removed', async () => {
+    const hidden: Record<string, string> = {};
+    const live = makeLive(stubApp({ 'archive/old.md': PAGE_B, 'Daily/note.md': PAGE_B }, hidden), 1);
+    await live.build();
+    expect(paths(live)).toEqual(['Daily/note.md', 'archive/old.md']);
+
+    hidden['.knowlery/config.json'] = JSON.stringify({ ignoreDirs: ['archive'] });
+    await live.refreshBundles();
+    expect(paths(live)).toEqual(['Daily/note.md']);
+    expect(live.snapshot()!.ignoreDirs).toEqual(['archive']);
+    expect(live.snapshot()!.ignoredDirs).toEqual([{ path: 'archive', reason: 'config' }]);
+    // Events for files under an ignored dir never resurrect them.
+    await live.refreshFile('archive/old.md');
+    expect(paths(live)).toEqual(['Daily/note.md']);
+
+    hidden['.knowlery/config.json'] = JSON.stringify({ ignoreDirs: [] });
+    await live.refreshBundles();
+    expect(paths(live)).toEqual(['Daily/note.md', 'archive/old.md']);
+  });
+
+  it('re-judges sibling build output when a project manifest appears or disappears', async () => {
+    const files: Record<string, string> = { 'proj/dist/out.md': PAGE_B, 'proj/src/in.md': PAGE_B };
+    const live = makeLive(stubApp(files), 1);
+    await live.build();
+    expect(paths(live)).toEqual(['proj/dist/out.md', 'proj/src/in.md']);
+
+    files['proj/package.json'] = '{}';
+    await live.handleMarkerChange('proj/package.json');
+    expect(paths(live)).toEqual(['proj/src/in.md']);
+
+    delete files['proj/package.json'];
+    await live.handleMarkerChange('proj/package.json');
+    expect(paths(live)).toEqual(['proj/dist/out.md', 'proj/src/in.md']);
+
+    // Non-marker files are a no-op, so vault events for ordinary notes cost nothing.
+    await live.handleMarkerChange('proj/src/in.md');
+    expect(paths(live)).toEqual(['proj/dist/out.md', 'proj/src/in.md']);
+  });
+
+  it('matches the fs scanner on the same tree, including the skipped-directory report', async () => {
+    const files: Record<string, string> = {
+      'Daily/note.md': PAGE_B,
+      'build/plan.md': PAGE_B,
+      'projects/app/package.json': '{}',
+      'projects/app/dist/README.md': PAGE_B,
+      'projects/app/dist/nested/deep.md': PAGE_B,
+      'projects/app/node_modules/dep/README.md': PAGE_B,
+      'projects/app/src/notes.md': PAGE_B,
+      'archive/old.md': PAGE_B,
+      'vendor/plain/notes.md': PAGE_B, // no manifest at the root → scanned
+    };
+    const hidden = { '.knowlery/config.json': JSON.stringify({ ignoreDirs: ['archive'] }) };
+    const root = mkdtempSync(join(tmpdir(), 'knowlery-parity-'));
+    try {
+      for (const [path, content] of Object.entries({ ...files, ...hidden })) {
+        mkdirSync(join(root, dirname(path)), { recursive: true });
+        writeFileSync(join(root, path), content);
+      }
+      const fsSnapshot = scanVault(root);
+      const live = makeLive(stubApp(files, hidden), 1);
+      await live.build();
+      const liveSnapshot = live.snapshot()!;
+
+      expect(paths(live)).toEqual(fsSnapshot.pages.map((page) => page.path).sort());
+      expect(liveSnapshot.ignoredDirs).toEqual(fsSnapshot.ignoredDirs);
+      expect(liveSnapshot.ignoreDirs).toEqual(fsSnapshot.ignoreDirs);
+      expect(fsSnapshot.ignoredDirs).toEqual([
+        { path: 'archive', reason: 'config' },
+        { path: 'projects/app/dist', reason: 'project-output' },
+        { path: 'projects/app/node_modules', reason: 'builtin' },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

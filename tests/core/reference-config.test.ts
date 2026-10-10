@@ -6,7 +6,9 @@ import {
   CONFIG_PATH,
   RESERVED_TOP_LEVEL,
   ReferenceDirError,
+  addDir,
   addReferenceDir,
+  emptyConfig,
   isUnderReferenceDir,
   normalizeReferenceDir,
   parseConfig,
@@ -44,6 +46,15 @@ describe('reference-config parsing', () => {
   it('malformed content is loud, not an empty list (silently un-referencing everything is worse)', () => {
     expect(() => parseConfig('{')).toThrow(ReferenceDirError);
     expect(() => parseConfig(JSON.stringify({ referenceDirs: 'teams' }))).toThrow(ReferenceDirError);
+  });
+
+  it('carries ignoreDirs alongside referenceDirs, and refuses a directory in both', () => {
+    expect(emptyConfig()).toEqual({ schemaVersion: 1, referenceDirs: [], ignoreDirs: [] });
+    const config = parseConfig(JSON.stringify({ referenceDirs: ['teams'], ignoreDirs: ['archive/', 'archive'] }));
+    expect(config.ignoreDirs).toEqual(['archive']);
+    expect(() => parseConfig(JSON.stringify({ ignoreDirs: 'archive' }))).toThrow(ReferenceDirError);
+    expect(() => parseConfig(JSON.stringify({ referenceDirs: ['teams'], ignoreDirs: ['teams'] })))
+      .toThrow(/cannot be both/);
   });
 
   it('reserved directories pin to the scanner\'s AGENT_DIRS plus Library and inbox', () => {
@@ -123,6 +134,21 @@ describe('add / remove', () => {
       expect((await removeReferenceDir(fs, 'vendors')).referenceDirs).toEqual(['teams']);
       expect((await removeReferenceDir(fs, 'vendors')).removed).toBe(false);
       expect((await readConfig(fs)).referenceDirs).toEqual(['teams']);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps the two lists disjoint: a dir in one list (or under it) cannot join the other', async () => {
+    const root = makeVault({ 'teams/a.md': NOTE('A'), 'teams/sub/c.md': NOTE('C'), 'archive/b.md': NOTE('B') });
+    const fs = nodeVaultFs(root);
+    try {
+      await addDir(fs, 'referenceDirs', 'teams');
+      await expect(addDir(fs, 'ignoreDirs', 'teams')).rejects.toThrow(/already a reference directory/);
+      await expect(addDir(fs, 'ignoreDirs', 'teams/sub')).rejects.toThrow(/already a reference directory/);
+      expect((await addDir(fs, 'ignoreDirs', 'archive')).dirs).toEqual(['archive']);
+      await expect(addDir(fs, 'referenceDirs', 'archive')).rejects.toThrow(/already an ignored directory/);
+      expect(await readConfig(fs)).toEqual({ schemaVersion: 1, referenceDirs: ['teams'], ignoreDirs: ['archive'] });
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

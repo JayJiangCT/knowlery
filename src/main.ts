@@ -217,10 +217,19 @@ export default class KnowleryPlugin extends Plugin {
       if (snapshot) {
         // Home renders a warming placeholder until the first build lands; refresh it then.
         void snapshot.build().then(() => this.events.trigger('dashboard-refresh'));
-        this.registerEvent(this.app.vault.on('create', (file) => snapshot.scheduleRefresh(file.path)));
+        this.registerEvent(this.app.vault.on('create', (file) => {
+          snapshot.scheduleRefresh(file.path);
+          void snapshot.handleMarkerChange(file.path);
+        }));
         this.registerEvent(this.app.vault.on('modify', (file) => snapshot.scheduleRefresh(file.path)));
-        this.registerEvent(this.app.vault.on('delete', (file) => snapshot.handleDelete(file.path)));
-        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => snapshot.handleRename(oldPath, file.path)));
+        this.registerEvent(this.app.vault.on('delete', (file) => {
+          snapshot.handleDelete(file.path);
+          void snapshot.handleMarkerChange(file.path);
+        }));
+        this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
+          snapshot.handleRename(oldPath, file.path);
+          void snapshot.handleMarkerChange(oldPath).then(() => snapshot.handleMarkerChange(file.path));
+        }));
         // Bundle registry files are hidden, so vault events never fire for them; the
         // dashboard-refresh event fires after bundle install/uninstall.
         this.events.on('dashboard-refresh', () => void snapshot.refreshBundles());

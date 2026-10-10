@@ -252,6 +252,12 @@ export const en = {
   'health.orphanNotes': 'Orphan notes',
   'health.brokenWikilinks': 'Broken wikilinks',
   'health.missingFrontmatter': 'Missing frontmatter',
+  'health.indexing': 'Indexing',
+  'health.skippedDirsHint': 'Directories retrieval and the staleness report never see. A real notes folder listed here can be rescued by moving it or renaming it; hidden folders are not listed.',
+  'health.skippedDirs': 'Skipped directories',
+  'health.skipReason.builtin': 'always skipped',
+  'health.skipReason.projectOutput': 'build output beside a project manifest',
+  'health.skipReason.config': 'ignored in .knowlery/config.json',
 
   // Settings — Rules & schema (ConfigTab)
   'config.schemaGuidance': 'Schema & Guidance',
@@ -275,6 +281,14 @@ export const en = {
   'config.referenceDirAdded': 'Marked {dir}/ as reference material',
   'config.referenceDirRemoved': 'Removed {dir}/ from reference directories',
   'config.noReferenceDirs': 'No reference directories.',
+  'config.ignoreDirs': 'Ignored directories ({count})',
+  'config.ignoreDirsHint': 'Not knowledge at all (generated output, archives): never scanned, so invisible to retrieval and to the staleness report. node_modules/ and build output beside a project manifest are skipped automatically — see Diagnostics.',
+  'config.addIgnoreDir': 'Add ignored directory',
+  'config.chooseIgnoreDir': 'Choose a vault folder to ignore…',
+  'config.removeIgnoreDir': 'Remove {dir} from ignored directories',
+  'config.ignoreDirAdded': 'Ignoring {dir}/ from now on',
+  'config.ignoreDirRemoved': 'Indexing {dir}/ again',
+  'config.noIgnoreDirs': 'No ignored directories.',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': 'Knowledge',
