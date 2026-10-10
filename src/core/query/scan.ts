@@ -26,9 +26,12 @@ export const AGENT_DIRS = ['entities', 'concepts', 'comparisons', 'queries'] as 
 /**
  * Vault-root files the system maintains about the vault rather than knowledge in it:
  * agent instruction docs plus the cook history log. Never lookup targets, never cook
- * material (spec f3 amendment: log.md must not appear as an uncooked note).
+ * material (spec f3 amendment: log.md must not appear as an uncooked note; AGENTS.md
+ * is rebuilt by Knowlery from KNOWLEDGE.md and the rules, so it is config, not a note —
+ * it was ranking first in fresh-vault queries and getting Jev-scored as uncooked).
+ * `.claude/CLAUDE.md` and `.agents/` are under hidden directories and never scanned.
  */
-export const SYSTEM_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md', 'log.md']);
+export const SYSTEM_FILES = new Set(['KNOWLEDGE.md', 'SCHEMA.md', 'AGENTS.md', 'log.md']);
 
 export type PageTier = 'agent' | 'bundle' | 'user';
 

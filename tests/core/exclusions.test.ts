@@ -14,7 +14,8 @@ import {
   type ExclusionContext,
 } from '../../src/core/query/exclusions';
 import { CONFIG_PATH } from '../../src/core/reference-config';
-import { scanVault } from '../../src/core/query/scan';
+import { runQuery } from '../../src/core/query/engine';
+import { SYSTEM_FILES, scanVault } from '../../src/core/query/scan';
 import { computeStaleness } from '../../src/core/query/staleness';
 
 const NOTE = (title: string) => `---\ntitle: ${title}\n---\n\n${title}.\n`;
@@ -144,6 +145,29 @@ describe('scanVault exclusions end to end', () => {
         'projects/app/README.md',
         'projects/lib/src/notes.md',
       ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('generated agent docs and the cook log are neither pages, uncooked notes, nor query candidates', () => {
+    // AGENTS.md is rebuilt by Knowlery from KNOWLEDGE.md and the rules: it ranked first in
+    // fresh-vault queries and got Jev-scored as an uncooked note until it joined SYSTEM_FILES.
+    const root = makeVault({
+      'KNOWLEDGE.md': '# Knowledge\n\nHow this vault is organized.\n',
+      'SCHEMA.md': '# Schema\n',
+      'AGENTS.md': '# Agents\n\nKnowledge base instructions for agents working in this vault.\n',
+      'log.md': '# Cook Log\n\n| Date | Mode |\n',
+      '.claude/CLAUDE.md': '# Claude\n\nKnowledge base instructions.\n',
+      'Daily/note.md': NOTE('Knowledge base instructions'),
+    });
+    try {
+      const snapshot = scanVault(root);
+      expect(SYSTEM_FILES.has('AGENTS.md')).toBe(true);
+      expect(snapshot.pages.map((page) => page.path)).toEqual(['Daily/note.md']);
+      expect(computeStaleness(snapshot).uncookedNotes.map((note) => note.path)).toEqual(['Daily/note.md']);
+      const result = runQuery('knowledge base instructions for agents', snapshot, 10);
+      expect(result.candidates.map((candidate) => candidate.path)).toEqual(['Daily/note.md']);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
