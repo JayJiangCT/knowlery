@@ -174,6 +174,7 @@ export const zh: Record<TranslationKey, string> = {
   'screens.allCited': '每篇用户笔记都被已编译页面引用。',
   'screens.danglingSources': '悬空来源（{count}）',
   'screens.citesMissing': '引用了缺失的笔记：{path}',
+  'home.health.configWarning': '在修复 .knowlery/config.json 之前，reference directories 已停用：{error}',
 
   // Settings — Diagnostics (HealthTab)
   'health.configuration': '配置',

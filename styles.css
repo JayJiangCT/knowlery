@@ -1012,6 +1012,10 @@
   background: var(--background-modifier-hover);
 }
 
+.knowlery-home__health-warning {
+  color: var(--text-warning);
+}
+
 .knowlery-config__hint {
   font-size: var(--knowlery-meta-size);
   color: var(--text-muted);

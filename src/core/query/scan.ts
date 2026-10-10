@@ -72,6 +72,8 @@ export interface VaultSnapshot {
    * and queryable like any user note, never listed as uncooked. Absent means none.
    */
   referenceDirs?: string[];
+  /** Set when `.knowlery/config.json` could not be parsed; reference dirs are then treated as none. */
+  referenceConfigError?: string;
 }
 
 export function scanVault(root: string): VaultSnapshot {
@@ -82,17 +84,24 @@ export function scanVault(root: string): VaultSnapshot {
     const page = loadPage(file, path);
     if (page) pages.push(page);
   }
-  return { root, pages, bundleEntries: loadBundleEntries(root), referenceDirs: loadReferenceDirs(root) };
+  const reference = loadReferenceDirs(root);
+  return {
+    root,
+    pages,
+    bundleEntries: loadBundleEntries(root),
+    referenceDirs: reference.referenceDirs,
+    ...(reference.error ? { referenceConfigError: reference.error } : {}),
+  };
 }
 
-/** Malformed config degrades to "no reference dirs" here; `knowlery reference list` reports the error loudly. */
-function loadReferenceDirs(root: string): string[] {
+/** Malformed config degrades to "no reference dirs" here, with the error carried on the snapshot for surfaces to show. */
+function loadReferenceDirs(root: string): { referenceDirs: string[]; error?: string } {
   const configPath = join(root, CONFIG_PATH);
-  if (!existsSync(configPath)) return [];
+  if (!existsSync(configPath)) return { referenceDirs: [] };
   try {
-    return parseConfig(readFileSync(configPath, 'utf8')).referenceDirs;
-  } catch {
-    return [];
+    return { referenceDirs: parseConfig(readFileSync(configPath, 'utf8')).referenceDirs };
+  } catch (error) {
+    return { referenceDirs: [], error: error instanceof Error ? error.message : String(error) };
   }
 }
 

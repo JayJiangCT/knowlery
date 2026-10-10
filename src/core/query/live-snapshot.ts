@@ -42,6 +42,7 @@ export class LiveQuerySnapshot {
   private pages = new Map<string, ScannedPage>();
   private bundleEntries: ScannedBundleEntry[] = [];
   private referenceDirs: string[] = [];
+  private referenceConfigError: string | null = null;
   private isReady = false;
   private pendingRefresh = new Map<string, unknown>();
   private timers: SnapshotTimers;
@@ -69,6 +70,7 @@ export class LiveQuerySnapshot {
       pages: [...this.pages.values()],
       bundleEntries: this.bundleEntries,
       referenceDirs: this.referenceDirs,
+      ...(this.referenceConfigError ? { referenceConfigError: this.referenceConfigError } : {}),
     };
   }
 
@@ -134,8 +136,12 @@ export class LiveQuerySnapshot {
     try {
       const raw = (await adapter.exists(CONFIG_PATH)) ? await adapter.read(CONFIG_PATH) : null;
       this.referenceDirs = parseConfig(raw).referenceDirs;
-    } catch {
-      // Malformed config — keep the previous reference dirs; the CLI/dashboard surface the error.
+      this.referenceConfigError = null;
+    } catch (error) {
+      // Same degradation as the fs scanner: malformed config means no reference dirs,
+      // and the error rides on the snapshot so the dashboard can say why.
+      this.referenceDirs = [];
+      this.referenceConfigError = error instanceof Error ? error.message : String(error);
     }
     const registryPath = '.knowlery/bundles.json';
     const entries: ScannedBundleEntry[] = [];

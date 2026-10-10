@@ -195,4 +195,24 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
     expect(snapshot.bundleEntries).toHaveLength(1);
     expect(snapshot.bundleEntries[0].path).toBe('Library/pack/concepts/thing.md');
   });
+
+  it('degrades a malformed reference config exactly like the fs scanner, and says why', async () => {
+    const hidden: Record<string, string> = { '.knowlery/config.json': JSON.stringify({ referenceDirs: ['teams'] }) };
+    const live = makeLive(stubApp({ 'teams/x.md': PAGE_B, 'Daily/note.md': PAGE_B }, hidden), 1);
+    await live.build();
+    expect(live.snapshot()!.referenceDirs).toEqual(['teams']);
+    expect(live.snapshot()!.referenceConfigError).toBeUndefined();
+
+    hidden['.knowlery/config.json'] = '{ not json';
+    await live.refreshBundles();
+    const degraded = live.snapshot()!;
+    expect(degraded).not.toBeNull();
+    expect(degraded.referenceDirs).toEqual([]);
+    expect(degraded.referenceConfigError).toContain('not valid JSON');
+
+    hidden['.knowlery/config.json'] = JSON.stringify({ referenceDirs: ['teams'] });
+    await live.refreshBundles();
+    expect(live.snapshot()!.referenceDirs).toEqual(['teams']);
+    expect(live.snapshot()!.referenceConfigError).toBeUndefined();
+  });
 });

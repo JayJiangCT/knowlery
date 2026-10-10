@@ -136,6 +136,11 @@ function KnowledgeHealthScreen(props: { navigate: (s: DashboardScreen, payload?:
         <p className="knowlery-screen__empty">{t('screens.snapshotWarming')}</p>
       ) : (
         <>
+          {snapshot?.referenceConfigError && (
+            <p className="knowlery-screen__empty knowlery-home__health-warning">
+              {t('home.health.configWarning', { error: snapshot.referenceConfigError })}
+            </p>
+          )}
           <section className="knowlery-home__activity" aria-label={t('screens.stalePages', { count: report.stalePages.length })}>
             <div className="knowlery-section-label">{t('screens.stalePages', { count: report.stalePages.length })}</div>
             {report.stalePages.length === 0 ? (

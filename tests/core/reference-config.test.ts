@@ -100,6 +100,7 @@ describe('reference directories end to end', () => {
     try {
       const snapshot = scanVault(root);
       expect(snapshot.referenceDirs).toEqual([]);
+      expect(snapshot.referenceConfigError).toContain('not valid JSON');
       expect(computeStaleness(snapshot).uncookedNotes.map((note) => note.path)).toEqual(['teams/x.md']);
     } finally {
       rmSync(root, { recursive: true, force: true });

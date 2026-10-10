@@ -179,6 +179,7 @@ export const en = {
   'screens.allCited': 'Every user note is cited by a compiled page.',
   'screens.danglingSources': 'Dangling sources ({count})',
   'screens.citesMissing': 'cites missing note: {path}',
+  'home.health.configWarning': 'Reference directories are off until .knowlery/config.json is fixed: {error}',
 
   // Settings — Diagnostics (HealthTab)
   'health.configuration': 'Configuration',
