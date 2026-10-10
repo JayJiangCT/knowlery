@@ -187,6 +187,7 @@ export const zh: Record<TranslationKey, string> = {
   'screens.allCited': '每篇用户笔记都被已编译页面引用。',
   'screens.danglingSources': '悬空来源（{count}）',
   'screens.citesMissing': '引用了缺失的笔记：{path}',
+  'home.health.configWarning': '在修复 .knowlery/config.json 之前，reference directories 已停用：{error}',
 
   // Dashboard — Jev 分诊（可选）
   'jev.hint.noKey': '添加 Jev API 密钥后，可按值得编译的程度为这些笔记排序。',
@@ -260,6 +261,15 @@ export const zh: Record<TranslationKey, string> = {
   'config.fileNotFound': '未找到文件：{path}',
   'config.ruleDeleted': '已删除规则“{name}”',
   'config.noRules': '还没有配置规则。',
+  'config.referenceDirs': '参考目录（{count}）',
+  'config.referenceDirsHint': '引入的外部知识，只读不编译：可被检索，但不会出现在未编译列表中。',
+  'config.addReferenceDir': '添加参考目录',
+  'config.chooseReferenceDir': '选择一个 vault 文件夹…',
+  'config.referenceDirNotes': '{count} 篇笔记',
+  'config.removeReferenceDir': '将 {dir} 从参考目录中移除',
+  'config.referenceDirAdded': '已将 {dir}/ 标记为参考材料',
+  'config.referenceDirRemoved': '已将 {dir}/ 从参考目录中移除',
+  'config.noReferenceDirs': '还没有参考目录。',
 
   // Settings — Skills (SkillsLibrary)
   'skills.group.knowledge.title': '知识',

@@ -65,7 +65,11 @@ The report has three parts:
    are candidate new material; use judgment (or ask) about which are worth compiling —
    many notes are legitimately never compiled. Notes under \`inbox/\` are the exception:
    they were captured from conversations (MCP \`capture\`) precisely to be compiled —
-   treat them as first-priority cook material.
+   treat them as first-priority cook material. Notes under installed bundles
+   (\`Library/\`) and under reference directories (\`referenceDirs\` in
+   \`.knowlery/config.json\`, e.g. an imported team KB) are never listed here —
+   if a whole directory of external material shows up as uncooked, suggest
+   \`knowlery reference add <dir>\` instead of cooking it.
 3. **Dangling sources** — pages citing notes that no longer exist. Mention them in the
    report; fixing them is /audit territory.
 
@@ -1313,6 +1317,7 @@ skill — the same operations are one tool call away.
 | \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
 | \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
 | \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes | Deciding what to re-cook |
+| \`knowlery reference list [--json]\` / \`reference add <dir>\` / \`reference remove <dir>\` | Mark directories as reference material: queryable, never reported as uncooked | Imported/external notes keep flooding the uncooked list |
 | \`knowlery bundle install <zip-folder-or-url>\` | Install a shared knowledge bundle into Library/ | User received a bundle or a link to one |
 | \`knowlery bundle list [--json]\` | Show installed bundles | Checking what knowledge is available |
 | \`knowlery bundle uninstall <bundle-id>\` | Remove an installed bundle | Bundle no longer wanted |

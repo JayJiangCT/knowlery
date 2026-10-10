@@ -215,7 +215,8 @@ export default class KnowleryPlugin extends Plugin {
       // in the background, then incremental per-file updates from the event stream.
       const snapshot = this.liveSnapshot;
       if (snapshot) {
-        void snapshot.build();
+        // Home renders a warming placeholder until the first build lands; refresh it then.
+        void snapshot.build().then(() => this.events.trigger('dashboard-refresh'));
         this.registerEvent(this.app.vault.on('create', (file) => snapshot.scheduleRefresh(file.path)));
         this.registerEvent(this.app.vault.on('modify', (file) => snapshot.scheduleRefresh(file.path)));
         this.registerEvent(this.app.vault.on('delete', (file) => snapshot.handleDelete(file.path)));

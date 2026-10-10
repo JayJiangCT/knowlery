@@ -21,6 +21,8 @@ const INVERTED_MODULES = [
   'cli/commands/health.ts',
   'cli/commands/query.ts',
   'cli/commands/stale.ts',
+  'cli/commands/reference.ts',
+  'core/reference-config.ts',
   'cli/commands/bundle.ts',
   'cli/commands/bundle-export.ts',
   'cli/commands/bundle-publish.ts',

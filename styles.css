@@ -974,6 +974,54 @@
   flex-shrink: 0;
 }
 
+/* Reference directory row (a file row that is not itself clickable) */
+.knowlery-config__ref-row {
+  cursor: default;
+}
+
+.knowlery-config__ref-row:hover {
+  background: var(--background-primary);
+}
+
+.knowlery-config__ref-count {
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.knowlery-dashboard button.knowlery-config__ref-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  min-block-size: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  border-radius: var(--knowlery-radius-sm);
+  transition: color var(--knowlery-transition), background var(--knowlery-transition);
+}
+
+.knowlery-dashboard button.knowlery-config__ref-remove:hover {
+  color: var(--text-error);
+  background: var(--background-modifier-hover);
+}
+
+.knowlery-home__health-warning {
+  color: var(--text-warning);
+}
+
+.knowlery-config__hint {
+  font-size: var(--knowlery-meta-size);
+  color: var(--text-muted);
+  margin: 0 0 var(--knowlery-space-sm);
+}
+
 /* Rule card */
 .knowlery-config__rule-card {
   background: var(--background-primary);
