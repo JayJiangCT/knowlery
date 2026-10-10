@@ -1,5 +1,6 @@
 import type { ScannedPage, VaultSnapshot } from './scan';
 import { isUnderReferenceDir } from '../reference-config';
+import { annotateWithTriage, type JevAnnotation } from '../jev/triage-store';
 
 /**
  * Mechanical staleness tier (spec f3, §4.2). Pure computation over a VaultSnapshot —
@@ -27,6 +28,11 @@ export interface UncookedNote {
   path: string;
   title: string;
   mtimeMs: number;
+  /**
+   * Optional Jev score from `.knowlery/triage.json` (added 1.6.0). Present only when
+   * the note was scored at its current mtime; a ranking hint, never a filter.
+   */
+  jev?: JevAnnotation;
 }
 
 export interface DanglingSource {
@@ -85,7 +91,10 @@ export function computeStaleness(snapshot: VaultSnapshot): StalenessReport {
     .map((page) => ({ path: page.path, title: page.title, mtimeMs: page.mtimeMs }))
     .sort((a, b) => b.mtimeMs - a.mtimeMs || a.path.localeCompare(b.path));
 
-  return { stalePages, uncookedNotes, danglingSources };
+  const report = { stalePages, uncookedNotes, danglingSources };
+  // Jev scores ride on the snapshot when a producer has written them; every transport
+  // gets the same ranking from the same file, offline.
+  return snapshot.triage ? annotateWithTriage(report, snapshot.triage) : report;
 }
 
 /**

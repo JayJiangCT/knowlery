@@ -19,6 +19,10 @@ import { renderOrientationMap } from '../query/orientation';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
 import { BUNDLED_SKILLS } from '../../assets/skills';
+import { autoTriage } from '../jev/auto-triage';
+import { resolveJevApiKey } from '../jev/api-key';
+import type { JevTransport } from '../jev/client';
+import { nodeJevTransport } from '../../platform/node-jev';
 
 /**
  * The MCP server core (spec 1.0 f2): tool/prompt/resource handlers over the KB
@@ -85,6 +89,11 @@ const UncookedNoteSchema = z.object({
   path: z.string(),
   title: z.string(),
   mtimeMs: z.number(),
+  /** Added 1.6.0: Jev score from .knowlery/triage.json when the note has a current one. */
+  jev: z.object({
+    worth: z.number(),
+    target: z.object({ path: z.string(), title: z.string() }).nullable(),
+  }).optional(),
 });
 
 /**
@@ -110,13 +119,15 @@ export interface McpServerOptions {
   /** The running CLI's version, for sync's downgrade guard (spec 0.7 f5, §2.5). */
   toolVersion?: string;
   access?: McpAccess;
+  /** Jev transport for the `stale` tool's producer step; tests inject a stub, shells use node https. */
+  jevTransport?: JevTransport;
 }
 
 const STDIO_ACCESS: Required<McpAccess> = { capture: true, sync: true, init: true, register: true };
 
 export function buildMcpServer(options: McpServerOptions = {}): McpServer {
   const server = new McpServer(SERVER_INFO);
-  registerTools(server);
+  registerTools(server, options.jevTransport ?? nodeJevTransport);
   registerWriteTools(server, { ...STDIO_ACCESS, ...options.access }, options);
   registerPrompts(server);
   registerResources(server);
@@ -175,7 +186,7 @@ async function resolveKbOrThrow(name: string): Promise<string> {
   }
 }
 
-function registerTools(server: McpServer): void {
+function registerTools(server: McpServer, jevTransport: JevTransport): void {
   defineTool(server, 'list_kbs', {
     title: 'List knowledge bases',
     description: 'List every registered knowledge base with its path and live state '
@@ -228,7 +239,9 @@ function registerTools(server: McpServer): void {
   defineTool(server, 'stale', {
     title: 'Staleness report',
     description: 'Compiled pages older than their sources, plus user notes never compiled. '
-      + 'This is a work list for re-cooking, not an alarm — a long list is a finding, not a failure.',
+      + 'This is a work list for re-cooking, not an alarm — a long list is a finding, not a failure. '
+      + 'Uncooked notes may carry a `jev` score (probability the note holds durable knowledge, plus a '
+      + 'suggested page to update) when the workspace has Jev triage; scored notes come first, by score.',
     inputSchema: { kb: z.string() },
     outputSchema: {
       stalePages: z.array(StaleFindingSchema),
@@ -236,8 +249,26 @@ function registerTools(server: McpServer): void {
     },
   }, async ({ kb }) => {
     const root = await resolveKbOrThrow(kb);
-    const report = computeStaleness(scanVault(root));
-    const text = `${report.stalePages.length} stale page(s), ${report.uncookedNotes.length} uncooked note(s) in ${kb}.`;
+    const snapshot = scanVault(root);
+    let report = computeStaleness(snapshot);
+    const key = await resolveJevApiKey(nodeVaultFs(root));
+    if (key) {
+      // Same producer step as `knowlery stale`; a Jev failure degrades to the mechanical report.
+      try {
+        report = (await autoTriage({
+          fs: nodeVaultFs(root),
+          snapshot,
+          readNote: (path) => readFile(join(root, path), 'utf8'),
+          transport: jevTransport,
+          apiKey: key.apiKey,
+        })).report;
+      } catch {
+        // Findings are data; the ranking hint is optional.
+      }
+    }
+    const scored = report.uncookedNotes.filter((note) => note.jev).length;
+    const text = `${report.stalePages.length} stale page(s), ${report.uncookedNotes.length} uncooked note(s)`
+      + `${scored > 0 ? ` (${scored} Jev-scored)` : ''} in ${kb}.`;
     return ok({ stalePages: report.stalePages, uncookedNotes: report.uncookedNotes }, text);
   });
 

@@ -18,7 +18,7 @@ function makeTab() {
     settings: { ...DEFAULT_SETTINGS },
     saveSettings: vi.fn().mockResolvedValue(undefined),
     app: {},
-    jevTriageCache: new Map<string, unknown>(),
+    jevScorer: { schedule: vi.fn(), cancel: vi.fn() },
     events: { trigger: vi.fn() },
   };
   const tab = new KnowlerySettingTab({} as never, plugin as never);
@@ -62,17 +62,31 @@ describe('settings control persistence (spec 0.8 f4, §4.3)', () => {
     expect(await fs.exists(ACTIVITY_DISABLED_PATH)).toBe(false);
   });
 
-  it('Jev key is optional: trimmed on save, empty clears, and cached scores are dropped', async () => {
+  it('Jev key is optional: trimmed on save, empty clears and stops background scoring', async () => {
     const { tab, plugin } = makeTab();
-    plugin.jevTriageCache.set('a.md@1', {});
 
     await tab.setControlValue('jevApiKey', '  ts-abc  ');
     expect(plugin.settings.jevApiKey).toBe('ts-abc');
-    expect(plugin.jevTriageCache.size).toBe(0);
     expect(plugin.events.trigger).toHaveBeenCalledWith('dashboard-refresh');
+    expect(plugin.jevScorer.cancel).not.toHaveBeenCalled();
 
     await tab.setControlValue('jevApiKey', '');
     expect(plugin.settings.jevApiKey).toBe('');
+    expect(plugin.jevScorer.cancel).toHaveBeenCalledTimes(1);
+    expect(plugin.saveSettings).toHaveBeenCalledTimes(2);
+  });
+
+  it('automatic Jev scoring is off by default and schedules a pass only when switched on', async () => {
+    const { tab, plugin } = makeTab();
+    expect(DEFAULT_SETTINGS.jevAutoRank).toBe(false);
+
+    await tab.setControlValue('jevAutoRank', true);
+    expect(plugin.settings.jevAutoRank).toBe(true);
+    expect(plugin.jevScorer.schedule).toHaveBeenCalledTimes(1);
+
+    await tab.setControlValue('jevAutoRank', false);
+    expect(plugin.settings.jevAutoRank).toBe(false);
+    expect(plugin.jevScorer.cancel).toHaveBeenCalledTimes(1);
     expect(plugin.saveSettings).toHaveBeenCalledTimes(2);
   });
 

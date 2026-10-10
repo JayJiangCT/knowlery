@@ -19,6 +19,7 @@ Usage:
   knowlery health [--dir <path>] [--json]
   knowlery query  "<question>" [--dir <path> | --kb <name> | --kb '*'] [--k <n>] [--json]
   knowlery stale  [--dir <path>] [--json]
+  knowlery triage [--dir <path> | --kb <name>] [--json]   # score the whole uncooked backlog with Jev
   knowlery index  [--dir <path> | --kb <name>] [--json]   # orientation map (live view)
   knowlery reference list [--json] | reference add <dir> | reference remove <dir>
                      [--dir <path> | --kb <name>]   # read-only dirs: queryable, never uncooked
@@ -85,6 +86,7 @@ export const POSITIONAL_LIMITS: Record<string, number> = {
   health: 0,
   query: 1,
   stale: 0,
+  triage: 0,
   index: 0,
   reference: 2,
   ignore: 2,

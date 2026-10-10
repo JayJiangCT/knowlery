@@ -30,6 +30,7 @@ describe('commands and arities are 1.0-frozen', () => {
       health: 0,
       query: 1,
       stale: 0,
+      triage: 0,  // added 1.6.0 — additive (Jev backlog scoring)
       index: 0,  // added 1.2.0 — additive, sanctioned (spec 1.2 f1, §4.4)
       reference: 2,  // added 1.6.0 — additive (reference directories)
       ignore: 2,  // added 1.6.0 — additive (ignored directories)
@@ -121,7 +122,7 @@ describe('--json key sets are 1.0-frozen', () => {
 
   it('stale / health / kb list / bundle list', async () => {
     const stale: string[] = [];
-    runStaleCommand(root, { json: true, log: (l) => stale.push(l) });
+    await runStaleCommand(root, { json: true, log: (l) => stale.push(l) });
     expect(Object.keys(jsonOf(stale)).sort()).toEqual(['danglingSources', 'stalePages', 'uncookedNotes']);
 
     const health = await buildHealthReport(nodeVaultFs(root), root);

@@ -498,6 +498,42 @@
                 },
                 "mtimeMs": {
                   "type": "number"
+                },
+                "jev": {
+                  "type": "object",
+                  "properties": {
+                    "worth": {
+                      "type": "number"
+                    },
+                    "target": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "path": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "title"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "worth",
+                    "target"
+                  ],
+                  "additionalProperties": false
                 }
               },
               "required": [

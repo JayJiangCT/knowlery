@@ -9,6 +9,8 @@ import {
   type VaultSnapshot,
 } from './scan';
 import { CONFIG_PATH, parseConfig } from '../reference-config';
+import { TRIAGE_PATH, parseTriageStore, type TriageStore } from '../jev/triage-store';
+import { JEV_MODEL } from '../jev/model';
 import {
   PROJECT_MARKERS,
   isIgnoredPath,
@@ -54,6 +56,7 @@ export class LiveQuerySnapshot {
   private ignoreDirs: string[] = [];
   /** Directories holding a project manifest; rebuilt from the vault file list, kept current on marker events. */
   private projectRoots = new Set<string>();
+  private triage: TriageStore | null = null;
   private isReady = false;
   private pendingRefresh = new Map<string, unknown>();
   private timers: SnapshotTimers;
@@ -84,6 +87,7 @@ export class LiveQuerySnapshot {
       ignoreDirs: this.ignoreDirs,
       ...(this.referenceConfigError ? { referenceConfigError: this.referenceConfigError } : {}),
       ignoredDirs: this.ignoredDirs(),
+      ...(this.triage ? { triage: this.triage } : {}),
     };
   }
 
@@ -211,6 +215,7 @@ export class LiveQuerySnapshot {
       this.referenceConfigError = error instanceof Error ? error.message : String(error);
     }
     if (this.ignoreDirs.join('\n') !== previousIgnoreDirs) await this.reconcileExclusions();
+    await this.refreshTriage();
     const registryPath = '.knowlery/bundles.json';
     const entries: ScannedBundleEntry[] = [];
     try {
@@ -233,6 +238,18 @@ export class LiveQuerySnapshot {
       this.bundleEntries = entries;
     } catch {
       // Malformed registry — keep the previous bundle entries.
+    }
+  }
+
+  /** Re-reads `.knowlery/triage.json` (hidden, so no vault events); producers call this after writing it. */
+  async refreshTriage(): Promise<void> {
+    const adapter = this.app.vault.adapter;
+    try {
+      this.triage = (await adapter.exists(TRIAGE_PATH))
+        ? parseTriageStore(await adapter.read(TRIAGE_PATH), JEV_MODEL)
+        : null;
+    } catch {
+      this.triage = null;
     }
   }
 }

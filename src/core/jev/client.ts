@@ -7,9 +7,10 @@
  * it only ranks cook candidates when the user has configured a key.
  */
 
+import { JEV_MODEL } from './model';
+
+export { JEV_MODEL };
 export const JEV_ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
-/** Pinned: Jev releases are not guaranteed to keep calibration across versions. */
-export const JEV_MODEL = 'jev-1.13.0';
 /** Published input price; output tokens are free. Used only for cost estimates in the UI. */
 export const JEV_PRICE_PER_MTOK = 0.042;
 

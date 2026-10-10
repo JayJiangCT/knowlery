@@ -149,7 +149,7 @@ Staleness 是机械计算出来的，从不靠猜：当已编译页面引用的�
 
 有些目录根本不是知识，扫描器会整个跳过——检索和过期报告都看不到它们。规则按"确定无疑"到"可配置"分层：隐藏目录（`.obsidian/`、`.knowlery/`、`.git/`）始终跳过；`node_modules/` 与 `__pycache__/` 无论位于何处也始终跳过；`dist/`、`build/`、`target/`、`outputs/`、`coverage/`、`vendor/` 这些常见构建产物名只在旁边存在项目清单（`package.json`、`Cargo.toml`、`pyproject.toml`、`go.mod` 等）且位于知识库内部时才跳过——知识库根目录下的清单不算数，因此一个恰好叫 `build/` 的普通笔记文件夹、或根目录下存放交付物的 `outputs/`，即使知识库本身也是一个代码仓库，仍会被索引；其余由 `.knowlery/config.json` 中的 `ignoreDirs` 兜底（Config 标签页，或 `knowlery ignore list|add|remove <dir>`）。一个目录只能是参考目录或忽略目录之一。由于被排除的文件夹会从检索中无声消失，每一个非隐藏的排除项都会连同原因一起列出——在 `knowlery health` 的「Skipped directories」部分，以及 Dashboard「诊断」页的「索引范围」部分——这样被规则误伤的真实笔记文件夹一眼就能发现。
 
-可选地，在设置中添加 API 密钥后，可以用 TypeSafe AI 的决策模型 [Jev](https://typesafe.ai) 对从未编译的笔记排序。Jev 根据每篇笔记的标题、frontmatter 和前 15 行，给出其包含值得沉淀知识的概率，并建议应更新哪个已编译页面；结果是一份重新排序的列表和一段可直接粘贴的 `/cook` 提示词，而不是过滤。它只在你点击时运行，每篇约 $0.0001，检索与 CLI 均不依赖它。
+可选地，可以用 TypeSafe AI 的决策模型 [Jev](https://typesafe.ai) 对从未编译的笔记排序。Jev 根据每篇笔记的标题、frontmatter 和前 15 行，给出其包含值得沉淀知识的概率，并建议应更新哪个已编译页面；结果是一份重新排序的列表（每条笔记带一个 `jev` 字段），而不是过滤。评分按路径和修改时间保存在 `.knowlery/triage.json` 中，因此每篇笔记在内容变化前只评一次（约 $0.0001/篇），而所有过期报告的出口——仪表盘、`knowlery stale`、MCP `stale` 工具、`node .knowlery/bin/query.mjs --stale`——都离线读取同一份排序。密钥只需在插件设置里配置一次：`knowlery stale`、`knowlery triage` 和 MCP `stale` 工具会从那里读取（shell 中的 `TYPESAFE_API_KEY` 优先），因此在 Codex、Claude Code 或 Cursor 里 cook 的 Agent 无需额外设置即可受益。评分在四个地方发生：`knowlery stale` 与 MCP `stale` 工具每次最多补 40 篇未评分笔记，不会让 Agent 等待；插件中可选的后台开关（默认关闭）在笔记停笔约 30 秒后做同样的事；Knowledge health 的 Rank 按钮或 `knowlery triage` 则按 40 篇一批评完整个积压，并打印置信度分布和花费——4,000 篇的积压约 $0.35。密钥从不写入知识库或 triage 文件，检索从不调用 Jev，`/cook` 技能把排序当作阅读顺序——低置信度的那一段仍会过一眼，而不是跳过。
 
 ## Knowledge Bundles
 

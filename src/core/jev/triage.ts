@@ -3,6 +3,9 @@ import { runQuery } from '../query/engine';
 import type { VaultSnapshot } from '../query/scan';
 import type { UncookedNote } from '../query/staleness';
 import { askJev, JEV_MODEL, type JevNoulAnswer, type JevRequest, type JevResponse, type JevTransport } from './client';
+import { CONFIDENT_NO, CONFIDENT_YES, buildTriagePrompt } from './triage-store';
+
+export { CONFIDENT_NO, CONFIDENT_YES, buildTriagePrompt };
 
 /**
  * Jev cook triage: rank uncooked notes by how likely each holds durable knowledge and
@@ -24,9 +27,6 @@ export const PREVIEW_MAX_CHARS = 3000;
 export const TARGET_CANDIDATES = 5;
 /** Below this best "same subject" probability the note is treated as needing a new page. */
 export const NEW_THRESHOLD = 0.5;
-/** Jev's guidance: act at the ends, escalate the middle. Loose band validated in evals. */
-export const CONFIDENT_YES = 0.8;
-export const CONFIDENT_NO = 0.2;
 
 export interface TriageCandidatePage {
   path: string;
@@ -214,28 +214,4 @@ async function triageOne(note: UncookedNote, deps: TriageDeps): Promise<TriageSc
 
 export function sortScores(scores: TriageScore[]): TriageScore[] {
   return [...scores].sort((a, b) => b.worth - a.worth || b.mtimeMs - a.mtimeMs || a.path.localeCompare(b.path));
-}
-
-/** Agent prompt for the dashboard's "Copy cook prompt" action over a Jev-ranked list. */
-export function buildTriagePrompt(scores: TriageScore[]): string {
-  const ranked = sortScores(scores);
-  const likely = ranked.filter((score) => score.worth > CONFIDENT_NO);
-  const unlikely = ranked.filter((score) => score.worth <= CONFIDENT_NO);
-  const lines = [
-    'Run /cook over the uncooked notes below, in this order. A decision model ranked them',
-    'by how likely each holds durable knowledge; the score is a probability from a short',
-    'preview, not a verdict — read each note and skip it if it turns out to be transient.',
-    'Where a target page is suggested, fold the note into that page instead of creating a',
-    'new one, following the /cook contradiction and SCHEMA rules.',
-    '',
-  ];
-  for (const score of likely) {
-    const target = score.target ? `update ${score.target.path}` : 'new page';
-    lines.push(`- ${score.worth.toFixed(2)}  ${score.path}  → ${target}`);
-  }
-  if (unlikely.length > 0) {
-    lines.push('', `Ranked unlikely (≤ ${CONFIDENT_NO}); glance at these last and only if time allows:`);
-    for (const score of unlikely) lines.push(`- ${score.worth.toFixed(2)}  ${score.path}`);
-  }
-  return lines.join('\n');
 }

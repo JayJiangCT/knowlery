@@ -1,26 +1,13 @@
 import { useState, type JSX } from 'react';
-import { Notice, requestUrl } from 'obsidian';
+import { Notice } from 'obsidian';
 import { usePlugin } from '../context';
-import type { UncookedNote } from '../core/query/staleness';
-import { JEV_PRICE_PER_MTOK, JevError, type JevTransport } from '../core/jev/client';
-import {
-  buildTriagePrompt,
-  CONFIDENT_NO,
-  CONFIDENT_YES,
-  TRIAGE_CAP,
-  triageUncookedNotes,
-  type TriageOutcome,
-  type TriageScore,
-} from '../core/jev/triage';
+import type { StalenessReport, UncookedNote } from '../core/query/staleness';
+import { JEV_PRICE_PER_MTOK, JevError } from '../core/jev/client';
+import { CONFIDENT_NO, CONFIDENT_YES, type TriageOutcome } from '../core/jev/triage';
+import { buildTriagePrompt, scoredNotesOf, unscoredNotes } from '../core/jev/triage-store';
 import { copyPrompt } from './request-actions';
 import { IconClipboard, IconSparkles } from './Icons';
 import { t } from '../i18n';
-
-/** Plugin-shell transport: requestUrl bypasses renderer CORS, as every other remote call here does. */
-const obsidianJevTransport: JevTransport = async (url, headers, body) => {
-  const response = await requestUrl({ url, method: 'POST', headers, body, throw: false });
-  return { status: response.status, text: response.text };
-};
 
 type PanelState =
   | { kind: 'idle' }
@@ -48,22 +35,50 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function worthClass(worth: number): string {
+export function worthClass(worth: number): string {
   if (worth >= CONFIDENT_YES) return 'knowlery-jev__score--yes';
   if (worth <= CONFIDENT_NO) return 'knowlery-jev__score--no';
   return 'knowlery-jev__score--mid';
 }
 
+/** Score badge for an annotated uncooked note; the list renderer places it before the path. */
+export function JevScore(props: { note: UncookedNote }) {
+  const { jev } = props.note;
+  if (!jev) return null;
+  return (
+    <span className={`knowlery-jev__score ${worthClass(jev.worth)}`} title={t('jev.score.title')}>
+      {jev.worth.toFixed(2)}
+    </span>
+  );
+}
+
+/** Suggested target page for an annotated note; rendered after the path. */
+export function JevTarget(props: { note: UncookedNote }) {
+  const { jev } = props.note;
+  if (!jev) return null;
+  return (
+    <span className="knowlery-home__act-meta">
+      {' → '}
+      {jev.target ? t('jev.target.update', { path: jev.target.path }) : t('jev.target.new')}
+    </span>
+  );
+}
+
 /**
- * Optional Jev ranking over the uncooked list. Renders nothing more than a hint when
- * no key is configured; the mechanical list underneath is always shown unchanged.
+ * Optional Jev ranking over the uncooked list. The list itself is rendered by the
+ * parent from the staleness report, which already carries scores from
+ * `.knowlery/triage.json` — so whatever scored the notes (this button, the background
+ * scorer, or `knowlery stale` with a key) shows up here identically. This panel only
+ * adds the controls: score what is unscored, copy the ranked prompt, or point at
+ * settings when no key exists. The mechanical list underneath is never hidden.
  */
-export function JevTriagePanel(props: { uncooked: UncookedNote[]; renderPlainList: () => JSX.Element }) {
+export function JevTriagePanel(props: { report: StalenessReport; renderList: () => JSX.Element }) {
   const plugin = usePlugin();
   const [state, setState] = useState<PanelState>({ kind: 'idle' });
   const apiKey = plugin.settings.jevApiKey;
+  const { uncookedNotes } = props.report;
 
-  if (props.uncooked.length === 0) return props.renderPlainList();
+  if (uncookedNotes.length === 0) return props.renderList();
 
   if (!apiKey) {
     return (
@@ -75,33 +90,29 @@ export function JevTriagePanel(props: { uncooked: UncookedNote[]; renderPlainLis
             {t('jev.hint.openSettings')}
           </button>
         </div>
-        {props.renderPlainList()}
+        {props.renderList()}
       </>
     );
   }
 
+  const scored = scoredNotesOf(props.report);
+  const snapshot = plugin.liveSnapshot?.snapshot();
+  const pending = snapshot?.triage ? unscoredNotes(uncookedNotes, snapshot.triage).length : uncookedNotes.length;
+
   const run = async () => {
-    const snapshot = plugin.liveSnapshot?.snapshot();
-    if (!snapshot) return;
-    setState({ kind: 'running', done: 0, total: Math.min(props.uncooked.length, TRIAGE_CAP) });
+    setState({ kind: 'running', done: 0, total: pending });
     try {
-      const outcome = await triageUncookedNotes(props.uncooked, {
-        snapshot,
-        apiKey,
-        transport: obsidianJevTransport,
-        cache: plugin.jevTriageCache,
-        readNote: async (path) => {
-          const file = plugin.app.vault.getFileByPath(path);
-          if (!file) throw new Error(t('jev.error.noteMissing', { path }));
-          return plugin.app.vault.cachedRead(file);
-        },
-        onProgress: (done, total) => setState({ kind: 'running', done, total }),
-      });
-      if (outcome.scores.length === 0 && outcome.failures.length > 0) {
-        setState({ kind: 'error', message: outcome.failures[0].message });
+      // Rank scores the whole backlog; the background top-up stays capped per pass.
+      const result = await plugin.jevScorer.runAll((done, total) => setState({ kind: 'running', done, total }));
+      if (!result) {
+        setState({ kind: 'idle' });
         return;
       }
-      setState({ kind: 'done', outcome });
+      if (result.scores.length === 0 && result.failures.length > 0) {
+        setState({ kind: 'error', message: result.failures[0].message });
+        return;
+      }
+      setState({ kind: 'done', outcome: { scores: result.scores, failures: result.failures, skipped: result.remaining } });
     } catch (error) {
       const message = describeError(error);
       new Notice(message);
@@ -109,95 +120,76 @@ export function JevTriagePanel(props: { uncooked: UncookedNote[]; renderPlainLis
     }
   };
 
-  switch (state.kind) {
-    case 'idle':
-      return (
-        <>
-          <div className="knowlery-home__note-actions">
-            <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={() => { void run(); }}>
-              <IconSparkles size={14} />
-              <span>{t('jev.action.rank', { count: Math.min(props.uncooked.length, TRIAGE_CAP) })}</span>
-            </button>
-          </div>
-          {props.renderPlainList()}
-        </>
-      );
-    case 'running':
-      return (
-        <>
-          <p className="knowlery-screen__empty">{t('jev.status.running', { done: state.done, total: state.total })}</p>
-          {props.renderPlainList()}
-        </>
-      );
-    case 'error':
-      return (
-        <>
+  const copy = () => { void copyPrompt(buildTriagePrompt(scored)); };
+
+  const status = (() => {
+    switch (state.kind) {
+      case 'idle':
+        return null;
+      case 'running':
+        return <p className="knowlery-screen__empty">{t('jev.status.running', { done: state.done, total: state.total })}</p>;
+      case 'error':
+        return (
           <div className="knowlery-jev__hint knowlery-jev__hint--error">
             <span>{state.message}</span>
             <button type="button" className="knowlery-home__viewall" onClick={() => { void run(); }}>
               {t('jev.action.retry')}
             </button>
           </div>
-          {props.renderPlainList()}
-        </>
-      );
-    case 'done':
-      return <RankedList outcome={state.outcome} onRerun={() => { void run(); }} />;
-    default: {
-      const exhaustive: never = state;
-      return exhaustive;
+        );
+      case 'done':
+        return <RunSummary outcome={state.outcome} />;
+      default: {
+        const exhaustive: never = state;
+        return exhaustive;
+      }
     }
-  }
-}
+  })();
 
-function RankedList(props: { outcome: TriageOutcome; onRerun: () => void }) {
-  const { outcome } = props;
-  const tokens = outcome.scores.reduce((sum, score) => sum + score.inputTokens, 0);
-  const cost = (tokens / 1e6) * JEV_PRICE_PER_MTOK;
   return (
     <>
-      <div className="knowlery-jev__hint">
-        <IconSparkles size={14} />
-        <span>
-          {t('jev.status.ranked', { count: outcome.scores.length })}
-          {outcome.skipped > 0 ? ` · ${t('jev.status.skipped', { count: outcome.skipped })}` : ''}
-          {outcome.failures.length > 0 ? ` · ${t('jev.status.failed', { count: outcome.failures.length })}` : ''}
-          {tokens > 0 ? ` · ${t('jev.status.cost', { cost: cost < 0.0001 ? '<0.0001' : cost.toFixed(4) })}` : ''}
-        </span>
-      </div>
-      {outcome.scores.map((score) => <ScoreRow key={score.path} score={score} />)}
+      {scored.length > 0 && state.kind !== 'done' && (
+        <div className="knowlery-jev__hint">
+          <IconSparkles size={14} />
+          <span>
+            {t('jev.status.scoredOf', { scored: scored.length, total: uncookedNotes.length })}
+            {plugin.settings.jevAutoRank ? ` · ${t('jev.status.autoOn')}` : ''}
+          </span>
+        </div>
+      )}
+      {status}
       <div className="knowlery-home__note-actions">
-        <button
-          type="button"
-          className="knowlery-btn knowlery-btn--outline"
-          onClick={() => { void copyPrompt(buildTriagePrompt(outcome.scores)); }}
-        >
-          <IconClipboard size={14} />
-          <span>{t('jev.action.copyPrompt')}</span>
-        </button>
-        <button type="button" className="knowlery-home__viewall" onClick={props.onRerun}>
-          {t('jev.action.rerun')}
-        </button>
+        {pending > 0 && state.kind !== 'running' && (
+          <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={() => { void run(); }}>
+            <IconSparkles size={14} />
+            <span>{t('jev.action.rank', { count: pending })}</span>
+          </button>
+        )}
+        {scored.length > 0 && (
+          <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={copy}>
+            <IconClipboard size={14} />
+            <span>{t('jev.action.copyPrompt')}</span>
+          </button>
+        )}
       </div>
+      {props.renderList()}
     </>
   );
 }
 
-function ScoreRow(props: { score: TriageScore }) {
-  const { score } = props;
+function RunSummary(props: { outcome: TriageOutcome }) {
+  const { outcome } = props;
+  const tokens = outcome.scores.reduce((sum, score) => sum + score.inputTokens, 0);
+  const cost = (tokens / 1e6) * JEV_PRICE_PER_MTOK;
   return (
-    <div className="knowlery-home__act knowlery-jev__row">
-      <span className={`knowlery-jev__score ${worthClass(score.worth)}`} title={t('jev.score.title')}>
-        {score.worth.toFixed(2)}
+    <div className="knowlery-jev__hint">
+      <IconSparkles size={14} />
+      <span>
+        {t('jev.status.ranked', { count: outcome.scores.length })}
+        {outcome.skipped > 0 ? ` · ${t('jev.status.skipped', { count: outcome.skipped })}` : ''}
+        {outcome.failures.length > 0 ? ` · ${t('jev.status.failed', { count: outcome.failures.length })}` : ''}
+        {tokens > 0 ? ` · ${t('jev.status.cost', { cost: cost < 0.0001 ? '<0.0001' : cost.toFixed(4) })}` : ''}
       </span>
-      <span className="knowlery-home__act-summary">
-        {score.path}
-        <span className="knowlery-home__act-meta">
-          {' → '}
-          {score.target ? t('jev.target.update', { path: score.target.path }) : t('jev.target.new')}
-        </span>
-      </span>
-      <span className="knowlery-home__act-meta">{new Date(score.mtimeMs).toISOString().slice(0, 10)}</span>
     </div>
   );
 }

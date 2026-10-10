@@ -44,9 +44,9 @@ describe('knowlery ignore', () => {
     const root = makeWorkspace();
     const fs = nodeVaultFs(root);
     try {
-      const uncooked = () => {
+      const uncooked = async () => {
         const { log, output } = capture();
-        runStaleCommand(root, { json: true, log });
+        await runStaleCommand(root, { json: true, log });
         return (JSON.parse(output()) as { uncookedNotes: { path: string }[] }).uncookedNotes.map((note) => note.path).sort();
       };
       const hits = () => {
@@ -55,12 +55,12 @@ describe('knowlery ignore', () => {
         return (JSON.parse(output()) as { candidates: { path: string }[] }).candidates.map((c) => c.path).sort();
       };
       // Built-in rules already keep dist/ and node_modules/ out.
-      expect(uncooked()).toEqual(['Projects/mine.md', 'archive/old.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md', 'archive/old.md']);
 
       const added = capture();
       await runIgnoreCommand(fs, { sub: 'add', dir: 'archive/', log: added.log });
       expect(added.output()).toContain('Ignoring archive/');
-      expect(uncooked()).toEqual(['Projects/mine.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md']);
       expect(hits()).toEqual(['Projects/mine.md']);
 
       const again = capture();
@@ -78,7 +78,7 @@ describe('knowlery ignore', () => {
       const removed = capture();
       await runIgnoreCommand(fs, { sub: 'remove', dir: 'archive', log: removed.log });
       expect(removed.output()).toContain('Stopped ignoring archive/');
-      expect(uncooked()).toEqual(['Projects/mine.md', 'archive/old.md']);
+      expect(await uncooked()).toEqual(['Projects/mine.md', 'archive/old.md']);
       expect(hits()).toEqual(['Projects/mine.md', 'archive/old.md']);
     } finally {
       rmSync(root, { recursive: true, force: true });

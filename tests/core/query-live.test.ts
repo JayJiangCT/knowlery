@@ -15,7 +15,9 @@ import {
   QUERY_CLI_USAGE,
   QUERY_CLI_WARMING,
   handleQueryCli,
+  handleStaleCli,
 } from '../../src/core/query/cli-handler';
+import { JEV_MODEL } from '../../src/core/jev/model';
 
 const FIXTURE_VAULT = join(__dirname, '..', '..', 'evals', 'fixtures', 'vault');
 
@@ -94,7 +96,8 @@ describe('transport parity (spec f5, §5.1/§5.2)', () => {
     const livePage = buildPageFromContent(
       path,
       readFileSync(join(FIXTURE_VAULT, path), 'utf8'),
-      statSync(join(FIXTURE_VAULT, path)).mtimeMs,
+      // Obsidian's file.stat.mtime is whole milliseconds; node's statSync is fractional on APFS.
+      Math.round(statSync(join(FIXTURE_VAULT, path)).mtimeMs),
     );
     expect(livePage).toEqual(fsPage);
   });
@@ -230,6 +233,30 @@ describe('LiveQuerySnapshot (spec f5, §5.2)', () => {
     await live.refreshBundles();
     expect(live.snapshot()!.referenceDirs).toEqual(['teams']);
     expect(live.snapshot()!.referenceConfigError).toBeUndefined();
+  });
+});
+
+describe('LiveQuerySnapshot triage store (added 1.6.0)', () => {
+  it('carries .knowlery/triage.json so obsidian knowlery:stale ranks like every other transport, and re-reads it on demand', async () => {
+    const hidden: Record<string, string> = {};
+    const live = makeLive(stubApp({ 'notes/a.md': PAGE_B, 'notes/b.md': PAGE_B }, hidden), 1);
+    await live.build();
+    expect(live.snapshot()!.triage).toBeUndefined();
+
+    hidden['.knowlery/triage.json'] = JSON.stringify({
+      schemaVersion: 1,
+      model: JEV_MODEL,
+      entries: { 'notes/b.md': { mtimeMs: 1000, worth: 0.9, target: null, scoredAt: '' } },
+    });
+    await live.refreshTriage();
+    expect(live.snapshot()!.triage?.entries['notes/b.md'].worth).toBe(0.9);
+    const report = JSON.parse(handleStaleCli({ json: 'true' }, live.snapshot())) as { uncookedNotes: Array<{ path: string; jev?: unknown }> };
+    expect(report.uncookedNotes.map((n) => n.path)).toEqual(['notes/b.md', 'notes/a.md']);
+    expect(report.uncookedNotes[0].jev).toEqual({ worth: 0.9, target: null });
+
+    hidden['.knowlery/triage.json'] = '{ broken';
+    await live.refreshBundles(); // the dashboard-refresh path also re-reads it
+    expect(live.snapshot()!.triage?.entries).toEqual({});
   });
 });
 
