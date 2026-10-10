@@ -83,7 +83,11 @@ scope detection ran in degraded mode.
 ### Full Mode
 
 When user runs \`/cook --all\`:
-- Read all user notes in the vault (exclude \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`)
+- Read all user notes in the vault. Exclude what the staleness report excludes:
+  \`entities/\`, \`concepts/\`, \`comparisons/\`, \`queries/\`, \`Library/\`, reference
+  directories and ignored directories (\`referenceDirs\` / \`ignoreDirs\` in
+  \`.knowlery/config.json\`), and the directories \`knowlery health\` lists under
+  "Skipped directories" (\`node_modules/\`, build output beside a project manifest)
 - Re-evaluate all entities and concepts
 
 ### Targeted Mode
@@ -1314,10 +1318,11 @@ skill — the same operations are one tool call away.
 | \`knowlery init\` | Create a new knowledge workspace (dirs, skills, agent instructions) | Starting a knowledge base outside Obsidian |
 | \`knowlery kb add <name> [path]\` / \`kb list\` / \`kb remove <name>\` | Manage the global registry of named knowledge bases | Working with more than one KB |
 | \`knowlery sync\` | Refresh built-in skills and instruction files to this tool version | After upgrading knowlery |
-| \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) | **After any bulk change** — verify before moving on |
+| \`knowlery health [--json]\` | Check workspace integrity (dirs, skills, manifest, index) and list skipped directories | **After any bulk change** — verify before moving on; when a note seems missing from query/stale |
 | \`knowlery query "<question>" [--k n] [--json]\` | Deterministic retrieval over compiled knowledge | Answering from the KB (see the ask skill's retrieval ladder) |
 | \`knowlery stale [--json]\` | List compiled pages older than their sources, and uncooked notes | Deciding what to re-cook |
 | \`knowlery reference list [--json]\` / \`reference add <dir>\` / \`reference remove <dir>\` | Mark directories as reference material: queryable, never reported as uncooked | Imported/external notes keep flooding the uncooked list |
+| \`knowlery ignore list [--json]\` / \`ignore add <dir>\` / \`ignore remove <dir>\` | Exclude directories from scanning entirely: invisible to query and stale | Generated output or archives that are not knowledge (node_modules/ and build output beside a project manifest are skipped automatically) |
 | \`knowlery bundle install <zip-folder-or-url>\` | Install a shared knowledge bundle into Library/ | User received a bundle or a link to one |
 | \`knowlery bundle list [--json]\` | Show installed bundles | Checking what knowledge is available |
 | \`knowlery bundle uninstall <bundle-id>\` | Remove an installed bundle | Bundle no longer wanted |

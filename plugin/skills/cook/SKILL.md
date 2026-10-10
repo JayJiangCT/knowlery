@@ -67,7 +67,11 @@ scope detection ran in degraded mode.
 ### Full Mode
 
 When user runs `/cook --all`:
-- Read all user notes in the vault (exclude `entities/`, `concepts/`, `comparisons/`, `queries/`)
+- Read all user notes in the vault. Exclude what the staleness report excludes:
+  `entities/`, `concepts/`, `comparisons/`, `queries/`, `Library/`, reference
+  directories and ignored directories (`referenceDirs` / `ignoreDirs` in
+  `.knowlery/config.json`), and the directories `knowlery health` lists under
+  "Skipped directories" (`node_modules/`, build output beside a project manifest)
 - Re-evaluate all entities and concepts
 
 ### Targeted Mode
