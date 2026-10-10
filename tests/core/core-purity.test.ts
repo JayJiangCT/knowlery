@@ -62,6 +62,7 @@ const INVERTED_MODULES = [
   'core/jev/triage.ts',
   'core/jev/triage-store.ts',
   'core/jev/auto-triage.ts',
+  'core/jev/api-key.ts',
   'core/query/scan.ts',
   'core/query/exclusions.ts',
   'core/query/tokenize.ts',

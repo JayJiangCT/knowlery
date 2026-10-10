@@ -20,8 +20,10 @@ import {
   serializeTriageStore,
   unscoredNotes,
 } from '../../src/core/jev/triage-store';
-import { autoTriage, jevApiKeyFromEnv } from '../../src/core/jev/auto-triage';
+import { autoTriage, autoTriageAll, jevApiKeyFromEnv } from '../../src/core/jev/auto-triage';
+import { PLUGIN_DATA_PATH, resolveJevApiKey } from '../../src/core/jev/api-key';
 import { runStaleCommand } from '../../src/cli/commands/stale';
+import { runTriageCommand } from '../../src/cli/commands/triage';
 import { handleStaleCli } from '../../src/core/query/cli-handler';
 import { nodeVaultFs } from '../../src/platform/node-fs';
 
@@ -281,6 +283,120 @@ describe('knowlery stale with a key in the environment', () => {
     expect(jevApiKeyFromEnv({})).toBeUndefined();
     expect(jevApiKeyFromEnv({ TYPESAFE_API_KEY: '  ' })).toBeUndefined();
     expect(jevApiKeyFromEnv({ TYPESAFE_API_KEY: ' ts-x ' })).toBe('ts-x');
+  });
+});
+
+describe('resolveJevApiKey — configure the key once', () => {
+  it('prefers the environment, falls back to the plugin settings file, tolerates a missing or broken file', async () => {
+    const fs = nodeVaultFs(root);
+    expect(await resolveJevApiKey(fs, {})).toBeNull();
+
+    write(PLUGIN_DATA_PATH, '{ not json', 1000);
+    expect(await resolveJevApiKey(fs, {})).toBeNull();
+
+    write(PLUGIN_DATA_PATH, JSON.stringify({ kbName: 'KB', jevApiKey: ' ts-plugin ' }), 1000);
+    expect(await resolveJevApiKey(fs, {})).toEqual({ apiKey: 'ts-plugin', source: 'plugin' });
+    expect(await resolveJevApiKey(fs, { TYPESAFE_API_KEY: 'ts-env' })).toEqual({ apiKey: 'ts-env', source: 'env' });
+
+    write(PLUGIN_DATA_PATH, JSON.stringify({ kbName: 'KB', jevApiKey: '' }), 1000);
+    expect(await resolveJevApiKey(fs, {})).toBeNull();
+
+    // A vault with a non-default config directory, when the caller knows it.
+    write('config-alt/plugins/knowlery/data.json', JSON.stringify({ jevApiKey: 'ts-alt' }), 1000);
+    expect(await resolveJevApiKey(fs, {}, 'config-alt')).toEqual({ apiKey: 'ts-alt', source: 'plugin' });
+  });
+});
+
+describe('autoTriageAll — the whole backlog', () => {
+  function manyNotes(count: number): void {
+    for (let i = 0; i < count; i += 1) write(`bulk/note-${String(i).padStart(3, '0')}.md`, NOTE(`Bulk ${i}`), 10_000 + i);
+  }
+
+  it('keeps passing until nothing is unscored, reporting overall progress, and writes one store', async () => {
+    manyNotes(95); // + 4 fixture notes = 99 unscored → 3 passes of 40
+    const fs = nodeVaultFs(root);
+    const calls: JevRequest[] = [];
+    const progress: Array<[number, number]> = [];
+    const result = await autoTriageAll({
+      fs,
+      snapshot: scanVault(root),
+      readNote: (path) => readFile(join(root, path), 'utf8'),
+      transport: fakeTransport(calls),
+      apiKey: 'ts-test',
+      onProgress: (done, total) => progress.push([done, total]),
+    });
+    expect(result.passes).toBe(3);
+    expect(result.scores).toHaveLength(99);
+    expect(result.failures).toEqual([]);
+    expect(result.remaining).toBe(0);
+    expect(calls).toHaveLength(99);
+    expect(progress[0][1]).toBe(99);
+    expect(progress.at(-1)).toEqual([99, 99]);
+    expect(Object.keys(result.store.entries)).toHaveLength(99);
+    expect(unscoredNotes(result.report.uncookedNotes, result.store)).toEqual([]);
+    expect(Object.keys((JSON.parse(readFileSync(join(root, TRIAGE_PATH), 'utf8')) as { entries: object }).entries)).toHaveLength(99);
+
+    // Nothing left: a second run sends nothing.
+    const again = await autoTriageAll({
+      fs, snapshot: scanVault(root), readNote: (path) => readFile(join(root, path), 'utf8'), transport: fakeTransport(calls), apiKey: 'ts-test',
+    });
+    expect(again.passes).toBe(0);
+    expect(calls).toHaveLength(99);
+  });
+
+  it('stops after a pass in which every note failed instead of looping', async () => {
+    let attempts = 0;
+    const failing: JevTransport = () => {
+      attempts += 1;
+      return Promise.resolve({ status: 401, text: '{"error":"bad key"}' });
+    };
+    const result = await autoTriageAll({
+      fs: nodeVaultFs(root), snapshot: scanVault(root), readNote: (path) => readFile(join(root, path), 'utf8'), transport: failing, apiKey: 'ts-test',
+    });
+    expect(result.passes).toBe(1);
+    expect(result.scores).toEqual([]);
+    expect(result.failures).toHaveLength(4);
+    expect(result.remaining).toBe(4);
+    expect(attempts).toBe(4);
+    expect(existsSync(join(root, TRIAGE_PATH))).toBe(false);
+  });
+});
+
+describe('knowlery triage', () => {
+  it('refuses without a key, naming both places to put one', async () => {
+    await expect(runTriageCommand(root, { log: () => undefined, key: null }))
+      .rejects.toMatchObject({ exitCode: 1, message: expect.stringContaining('TYPESAFE_API_KEY') as string });
+  });
+
+  it('scores the backlog, prints bands and cost, keeps --json stdout clean, and is idempotent', async () => {
+    const out: string[] = [];
+    const err: string[] = [];
+    await runTriageCommand(root, {
+      log: (line) => out.push(line),
+      warn: (line) => err.push(line),
+      key: { apiKey: 'ts-test', source: 'plugin' },
+      jevTransport: fakeTransport(),
+    });
+    const text = out.join('\n');
+    expect(text).toContain('4 note(s) scored in 1 pass(es)');
+    expect(text).toContain('likely knowledge: 1'); // decision
+    expect(text).toContain('unlikely:         1'); // agenda
+    expect(text).toContain('Key from plugin settings');
+    expect(err).toEqual([]); // progress goes to the main log without --json
+
+    const json: string[] = [];
+    const progress: string[] = [];
+    await runTriageCommand(root, {
+      json: true,
+      log: (line) => json.push(line),
+      warn: (line) => progress.push(line),
+      key: { apiKey: 'ts-test', source: 'env' },
+      jevTransport: fakeTransport(),
+    });
+    const summary = JSON.parse(json.join('\n')) as { scored: number; bands: { likely: number; unlikely: number }; keySource: string };
+    expect(summary).toMatchObject({ scored: 0, keySource: 'env' });
+    expect(progress).toEqual([]);
+    expect(readFileSync(join(root, TRIAGE_PATH), 'utf8')).not.toContain('ts-test');
   });
 });
 

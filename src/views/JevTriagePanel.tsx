@@ -3,7 +3,7 @@ import { Notice } from 'obsidian';
 import { usePlugin } from '../context';
 import type { StalenessReport, UncookedNote } from '../core/query/staleness';
 import { JEV_PRICE_PER_MTOK, JevError } from '../core/jev/client';
-import { CONFIDENT_NO, CONFIDENT_YES, TRIAGE_CAP, type TriageOutcome } from '../core/jev/triage';
+import { CONFIDENT_NO, CONFIDENT_YES, type TriageOutcome } from '../core/jev/triage';
 import { buildTriagePrompt, scoredNotesOf, unscoredNotes } from '../core/jev/triage-store';
 import { copyPrompt } from './request-actions';
 import { IconClipboard, IconSparkles } from './Icons';
@@ -100,18 +100,19 @@ export function JevTriagePanel(props: { report: StalenessReport; renderList: () 
   const pending = snapshot?.triage ? unscoredNotes(uncookedNotes, snapshot.triage).length : uncookedNotes.length;
 
   const run = async () => {
-    setState({ kind: 'running', done: 0, total: Math.min(pending, TRIAGE_CAP) });
+    setState({ kind: 'running', done: 0, total: pending });
     try {
-      const result = await plugin.jevScorer.runNow((done, total) => setState({ kind: 'running', done, total }));
+      // Rank scores the whole backlog; the background top-up stays capped per pass.
+      const result = await plugin.jevScorer.runAll((done, total) => setState({ kind: 'running', done, total }));
       if (!result) {
         setState({ kind: 'idle' });
         return;
       }
-      if (result.outcome && result.outcome.scores.length === 0 && result.outcome.failures.length > 0) {
-        setState({ kind: 'error', message: result.outcome.failures[0].message });
+      if (result.scores.length === 0 && result.failures.length > 0) {
+        setState({ kind: 'error', message: result.failures[0].message });
         return;
       }
-      setState({ kind: 'done', outcome: result.outcome ?? { scores: [], failures: [], skipped: 0 } });
+      setState({ kind: 'done', outcome: { scores: result.scores, failures: result.failures, skipped: result.remaining } });
     } catch (error) {
       const message = describeError(error);
       new Notice(message);
@@ -161,7 +162,7 @@ export function JevTriagePanel(props: { report: StalenessReport; renderList: () 
         {pending > 0 && state.kind !== 'running' && (
           <button type="button" className="knowlery-btn knowlery-btn--outline" onClick={() => { void run(); }}>
             <IconSparkles size={14} />
-            <span>{t('jev.action.rank', { count: Math.min(pending, TRIAGE_CAP) })}</span>
+            <span>{t('jev.action.rank', { count: pending })}</span>
           </button>
         )}
         {scored.length > 0 && (

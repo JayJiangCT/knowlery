@@ -1,7 +1,13 @@
 import { requestUrl } from 'obsidian';
 import type KnowleryPlugin from './main';
 import type { JevTransport } from './core/jev/client';
-import { autoTriage, type AutoTriageResult } from './core/jev/auto-triage';
+import {
+  autoTriage,
+  autoTriageAll,
+  type AutoTriageAllResult,
+  type AutoTriageDeps,
+  type AutoTriageResult,
+} from './core/jev/auto-triage';
 
 /** Plugin-shell transport: requestUrl bypasses renderer CORS, as every other remote call here does. */
 export const obsidianJevTransport: JevTransport = async (url, headers, body) => {
@@ -50,14 +56,32 @@ export class JevBackgroundScorer {
     this.timer = null;
   }
 
-  /** One scoring pass over unscored uncooked notes; shared with the dashboard's manual action. */
+  /** One capped pass over unscored uncooked notes — the background top-up for new notes. */
   async runNow(onProgress?: (done: number, total: number) => void): Promise<AutoTriageResult | null> {
+    return this.withDeps(onProgress, async (deps) => {
+      const result = await autoTriage(deps);
+      return { result, wrote: (result.outcome?.scores.length ?? 0) > 0 };
+    });
+  }
+
+  /** The whole backlog, pass after pass — the dashboard's Rank button. */
+  async runAll(onProgress?: (done: number, total: number) => void): Promise<AutoTriageAllResult | null> {
+    return this.withDeps(onProgress, async (deps) => {
+      const result = await autoTriageAll(deps);
+      return { result, wrote: result.scores.length > 0 };
+    });
+  }
+
+  private async withDeps<T>(
+    onProgress: ((done: number, total: number) => void) | undefined,
+    run: (deps: AutoTriageDeps) => Promise<{ result: T; wrote: boolean }>,
+  ): Promise<T | null> {
     const apiKey = this.plugin.settings.jevApiKey;
     const snapshot = this.plugin.liveSnapshot?.snapshot();
     if (!apiKey || !snapshot || this.running) return null;
     this.running = true;
     try {
-      const result = await autoTriage({
+      const { result, wrote } = await run({
         fs: this.plugin.fs,
         snapshot,
         apiKey,
@@ -69,7 +93,7 @@ export class JevBackgroundScorer {
         },
         onProgress,
       });
-      if (result.outcome && result.outcome.scores.length > 0) {
+      if (wrote) {
         await this.plugin.liveSnapshot?.refreshTriage();
         this.plugin.events.trigger('dashboard-refresh');
       }

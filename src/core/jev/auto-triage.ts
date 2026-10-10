@@ -3,7 +3,7 @@ import type { VaultSnapshot } from '../query/scan';
 import { computeStaleness, type StalenessReport } from '../query/staleness';
 import type { JevTransport } from './client';
 import { JEV_MODEL } from './model';
-import { triageUncookedNotes, type TriageOutcome } from './triage';
+import { triageUncookedNotes, type TriageFailure, type TriageOutcome, type TriageScore } from './triage';
 import { readTriageStore, recordScores, unscoredNotes, writeTriageStore, type TriageStore } from './triage-store';
 
 /**
@@ -58,10 +58,54 @@ export async function autoTriage(deps: AutoTriageDeps): Promise<AutoTriageResult
   return { report: computeStaleness({ ...snapshot, triage: updated }), store: updated, outcome };
 }
 
-/** The environment variable CLI and MCP shells read the key from. Never persisted by Knowlery. */
-export const JEV_API_KEY_ENV = 'TYPESAFE_API_KEY';
-
-export function jevApiKeyFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
-  const key = env[JEV_API_KEY_ENV]?.trim();
-  return key ? key : undefined;
+export interface AutoTriageAllResult {
+  report: StalenessReport;
+  store: TriageStore;
+  scores: TriageScore[];
+  failures: TriageFailure[];
+  passes: number;
+  /** Notes still unscored when the loop stopped — nonzero only when a whole pass failed. */
+  remaining: number;
 }
+
+/**
+ * Score the whole backlog, TRIAGE_CAP notes per pass, until nothing is left unscored.
+ * The one-shot `stale` producers stay capped because they sit on an agent's critical
+ * path; this is the deliberate, user-invoked pass (`knowlery triage`, the dashboard's
+ * Rank button) that makes a years-old backlog rankable in one go — a 4,000-note vault
+ * is on the order of $0.35. A pass in which every note fails stops the loop rather
+ * than retrying forever.
+ */
+export async function autoTriageAll(deps: AutoTriageDeps): Promise<AutoTriageAllResult> {
+  let store = deps.snapshot.triage ?? (await readTriageStore(deps.fs, JEV_MODEL));
+  let report = computeStaleness({ ...deps.snapshot, triage: store });
+  const total = unscoredNotes(report.uncookedNotes, store).length;
+  const scores: TriageScore[] = [];
+  const failures: TriageFailure[] = [];
+  let passes = 0;
+  let remaining = total;
+
+  while (remaining > 0) {
+    const scoredBefore = scores.length;
+    const result = await autoTriage({
+      ...deps,
+      snapshot: { ...deps.snapshot, triage: store },
+      onProgress: (done) => deps.onProgress?.(Math.min(total, scoredBefore + done), total),
+    });
+    passes += 1;
+    store = result.store;
+    report = result.report;
+    if (!result.outcome) {
+      remaining = 0;
+      break;
+    }
+    scores.push(...result.outcome.scores);
+    failures.push(...result.outcome.failures);
+    remaining = result.outcome.failures.length + result.outcome.skipped;
+    if (result.outcome.scores.length === 0) break;
+  }
+
+  return { report, store, scores, failures, passes, remaining };
+}
+
+export { JEV_API_KEY_ENV, jevApiKeyFromEnv } from './api-key';

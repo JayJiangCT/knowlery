@@ -19,7 +19,8 @@ import { renderOrientationMap } from '../query/orientation';
 import { nodeVaultFs } from '../../platform/node-fs';
 import { buildHealthReport } from '../../cli/commands/health';
 import { BUNDLED_SKILLS } from '../../assets/skills';
-import { autoTriage, jevApiKeyFromEnv } from '../jev/auto-triage';
+import { autoTriage } from '../jev/auto-triage';
+import { resolveJevApiKey } from '../jev/api-key';
 import type { JevTransport } from '../jev/client';
 import { nodeJevTransport } from '../../platform/node-jev';
 
@@ -250,8 +251,8 @@ function registerTools(server: McpServer, jevTransport: JevTransport): void {
     const root = await resolveKbOrThrow(kb);
     const snapshot = scanVault(root);
     let report = computeStaleness(snapshot);
-    const apiKey = jevApiKeyFromEnv();
-    if (apiKey) {
+    const key = await resolveJevApiKey(nodeVaultFs(root));
+    if (key) {
       // Same producer step as `knowlery stale`; a Jev failure degrades to the mechanical report.
       try {
         report = (await autoTriage({
@@ -259,7 +260,7 @@ function registerTools(server: McpServer, jevTransport: JevTransport): void {
           snapshot,
           readNote: (path) => readFile(join(root, path), 'utf8'),
           transport: jevTransport,
-          apiKey,
+          apiKey: key.apiKey,
         })).report;
       } catch {
         // Findings are data; the ranking hint is optional.

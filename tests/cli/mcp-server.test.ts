@@ -7,6 +7,7 @@ import { buildMcpServer, MCP_PROMPT_SKILLS, type McpServerOptions } from '../../
 import { addKb } from '../../src/core/kb-registry';
 import { JEV_MODEL, type JevRequest, type JevResponse } from '../../src/core/jev/client';
 import { TRIAGE_PATH } from '../../src/core/jev/triage-store';
+import { PLUGIN_DATA_PATH } from '../../src/core/jev/api-key';
 import { runFederatedQuery } from '../../src/core/federated-query';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
 
@@ -82,7 +83,7 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
   // Added 1.6.0: `stale` carries Jev scores from .knowlery/triage.json and, with a key
   // in the environment, refreshes them — the path by which agents in Codex / Claude
   // Code / Cursor get the ranking without the dashboard.
-  it('stale reads Jev scores from the triage store and scores unscored notes when TYPESAFE_API_KEY is set', async () => {
+  it('stale reads Jev scores from the triage store and scores unscored notes once a key is configured', async () => {
     const dir = await makeKb('work');
     await addKb('work', dir);
     await mkdir(join(dir, '.knowlery'), { recursive: true });
@@ -115,7 +116,9 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
     expect(notes[1].jev).toBeUndefined();
     expect(calls).toHaveLength(0);
 
-    process.env.TYPESAFE_API_KEY = 'ts-env';
+    // With the key saved once in the plugin's settings, the MCP shell scores on its own.
+    await mkdir(join(dir, PLUGIN_DATA_PATH, '..'), { recursive: true });
+    await writeFile(join(dir, PLUGIN_DATA_PATH), JSON.stringify({ jevApiKey: 'ts-env' }));
     try {
       const scored = await client.callTool({ name: 'stale', arguments: { kb: 'work' } });
       expect(scored.isError).toBeFalsy();
@@ -128,7 +131,7 @@ describe('mcp tools (spec 1.0 f2, §5.1/§5.2/§5.4)', () => {
       expect(written).toContain('Projects/fresh.md');
       expect(written).not.toContain('ts-env');
     } finally {
-      delete process.env.TYPESAFE_API_KEY;
+      await rm(join(dir, PLUGIN_DATA_PATH), { force: true });
     }
   });
 
