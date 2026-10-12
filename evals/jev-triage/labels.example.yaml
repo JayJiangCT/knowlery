@@ -1,0 +1,33 @@
+# Example labels for the Jev cook-triage experiment (evals/jev-triage/run.ts).
+#
+# SYNTHETIC. Real labels name real notes in a real vault, and this repository is
+# public: keep them in evals/jev-triage/labels.yaml (gitignored) or anywhere outside
+# the repository, and pass the path with --labels.
+#
+# Paths are relative to the KB root passed as --kb-root. Labels are FULL-READ labels
+# (not preview labels) — the ground truth Jev's preview-only judgment is measured
+# against.
+#
+#   worth_compiling:        yes | no
+#   type_if_yes:            entity | concept | comparison | query   (omit when no)
+#   matches_existing_page:  vault-relative path of the compiled page to update, or "new"
+#
+# Sample the long tail too — older notes, and enough "no" cases to measure the
+# confident-no band; a set that is 93% yes cannot tell a triage filter from a
+# rubber stamp.
+
+notes:
+  - path: Projects/example-service/decisions/2026-03-04 storage retention.md
+    worth_compiling: yes
+    type_if_yes: concept
+    matches_existing_page: concepts/example-service-storage.md
+  - path: Projects/example-service/tickets/SVC-101.md
+    worth_compiling: yes
+    type_if_yes: query
+    matches_existing_page: new
+  - path: Meetings/2026-03-05 weekly sync.md
+    worth_compiling: no
+    matches_existing_page: new
+  - path: imports/vendor-docs-2026-03-02/document-text.md
+    worth_compiling: no
+    matches_existing_page: queries/vendor-webhook-contract.md

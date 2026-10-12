@@ -30,6 +30,9 @@ import { scanVault, type VaultSnapshot } from '../../src/core/query/scan';
  *   export TYPESAFE_API_KEY=...
  *   npx tsx evals/jev-triage/run.ts --kb-root "/path/to/vault" --labels evals/jev-triage/labels.yaml
  *
+ * labels.yaml is gitignored: it names real notes, and the repository is public. Its
+ * format is shown in labels.example.yaml.
+ *
  * Options: --model (default jev-1.13.0, pinned), --cache <file>, --out <report.json>.
  * Every API response is cached by request hash, so re-running after editing the metric
  * code costs nothing. Only metadata and the preview leave the machine; never full bodies.
