@@ -792,6 +792,14 @@ so the store does not need another migration.
   "Page-summary consent is now off; `.knowlery/config.json` was rewritten,
   possibly by an older Knowlery. Re-enable it in settings if intended." Consent
   is never restored automatically.
+  Two acceptance constraints apply to the implementation:
+  - **`config.json` is the only source of authority.** `consentObserved` only
+    detects and announces a change. No code path reads it to decide whether
+    summaries may be sent, and none uses it to restore consent. A test asserts
+    that `consentObserved.pageSummaries: true` with consent absent in the config
+    sends nothing.
+  - Updating `consentObserved` goes through the same locked read–merge–write path
+    as every other store write (§4.5), never a separate unlocked write.
 - **Granting** happens in plugin settings (a toggle that first shows the payload
   preview), or with `knowlery triage consent page-summaries on`. The CLI command
   prints the preview for a real note and requires typing `yes` on a TTY. It

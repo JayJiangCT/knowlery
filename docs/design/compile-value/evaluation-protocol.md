@@ -58,6 +58,19 @@ The freeze lives outside the repository (§12) and is identified by
 `freezeId = sha256(manifest)`. Every annotation file, pool and report records the
 `freezeId`; the harness refuses to mix freezes.
 
+**Consistency.** A vault can change while it is being copied (an edit, or a
+`/cook` writing a page), which would mix two points in time in one freeze.
+`freeze.ts` therefore works in three steps:
+
+1. Build the manifest, recording path, size, mtime and hash for every file.
+2. Copy the files and hash each copy.
+3. Re-scan the source and compare it with the manifest: every path, size, mtime
+   and hash, plus files that appeared or disappeared.
+
+If anything differs, the copy is discarded and the freeze retried, up to 3
+attempts. After that the freeze fails, listing the changed paths, and no
+`freezeId` is produced. A freeze never silently succeeds with mixed state.
+
 Cost: a full freeze is a copy of the vault's Markdown minus excluded directories
 (megabytes, local only). The tooling is validated first on a **synthetic full
 vault** committed under `evals/compile-value/fixtures/`; the cost of a real
@@ -275,6 +288,14 @@ queue. The harness therefore uses a **paired bootstrap over the labelled pool**:
 
 When several freezes are combined, each freeze is a stratum and is resampled
 separately.
+
+**What these intervals do not show.** The pool of one vault is not a random
+sample of vaults, and a policy's top 20 is not a random sample of its queue. The
+bootstrap interval describes variability *within this vault's labelled
+material*. It is not evidence that the result generalises to other vaults. On a
+single freeze, the report labels every interval "exploratory, single vault".
+Generalisation rests on rule 4 (§10: a second, preferably independent, freeze),
+not on the width of one vault's interval.
 
 ### 9.1 Diagnostic tier (`sample-only`)
 

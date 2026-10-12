@@ -7,6 +7,14 @@ public interface). Status: **revision 3, draft for review**.
   revision 2 addressed them.
 - Review round 2 approved the overall architecture and the 1.6.1 direction, with
   three engineering conditions; revision 3 writes them in.
+- Review round 3 **approved revision 3 as the design baseline** and approved
+  starting 1.6.1 tooling. The 1.7.0 code and tests get their own review, so
+  design approval is not implementation approval. Four implementation
+  acceptance details were added:
+  - `config.json` is the sole consent authority (store §7.1);
+  - `consentObserved` writes take the locked path (store §7.1);
+  - the freeze verifies its own consistency (protocol §2);
+  - bootstrap intervals are labelled single-vault exploratory (protocol §9).
 
 Nothing here changes product behaviour yet. 1.6.0 ordering is unaffected until
 1.6.1 (evaluation tooling) and 1.7.0 (signals) are implemented and the
