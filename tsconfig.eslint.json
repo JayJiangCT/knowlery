@@ -6,6 +6,7 @@
     "tests/**/*.ts",
     "evals/src/**/*.ts",
     "evals/perf/**/*.ts",
-    "evals/jev-triage/**/*.ts"
+    "evals/jev-triage/**/*.ts",
+    "evals/compile-value/**/*.ts"
   ]
 }
