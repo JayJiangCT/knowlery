@@ -1,6 +1,10 @@
 # Evaluation protocol and annotation template
 
-Protocol version: `cv-eval@1`, draft revision 2 (addresses the #86 design review).
+Protocol version: `cv-eval@1`, draft revision 3. Revision 2 addressed the first
+#86 review; revision 3 replaces "the CI includes 0" with pre-registered
+non-inferiority margins and records the second review's decisions. No data has
+been collected under any revision, so revising the rules here does not breach
+§10.
 Target release for the tooling: 1.6.1.
 
 ## 1. What the evaluation must decide
@@ -95,7 +99,12 @@ selection) and reported individually.
 ## 5. Operational pool
 
 1. Run every **available** policy (§8) over the full frozen queue.
-2. Pool = union of each policy's top 20 (k = 10 and k = 20 are both scored).
+2. Pool = union of each policy's top 20 (k = 10 and k = 20 are both scored), so
+   Precision@20 is exact. If the labelling budget allows, also add a **random
+   probe**: up to 10 notes drawn uniformly from ranks 21–50 of each policy,
+   with inclusion probabilities recorded in the private file. The probe
+   estimates how many `cook_next: yes` notes sit just below every policy's cut,
+   which measures pooling bias. It never changes the exact top-k metrics.
 3. Notes in the pool without labels are added to the blind sheet (§3). With
    five policies the pool is at most 100 notes and in practice far fewer —
    policies overlap and diagnostic labels are reused.
@@ -252,7 +261,20 @@ leave-one-out cross-validation and reports held-out scores only.
 
 ## 9. Metrics
 
-All with 95% bootstrap confidence intervals (1,000 resamples).
+All with 95% bootstrap confidence intervals (at least 2,000 resamples, percentile
+method).
+
+**Resampling unit.** On one freeze, operational P@k is exact for that queue.
+The uncertainty that matters is whether the result would hold for a similar
+queue. The harness therefore uses a **paired bootstrap over the labelled pool**:
+
+1. Resample pooled notes with replacement.
+2. Re-rank each policy within the resample, keeping its original relative order.
+3. Recompute every policy's metric on the same resample, so differences stay
+   paired.
+
+When several freezes are combined, each freeze is a stratum and is resampled
+separately.
 
 ### 9.1 Diagnostic tier (`sample-only`)
 
@@ -296,18 +318,44 @@ Fixed per protocol version. Changing a rule creates a new protocol version, and
 **data used to revise rules cannot be used to declare the revised rules passed**:
 the next decision needs a fresh freeze.
 
-1. A candidate may replace the default only if, on the operational tier:
-   - Precision@10 is better than B0's and not worse than B2's (the CI of the
-     difference includes or exceeds 0);
-   - the estimated bottom-20% share of actionable-critical notes is ≤ B0's and
-     ≤ B2's;
+**A confidence interval that contains 0 only means the data cannot tell the
+policies apart. It does not show the new policy is no worse.** Every comparison
+is therefore one of two pre-registered tests on the paired difference
+`Δ = candidate − baseline`, judged by its 95% CI `[L, U]`. Each test has three
+outcomes, and only `pass` counts toward a decision:
+
+| Test | Pass | Fail | Otherwise |
+| --- | --- | --- | --- |
+| Superiority (higher is better) | `L > 0` | `U ≤ 0` | `insufficient evidence` |
+| Non-inferiority with margin `δ` (higher is better) | `L ≥ −δ` | `U < −δ` | `insufficient evidence` |
+| Non-inferiority with margin `δ` (lower is better, e.g. a miss share) | `U ≤ δ` | `L > δ` | `insufficient evidence` |
+
+Pre-registered margins for `cv-eval@1`:
+
+| Metric | Margin | Meaning |
+| --- | --- | --- |
+| Precision@10 | δ = 0.10 | At most one of the ten next-session notes worse than the baseline |
+| Estimated bottom-20% share of actionable-critical notes | δ = 0.05 | At most 5 percentage points more of them buried |
+
+`insufficient evidence` is reported as such, never rounded to a pass. With 10
+binary outcomes per policy on one freeze, it is the **expected** outcome of a
+first round, and it is the honest one. Freezes may be combined (stratified, as
+above) to reach a decision.
+
+1. A candidate may replace the default only if, on the operational tier, all of
+   these pass:
+   - superiority over B0 on Precision@10;
+   - non-inferiority to B2 on Precision@10 (δ = 0.10);
+   - non-inferiority to both B0 and B2 on the estimated bottom-20% share of
+     actionable-critical notes (δ = 0.05);
    - every seeded note confirmed `actionable_critical` ranks in the top 20% of
-     the queue;
-   - and on the diagnostic tier, no `type` or age bucket with ≥ 5 notes has a
-     mean rank percentile worse than under B0 by more than 20 points.
-2. Jev Delta (C4) becomes an option only if it beats the best local-Delta policy
-   on operational Precision@10 or the actionable-critical miss estimate with a CI
-   excluding 0, and is not worse on the other.
+     the queue (an observed check per note, not a statistical test);
+   - and on the diagnostic tier (a veto only), no `type` or age bucket with
+     ≥ 5 notes has a mean rank percentile worse than under B0 by more than 20
+     points.
+2. Jev Delta (C4) becomes an option only if it passes superiority over the best
+   local-Delta policy on operational Precision@10 or on the actionable-critical
+   miss estimate, and passes non-inferiority (same margins) on the other.
 3. A producer (local or Jev) may claim `high` confidence for a band only if, on
    labelled data, its claims in that band are correct ≥ 85% of the time, with at
    least 20 supporting cases and a 95% Wilson lower bound ≥ 0.70 (in practice
@@ -315,8 +363,13 @@ the next decision needs a fresh freeze.
    stay `null` (uncalibrated). See the calibration record in
    [signal-store-v2 §2.4](./signal-store-v2.md#24-calibration-and-confidence).
 4. Passing on one freeze of 60–80 + pool notes is a **direction**. The default
-   changes for everyone only after the rules also pass on a second freeze (a
-   second vault, or the same vault after at least one month of normal use).
+   changes for everyone only after the rules also pass on a second freeze
+   (rules 1–2 are evaluated per freeze and on the combined stratified sample).
+   An independent second vault is preferred. A second freeze of the **same**
+   vault qualifies only after at least 30 days **and** a substantive change in
+   knowledge: at least 10 compiled pages created or modified, and at least 30
+   notes added or modified since the first freeze. Both are counted from the
+   two manifests, and the report shows the counts.
 
 ## 11. `focus.md` dates
 
@@ -349,13 +402,16 @@ the next decision needs a fresh freeze.
 | `evals/compile-value/pool.ts` | Run available policies on the full freeze, build the operational pool, append unlabelled notes to the sheet (§5) |
 | `evals/compile-value/run.ts` | Both tiers' metrics, availability reporting, bootstrap CIs, weighted estimates; Markdown + JSON report stamped with protocol version and `freezeId` (§8–9) |
 | `evals/compile-value/fixtures/` | Synthetic full vault + synthetic labels with hand-computed expected metrics |
-| Tests | Metric maths (P@k, graded nDCG, Horvitz–Thompson, κ); freeze-id mismatch refusal; blindness (sheet holds no scores, tiers, strata or seeded flags); `not available` reporting; `until` interpretation incl. time zone and inclusivity |
+| Tests | Metric maths (P@k, graded nDCG, Horvitz–Thompson, κ, Wilson bounds); decision tests return `pass` / `fail` / `insufficient evidence` exactly at their boundaries, and a CI containing 0 is never reported as non-inferior unless `L ≥ −δ`; paired and stratified bootstrap reproducible under a fixed seed; freeze-id mismatch refusal; blindness (sheet holds no scores, tiers, strata or seeded flags); `not available` reporting; `until` interpretation incl. time zone and inclusivity |
 
 The 1.6.0 `jev-triage` harness stays for reproducibility of its numbers.
 
-## 14. Open questions
+## 14. Questions resolved in review (revision 3)
 
-1. Pool depth: top 20 per policy, or top 10 plus a random 10 from ranks 11–50 to
-   reduce pooling bias at similar cost?
-2. Is a month of normal use the right minimum gap for a second freeze of the same
-   vault?
+1. **Pool depth**: top 20 per policy, plus an optional random probe of ranks
+   21–50 when the budget allows (§5).
+2. **Second freeze**: an independent vault is preferred. The same vault
+   qualifies after at least 30 days and a substantive knowledge change (§10,
+   rule 4).
+
+No open questions remain in this document.

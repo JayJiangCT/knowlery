@@ -1,9 +1,16 @@
 # Compile value: what should the next cook session bring?
 
 Design track for 1.6.1 (evaluation infrastructure) and 1.7.0 (signal store and
-public interface). Status: **revision 2, draft for review**. The first review
-passed the design on condition that its P0/P1 items were fixed, and this
-revision addresses them. Nothing here changes product behaviour yet.
+public interface). Status: **revision 3, draft for review**.
+
+- Review round 1 passed the design on condition that its P0/P1 items were fixed;
+  revision 2 addressed them.
+- Review round 2 approved the overall architecture and the 1.6.1 direction, with
+  three engineering conditions; revision 3 writes them in.
+
+Nothing here changes product behaviour yet. 1.6.0 ordering is unaffected until
+1.6.1 (evaluation tooling) and 1.7.0 (signals) are implemented and the
+evaluation passes.
 
 ## Positioning
 
@@ -41,6 +48,13 @@ agent `/cook` (full read, cross-checking, compilation).
 | `focus.md` expiry | Optional `until: YYYY-MM-DD` frontmatter, inclusive through local 23:59:59. Without it, focus stays in force. After expiry, Relevance falls back to `KNOWLEDGE.md`. Frozen evaluations use `frozenAt` and the recorded time zone. |
 | Store file name | `.knowlery/compile-signals.json`. |
 | Link-only Delta | A wikilink proves a subject relation, not overlap, so it yields `unknown` with a `target`, never `partial`. |
+| Consent location | `.knowlery/config.json`. Older shells dropping the key revoke consent safely, and 1.7.0 announces any consent change. |
+| Operational pool | Top 20 per policy (exact P@20), plus an optional random probe of ranks 21–50 to measure pooling bias. |
+| Second freeze | An independent vault is preferred. The same vault needs ≥ 30 days and a substantive knowledge change. |
+| `triage.json` mirror | Written for the whole 1.7.x line; removal is evaluated no earlier than the following minor. |
+| Lock age | 30 s only triggers a liveness check; it never overrides a live or undecidable holder. |
+| Title-only templates | Not treated as low Worth until the first labelled round measures the error rate. |
+| UI | No prominent composite score or percentage. Explanation, traceable evidence and ordering credibility come first. |
 
 ## Review round 1 → revision 2
 
@@ -58,6 +72,17 @@ agent `/cook` (full read, cross-checking, compilation).
 | P1 CLI consent boundary | Store §7.1: consent matrix, no granting flag or environment variable, never on agent-facing paths, each row tested |
 | P1 protocol versioning | Protocol §10: a revised rule needs a new protocol version and a fresh freeze |
 | `labels.yaml` in the public repo | Replaced by synthetic data in #87, with a history audit; a history rewrite awaits a separate risk assessment |
+
+## Review round 2 → revision 3
+
+These are engineering acceptance conditions: the related implementation does not
+merge until its tests pass.
+
+| Condition | Where it is addressed |
+| --- | --- |
+| A. Lock age alone must not justify reclaim; reclaim must verify ownership | Store §4.5.3: liveness table (dead / alive / undecidable, including pid namespaces), reclaim under a second lock with a token re-check, the reclaim lock never auto-broken, fencing at commit, `--break-lock` as the only manual path. Must-pass tests in §4.5.4 (paused holder, release-and-recreate, concurrent reclaimers, pid reuse) |
+| B. "CI includes 0" is not evidence of no regression | Protocol §9–§10: pre-registered non-inferiority margins (P@10 δ = 0.10, critical-miss share δ = 0.05), three outcomes (pass / fail / insufficient evidence), paired and stratified bootstrap |
+| C. Lexical coverage must resist semantic inversion | Store §2.2.1–2.2.2: items compared with subject, value and polarity; conflicts and unverifiable items block `redundant`. Counter-examples (negation, reversal, numeric and unit updates, conditionals) in English and Chinese are must-pass tests in §9 |
 
 ## Documents
 

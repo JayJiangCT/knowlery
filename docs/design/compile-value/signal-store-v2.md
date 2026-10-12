@@ -1,6 +1,8 @@
 # Signal store v2 design
 
-Status: draft revision 2 (addresses the #86 design review). Target release:
+Status: draft revision 3. Revision 2 addressed the first #86 review; revision 3
+adds the second review's engineering conditions (lock reclaim, semantic
+inversion) and its decisions. Target release:
 **1.7.0**. Nothing here ships in 1.6.x.
 Lineage: successor of the 1.6.0 triage store (`.knowlery/triage.json`, schemaVersion 1).
 
@@ -102,7 +104,26 @@ note's **key items**: numbers with units, dates, version strings, identifiers
 (ticket keys, code symbols, `CamelCase`/`snake_case` names), quoted strings and
 sentences carrying decision markers ("decided", "agreed", "must", "决定",
 "确认", …). It then looks for each item in `P`'s text after normalisation. The
-evidence records `itemCount` and `coveredCount`, never the items.
+evidence records counts, never the items.
+
+**Matching words is not matching meaning.** "Caching must be enabled" and
+"caching must be disabled" share almost every token. "Retention: 30 days" and
+"Retention: 90 days" share the subject, but the value was updated. Each key item
+is therefore compared as a small tuple, not a bag of words:
+
+| Item kind | Compared as | Covered only if | Conflict if |
+| --- | --- | --- | --- |
+| Number / date / version | `(subject term within the same clause, value, unit)` | Same subject, value and unit on `P` | Same subject and unit, different value (an update) |
+| Decision sentence | `(subject terms, action, polarity)`, where polarity comes from a reviewed lexicon of negators and opposite pairs per language (`not`/`never`/`must not`/`no longer`, `enable`↔`disable`, `adopt`↔`drop`; `不`/`没`/`禁止`/`不得`/`无需`, `启用`↔`禁用`, `采用`↔`放弃`, …) | Same subject and action with the **same** polarity | Same subject and action with opposite polarity (a reversal) |
+| Identifier / quoted string | Exact token | Present on `P` | — |
+
+An item whose polarity or subject cannot be determined reliably is
+**unverifiable**. That includes double negation, conditionals ("unless",
+"除非"), negation scope spanning clauses, and a language outside the lexicon.
+An unverifiable item never counts as covered.
+
+`content-coverage` evidence records `itemCount`, `coveredCount`,
+`conflictCount` and `unverifiableCount`.
 
 Direction of a version relation comes from explicit evidence only. That means a
 `supersedes:` / `superseded_by:` frontmatter key on either note, or an ISO date
@@ -115,7 +136,10 @@ Rules are applied top to bottom; the first match wins.
 
 | Evidence present | Class | Max confidence | Target |
 | --- | --- | --- | --- |
-| `content-coverage` on `P`: `itemCount ≥ 5` and `coveredCount / itemCount ≥ 0.9` | `redundant` | `medium`, or `high` only via calibration (§2.4) | `P` |
+| `content-coverage` on `P` with `conflictCount > 0`, and the note is the newer side by explicit evidence (`version-of-source` `direction: newer`, or a later date in its frontmatter or file name than the conflicting statement's source) | `partial` | `low` | `P` |
+| `content-coverage` on `P` with `conflictCount > 0`, direction not established | `unknown` | — | `P` |
+| `content-coverage` on `P`: `itemCount ≥ 5`, `conflictCount = 0`, no unverifiable decision sentence, and `coveredCount / itemCount ≥ 0.9` | `redundant` | `medium`, or `high` only via calibration (§2.4) | `P` |
+| `content-coverage` on `P`: `unverifiableCount / itemCount > 0.3` | `unknown` | — | `P` |
 | `content-coverage` on `P`: covered share between 0.3 and 0.9 | `partial` | `medium` | `P` |
 | `version-of-source`, `direction: newer` | `partial` | `low` | the page citing the older version |
 | `content-coverage` on `P`: covered share < 0.3, with a source or version relation to `P` | `partial` | `low` | `P` |
@@ -235,6 +259,8 @@ interface SignalStore {
   generation: number;
   /** Agent-tier fingerprint at the last write; lets readers skip revalidation when unchanged. */
   kbFingerprint: string;
+  /** Last consent state a 1.7.x shell observed, so a silent change can be announced (§7.1). */
+  consentObserved?: { pageSummaries: boolean; at: string };
   notes: Record<string, NoteSignals>; // keyed by vault-relative path
 }
 
@@ -277,7 +303,7 @@ type DeltaEvidence =
   | { kind: 'links-to-page'; page: string; direction: 'note-to-page' | 'page-to-note' }
   | { kind: 'jev-same-subject'; page: string; probability: number }
   | { kind: 'retrieval-similar'; page: string; score: number }
-  | { kind: 'content-coverage'; page: string; itemCount: number; coveredCount: number }
+  | { kind: 'content-coverage'; page: string; itemCount: number; coveredCount: number; conflictCount: number; unverifiableCount: number }
   | { kind: 'jev-delta'; page: string; probability: number }
   | { kind: 'no-candidate' }
   | { kind: 'page-newer'; page: string };
@@ -308,7 +334,7 @@ Example entry:
           "target": { "path": "concepts/example-service-storage.md", "title": "Example service storage" },
           "evidence": [
             { "kind": "near-duplicate-of-source", "of": "Daily/2026-03-01.md", "citedBy": ["concepts/example-service-storage.md"], "similarity": 0.58 },
-            { "kind": "content-coverage", "page": "concepts/example-service-storage.md", "itemCount": 9, "coveredCount": 5 },
+            { "kind": "content-coverage", "page": "concepts/example-service-storage.md", "itemCount": 9, "coveredCount": 5, "conflictCount": 0, "unverifiableCount": 1 },
             { "kind": "page-newer", "page": "concepts/example-service-storage.md" }
           ],
           "revalidatedAt": { "kbFingerprint": "9f2c41d07ab3e815" }
@@ -461,20 +487,72 @@ defence.
 - The lock is held **only for the read–merge–write critical section**
   (milliseconds), never across Jev calls. Network work happens outside the lock;
   results are merged afterwards.
-- Lock content: `{ token, pid, host, createdAt }`. Acquisition retries with
-  jittered backoff for up to 2 s. If the lock is still unavailable after that,
-  the writer gives up for this write: results are kept in memory and retried
-  once at the end of the run, then dropped with a warning. A dropped result
-  costs a re-score later; it is never written unlocked.
-- **Stale-lock reclaim** applies when a lock is older than 30 s (far longer than
-  any critical section), or when its `host` equals ours and its `pid` is not
-  alive. The reclaimer renames the lock to `compile-signals.lock.stale-<own
-  token>`. Only one rename of the same source succeeds; the loser sees `ENOENT`
-  and retries acquisition. The winner deletes the renamed file and acquires
-  normally with `wx`.
-- The generation check inside the lock: if `generation` changed between the
-  read and the temp write (which can only happen if a lock was wrongly
-  reclaimed, or because of a sync client), re-merge and retry, up to 3 times.
+- Lock content: `{ token, pid, host, pidNamespace, command, createdAt }`.
+  `pidNamespace` is the inode of `/proc/self/ns/pid` on Linux and absent
+  elsewhere. Acquisition retries with jittered backoff for up to 2 s. If the lock
+  is still unavailable after that, the writer gives up for this write: results
+  are kept in memory and retried once at the end of the run, then dropped with a
+  warning. A dropped result costs a re-score later; it is never written unlocked.
+
+**Age never proves the holder is gone.** A holder can be paused (`SIGSTOP`, a
+debugger), blocked on a slow disk, or resumed from system sleep, and still
+legitimately hold the lock. The 30 s age is only the point after which a waiting
+writer *checks* liveness instead of just waiting. It is never a reason to
+reclaim on its own.
+
+**Liveness is decided only when it can be decided:**
+
+| Holder, compared with the waiting writer | Decision |
+| --- | --- |
+| Same `host`, same `pidNamespace` (or both absent), `process.kill(pid, 0)` throws `ESRCH` | **Dead**: may be reclaimed |
+| Same `host` and namespace, pid exists (alive, paused, or a reused pid) | **Alive**: wait, then give up as above; never reclaim |
+| Different `host` (a lock delivered by a sync client or a shared drive), or a different `pidNamespace` (for example a Flatpak or container sandbox, where pids are not comparable) | **Undecidable**: never reclaimed automatically |
+| Malformed lock content | **Undecidable** |
+
+Errors always land on the safe side. A reused pid reads as alive, which costs a
+skipped write, never a stolen lock. When a write gives up because of an alive or
+undecidable holder, `knowlery health` and the triage output name the holder
+(host, pid, command, age). `knowlery triage --break-lock` removes the lock after
+showing the holder and requiring `yes` on a TTY. That is the only way an
+undecidable lock is removed.
+
+**Ownership-verified reclaim.** Reading a lock, judging it dead, and then
+renaming or unlinking it is a check-then-act race. Between the check and the act,
+the lock may have been released and recreated by a live writer. Reclaim
+therefore runs under a second lock, so the observed lock cannot change before
+it is removed:
+
+1. Observe `compile-signals.lock` with token `t`, and judge its holder dead (table
+   above).
+2. Create `compile-signals.lock.reclaim` with `wx`. If that fails, another writer
+   is reclaiming; go back to waiting.
+3. Re-read `compile-signals.lock`. If it is gone, or its token is not `t`, the
+   situation changed: release the reclaim lock and go back to waiting.
+4. Re-check liveness for `t`'s holder. If still dead, unlink
+   `compile-signals.lock`.
+5. Release the reclaim lock, then acquire normally with `wx`.
+
+Why this is safe: while the reclaim lock is held, only two actors could remove
+`compile-signals.lock`. Its owner can't, because step 4 verified it is dead.
+Another reclaimer can't, because it would need the reclaim lock. No live writer
+can create a new lock either, because `wx` fails while the dead one exists. So
+the lock unlinked in step 4 is the lock checked in step 3. The window the review
+described (lock released and recreated between observation and rename) is
+closed by step 3.
+
+**The reclaim lock is never reclaimed automatically.** It is held for
+microseconds, so a leftover one means a crash inside reclaim, which is a double
+failure. Writers then give up as above, and `--break-lock` clears both files.
+This bounds the design: no automatic step ever removes a lock it has not just
+verified under exclusion.
+
+**Fencing at commit (defence in depth).** Immediately before the final rename,
+the holder re-reads the lock and checks two things: that the token is still its
+own, and that the store's `generation` is still the `G` it read. If either check
+fails, it abandons the temp file and restarts the update from acquisition, up to
+3 times. This catches a lock removed by `--break-lock` or delivered by a sync
+client mid-update. The remaining window is between this check and `rename`
+(microseconds), and only matters if a lock was also wrongly removed.
 - On Windows, the rename retries `EPERM`/`EBUSY`/`EACCES` with backoff for up to
   1 s.
 - Merging is per `(note, signal kind, producer)`: the entry with the newer
@@ -483,8 +561,10 @@ defence.
 - Entries with an unknown producer, evidence kind or signal are **preserved
   verbatim**, so a 1.7.x shell never deletes what a later 1.7.y wrote.
 
-**Stated guarantee.** On one machine, concurrent Knowlery writers lose no
-updates and never produce a torn file. Across devices on a sync folder, the file
+**Stated guarantee.** On one machine, with holders in comparable pid namespaces,
+concurrent Knowlery writers lose no updates and never produce a torn file. A
+holder that cannot be proven dead blocks writes, which costs scores, rather than
+being reclaimed, which could corrupt merges. Across devices on a sync folder, the file
 is never torn locally, but the sync client may choose one device's version; the
 worst case is **re-scoring cost, never corruption** and never a wrong signal
 (every surviving entry still carries its own fingerprint).
@@ -495,11 +575,31 @@ worst case is **re-scoring cost, never corruption** and never a wrong signal
   signals in tight loops against one temp vault. Assert all 400 entries are
   present and `generation` equals the number of successful writes. Run it in CI
   on Linux; run it on Windows and macOS in a scheduled job before the 1.7.0 tag.
+The lock tests below are **must-pass conditions for merging the 1.7.0 store
+implementation**. Timeouts are shortened through a test-only parameter, never by
+sleeping 30 s.
+
 - **Crash holding the lock**: a child acquires the lock and is killed with
-  `SIGKILL`; another writer reclaims it after the stale timeout and completes;
-  no `.stale-*` files are left behind.
-- **Reclaim race**: two processes find the same stale lock; exactly one reclaims;
-  no update is lost.
+  `SIGKILL`; another writer reclaims it after the age threshold and completes;
+  no `.reclaim` file is left behind.
+- **Paused holder is not reclaimed**: a child acquires the lock and is stopped
+  with `SIGSTOP` well past the age threshold. Other writers give up (results
+  dropped with the holder named), never reclaim. After `SIGCONT`, the child
+  commits successfully and its update is present.
+- **Release-and-recreate between observation and reclaim**: a test hook pauses a
+  reclaimer after step 1; the dead lock is replaced by a live writer's lock; the
+  reclaimer resumes, sees a different token at step 3, and backs off. The live
+  writer's lock and update survive.
+- **Concurrent reclaimers**: several processes judge the same dead lock at once;
+  exactly one unlinks it; no update is lost.
+- **Undecidable holders**: locks with a foreign `host`, a different
+  `pidNamespace`, or malformed content are never removed automatically;
+  `--break-lock` removes them only after TTY confirmation.
+- **Pid reuse**: a lock naming a live, unrelated pid is treated as alive.
+- **Crash during reclaim**: a leftover `.reclaim` file makes writers give up with
+  a health message; `--break-lock` recovers.
+- **Fencing**: a lock removed by `--break-lock` mid-update makes the original
+  holder's commit abort and retry instead of overwriting.
 - **Windows rename contention** (scheduled job): hold the target open from
   another process during a write; the write succeeds after retry or reports a
   dropped result, never a partial file.
@@ -683,6 +783,15 @@ so the store does not need another migration.
   `jev.pageSummaries`. Consent is then revoked, never granted. 1.7.0 changes
   `parseConfig`/`writeConfig` to preserve unknown keys, with a test, so 1.7.x
   shells never drop each other's settings.
+- **Consent changes are announced.** The store records the last consent state any
+  1.7.x shell observed (`consentObserved: { pageSummaries: boolean, at: string }`
+  at the top level of `compile-signals.json`; a boolean and a timestamp, no
+  text). When the config disagrees with it, that shell says so once and then
+  updates the record. The plugin shows a notice and the settings toggle; the CLI
+  prints a line on stderr in `triage` and a `knowlery health` warning. Example:
+  "Page-summary consent is now off; `.knowlery/config.json` was rewritten,
+  possibly by an older Knowlery. Re-enable it in settings if intended." Consent
+  is never restored automatically.
 - **Granting** happens in plugin settings (a toggle that first shows the payload
   preview), or with `knowlery triage consent page-summaries on`. The CLI command
   prints the preview for a real note and requires typing `yes` on a TTY. It
@@ -748,6 +857,22 @@ accepted.
   - fewer than 5 key items never yields `redundant`;
   - weak evidence never exceeds `low`;
   - nothing exceeds `medium` without a calibration record.
+- **Semantic counter-examples (must pass before local Delta merges)**. Each case
+  is a note/page pair, in English and Chinese, with the expected result. None of
+  these may yield `redundant`:
+  - negation: "must enable caching" vs "must not enable caching"; "需要审批" vs
+    "无需审批";
+  - decision reversal: "adopt Postgres" vs "drop Postgres"; "启用缓存" vs
+    "禁用缓存";
+  - numeric update: "retention 30 days" vs "retention 90 days"; a version string
+    changed;
+  - unit change: "timeout 30 s" vs "timeout 30 min";
+  - same number, different subject: not a conflict, but not covered either;
+  - double negation and conditionals ("unless", "除非") produce unverifiable
+    items, and a note dominated by them yields `unknown`.
+
+  A conflict with an explicitly newer note yields `partial`; without direction,
+  `unknown`.
 - **Local Worth**: each detector fires on its fixture; folder names, the word
   "draft" and short notes do **not** trigger anything.
 - **Freshness**: a stale or unrevalidated `redundant` is exposed as `unknown`
@@ -764,11 +889,17 @@ accepted.
 - **Policy purity**: same inputs give the same order; `jev-worth@1` reproduces
   1.6.0 output byte-for-byte.
 
-## 10. Open questions for review
+## 10. Questions resolved in review (revision 3)
 
-1. Mirror period for `triage.json`: the whole 1.7.x line, or one minor?
-2. Lock stale timeout: is 30 s right for slow network drives, or should it scale
-   with a measured critical-section time?
-3. Should `local-worth`'s `template-boilerplate` also match a template with a
-   filled-in title only (the most common "empty daily note"), or is that a
-   heuristic too far for the minimal set?
+1. **`triage.json` mirror period**: the whole 1.7.x line. Removal is evaluated
+   no earlier than the next minor after that.
+2. **Lock age threshold**: 30 s is kept as the initial parameter, and it only
+   triggers a liveness check. It can never override a live or undecidable
+   holder (§4.5.3).
+3. **Template with only a filled-in title**: not treated as low Worth.
+   `template-boilerplate` matches the unmodified template only, until the first
+   labelled round measures the false-positive rate of a looser rule.
+4. **Consent location**: `.knowlery/config.json`, with consent changes announced
+   (§7.1).
+
+No open questions remain in this document.

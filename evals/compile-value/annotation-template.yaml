@@ -1,4 +1,4 @@
-# Compile-value annotation sheet — protocol cv-eval@1, revision 2
+# Compile-value annotation sheet — protocol cv-eval@1, revision 3
 # (docs/design/compile-value/evaluation-protocol.md)
 #
 # This committed file is the TEMPLATE, with synthetic examples only. Real sheets are
@@ -19,7 +19,7 @@
 
 header:
   protocol: cv-eval@1
-  protocol_revision: 2
+  protocol_revision: 3
   freeze_id: "<sha256 of the freeze manifest — filled by sample.ts>"
   frozen_at: "<ISO timestamp of T0, UTC — filled by sample.ts>"
   frozen_tz: "<IANA time zone of the freezing machine, e.g. Asia/Shanghai — filled by sample.ts>"
