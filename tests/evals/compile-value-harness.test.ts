@@ -11,7 +11,7 @@ import { type AvailablePolicy, type Policy, availablePolicies, policiesFor } fro
 import { buildPool } from '../../evals/compile-value/lib/pool';
 import type { PrivateFile } from '../../evals/compile-value/lib/private';
 import { loadQueue, type FrozenQueue } from '../../evals/compile-value/lib/queue';
-import { allocate, drawSample, systematic } from '../../evals/compile-value/lib/sample';
+import { SampleError, allocate, drawSample, systematic } from '../../evals/compile-value/lib/sample';
 import { SHEET_NOTE_KEYS, readSheet, serializeSheet, writeSheet, type Sheet } from '../../evals/compile-value/lib/sheet';
 import { mulberry32, sha256 } from '../../evals/compile-value/lib/rng';
 import { parse as parseYaml } from 'yaml';
@@ -158,6 +158,28 @@ describe('diagnostic sample (protocol §3–4)', () => {
     expect([...allocation.values()].reduce((a, b) => a + b, 0)).toBe(10);
     expect(allocation.get('gt180d')).toBeGreaterThanOrEqual(6);
     for (const [key, n] of allocation) expect(n).toBeLessThanOrEqual(new Map([['le30d', 4], ['30to180d', 16], ['gt180d', 20]]).get(key) as number);
+  });
+
+  it('every non-empty stratum gets at least one draw, so π > 0 everywhere', () => {
+    const allocation = allocate(new Map([['a', 3999], ['b', 1]]), 80, 0);
+    expect(allocation.get('b')).toBe(1);
+    expect(allocation.get('a')).toBe(79);
+    const many = allocate(new Map([['gt180d|le0.2', 1], ['le30d|gt0.8', 2], ['30to180d|unscored', 500], ['gt180d|gt0.8', 3000]]), 20, 6);
+    expect([...many.values()].reduce((a, b) => a + b, 0)).toBe(20);
+    for (const n of many.values()) expect(n).toBeGreaterThanOrEqual(1);
+    expect(allocate(new Map([['a', 5], ['b', 0]]), 3, 0).has('b')).toBe(false);
+    expect(() => allocate(new Map([['a', 1], ['b', 1], ['c', 1]]), 2, 0)).toThrow(SampleError);
+  });
+
+  it('falls back to age-only strata when age × Jev cells outnumber the sample', () => {
+    const w = world();
+    const jevCells = new Set(w.queue.notes.map((note) => `${note.ageBucket}|${note.jevBand ?? 'unscored'}`)).size;
+    const ageCells = new Set(w.queue.notes.map((note) => note.ageBucket)).size;
+    expect(jevCells).toBeGreaterThan(ageCells);
+    const { privateFile, warnings } = drawSample(w.freeze, w.queue, { size: ageCells, floor: 0, seed: 3, now: T0 });
+    expect(privateFile.sample.usedJevStrata).toBe(false);
+    expect(warnings.join(' ')).toMatch(/falling back to age-only strata/);
+    for (const stratum of privateFile.sample.strata) expect(stratum.allocated).toBe(1);
   });
 
   it('systematic sampling draws n distinct members', () => {
