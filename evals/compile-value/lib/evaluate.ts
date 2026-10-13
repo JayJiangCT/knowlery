@@ -161,7 +161,12 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
   const selectedPaths = validated.selectedNext.map((id) => validated.labels.get(id)?.path).filter((path): path is string => Boolean(path));
   const selected = new Set(selectedPaths);
   const units: Unit[] = [...validated.labels.values()].map((label) => ({ id: label.id, path: label.path, entry: privateFile.entries[label.id], label }));
-  const diagnosticUnits = units.filter((unit) => unit.entry.sources.includes('diagnostic') && typeof unit.entry.pi === 'number' && unit.entry.pi > 0);
+  // Dropping unlabelled diagnostic notes while keeping the others' 1/π weights would
+  // silently change the design, so every population estimate waits for the whole sample.
+  const diagnosticTotal = Object.values(privateFile.entries).filter((entry) => entry.sources.includes('diagnostic')).length;
+  const diagnosticLabelled = units.filter((unit) => unit.entry.sources.includes('diagnostic') && typeof unit.entry.pi === 'number' && unit.entry.pi > 0);
+  const diagnosticComplete = diagnosticTotal > 0 && diagnosticLabelled.length === diagnosticTotal;
+  const diagnosticUnits = diagnosticComplete ? diagnosticLabelled : [];
   const poolUnits = units.filter((unit) => unit.entry.sources.includes('pool'));
   const rankOf = (policyId: string, path: string) => ranks.get(policyId)?.get(path) ?? Number.POSITIVE_INFINITY;
   const queuedNote = (path: string): QueueNote | undefined => queue.byPath.get(path);
@@ -240,7 +245,9 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
 
   // ---- Actionable-critical misses on the full queue (§9.3): Horvitz–Thompson over the diagnostic sample.
   const missNotes: string[] = [];
-  if (diagnosticUnits.length === 0) missNotes.push('No labelled diagnostic notes: population estimates are not available.');
+  const incompleteDiagnostic = `Diagnostic sample incomplete: ${diagnosticLabelled.length} of ${diagnosticTotal} labelled. B1 prevalence, the actionable-critical estimates and the diagnostic tier are withheld until every sampled note is labelled.`;
+  if (diagnosticTotal === 0) missNotes.push('No diagnostic sample: population estimates are not available.');
+  else if (!diagnosticComplete) missNotes.push(incompleteDiagnostic);
   if (privateFile.sample.ineligible.length > 0) {
     missNotes.push(`Estimates cover the eligible population: ${privateFile.sample.ineligible.length} older snapshot(s) beyond the per-document cap are outside it.`);
   }
@@ -323,7 +330,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     }
   }
   let calibration: EvaluationReport['diagnostic']['calibration'] = null;
-  if (available.some((policy) => policy.id === 'B2')) {
+  if (diagnosticComplete && available.some((policy) => policy.id === 'B2')) {
     const bands = ['gt0.8', '0.2to0.8', 'le0.2'].map((band) => {
       const members = diagnosticUnits.filter((unit) => queuedNote(unit.path)?.jevBand === band);
       const yes = members.filter((unit) => unit.label.worth === 'yes').length;
@@ -403,8 +410,10 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     });
     checks.push({
       rule: `1. Diagnostic veto: no type or age group (n ≥ ${VETO_MIN_GROUP}) sunk > ${VETO_PERCENTILE_POINTS} points below B0`,
-      outcome: vetoes.length === 0 ? 'pass' : 'fail',
-      detail: vetoes.length === 0 ? 'no group vetoed' : vetoes.map((group) => `${group.dimension}=${group.group}`).join(', '),
+      outcome: !diagnosticComplete ? 'insufficient evidence' : vetoes.length === 0 ? 'pass' : 'fail',
+      detail: !diagnosticComplete
+        ? `diagnostic sample incomplete (${diagnosticLabelled.length} of ${diagnosticTotal} labelled)`
+        : vetoes.length === 0 ? 'no group vetoed' : vetoes.map((group) => `${group.dimension}=${group.group}`).join(', '),
     });
     const outcome: Outcome = checks.some((check) => check.outcome === 'fail')
       ? 'fail'
@@ -417,6 +426,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
 
   if (privateFile.pool?.appendedAfterLabelling) warnings.push('Pool entries were added after labelling began; blindness of that block is weaker (see the private file).');
   if (validated.unlabelled.length > 0) warnings.push(`${validated.unlabelled.length} sheet entries are unlabelled.`);
+  if (diagnosticTotal > 0 && !diagnosticComplete) warnings.push(incompleteDiagnostic);
   for (const row of rows) if (!row.complete) warnings.push(`${row.policy}: ${row.unlabelledInTopK.length} of its top ${POOL_DEPTH} are unlabelled; its operational metrics are withheld.`);
 
   const sources = (source: string) => Object.values(privateFile.entries).filter((entry) => entry.sources.includes(source as PrivateEntry['sources'][number])).length;
@@ -434,7 +444,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
       labelled: validated.labels.size,
       unlabelled: validated.unlabelled.length,
       diagnostic: sources('diagnostic'),
-      diagnosticLabelled: diagnosticUnits.length,
+      diagnosticLabelled: diagnosticLabelled.length,
       pool: sources('pool'),
       poolLabelled: poolUnits.length,
       seeded: sources('seeded'),

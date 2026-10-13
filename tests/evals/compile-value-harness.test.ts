@@ -376,6 +376,49 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(superiorityCheck?.outcome).not.toBe('pass');
   });
 
+  function oracleCandidate(w: World): AvailablePolicy {
+    const b0 = w.policies.find((policy) => policy.id === 'B0') as AvailablePolicy;
+    const truth = new Map(w.notes.map((note) => [note.path, note.truth]));
+    const score = (path: string) => {
+      const t = truth.get(path);
+      if (!t) return 0;
+      const ac = t.importance === 'critical' && (t.delta === 'new' || t.delta === 'partial');
+      return (ac ? 2 : 0) + (t.cookNext ? 1 : 0);
+    };
+    const order = [...b0.order].sort((a, b) => score(b) - score(a) || b0.order.indexOf(a) - b0.order.indexOf(b));
+    return { id: 'C-oracle', kind: 'candidate', description: 'test-only', available: true, order };
+  }
+
+  it('withholds population estimates while the diagnostic sample is incomplete', () => {
+    const w = world();
+    const candidate = oracleCandidate(w);
+    const { sheet, privateFile } = sampledAndPooled(w, [candidate]);
+    const labelled = label(sheet, w.notes);
+    const diagnosticOnly = Object.entries(privateFile.entries).find(([, entry]) => entry.sources.join() === 'diagnostic') as [string, PrivateFile['entries'][string]];
+    expect(diagnosticOnly).toBeDefined();
+    const partial = {
+      ...labelled,
+      notes: labelled.notes.map((note) => (note.id === diagnosticOnly[0] ? { ...note, worth: null, delta: null, relevance: null, cook_next: null, cook_next_reason: null, type: null, importance: null } : note)),
+    };
+    const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile, sheet: partial, intraSheet: labelled, seed: 7, resamples: 50 });
+    expect(report.counts.diagnosticLabelled).toBe(report.counts.diagnostic - 1);
+    expect(report.b1.prevalence).toEqual({ value: null, ci: null });
+    expect(report.misses.estimatedActionableCritical).toEqual({ value: null, ci: null });
+    for (const row of report.misses.rows) {
+      expect(row.bottom20Share.value).toBeNull();
+      expect(row.recall.every((entry) => entry.estimate.value === null)).toBe(true);
+      expect(row.diffVsB0?.value ?? null).toBeNull();
+    }
+    expect(report.diagnostic.withinSample.every((row) => row.precisionAt10 === null)).toBe(true);
+    expect(report.diagnostic.groups).toEqual([]);
+    expect(report.diagnostic.calibration).toBeNull();
+    expect(report.warnings.join(' ')).toMatch(/Diagnostic sample incomplete: \d+ of \d+ labelled/);
+    const decision = report.decisions.find((entry) => entry.policy === 'C-oracle');
+    expect(decision?.checks.find((check) => check.rule.includes('Diagnostic veto'))?.outcome).toBe('insufficient evidence');
+    expect(decision?.outcome).toBe('insufficient evidence');
+    expect(report.operational.rows.find((row) => row.policy === 'B0')?.complete).toBe(true);
+  });
+
   it('refuses mixed freezes and sheets with label errors; withholds metrics for an incomplete top 20', () => {
     const w = world();
     const otherVault = temp();
