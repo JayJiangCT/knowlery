@@ -9,7 +9,8 @@ import { loadQueue } from './lib/queue';
  *
  * Copies every indexed page plus KNOWLEDGE.md, .knowlery/{config.json,triage.json,focus.md}
  * with original mtimes, verifies the source did not change during the copy (up to three
- * attempts), and writes manifest.json. The freeze id is sha256(manifest.json). Local only:
+ * attempts), checks that the copy reproduces the vault's mtime and 1.6.0 Jev queue orders,
+ * and writes manifest.json. The freeze id is sha256(manifest.json). Local only:
  * nothing leaves the machine.
  */
 
@@ -23,6 +24,9 @@ runCli(() => {
   const queue = loadQueue(freeze);
   console.log(`Froze ${freeze.manifest.files.length} files at ${freeze.manifest.frozenAt} (${freeze.manifest.timeZone}).`);
   console.log(`Uncooked queue: ${queue.notes.length} notes; 1.6.0 Jev scores: ${queue.hasJevScores ? 'present' : 'absent'}.`);
+  if (freeze.orderParity) {
+    console.log(`Order parity: the copy reproduces the vault's mtime order${freeze.orderParity.triage ? ' and 1.6.0 Jev order' : ''} for all ${freeze.orderParity.queue} queued notes.`);
+  }
   console.log(`freezeId ${freeze.freezeId}`);
   console.log(`Next: tsx evals/compile-value/sample.ts --freeze "${freeze.dir}" --sheet <file> --private <file>`);
 });

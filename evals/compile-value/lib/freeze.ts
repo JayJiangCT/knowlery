@@ -5,6 +5,7 @@ import { JEV_MODEL } from '../../../src/core/jev/client';
 import { TRIAGE_PATH } from '../../../src/core/jev/triage-store';
 import { CONFIG_PATH } from '../../../src/core/reference-config';
 import { SYSTEM_FILES, scanVault } from '../../../src/core/query/scan';
+import { computeStaleness } from '../../../src/core/query/staleness';
 import { PROTOCOL, PROTOCOL_REVISION } from './protocol';
 import { sha256 } from './rng';
 
@@ -47,6 +48,8 @@ export interface Freeze {
   vaultDir: string;
   manifest: FreezeManifest;
   freezeId: string;
+  /** Set by `freezeVault`: the source and the copy produced the same queue orders. */
+  orderParity?: { queue: number; triage: boolean };
 }
 
 export class FreezeError extends Error {
@@ -100,6 +103,33 @@ function diff(before: Map<string, FrozenFile>, after: Map<string, FrozenFile>): 
   return [...changed].sort();
 }
 
+export interface QueueOrders {
+  /** Uncooked queue in mtime order (B0). */
+  mtime: string[];
+  /** The same queue with the vault's triage.json applied (B2); null without one. */
+  triage: string[] | null;
+}
+
+export function queueOrders(root: string): QueueOrders {
+  const snapshot = scanVault(root);
+  const paths = (notes: { path: string }[]) => notes.map((note) => note.path);
+  return {
+    mtime: paths(computeStaleness({ ...snapshot, triage: undefined }).uncookedNotes),
+    triage: snapshot.triage ? paths(computeStaleness(snapshot).uncookedNotes) : null,
+  };
+}
+
+/** First disagreement between two queue orders, or null when they match. */
+function orderMismatch(name: string, source: string[] | null, copy: string[] | null): string | null {
+  if (source === null && copy === null) return null;
+  if (source === null || copy === null) return `${name}: triage.json is ${source === null ? 'only in the copy' : 'missing from the copy'}`;
+  const length = Math.max(source.length, copy.length);
+  for (let i = 0; i < length; i++) {
+    if (source[i] !== copy[i]) return `${name} rank ${i + 1}: source ${source[i] ?? '(end)'}, copy ${copy[i] ?? '(end)'}`;
+  }
+  return null;
+}
+
 function packageVersion(): string {
   const raw = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version?: unknown };
   return typeof raw.version === 'string' ? raw.version : 'unknown';
@@ -151,6 +181,21 @@ export function freezeVault(sourceRoot: string, outDir: string, options: FreezeO
     options.afterCopy?.(attempt);
     for (const path of diff(before, describeAll(source))) changed.add(path);
     if (changed.size === 0) {
+      const sourceOrders = queueOrders(source);
+      const copyOrders = queueOrders(vaultDir);
+      const mismatches = [
+        orderMismatch('mtime order', sourceOrders.mtime, copyOrders.mtime),
+        orderMismatch('1.6.0 Jev order', sourceOrders.triage, copyOrders.triage),
+      ].filter((entry): entry is string => entry !== null);
+      if (mismatches.length > 0) {
+        const raced = diff(before, describeAll(source));
+        if (raced.length > 0) {
+          lastChanged = raced;
+          continue;
+        }
+        rmSync(vaultDir, { recursive: true, force: true });
+        throw new FreezeError(`The copy does not reproduce the vault's queue order, so it cannot stand in for the vault. No freeze was produced. ${mismatches.join('; ')}`);
+      }
       const manifest: FreezeManifest = {
         protocol: PROTOCOL,
         protocolRevision: PROTOCOL_REVISION,
@@ -161,7 +206,10 @@ export function freezeVault(sourceRoot: string, outDir: string, options: FreezeO
       };
       const raw = `${JSON.stringify(manifest, null, 2)}\n`;
       writeFileSync(join(out, 'manifest.json'), raw);
-      return { dir: out, vaultDir, manifest, freezeId: sha256(raw) };
+      return {
+        dir: out, vaultDir, manifest, freezeId: sha256(raw),
+        orderParity: { queue: copyOrders.mtime.length, triage: copyOrders.triage !== null },
+      };
     }
     lastChanged = [...changed].sort();
   }
@@ -172,7 +220,20 @@ export function freezeVault(sourceRoot: string, outDir: string, options: FreezeO
   );
 }
 
-/** Loads a freeze; with `verify`, re-hashes every copied file against the manifest. */
+function listFiles(root: string, prefix = ''): string[] {
+  if (!existsSync(join(root, prefix))) return [];
+  return readdirSync(join(root, prefix), { withFileTypes: true }).flatMap((entry) => {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    return entry.isDirectory() ? listFiles(root, path) : [path];
+  });
+}
+
+/**
+ * Loads a freeze. Verification (on by default) walks the whole copy, hidden files
+ * included, and requires exactly the manifest's file set with the same size, mtime and
+ * content: the queue order depends on mtimes and on which files exist, so a hash-only
+ * check would let one freeze id stand for different queues.
+ */
 export function loadFreeze(dir: string, options: { verify?: boolean } = {}): Freeze {
   const out = resolve(dir);
   const manifestPath = join(out, 'manifest.json');
@@ -181,11 +242,14 @@ export function loadFreeze(dir: string, options: { verify?: boolean } = {}): Fre
   const manifest = JSON.parse(raw) as FreezeManifest;
   if (manifest.protocol !== PROTOCOL) throw new FreezeError(`Freeze protocol ${manifest.protocol} is not ${PROTOCOL}`);
   const vaultDir = join(out, 'vault');
-  if (options.verify) {
-    const mismatched = manifest.files
-      .filter((entry) => describe(vaultDir, entry.path)?.sha256 !== entry.sha256)
-      .map((entry) => entry.path);
-    if (mismatched.length > 0) throw new FreezeError(`Freeze copy differs from its manifest: ${mismatched.join(', ')}`, mismatched);
+  if (options.verify ?? true) {
+    const actual = new Map<string, FrozenFile>();
+    for (const path of listFiles(vaultDir)) {
+      const entry = describe(vaultDir, path);
+      if (entry) actual.set(path, entry);
+    }
+    const mismatched = diff(new Map(manifest.files.map((entry) => [entry.path, entry])), actual);
+    if (mismatched.length > 0) throw new FreezeError(`Freeze copy differs from its manifest (file set, size, mtime or content): ${mismatched.join(', ')}`, mismatched);
   }
   return { dir: out, vaultDir, manifest, freezeId: sha256(raw) };
 }

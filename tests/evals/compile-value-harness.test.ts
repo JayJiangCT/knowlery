@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -126,6 +126,54 @@ describe('freeze (protocol §2)', () => {
     const freeze = freezeVault(vault, join(temp(), 'freeze'));
     writeFileSync(join(freeze.vaultDir, notePath(1)), 'tampered');
     expect(() => loadFreeze(freeze.dir, { verify: true })).toThrow(/differs from its manifest/);
+  });
+
+  it('verification covers the file set and mtimes, not only content: one freeze id, one queue', () => {
+    const w = world();
+    expect(w.freeze.orderParity).toEqual({ queue: 43, triage: true });
+    expect(loadFreeze(w.freeze.dir).freezeId).toBe(w.freeze.freezeId);
+    const before = loadQueue(loadFreeze(w.freeze.dir)).notes.map((note) => note.path);
+    expect(policiesFor(w.queue).find((policy) => policy.id === 'B0')).toMatchObject({ order: before });
+
+    const touched = join(w.freeze.vaultDir, notePath(30));
+    const now = Date.now() / 1000;
+    utimesSync(touched, now, now);
+    expect(loadQueue(w.freeze).notes[0].path).toBe(notePath(30));
+    expect(() => loadFreeze(w.freeze.dir)).toThrow(/differs from its manifest/);
+    const mtime = (w.freeze.manifest.files.find((file) => file.path === notePath(30)) as { mtimeMs: number }).mtimeMs / 1000;
+    utimesSync(touched, mtime, mtime);
+    expect(loadFreeze(w.freeze.dir).freezeId).toBe(w.freeze.freezeId);
+
+    writeFileSync(join(w.freeze.vaultDir, 'Journal', 'added.md'), '# added after freezing\n');
+    expect(() => loadFreeze(w.freeze.dir)).toThrow(/Journal\/added\.md/);
+    rmSync(join(w.freeze.vaultDir, 'Journal', 'added.md'));
+    writeFileSync(join(w.freeze.vaultDir, '.hidden-extra'), 'x');
+    expect(() => loadFreeze(w.freeze.dir)).toThrow(/\.hidden-extra/);
+    rmSync(join(w.freeze.vaultDir, '.hidden-extra'));
+    rmSync(join(w.freeze.vaultDir, notePath(2)));
+    expect(() => loadFreeze(w.freeze.dir)).toThrow(/differs from its manifest/);
+  });
+
+  it('refuses a copy whose queue order differs from the source vault', () => {
+    const vault = temp();
+    writeSyntheticVault(vault);
+    const out = join(temp(), 'freeze');
+    const failure = ((): unknown => {
+      try {
+        freezeVault(vault, out, {
+          afterCopy: () => {
+            const now = Date.now() / 1000;
+            utimesSync(join(out, 'vault', notePath(30)), now, now);
+          },
+        });
+        return null;
+      } catch (error) {
+        return error;
+      }
+    })();
+    expect(failure).toBeInstanceOf(FreezeError);
+    expect((failure as Error).message).toMatch(/does not reproduce the vault's queue order.*mtime order rank 1: source .*note-00.*copy .*note-30/);
+    expect(existsSync(join(out, 'manifest.json'))).toBe(false);
   });
 });
 
