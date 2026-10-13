@@ -32,6 +32,13 @@ export const VETO_PERCENTILE_POINTS = 20;
 export const VETO_MIN_GROUP = 5;
 /** §7 — a label with intra-rater κ below this is reported but not used for decisions. */
 export const KAPPA_MIN = 0.4;
+/** §7 — share of labelled notes re-labelled by the same annotator at least a week later. */
+export const RELABEL_SHARE = 0.2;
+/**
+ * Labels the §10 checks read: cook_next (precision, gains), actionable_critical and its
+ * inputs importance and delta (bottom-20% share, seeded notes), type (diagnostic veto).
+ */
+export const DECISION_LABELS = ['cook_next', 'actionable_critical', 'importance', 'delta', 'type'] as const;
 
 export const WORTH = ['yes', 'no', 'unsure'] as const;
 export const DELTA = ['new', 'partial', 'redundant', 'unknown', 'n/a'] as const;

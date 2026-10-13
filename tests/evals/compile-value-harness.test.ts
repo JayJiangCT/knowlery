@@ -370,7 +370,7 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     });
     const decision = report.decisions.find((entry) => entry.policy === 'C-test');
     expect(decision).toBeDefined();
-    expect(decision?.checks).toHaveLength(6);
+    expect(decision?.checks).toHaveLength(7);
     expect(decision?.outcome).toBe('fail');
     const superiorityCheck = decision?.checks[0];
     expect(superiorityCheck?.outcome).not.toBe('pass');
@@ -388,6 +388,40 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     const order = [...b0.order].sort((a, b) => score(b) - score(a) || b0.order.indexOf(a) - b0.order.indexOf(b));
     return { id: 'C-oracle', kind: 'candidate', description: 'test-only', available: true, order };
   }
+
+  it('a label with κ below 0.4, or no re-label at all, cannot carry a pass (§7)', () => {
+    const w = world();
+    const candidate = oracleCandidate(w);
+    const { sheet, privateFile } = sampledAndPooled(w, [candidate]);
+    const labelled = label(sheet, w.notes);
+    const run = (intraSheet?: Sheet) => {
+      const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile, sheet: labelled, ...(intraSheet ? { intraSheet } : {}), seed: 7, resamples: 300 });
+      return report.decisions.find((entry) => entry.policy === 'C-oracle') as EvaluationReport['decisions'][number];
+    };
+    const gate = (decision: EvaluationReport['decisions'][number]) => decision.checks.find((check) => check.rule.startsWith('§7')) as EvaluationReport['decisions'][number]['checks'][number];
+
+    const agreed = run(labelled);
+    expect(agreed.checks.filter((check) => check !== gate(agreed)).map((check) => check.outcome)).toEqual(Array(6).fill('pass'));
+    expect(gate(agreed).outcome).toBe('pass');
+    expect(agreed.outcome).toBe('pass');
+
+    const none = run();
+    expect(gate(none).detail).toMatch(/no intra-rater/);
+    expect(none.outcome).toBe('insufficient evidence');
+
+    const few = run({ ...labelled, notes: labelled.notes.slice(0, 3), selected_next: [] });
+    expect(gate(few).detail).toMatch(/3 re-labelled, \d+ needed/);
+    expect(few.outcome).toBe('insufficient evidence');
+
+    const flipped = run({
+      ...labelled,
+      notes: labelled.notes.map((note, i) => (i % 2 === 0
+        ? { ...note, cook_next: note.cook_next === 'yes' ? ('no' as const) : ('yes' as const), cook_next_reason: note.cook_next === 'yes' ? null : { code: 'new-decision' as const, why: 'Flipped on re-label.' } }
+        : note)),
+    });
+    expect(gate(flipped).detail).toMatch(/cook_next/);
+    expect(flipped.outcome).toBe('insufficient evidence');
+  });
 
   it('withholds population estimates while the diagnostic sample is incomplete', () => {
     const w = world();

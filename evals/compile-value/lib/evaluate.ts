@@ -7,8 +7,8 @@ import {
 import { type AvailablePolicy, type Policy, B1_DESCRIPTION, availablePolicies, rankIndex } from './policies';
 import type { PrivateEntry, PrivateFile } from './private';
 import {
-  BOOTSTRAP_RESAMPLES, CI_LEVEL, KAPPA_MIN, MARGIN_BOTTOM20_SHARE, MARGIN_PRECISION_AT_10, POOL_DEPTH, PROTOCOL,
-  PROTOCOL_REVISION, SESSION_SIZE, VETO_MIN_GROUP, VETO_PERCENTILE_POINTS,
+  BOOTSTRAP_RESAMPLES, CI_LEVEL, DECISION_LABELS, KAPPA_MIN, MARGIN_BOTTOM20_SHARE, MARGIN_PRECISION_AT_10, POOL_DEPTH,
+  PROTOCOL, PROTOCOL_REVISION, RELABEL_SHARE, SESSION_SIZE, VETO_MIN_GROUP, VETO_PERCENTILE_POINTS,
 } from './protocol';
 import type { FrozenQueue, QueueNote } from './queue';
 import { deriveSeed, mulberry32 } from './rng';
@@ -371,6 +371,22 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     });
   }
 
+  // ---- §7 gate: a label below κ = 0.4, or without a re-label to measure it, is reported but never decides.
+  const relabelled = kappa?.[0]?.n ?? 0;
+  const relabelNeeded = Math.ceil(RELABEL_SHARE * validated.labels.size);
+  const weakLabels = DECISION_LABELS.filter((name) => !kappa?.find((row) => row.label === name)?.usable);
+  const agreementCheck: DecisionCheck = {
+    rule: `§7. Intra-rater κ ≥ ${KAPPA_MIN} for ${DECISION_LABELS.join(', ')} on a re-label of ≥ ${RELABEL_SHARE * 100}% of labelled notes`,
+    outcome: kappa && relabelled >= relabelNeeded && weakLabels.length === 0 ? 'pass' : 'insufficient evidence',
+    detail: !kappa
+      ? 'no intra-rater re-label sheet (--intra)'
+      : relabelled < relabelNeeded
+        ? `${relabelled} re-labelled, ${relabelNeeded} needed`
+        : weakLabels.length > 0
+          ? `κ below ${KAPPA_MIN} or undefined: ${weakLabels.map((name) => `${name} (${kappa.find((row) => row.label === name)?.kappa?.toFixed(2) ?? 'n/a'})`).join(', ')}`
+          : `${relabelled} re-labelled; every decision label has κ ≥ ${KAPPA_MIN}`,
+  };
+
   // ---- Pre-registered decisions (§10), for candidate policies only.
   const candidates = available.filter((policy) => policy.kind === 'candidate');
   const rowOf = (id: string) => rows.find((row) => row.policy === id);
@@ -415,6 +431,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
         ? `diagnostic sample incomplete (${diagnosticLabelled.length} of ${diagnosticTotal} labelled)`
         : vetoes.length === 0 ? 'no group vetoed' : vetoes.map((group) => `${group.dimension}=${group.group}`).join(', '),
     });
+    checks.push(agreementCheck);
     const outcome: Outcome = checks.some((check) => check.outcome === 'fail')
       ? 'fail'
       : checks.every((check) => check.outcome === 'pass') ? 'pass' : 'insufficient evidence';
