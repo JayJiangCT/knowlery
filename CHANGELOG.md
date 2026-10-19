@@ -1,5 +1,68 @@
 # Changelog
 
+## [1.6.1] — 2026-10-19
+
+This is a maintenance release: **nothing you see or use changes.** The plugin,
+the `knowlery` CLI, the MCP tools, the vault files and the 1.6.0 Jev ranking
+behave exactly as in 1.6.0, and no new data is sent to Jev. 1.6.1 adds the
+tooling that will measure whether a better cook-backlog ranking exists. It does
+not ship that ranking: no new policy is enabled, and the ranking you get is
+unchanged. The tooling lives in the repository only; it is not part of the
+npm package or the Obsidian plugin.
+
+### Evaluation tooling (#86, #88)
+
+- **Design for measuring cook-backlog ranking.** `docs/design/compile-value/`
+  records the evaluation protocol (`cv-eval@1`, revision 3) and the signal-store
+  design reviewed for 1.7.0. The 1.7.0 design is documentation only; none of
+  it is implemented in 1.6.1.
+- **`evals/compile-value/` harness.** Four local scripts take a vault through
+  one evaluation round:
+  - `freeze.ts` copies the vault and verifies that the copy reproduces the
+    vault's mtime order and its 1.6.0 Jev order;
+  - `sample.ts` draws a stratified diagnostic sample and writes a blind
+    annotation sheet;
+  - `pool.ts` adds every available policy's top 20 to the sheet;
+  - `run.ts` writes the metrics and the pre-registered decisions to a report.
+
+  The scripts never call Jev, never write inside the repository, and refuse to
+  overwrite sheets, private files or reports. In this round only the
+  baselines (mtime order, the 1.6.0 Jev order, random, and an oracle ceiling)
+  can be measured. The candidate policies need 1.7.0 producers, so every
+  report states that no ship decision is possible.
+- **Fixes made while preparing the release.** Actionable-critical estimates now
+  count labelled pool notes exactly, as protocol §9.3 requires. Their intervals
+  are withheld, not reported as zero width, when the sample has no event to
+  resample. Reports record the harness version, so reports from before and
+  after this fix can be told apart.
+
+### Data hygiene (#87)
+
+- The Jev-triage experiment's real-vault labels were removed from the
+  repository and replaced with a synthetic `labels.example.yaml`. The real
+  file is now gitignored. The removed file remains in git history; rewriting
+  history was deliberately not done.
+
+### Maintenance (#85)
+
+- Every GitHub Action moved to its Node 24 major version. The release workflow
+  itself is unchanged apart from the action versions.
+
+### Known limitations of the first evaluation round
+
+- Intervals are exploratory for a single vault: they describe that vault's
+  labelled notes, not other vaults.
+- The pre-registered diagnostic veto compares age and type groups with the
+  mtime baseline. Under mtime order, recent notes are at the top by
+  construction, so any non-mtime candidate is likely to trip the age veto once
+  the newest bucket has five or more sampled notes. Old notes are already near
+  the bottom, so the veto barely protects them. The rule stays as registered
+  for `cv-eval@1`; changing it requires a new protocol version before any
+  candidate is judged.
+- With about 80 sampled notes, actionable-critical notes outside the pool are
+  rare. The bottom-20% non-inferiority checks will therefore often report
+  *insufficient evidence*. This is reported as such, never rounded to a pass.
+
 ## [1.6.0] — 2026-10-10
 
 This release is about the cook backlog: which of your never-compiled notes
