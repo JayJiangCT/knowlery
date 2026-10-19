@@ -254,7 +254,22 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
   const strataOf = (unit: Unit) => unit.entry.stratum ?? '(none)';
   const isAc = (unit: Unit) => unit.label.actionableCritical;
   const recallKs = [10, 20, Math.max(1, Math.ceil(Q * 0.1))].filter((k, i, all) => all.indexOf(k) === i).sort((a, b) => a - b);
-  missNotes.push('Recall and bottom-20% estimates use diagnostic notes only (weighted by 1/π). "(n labelled)" counts every labelled actionable-critical note in the top k, including seeded and pooled ones, so the two can disagree.');
+  // §9.3 "combined with the pooled labels": the pool is fixed by the policies before any
+  // draw, so its notes are counted exactly and only diagnostic notes outside it are
+  // weighted by 1/π. This stays unbiased and agrees with the labelled top-k counts.
+  const poolPaths = new Set(Object.values(privateFile.entries).filter((entry) => entry.sources.includes('pool')).map((entry) => entry.path));
+  const poolUnlabelled = [...poolPaths].filter((path) => !labelsByPath.has(path)).length;
+  const estimable = diagnosticUnits.length > 0 && poolUnlabelled === 0;
+  if (diagnosticUnits.length > 0 && poolUnlabelled > 0) {
+    missNotes.push(`Pool incomplete: ${poolUnlabelled} pooled note(s) unlabelled. The actionable-critical estimates count the pool exactly, so they are withheld until it is labelled.`);
+  }
+  missNotes.push('Recall and bottom-20% estimates count labelled pool notes exactly and weight diagnostic notes outside the pool by 1/π; seeded-only notes are excluded (§4). For a pooled policy and k ≤ 20 the recall numerator is the labelled count.');
+  const hybridTotal = (sample: readonly Unit[], include: (unit: Unit) => boolean) =>
+    poolUnits.filter(include).length + htTotal(sample.filter((unit) => !poolPaths.has(unit.path)), weight, include);
+  const hybridRatio = (sample: readonly Unit[], numerator: (unit: Unit) => boolean, denominator: (unit: Unit) => boolean) => {
+    const den = hybridTotal(sample, denominator);
+    return den === 0 ? null : hybridTotal(sample, (unit) => denominator(unit) && numerator(unit)) / den;
+  };
   const missReplicates = new Map<string, { bottom: number[]; recall: Map<number, number[]> }>();
   for (const policy of available) missReplicates.set(policy.id, { bottom: [], recall: new Map(recallKs.map((k) => [k, []])) });
   const prevalenceReplicates: number[] = [];
@@ -264,16 +279,17 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
       const sample = stratifiedResample(diagnosticUnits, strataOf, random);
       const prevalence = htRatio(sample, weight, (unit) => unit.label.cookNext, () => true);
       if (prevalence !== null) prevalenceReplicates.push(prevalence);
-      acTotalReplicates.push(htTotal(sample, weight, isAc));
+      if (!estimable) continue;
+      acTotalReplicates.push(hybridTotal(sample, isAc));
       for (const policy of available) {
         const record = missReplicates.get(policy.id) as { bottom: number[]; recall: Map<number, number[]> };
-        const bottom = htRatio(sample, weight, (unit) => inBottom20(rankOf(policy.id, unit.path), Q), isAc);
+        const bottom = hybridRatio(sample, (unit) => inBottom20(rankOf(policy.id, unit.path), Q), isAc);
         record.bottom.push(bottom ?? Number.NaN);
-        for (const k of recallKs) record.recall.get(k)?.push(htRatio(sample, weight, (unit) => rankOf(policy.id, unit.path) < k, isAc) ?? Number.NaN);
+        for (const k of recallKs) record.recall.get(k)?.push(hybridRatio(sample, (unit) => rankOf(policy.id, unit.path) < k, isAc) ?? Number.NaN);
       }
     }
   }
-  const bottomShare = (policyId: string) => htRatio(diagnosticUnits, weight, (unit) => inBottom20(rankOf(policyId, unit.path), Q), isAc);
+  const bottomShare = (policyId: string) => (estimable ? hybridRatio(diagnosticUnits, (unit) => inBottom20(rankOf(policyId, unit.path), Q), isAc) : null);
   const finiteCi = (values: number[]) => {
     const finite = values.filter((value) => Number.isFinite(value));
     return finite.length > 0 ? percentileInterval(finite, CI_LEVEL) : null;
@@ -293,7 +309,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     recall: recallKs.map((k) => ({
       k,
       estimate: est(
-        htRatio(diagnosticUnits, weight, (unit) => rankOf(policy.id, unit.path) < k, isAc),
+        estimable ? hybridRatio(diagnosticUnits, (unit) => rankOf(policy.id, unit.path) < k, isAc) : null,
         finiteCi(missReplicates.get(policy.id)?.recall.get(k) ?? []),
       ),
       labelledInTopK: k <= POOL_DEPTH && pooled.includes(policy.id) ? policy.order.slice(0, k).filter((path) => labelsByPath.get(path)?.actionableCritical).length : null,
@@ -302,7 +318,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     diffVsB0: pairedBottomDiff(policy.id, 'B0'),
     diffVsB2: pairedBottomDiff(policy.id, 'B2'),
   }));
-  const acTotal = diagnosticUnits.length > 0 ? htTotal(diagnosticUnits, weight, isAc) : null;
+  const acTotal = estimable ? hybridTotal(diagnosticUnits, isAc) : null;
 
   // ---- Diagnostic tier (§9.1): sample-only.
   const withinSample = available.map((policy) => {

@@ -350,6 +350,34 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(seeded.get(notePath(39))?.percentiles.B0).toBeCloseTo((100 * 39.5) / 43, 10);
   });
 
+  it('actionable-critical estimates count the labelled pool exactly, so recall agrees with the labelled top k (§9.3)', () => {
+    const w = world();
+    const report = evaluated(w);
+    const total = report.misses.estimatedActionableCritical.value as number;
+    // note-03 (B0 top 20) and note-25 (B2 top 10) are pooled and counted once each;
+    // note-39 is a diagnostic note outside the pool, weighted by 1/π.
+    const pi39 = Object.values(sampledAndPooled(w).privateFile.entries).find((entry) => entry.path === notePath(39))?.pi as number;
+    expect(pi39).toBeGreaterThan(0);
+    expect(total).toBeCloseTo(2 + 1 / pi39, 10);
+    for (const row of report.misses.rows) {
+      for (const entry of row.recall.filter((recall) => recall.k <= 20)) {
+        expect(entry.labelledInTopK).not.toBeNull();
+        expect((entry.estimate.value as number) * total).toBeCloseTo(entry.labelledInTopK as number, 10);
+      }
+    }
+    expect(report.misses.rows.find((row) => row.policy === 'B0')?.recall.find((entry) => entry.k === 10)?.estimate.value).toBeCloseTo(1 / total, 10);
+    expect(report.misses.rows.find((row) => row.policy === 'B2')?.bottom20Share.value).toBeCloseTo(1 / pi39 / total, 10);
+
+    const { sheet, privateFile } = sampledAndPooled(w);
+    const labelled = label(sheet, w.notes);
+    const pooledOnly = Object.entries(privateFile.entries).find(([, entry]) => entry.sources.join() === 'pool') as [string, PrivateFile['entries'][string]];
+    const partial = { ...labelled, notes: labelled.notes.map((note) => (note.id === pooledOnly[0] ? { ...note, worth: null, delta: null, relevance: null, cook_next: null, cook_next_reason: null, type: null, importance: null } : note)) };
+    const withheld = evaluate({ freeze: w.freeze, queue: w.queue, policies: w.policies, privateFile, sheet: partial, seed: 7, resamples: 20 });
+    expect(withheld.misses.estimatedActionableCritical.value).toBeNull();
+    expect(withheld.misses.rows.every((row) => row.bottom20Share.value === null)).toBe(true);
+    expect(withheld.misses.notes.join(' ')).toMatch(/Pool incomplete: 1 pooled note/);
+  });
+
   it('no candidate is available in 1.6.1, so no decision is made — and the report says so', () => {
     const report = evaluated(world());
     expect(report.decisions).toEqual([]);
