@@ -378,6 +378,39 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(withheld.misses.notes.join(' ')).toMatch(/Pool incomplete: 1 pooled note/);
   });
 
+  it('never reports a zero-width or event-conditioned interval for actionable-critical estimates', () => {
+    const w = world();
+    const candidate = oracleCandidate(w);
+    // Seed 1: the only actionable-critical diagnostic note is note-25, which the pool already holds.
+    const sample = drawSample(w.freeze, w.queue, { size: 16, floor: 4, seed: 1, now: T0 });
+    const diagnosticAc = Object.values(sample.privateFile.entries).filter((entry) => [notePath(3), notePath(25), notePath(39)].includes(entry.path)).map((entry) => entry.path);
+    expect(diagnosticAc).toEqual([notePath(25)]);
+    const pooled = buildPool(sample.sheet, sample.privateFile, [...availablePolicies(w.policies), candidate], { seed: 1, now: T0 });
+    const labelled = label(pooled.sheet, w.notes);
+    const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile: pooled.privateFile, sheet: labelled, intraSheet: labelled, seed: 7, resamples: 300 });
+    // The candidate pools all three actionable-critical notes, so the total is exact.
+    expect(report.misses.estimatedActionableCritical.value).toBeCloseTo(3, 10);
+    expect(report.misses.estimatedActionableCritical.ci).toBeNull();
+    for (const row of report.misses.rows) {
+      expect(row.bottom20Share.value).not.toBeNull();
+      expect(row.bottom20Share.ci).toBeNull();
+      expect(row.recall.every((entry) => entry.estimate.ci === null)).toBe(true);
+      expect(row.diffVsB0?.ci ?? null).toBeNull();
+    }
+    expect(report.misses.notes.join(' ')).toMatch(/nothing to resample/);
+    const decision = report.decisions.find((entry) => entry.policy === 'C-oracle');
+    for (const check of decision?.checks.filter((entry) => entry.rule.includes('Bottom-20%')) ?? []) expect(check.outcome).toBe('insufficient evidence');
+    expect(decision?.outcome).toBe('insufficient evidence');
+
+    // Without a pool, the one event is missing from some resamples: those replicates are
+    // undefined, and an interval over the rest would have read [1, 1].
+    const unpooled = evaluate({ freeze: w.freeze, queue: w.queue, policies: w.policies, privateFile: sample.privateFile, sheet: label(sample.sheet, w.notes), seed: 7, resamples: 300 });
+    const b2 = unpooled.misses.rows.find((row) => row.policy === 'B2');
+    expect(b2?.recall.find((entry) => entry.k === 10)?.estimate.value).toBe(1);
+    expect(b2?.recall.find((entry) => entry.k === 10)?.estimate.ci).toBeNull();
+    expect(b2?.bottom20Share.ci).toBeNull();
+  });
+
   it('no candidate is available in 1.6.1, so no decision is made — and the report says so', () => {
     const report = evaluated(world());
     expect(report.decisions).toEqual([]);
@@ -404,12 +437,13 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(superiorityCheck?.outcome).not.toBe('pass');
   });
 
-  function oracleCandidate(w: World): AvailablePolicy {
+  /** Ranks actionable-critical, then cook_next notes first; `buried` keep their B0 place. */
+  function oracleCandidate(w: World, buried: string[] = []): AvailablePolicy {
     const b0 = w.policies.find((policy) => policy.id === 'B0') as AvailablePolicy;
     const truth = new Map(w.notes.map((note) => [note.path, note.truth]));
     const score = (path: string) => {
       const t = truth.get(path);
-      if (!t) return 0;
+      if (!t || buried.includes(path)) return 0;
       const ac = t.importance === 'critical' && (t.delta === 'new' || t.delta === 'partial');
       return (ac ? 2 : 0) + (t.cookNext ? 1 : 0);
     };
@@ -419,8 +453,10 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
 
   it('a label with κ below 0.4, or no re-label at all, cannot carry a pass (§7)', () => {
     const w = world();
-    const candidate = oracleCandidate(w);
-    const { sheet, privateFile } = sampledAndPooled(w, [candidate]);
+    // note-39 stays buried, as in both baselines, so one actionable-critical diagnostic
+    // note lies outside the pool and the miss-share intervals are estimable.
+    const candidate = oracleCandidate(w, [notePath(39)]);
+    const { sheet, privateFile } = sampledAndPooled(w, [candidate], [notePath(3)]);
     const labelled = label(sheet, w.notes);
     const run = (intraSheet?: Sheet) => {
       const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile, sheet: labelled, ...(intraSheet ? { intraSheet } : {}), seed: 7, resamples: 300 });

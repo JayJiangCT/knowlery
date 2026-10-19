@@ -290,27 +290,31 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     }
   }
   const bottomShare = (policyId: string) => (estimable ? hybridRatio(diagnosticUnits, (unit) => inBottom20(rankOf(policyId, unit.path), Q), isAc) : null);
-  const finiteCi = (values: number[]) => {
-    const finite = values.filter((value) => Number.isFinite(value));
-    return finite.length > 0 ? percentileInterval(finite, CI_LEVEL) : null;
-  };
+  // Only notes outside the pool vary between resamples. With no actionable-critical one
+  // among them every replicate is identical, and keeping only the defined replicates
+  // conditions on an event being drawn; either way the interval would overstate certainty.
+  const acEvents = estimable ? diagnosticUnits.filter((unit) => !poolPaths.has(unit.path) && isAc(unit)).length : 0;
+  if (estimable && acEvents === 0) {
+    missNotes.push('No actionable-critical note among the diagnostic notes outside the pool: the bootstrap has nothing to resample, so these intervals are withheld and the §10 miss-share checks report insufficient evidence.');
+  }
+  const acCi = (values: number[]) => (acEvents > 0 && values.length > 0 && values.every((value) => Number.isFinite(value)) ? percentileInterval(values, CI_LEVEL) : null);
   const pairedBottomDiff = (a: string, b: string): Estimate | null => {
     if (a === b || !ranks.has(b)) return null;
     const left = missReplicates.get(a)?.bottom ?? [];
     const right = missReplicates.get(b)?.bottom ?? [];
     const pointA = bottomShare(a);
     const pointB = bottomShare(b);
-    return est(pointA !== null && pointB !== null ? pointA - pointB : null, finiteCi(left.map((value, i) => value - right[i])));
+    return est(pointA !== null && pointB !== null ? pointA - pointB : null, acCi(left.map((value, i) => value - right[i])));
   };
   const acLabelled = units.filter(isAc);
   const missRows: MissRow[] = available.map((policy) => ({
     policy: policy.id,
-    bottom20Share: est(bottomShare(policy.id), finiteCi(missReplicates.get(policy.id)?.bottom ?? [])),
+    bottom20Share: est(bottomShare(policy.id), acCi(missReplicates.get(policy.id)?.bottom ?? [])),
     recall: recallKs.map((k) => ({
       k,
       estimate: est(
         estimable ? hybridRatio(diagnosticUnits, (unit) => rankOf(policy.id, unit.path) < k, isAc) : null,
-        finiteCi(missReplicates.get(policy.id)?.recall.get(k) ?? []),
+        acCi(missReplicates.get(policy.id)?.recall.get(k) ?? []),
       ),
       labelledInTopK: k <= POOL_DEPTH && pooled.includes(policy.id) ? policy.order.slice(0, k).filter((path) => labelsByPath.get(path)?.actionableCritical).length : null,
     })),
@@ -494,10 +498,10 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     })),
     b1: {
       description: B1_DESCRIPTION,
-      prevalence: est(diagnosticUnits.length > 0 ? htRatio(diagnosticUnits, weight, (unit) => unit.label.cookNext, () => true) : null, finiteCi(prevalenceReplicates)),
+      prevalence: est(diagnosticUnits.length > 0 ? htRatio(diagnosticUnits, weight, (unit) => unit.label.cookNext, () => true) : null, ciOf(prevalenceReplicates)),
     },
     operational: { rows, oracle, gradedGains, notes: operationalNotes },
-    misses: { estimatedActionableCritical: est(acTotal, finiteCi(acTotalReplicates)), rows: missRows, notes: missNotes },
+    misses: { estimatedActionableCritical: est(acTotal, acCi(acTotalReplicates)), rows: missRows, notes: missNotes },
     diagnostic: {
       withinSample,
       groups,
