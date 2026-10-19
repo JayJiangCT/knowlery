@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -574,8 +574,41 @@ describe('CLIs', () => {
     const baseline = readFileSync(join(out, 'report.json'), 'utf8');
     const again = run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '10', '--out', out]);
     expect(again.status).not.toBe(0);
-    expect(again.stderr).toMatch(/Refusing to overwrite an existing report/);
+    expect(again.stderr).toMatch(/Refusing to write into an existing report directory/);
     expect(readFileSync(join(out, 'report.json'), 'utf8')).toBe(baseline);
+    const empty = join(work, 'empty-report');
+    mkdirSync(empty);
+    expect(run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '10', '--out', empty]).stderr).toMatch(/existing report directory/);
+    expect(existsSync(join(empty, 'report.json'))).toBe(false);
     expect(run('freeze.ts', ['--vault', vault, '--out', join(REPO_ROOT, 'evals', 'compile-value', 'nope')]).stderr).toMatch(/outside the repository/);
+  }, 60_000);
+
+  it('of concurrent runs sharing one --out, exactly one writes and the report is never mixed', async () => {
+    const vault = temp();
+    writeSyntheticVault(vault);
+    const work = temp();
+    const tsx = join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+    const script = (name: string) => join(REPO_ROOT, 'evals', 'compile-value', name);
+    const freezeDir = join(work, 'freeze');
+    const sheet = join(work, 'sheet.yaml');
+    const priv = join(work, 'private.json');
+    expect(spawnSync(tsx, [script('freeze.ts'), '--vault', vault, '--out', freezeDir], { cwd: REPO_ROOT }).status).toBe(0);
+    expect(spawnSync(tsx, [script('sample.ts'), '--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--size', '12', '--floor', '3', '--seed', '5'], { cwd: REPO_ROOT }).status).toBe(0);
+    const runAsync = (out: string, seed: number) => new Promise<{ seed: number; code: number | null; stderr: string }>((resolve) => {
+      const child = spawn(tsx, [script('run.ts'), '--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '20', '--seed', String(seed), '--out', out], { cwd: REPO_ROOT });
+      let stderr = '';
+      child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
+      child.on('close', (code) => resolve({ seed, code, stderr }));
+    });
+    const outs = [1, 2, 3].map((round) => join(work, 'reports', `shared-${round}`));
+    const results = await Promise.all(outs.map((out, round) => Promise.all([runAsync(out, 100 + round), runAsync(out, 200 + round)])));
+    results.forEach((pair, round) => {
+      const winners = pair.filter((result) => result.code === 0);
+      expect(winners).toHaveLength(1);
+      expect(pair.find((result) => result.code !== 0)?.stderr).toMatch(/existing report directory/);
+      const json = JSON.parse(readFileSync(join(outs[round], 'report.json'), 'utf8')) as { seed: number };
+      expect(json.seed).toBe(winners[0].seed);
+      expect(readFileSync(join(outs[round], 'report.md'), 'utf8')).toContain(`seed ${winners[0].seed} ·`);
+    });
   }, 60_000);
 });
