@@ -569,6 +569,13 @@ describe('CLIs', () => {
     const result = run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '50', '--out', out]);
     expect(result.status).toBe(0);
     expect(readFileSync(join(out, 'report.md'), 'utf8')).toContain('No candidate policy is available');
+    const version = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string }).version;
+    expect((JSON.parse(readFileSync(join(out, 'report.json'), 'utf8')) as { harness: string }).harness).toBe(version);
+    const baseline = readFileSync(join(out, 'report.json'), 'utf8');
+    const again = run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '10', '--out', out]);
+    expect(again.status).not.toBe(0);
+    expect(again.stderr).toMatch(/Refusing to overwrite an existing report/);
+    expect(readFileSync(join(out, 'report.json'), 'utf8')).toBe(baseline);
     expect(run('freeze.ts', ['--vault', vault, '--out', join(REPO_ROOT, 'evals', 'compile-value', 'nope')]).stderr).toMatch(/outside the repository/);
   }, 60_000);
 });

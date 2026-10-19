@@ -130,7 +130,7 @@ function orderMismatch(name: string, source: string[] | null, copy: string[] | n
   return null;
 }
 
-function packageVersion(): string {
+export function packageVersion(): string {
   const raw = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version?: unknown };
   return typeof raw.version === 'string' ? raw.version : 'unknown';
 }

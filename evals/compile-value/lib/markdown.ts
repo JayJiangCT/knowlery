@@ -22,7 +22,7 @@ export function renderMarkdown(report: EvaluationReport): string {
   const out: string[] = [];
   out.push(`# Compile-value evaluation — ${report.protocol} r${report.protocolRevision}`);
   out.push('');
-  out.push(`Freeze \`${report.freezeId.slice(0, 16)}…\` (frozen ${report.frozenAt}) · queue ${report.queueSize} notes · seed ${report.seed} · ${report.resamples} bootstrap resamples.`);
+  out.push(`Freeze \`${report.freezeId.slice(0, 16)}…\` (frozen ${report.frozenAt}) · queue ${report.queueSize} notes · seed ${report.seed} · ${report.resamples} bootstrap resamples · harness knowlery ${report.harness}.`);
   out.push('');
   out.push(`> Intervals are 95% bootstrap intervals, **${report.intervalScope}**: they describe this vault's labelled material, not other vaults. Generalisation needs a second freeze (protocol §10 rule 4).`);
   out.push('');

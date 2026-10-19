@@ -1,4 +1,4 @@
-import type { Freeze } from './freeze';
+import { type Freeze, packageVersion } from './freeze';
 import {
   type Interval, type Outcome, cohenKappa, htRatio, htTotal, inBottom20, mean, ndcgAtK, nonInferiorityHigher,
   nonInferiorityLower, percentileInterval, precisionAtK, rankPercentile, resampleIndices, stratifiedResample, superiority,
@@ -73,6 +73,8 @@ export interface EvaluationReport {
   freezeId: string;
   frozenAt: string;
   intervalScope: string;
+  /** Knowlery version of the harness that computed this report; estimators can change between releases. */
+  harness: string;
   seed: number;
   resamples: number;
   queueSize: number;
@@ -473,6 +475,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     freezeId: freeze.freezeId,
     frozenAt: freeze.manifest.frozenAt,
     intervalScope: INTERVAL_SCOPE,
+    harness: packageVersion(),
     seed: input.seed,
     resamples,
     queueSize: Q,
