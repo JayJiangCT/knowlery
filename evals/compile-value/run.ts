@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { integer, parseArgs, required, runCli } from './lib/args';
 import { evaluate } from './lib/evaluate';
 import { assertOutsideRepo, loadFreeze } from './lib/freeze';
@@ -17,7 +17,9 @@ import { readSheet } from './lib/sheet';
  *     [--intra <re-label sheet.yaml>] [--seed n] [--resamples 2000] [--out <dir>]
  *
  * Writes report.json and report.md (default: <freeze>/reports/<timestamp>/), stamped
- * with the protocol revision and freeze id. Refuses mixed freezes.
+ * with the protocol revision, freeze id and harness version. Refuses mixed freezes. The
+ * report directory must not exist yet: creating it is the atomic claim, so of two
+ * concurrent runs with the same --out exactly one writes and the other refuses.
  */
 
 const USAGE = 'Usage: tsx evals/compile-value/run.ts --freeze <dir> --sheet <file> --private <file> [--intra <file>] [--seed n] [--resamples n] [--out <dir>]';
@@ -39,9 +41,15 @@ runCli(() => {
   });
   const out = args.get('out') ?? join(freeze.dir, 'reports', new Date().toISOString().replace(/[:.]/g, '-'));
   assertOutsideRepo(out, 'The report directory');
-  mkdirSync(out, { recursive: true });
-  writeFileSync(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
-  writeFileSync(join(out, 'report.md'), renderMarkdown(report));
+  mkdirSync(dirname(out), { recursive: true });
+  try {
+    mkdirSync(out);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') throw new Error(`Refusing to write into an existing report directory ${out}; choose a new --out`);
+    throw error;
+  }
+  writeFileSync(join(out, 'report.json'), `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+  writeFileSync(join(out, 'report.md'), renderMarkdown(report), { flag: 'wx' });
   for (const warning of report.warnings) console.warn(`warning: ${warning}`);
   console.log(report.decisionNote);
   console.log(`Report → ${join(out, 'report.md')}`);

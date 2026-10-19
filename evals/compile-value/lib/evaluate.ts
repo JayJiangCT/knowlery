@@ -1,4 +1,4 @@
-import type { Freeze } from './freeze';
+import { type Freeze, packageVersion } from './freeze';
 import {
   type Interval, type Outcome, cohenKappa, htRatio, htTotal, inBottom20, mean, ndcgAtK, nonInferiorityHigher,
   nonInferiorityLower, percentileInterval, precisionAtK, rankPercentile, resampleIndices, stratifiedResample, superiority,
@@ -73,6 +73,8 @@ export interface EvaluationReport {
   freezeId: string;
   frozenAt: string;
   intervalScope: string;
+  /** Knowlery version of the harness that computed this report; estimators can change between releases. */
+  harness: string;
   seed: number;
   resamples: number;
   queueSize: number;
@@ -254,7 +256,22 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
   const strataOf = (unit: Unit) => unit.entry.stratum ?? '(none)';
   const isAc = (unit: Unit) => unit.label.actionableCritical;
   const recallKs = [10, 20, Math.max(1, Math.ceil(Q * 0.1))].filter((k, i, all) => all.indexOf(k) === i).sort((a, b) => a - b);
-  missNotes.push('Recall and bottom-20% estimates use diagnostic notes only (weighted by 1/π). "(n labelled)" counts every labelled actionable-critical note in the top k, including seeded and pooled ones, so the two can disagree.');
+  // §9.3 "combined with the pooled labels": the pool is fixed by the policies before any
+  // draw, so its notes are counted exactly and only diagnostic notes outside it are
+  // weighted by 1/π. This stays unbiased and agrees with the labelled top-k counts.
+  const poolPaths = new Set(Object.values(privateFile.entries).filter((entry) => entry.sources.includes('pool')).map((entry) => entry.path));
+  const poolUnlabelled = [...poolPaths].filter((path) => !labelsByPath.has(path)).length;
+  const estimable = diagnosticUnits.length > 0 && poolUnlabelled === 0;
+  if (diagnosticUnits.length > 0 && poolUnlabelled > 0) {
+    missNotes.push(`Pool incomplete: ${poolUnlabelled} pooled note(s) unlabelled. The actionable-critical estimates count the pool exactly, so they are withheld until it is labelled.`);
+  }
+  missNotes.push('Recall and bottom-20% estimates count labelled pool notes exactly and weight diagnostic notes outside the pool by 1/π; seeded-only notes are excluded (§4). For a pooled policy and k ≤ 20 the recall numerator is the labelled count.');
+  const hybridTotal = (sample: readonly Unit[], include: (unit: Unit) => boolean) =>
+    poolUnits.filter(include).length + htTotal(sample.filter((unit) => !poolPaths.has(unit.path)), weight, include);
+  const hybridRatio = (sample: readonly Unit[], numerator: (unit: Unit) => boolean, denominator: (unit: Unit) => boolean) => {
+    const den = hybridTotal(sample, denominator);
+    return den === 0 ? null : hybridTotal(sample, (unit) => denominator(unit) && numerator(unit)) / den;
+  };
   const missReplicates = new Map<string, { bottom: number[]; recall: Map<number, number[]> }>();
   for (const policy of available) missReplicates.set(policy.id, { bottom: [], recall: new Map(recallKs.map((k) => [k, []])) });
   const prevalenceReplicates: number[] = [];
@@ -264,37 +281,42 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
       const sample = stratifiedResample(diagnosticUnits, strataOf, random);
       const prevalence = htRatio(sample, weight, (unit) => unit.label.cookNext, () => true);
       if (prevalence !== null) prevalenceReplicates.push(prevalence);
-      acTotalReplicates.push(htTotal(sample, weight, isAc));
+      if (!estimable) continue;
+      acTotalReplicates.push(hybridTotal(sample, isAc));
       for (const policy of available) {
         const record = missReplicates.get(policy.id) as { bottom: number[]; recall: Map<number, number[]> };
-        const bottom = htRatio(sample, weight, (unit) => inBottom20(rankOf(policy.id, unit.path), Q), isAc);
+        const bottom = hybridRatio(sample, (unit) => inBottom20(rankOf(policy.id, unit.path), Q), isAc);
         record.bottom.push(bottom ?? Number.NaN);
-        for (const k of recallKs) record.recall.get(k)?.push(htRatio(sample, weight, (unit) => rankOf(policy.id, unit.path) < k, isAc) ?? Number.NaN);
+        for (const k of recallKs) record.recall.get(k)?.push(hybridRatio(sample, (unit) => rankOf(policy.id, unit.path) < k, isAc) ?? Number.NaN);
       }
     }
   }
-  const bottomShare = (policyId: string) => htRatio(diagnosticUnits, weight, (unit) => inBottom20(rankOf(policyId, unit.path), Q), isAc);
-  const finiteCi = (values: number[]) => {
-    const finite = values.filter((value) => Number.isFinite(value));
-    return finite.length > 0 ? percentileInterval(finite, CI_LEVEL) : null;
-  };
+  const bottomShare = (policyId: string) => (estimable ? hybridRatio(diagnosticUnits, (unit) => inBottom20(rankOf(policyId, unit.path), Q), isAc) : null);
+  // Only notes outside the pool vary between resamples. With no actionable-critical one
+  // among them every replicate is identical, and keeping only the defined replicates
+  // conditions on an event being drawn; either way the interval would overstate certainty.
+  const acEvents = estimable ? diagnosticUnits.filter((unit) => !poolPaths.has(unit.path) && isAc(unit)).length : 0;
+  if (estimable && acEvents === 0) {
+    missNotes.push('No actionable-critical note among the diagnostic notes outside the pool: the bootstrap has nothing to resample, so these intervals are withheld and the §10 miss-share checks report insufficient evidence.');
+  }
+  const acCi = (values: number[]) => (acEvents > 0 && values.length > 0 && values.every((value) => Number.isFinite(value)) ? percentileInterval(values, CI_LEVEL) : null);
   const pairedBottomDiff = (a: string, b: string): Estimate | null => {
     if (a === b || !ranks.has(b)) return null;
     const left = missReplicates.get(a)?.bottom ?? [];
     const right = missReplicates.get(b)?.bottom ?? [];
     const pointA = bottomShare(a);
     const pointB = bottomShare(b);
-    return est(pointA !== null && pointB !== null ? pointA - pointB : null, finiteCi(left.map((value, i) => value - right[i])));
+    return est(pointA !== null && pointB !== null ? pointA - pointB : null, acCi(left.map((value, i) => value - right[i])));
   };
   const acLabelled = units.filter(isAc);
   const missRows: MissRow[] = available.map((policy) => ({
     policy: policy.id,
-    bottom20Share: est(bottomShare(policy.id), finiteCi(missReplicates.get(policy.id)?.bottom ?? [])),
+    bottom20Share: est(bottomShare(policy.id), acCi(missReplicates.get(policy.id)?.bottom ?? [])),
     recall: recallKs.map((k) => ({
       k,
       estimate: est(
-        htRatio(diagnosticUnits, weight, (unit) => rankOf(policy.id, unit.path) < k, isAc),
-        finiteCi(missReplicates.get(policy.id)?.recall.get(k) ?? []),
+        estimable ? hybridRatio(diagnosticUnits, (unit) => rankOf(policy.id, unit.path) < k, isAc) : null,
+        acCi(missReplicates.get(policy.id)?.recall.get(k) ?? []),
       ),
       labelledInTopK: k <= POOL_DEPTH && pooled.includes(policy.id) ? policy.order.slice(0, k).filter((path) => labelsByPath.get(path)?.actionableCritical).length : null,
     })),
@@ -302,7 +324,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     diffVsB0: pairedBottomDiff(policy.id, 'B0'),
     diffVsB2: pairedBottomDiff(policy.id, 'B2'),
   }));
-  const acTotal = diagnosticUnits.length > 0 ? htTotal(diagnosticUnits, weight, isAc) : null;
+  const acTotal = estimable ? hybridTotal(diagnosticUnits, isAc) : null;
 
   // ---- Diagnostic tier (§9.1): sample-only.
   const withinSample = available.map((policy) => {
@@ -453,6 +475,7 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     freezeId: freeze.freezeId,
     frozenAt: freeze.manifest.frozenAt,
     intervalScope: INTERVAL_SCOPE,
+    harness: packageVersion(),
     seed: input.seed,
     resamples,
     queueSize: Q,
@@ -478,10 +501,10 @@ export function evaluate(input: EvaluateInput): EvaluationReport {
     })),
     b1: {
       description: B1_DESCRIPTION,
-      prevalence: est(diagnosticUnits.length > 0 ? htRatio(diagnosticUnits, weight, (unit) => unit.label.cookNext, () => true) : null, finiteCi(prevalenceReplicates)),
+      prevalence: est(diagnosticUnits.length > 0 ? htRatio(diagnosticUnits, weight, (unit) => unit.label.cookNext, () => true) : null, ciOf(prevalenceReplicates)),
     },
     operational: { rows, oracle, gradedGains, notes: operationalNotes },
-    misses: { estimatedActionableCritical: est(acTotal, finiteCi(acTotalReplicates)), rows: missRows, notes: missNotes },
+    misses: { estimatedActionableCritical: est(acTotal, acCi(acTotalReplicates)), rows: missRows, notes: missNotes },
     diagnostic: {
       withinSample,
       groups,

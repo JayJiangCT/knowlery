@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -350,6 +350,67 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(seeded.get(notePath(39))?.percentiles.B0).toBeCloseTo((100 * 39.5) / 43, 10);
   });
 
+  it('actionable-critical estimates count the labelled pool exactly, so recall agrees with the labelled top k (§9.3)', () => {
+    const w = world();
+    const report = evaluated(w);
+    const total = report.misses.estimatedActionableCritical.value as number;
+    // note-03 (B0 top 20) and note-25 (B2 top 10) are pooled and counted once each;
+    // note-39 is a diagnostic note outside the pool, weighted by 1/π.
+    const pi39 = Object.values(sampledAndPooled(w).privateFile.entries).find((entry) => entry.path === notePath(39))?.pi as number;
+    expect(pi39).toBeGreaterThan(0);
+    expect(total).toBeCloseTo(2 + 1 / pi39, 10);
+    for (const row of report.misses.rows) {
+      for (const entry of row.recall.filter((recall) => recall.k <= 20)) {
+        expect(entry.labelledInTopK).not.toBeNull();
+        expect((entry.estimate.value as number) * total).toBeCloseTo(entry.labelledInTopK as number, 10);
+      }
+    }
+    expect(report.misses.rows.find((row) => row.policy === 'B0')?.recall.find((entry) => entry.k === 10)?.estimate.value).toBeCloseTo(1 / total, 10);
+    expect(report.misses.rows.find((row) => row.policy === 'B2')?.bottom20Share.value).toBeCloseTo(1 / pi39 / total, 10);
+
+    const { sheet, privateFile } = sampledAndPooled(w);
+    const labelled = label(sheet, w.notes);
+    const pooledOnly = Object.entries(privateFile.entries).find(([, entry]) => entry.sources.join() === 'pool') as [string, PrivateFile['entries'][string]];
+    const partial = { ...labelled, notes: labelled.notes.map((note) => (note.id === pooledOnly[0] ? { ...note, worth: null, delta: null, relevance: null, cook_next: null, cook_next_reason: null, type: null, importance: null } : note)) };
+    const withheld = evaluate({ freeze: w.freeze, queue: w.queue, policies: w.policies, privateFile, sheet: partial, seed: 7, resamples: 20 });
+    expect(withheld.misses.estimatedActionableCritical.value).toBeNull();
+    expect(withheld.misses.rows.every((row) => row.bottom20Share.value === null)).toBe(true);
+    expect(withheld.misses.notes.join(' ')).toMatch(/Pool incomplete: 1 pooled note/);
+  });
+
+  it('never reports a zero-width or event-conditioned interval for actionable-critical estimates', () => {
+    const w = world();
+    const candidate = oracleCandidate(w);
+    // Seed 1: the only actionable-critical diagnostic note is note-25, which the pool already holds.
+    const sample = drawSample(w.freeze, w.queue, { size: 16, floor: 4, seed: 1, now: T0 });
+    const diagnosticAc = Object.values(sample.privateFile.entries).filter((entry) => [notePath(3), notePath(25), notePath(39)].includes(entry.path)).map((entry) => entry.path);
+    expect(diagnosticAc).toEqual([notePath(25)]);
+    const pooled = buildPool(sample.sheet, sample.privateFile, [...availablePolicies(w.policies), candidate], { seed: 1, now: T0 });
+    const labelled = label(pooled.sheet, w.notes);
+    const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile: pooled.privateFile, sheet: labelled, intraSheet: labelled, seed: 7, resamples: 300 });
+    // The candidate pools all three actionable-critical notes, so the total is exact.
+    expect(report.misses.estimatedActionableCritical.value).toBeCloseTo(3, 10);
+    expect(report.misses.estimatedActionableCritical.ci).toBeNull();
+    for (const row of report.misses.rows) {
+      expect(row.bottom20Share.value).not.toBeNull();
+      expect(row.bottom20Share.ci).toBeNull();
+      expect(row.recall.every((entry) => entry.estimate.ci === null)).toBe(true);
+      expect(row.diffVsB0?.ci ?? null).toBeNull();
+    }
+    expect(report.misses.notes.join(' ')).toMatch(/nothing to resample/);
+    const decision = report.decisions.find((entry) => entry.policy === 'C-oracle');
+    for (const check of decision?.checks.filter((entry) => entry.rule.includes('Bottom-20%')) ?? []) expect(check.outcome).toBe('insufficient evidence');
+    expect(decision?.outcome).toBe('insufficient evidence');
+
+    // Without a pool, the one event is missing from some resamples: those replicates are
+    // undefined, and an interval over the rest would have read [1, 1].
+    const unpooled = evaluate({ freeze: w.freeze, queue: w.queue, policies: w.policies, privateFile: sample.privateFile, sheet: label(sample.sheet, w.notes), seed: 7, resamples: 300 });
+    const b2 = unpooled.misses.rows.find((row) => row.policy === 'B2');
+    expect(b2?.recall.find((entry) => entry.k === 10)?.estimate.value).toBe(1);
+    expect(b2?.recall.find((entry) => entry.k === 10)?.estimate.ci).toBeNull();
+    expect(b2?.bottom20Share.ci).toBeNull();
+  });
+
   it('no candidate is available in 1.6.1, so no decision is made — and the report says so', () => {
     const report = evaluated(world());
     expect(report.decisions).toEqual([]);
@@ -376,12 +437,13 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
     expect(superiorityCheck?.outcome).not.toBe('pass');
   });
 
-  function oracleCandidate(w: World): AvailablePolicy {
+  /** Ranks actionable-critical, then cook_next notes first; `buried` keep their B0 place. */
+  function oracleCandidate(w: World, buried: string[] = []): AvailablePolicy {
     const b0 = w.policies.find((policy) => policy.id === 'B0') as AvailablePolicy;
     const truth = new Map(w.notes.map((note) => [note.path, note.truth]));
     const score = (path: string) => {
       const t = truth.get(path);
-      if (!t) return 0;
+      if (!t || buried.includes(path)) return 0;
       const ac = t.importance === 'critical' && (t.delta === 'new' || t.delta === 'partial');
       return (ac ? 2 : 0) + (t.cookNext ? 1 : 0);
     };
@@ -391,8 +453,10 @@ describe('evaluation (protocol §8–10) on hand-computed fixture values', () =>
 
   it('a label with κ below 0.4, or no re-label at all, cannot carry a pass (§7)', () => {
     const w = world();
-    const candidate = oracleCandidate(w);
-    const { sheet, privateFile } = sampledAndPooled(w, [candidate]);
+    // note-39 stays buried, as in both baselines, so one actionable-critical diagnostic
+    // note lies outside the pool and the miss-share intervals are estimable.
+    const candidate = oracleCandidate(w, [notePath(39)]);
+    const { sheet, privateFile } = sampledAndPooled(w, [candidate], [notePath(3)]);
     const labelled = label(sheet, w.notes);
     const run = (intraSheet?: Sheet) => {
       const report = evaluate({ freeze: w.freeze, queue: w.queue, policies: [...w.policies, candidate], privateFile, sheet: labelled, ...(intraSheet ? { intraSheet } : {}), seed: 7, resamples: 300 });
@@ -505,6 +569,46 @@ describe('CLIs', () => {
     const result = run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '50', '--out', out]);
     expect(result.status).toBe(0);
     expect(readFileSync(join(out, 'report.md'), 'utf8')).toContain('No candidate policy is available');
+    const version = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string }).version;
+    expect((JSON.parse(readFileSync(join(out, 'report.json'), 'utf8')) as { harness: string }).harness).toBe(version);
+    const baseline = readFileSync(join(out, 'report.json'), 'utf8');
+    const again = run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '10', '--out', out]);
+    expect(again.status).not.toBe(0);
+    expect(again.stderr).toMatch(/Refusing to write into an existing report directory/);
+    expect(readFileSync(join(out, 'report.json'), 'utf8')).toBe(baseline);
+    const empty = join(work, 'empty-report');
+    mkdirSync(empty);
+    expect(run('run.ts', ['--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '10', '--out', empty]).stderr).toMatch(/existing report directory/);
+    expect(existsSync(join(empty, 'report.json'))).toBe(false);
     expect(run('freeze.ts', ['--vault', vault, '--out', join(REPO_ROOT, 'evals', 'compile-value', 'nope')]).stderr).toMatch(/outside the repository/);
+  }, 60_000);
+
+  it('of concurrent runs sharing one --out, exactly one writes and the report is never mixed', async () => {
+    const vault = temp();
+    writeSyntheticVault(vault);
+    const work = temp();
+    const tsx = join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+    const script = (name: string) => join(REPO_ROOT, 'evals', 'compile-value', name);
+    const freezeDir = join(work, 'freeze');
+    const sheet = join(work, 'sheet.yaml');
+    const priv = join(work, 'private.json');
+    expect(spawnSync(tsx, [script('freeze.ts'), '--vault', vault, '--out', freezeDir], { cwd: REPO_ROOT }).status).toBe(0);
+    expect(spawnSync(tsx, [script('sample.ts'), '--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--size', '12', '--floor', '3', '--seed', '5'], { cwd: REPO_ROOT }).status).toBe(0);
+    const runAsync = (out: string, seed: number) => new Promise<{ seed: number; code: number | null; stderr: string }>((resolve) => {
+      const child = spawn(tsx, [script('run.ts'), '--freeze', freezeDir, '--sheet', sheet, '--private', priv, '--resamples', '20', '--seed', String(seed), '--out', out], { cwd: REPO_ROOT });
+      let stderr = '';
+      child.stderr.on('data', (chunk: Buffer) => { stderr += chunk.toString(); });
+      child.on('close', (code) => resolve({ seed, code, stderr }));
+    });
+    const outs = [1, 2, 3].map((round) => join(work, 'reports', `shared-${round}`));
+    const results = await Promise.all(outs.map((out, round) => Promise.all([runAsync(out, 100 + round), runAsync(out, 200 + round)])));
+    results.forEach((pair, round) => {
+      const winners = pair.filter((result) => result.code === 0);
+      expect(winners).toHaveLength(1);
+      expect(pair.find((result) => result.code !== 0)?.stderr).toMatch(/existing report directory/);
+      const json = JSON.parse(readFileSync(join(outs[round], 'report.json'), 'utf8')) as { seed: number };
+      expect(json.seed).toBe(winners[0].seed);
+      expect(readFileSync(join(outs[round], 'report.md'), 'utf8')).toContain(`seed ${winners[0].seed} ·`);
+    });
   }, 60_000);
 });
