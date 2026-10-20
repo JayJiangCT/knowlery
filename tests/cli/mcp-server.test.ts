@@ -7,9 +7,11 @@ import { buildMcpServer, MCP_PROMPT_SKILLS, type McpServerOptions } from '../../
 import { addKb } from '../../src/core/kb-registry';
 import { JEV_MODEL, type JevRequest, type JevResponse } from '../../src/core/jev/client';
 import { TRIAGE_PATH } from '../../src/core/jev/triage-store';
-import { PLUGIN_DATA_PATH } from '../../src/core/jev/api-key';
+import { pluginDataPath } from '../../src/core/jev/api-key';
 import { runFederatedQuery } from '../../src/core/federated-query';
 import { BUNDLED_SKILLS } from '../../src/assets/skills';
+
+const PLUGIN_DATA_PATH = pluginDataPath('.obsidian');
 
 /**
  * Spec 1.0 f2, §5: protocol round trips over the SDK's in-memory transport —

@@ -21,11 +21,13 @@ import {
   unscoredNotes,
 } from '../../src/core/jev/triage-store';
 import { autoTriage, autoTriageAll, jevApiKeyFromEnv } from '../../src/core/jev/auto-triage';
-import { PLUGIN_DATA_PATH, resolveJevApiKey } from '../../src/core/jev/api-key';
+import { pluginDataPath, resolveJevApiKey } from '../../src/core/jev/api-key';
 import { runStaleCommand } from '../../src/cli/commands/stale';
 import { runTriageCommand } from '../../src/cli/commands/triage';
 import { handleStaleCli } from '../../src/core/query/cli-handler';
 import { nodeVaultFs } from '../../src/platform/node-fs';
+
+const PLUGIN_DATA_PATH = pluginDataPath('.obsidian');
 
 /**
  * `.knowlery/triage.json` is the bridge that lets agents cooking from Codex, Claude
@@ -356,6 +358,18 @@ describe('resolveJevApiKey — configure the key once', () => {
     // A vault with a non-default config directory, when the caller knows it.
     write('config-alt/plugins/knowlery/data.json', JSON.stringify({ jevApiKey: 'ts-alt' }), 1000);
     expect(await resolveJevApiKey(fs, {}, 'config-alt')).toEqual({ apiKey: 'ts-alt', source: 'plugin' });
+  });
+
+  it('finds the settings file under a non-default hidden config folder without being told', async () => {
+    const fs = nodeVaultFs(root);
+    write('notes/plugins/knowlery/data.json', JSON.stringify({ jevApiKey: 'ts-visible' }), 1000);
+    expect(await resolveJevApiKey(fs, {})).toBeNull();
+
+    write('.vault-config/plugins/knowlery/data.json', JSON.stringify({ jevApiKey: 'ts-custom' }), 1000);
+    expect(await resolveJevApiKey(fs, {})).toEqual({ apiKey: 'ts-custom', source: 'plugin' });
+
+    write('.knowlery/plugins/knowlery/data.json', JSON.stringify({ jevApiKey: '' }), 1000);
+    expect(await resolveJevApiKey(fs, {})).toEqual({ apiKey: 'ts-custom', source: 'plugin' });
   });
 });
 
