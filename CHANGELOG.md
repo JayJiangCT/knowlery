@@ -3,8 +3,7 @@
 ## [1.6.2] — 2026-10-20
 
 A fix so the plugin passes Obsidian's community directory review, which failed
-1.6.0 and 1.6.1. Users who install from the community directory get 1.6.x for
-the first time with this release. Nothing else changes.
+1.6.0 and 1.6.1. Nothing else changes.
 
 ### Fixed
 
