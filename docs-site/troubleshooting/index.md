@@ -191,7 +191,7 @@ Knowledge health (and `knowlery stale`) lists every user note no compiled page c
 
 ## A Jev Score Never Appears
 
-- `knowlery stale` prints the plain list: no key was found. Node shells read `TYPESAFE_API_KEY` first, then `.obsidian/plugins/knowlery/data.json`; a vault with a non-default config folder must use the environment variable. `knowlery triage` exits 1 and names both places.
+- `knowlery stale` prints the plain list: no key was found. Node shells read `TYPESAFE_API_KEY` first, then `plugins/knowlery/data.json` under the vault's hidden config folder (`.obsidian` by default; a renamed folder is found too). `knowlery triage` exits 1 and names both places.
 - The plugin still shows the "Add a Jev API key" hint: the field is empty after trimming whitespace. Paste the key again; the Rank button appears as soon as the field is non-empty.
 - The plugin and the CLI disagree on which notes are scored: both normalise modification times to whole milliseconds since 1.6.0; run `knowlery triage` once to reconcile older stores.
 - Scores appear in Obsidian and `knowlery stale` but not in `node .knowlery/bin/query.mjs --stale`: the generated script predates 1.6.0. Run `knowlery sync` (or reload the plugin, which re-syncs it) and rerun.

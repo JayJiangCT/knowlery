@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.6.2] — 2026-10-20
+
+A fix so the plugin passes Obsidian's community directory review, which failed
+1.6.0 and 1.6.1. Users who install from the community directory get 1.6.x for
+the first time with this release. Nothing else changes.
+
+### Fixed
+
+- **Jev key lookup no longer hardcodes `.obsidian`.** The `knowlery` CLI and the
+  MCP `stale` tool read the Jev key the plugin saved by looking for
+  `plugins/knowlery/data.json` under each hidden folder at the vault root. Vaults
+  with a renamed Obsidian config folder now find the key too, instead of
+  needing `TYPESAFE_API_KEY`. The environment variable still takes precedence.
+
+### Maintenance
+
+- Lint with `eslint-plugin-obsidianmd` 0.4.2, which applies the same rules as
+  the community review, so `npm run lint` catches these failures before release.
+
 ## [1.6.1] — 2026-10-19
 
 This is a maintenance release: **nothing you see or use changes.** The plugin,

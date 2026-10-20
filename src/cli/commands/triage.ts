@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { scanVault } from '../../core/query/scan';
 import { autoTriageAll } from '../../core/jev/auto-triage';
-import { JEV_API_KEY_ENV, PLUGIN_DATA_PATH, type ResolvedJevKey } from '../../core/jev/api-key';
+import { JEV_API_KEY_ENV, PLUGIN_DATA_SUFFIX, type ResolvedJevKey } from '../../core/jev/api-key';
 import { CONFIDENT_NO, CONFIDENT_YES } from '../../core/jev/triage-store';
 import { JEV_PRICE_PER_MTOK, type JevTransport } from '../../core/jev/client';
 import { nodeJevTransport } from '../../platform/node-jev';
@@ -39,7 +39,7 @@ export interface TriageSummary {
 export async function runTriageCommand(root: string, options: TriageCommandOptions): Promise<void> {
   if (!options.key) {
     throw new CliError(
-      `No Jev key. Export ${JEV_API_KEY_ENV} or add the key in the Knowlery plugin settings (${PLUGIN_DATA_PATH}).`,
+      `No Jev key. Export ${JEV_API_KEY_ENV} or add the key in the Knowlery plugin settings (<config folder>/${PLUGIN_DATA_SUFFIX}).`,
     );
   }
   const snapshot = scanVault(root);

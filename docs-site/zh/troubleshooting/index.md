@@ -181,7 +181,7 @@ Knowledge health（以及 `knowlery stale`）会列出所有没有被任何编�
 
 ## 看不到 Jev 评分
 
-- `knowlery stale` 打印的是普通列表：没有找到密钥。Node 侧先读 `TYPESAFE_API_KEY`，再读 `.obsidian/plugins/knowlery/data.json`；配置目录非默认的 vault 必须用环境变量。`knowlery triage` 会以 exit 1 退出并指出这两个位置。
+- `knowlery stale` 打印的是普通列表：没有找到密钥。Node 侧先读 `TYPESAFE_API_KEY`，再读 vault 隐藏配置目录下的 `plugins/knowlery/data.json`（默认是 `.obsidian`，改过名的配置目录也能找到）。`knowlery triage` 会以 exit 1 退出并指出这两个位置。
 - 插件仍然显示"添加 Jev API 密钥"的提示：字段去掉空白后为空。重新粘贴密钥，字段非空后 Rank 按钮立即出现。
 - 插件和 CLI 对哪些笔记已评分意见不一：1.6.0 起两边都把修改时间规整到整毫秒；跑一次 `knowlery triage` 即可让旧的存储对齐。
 - Obsidian 和 `knowlery stale` 里有评分，但 `node .knowlery/bin/query.mjs --stale` 里没有：生成的脚本还是 1.6.0 之前的。跑一次 `knowlery sync`（或重载插件，它会重新同步脚本）再重跑。
