@@ -51,8 +51,8 @@ for d,f,fm,b in pages:
         x=str(x)
         if x.startswith("[["): src_forms["wikilink"]+=1
         elif x.startswith("http"): src_forms["url"]+=1
-        elif "/" in x: src_forms["path"]+=1
-        else: src_forms["other"]+=1
+        elif re.match(r"^(Wonder|queries|concepts|entities|comparisons|Attachments|teams|Library|\.knowlery|<local-[a-z]+>)/", x): src_forms["path"]+=1
+        else: src_forms["other"]+=1   # free text: attestations, BigQuery table ids, bare names, external repo refs
 print("\nsources count dist:", dict(sorted(src_counts.items())), "no sources:", nosrc)
 print("sources forms:", dict(src_forms))
 
@@ -100,8 +100,8 @@ for key in ["status","freshness_status","retrieval_priority","supersedes","contr
 tot = sum(src_forms.values())
 print("sources entries total:", tot, "=", " + ".join(f"{v} {k}" for k,v in sorted(src_forms.items(), key=lambda x:-x[1])))
 ver = sum(1 for d,f,fm,b in pages for x in (fm.get("sources") or []) if re.search(r"@[0-9a-f]{7,40}\b|sha256:|blob:", str(x)))
-verp = sum(1 for d,f,fm,b in pages for x in (fm.get("sources") or []) if ("/" in str(x) or str(x).startswith("http")) and re.search(r"@[0-9a-f]{7,40}\b|sha256:|blob:", str(x)))
-print("sources entries carrying a commit/content hash:", ver, "| of which path/URL entries:", verp)
+verp = sum(1 for d,f,fm,b in pages for x in (fm.get("sources") or []) if (re.match(r"^(Wonder|queries|concepts|entities|comparisons|Attachments|teams|Library|\.knowlery|<local-[a-z]+>)/", str(x)) or str(x).startswith("http")) and re.search(r"@[0-9a-f]{7,40}\b|sha256:|blob:", str(x)))
+print("sources entries carrying a commit/content hash:", ver, "| of which vault-path/URL entries:", verp, "(the rest are free-text references to external code repositories)")
 qfiles=[f for d,f,_,_ in pages if d=="queries"]
 print("query files with a date in the filename:", sum(1 for f in qfiles if re.search(r"\d{4}-\d{2}-\d{2}", f)), "of", len(qfiles))
 def cites_queries(fm): return any(str(x).startswith("queries/") for x in (fm.get("sources") or []))

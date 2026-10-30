@@ -36,7 +36,7 @@ domain: {'delivery': 185, 'data': 9}
 confidence: {'None': 194}
 
 sources count dist: {1: 13, 2: 15, 3: 15, 4: 16, 5: 22, 6: 22, 7: 17, 8: 14, 9: 8, 10: 10, 11: 8, 12: 5, 13: 6, 14: 6, 16: 3, 17: 3, 19: 2, 20: 3, 21: 1, 22: 2, 24: 1, 26: 1, 30: 1} no sources: 0
-sources forms: {'url': 161, 'path': 1050, 'other': 225, 'wikilink': 13}
+sources forms: {'url': 161, 'path': 1002, 'other': 273, 'wikilink': 13}
 
 body lines: median 109.0 max (563,) min (25,)
 outbound wikilinks/page: median 7.0 zero-link pages 1
@@ -63,8 +63,8 @@ pages with non-empty retrieval_priority: 91
 pages with non-empty supersedes: 0
 pages with non-empty contradictions: 4
 pages with non-empty freshness_sidecar: 0
-sources entries total: 1449 = 1050 path + 225 other + 161 url + 13 wikilink
-sources entries carrying a commit/content hash: 10 | of which path/URL entries: 7
+sources entries total: 1449 = 1002 path + 273 other + 161 url + 13 wikilink
+sources entries carrying a commit/content hash: 10 | of which vault-path/URL entries: 0 (the rest are free-text references to external code repositories)
 query files with a date in the filename: 95 of 131
 query pages citing other queries in sources: 77
 concept/entity pages citing queries in sources: 20

@@ -15,7 +15,7 @@ The Pilot vault (194 compiled pages, ~220 raw notes; `JayJiangCT/Knowlery-Pilot`
 | Finding | Evidence | Consequence for 2.0 |
 |---|---|---|
 | Trust is expressed by three overlapping page-level fields, none complete | `status` 192/194, `freshness_status` 97/194, `retrieval_priority` 91/194; `supersedes` 0, `contradictions` 4, `freshness_sidecar` defined but used 0 times | One status axis; status at claim level, not only page level |
-| Sources carry no version | 1,449 `sources` entries: 1,050 paths, 161 URLs, 225 free text, 13 wikilinks. No vault path or URL entry carries a version; the only version pins are 10 free-text entries naming an external code commit | Every source reference carries a version; free-text sources become typed attestations |
+| Sources carry no version | 1,449 `sources` entries: 1,002 vault paths, 161 URLs, 273 free text, 13 wikilinks. No vault path or URL entry carries a version; the only version pins are 10 free-text entries naming an external code commit | Every source reference carries a version; free-text sources become typed attestations |
 | Query pages are the primary landing place of new knowledge, not a cache | 95/131 query files are dated snapshots; 77 cite other queries in `sources`; 20 concept/entity pages cite queries in `sources` | Queries become immutable **Records**; the dependency chain is straightened: Source → Record → Knowledge |
 | Pages have no structural contract | Only `## Related` (156) and `## Short Answer` (39) recur across the four directories; 48 pages carry appended `## Cook Refresh (date)` sections; body after frontmatter: median 109 lines, max 563 | Fixed section order; `## Current` first; history in its own section; section-level writes become deterministic |
 
