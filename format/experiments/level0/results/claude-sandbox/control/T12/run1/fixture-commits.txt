@@ -1,0 +1,3 @@
+37a69d9 Medium bag note: decision withdrawn (frontmatter)
+f235d81 baseline: Level 0 control arm
+cf9e378 pilot: split questions from answer keys for runtime parity experiment

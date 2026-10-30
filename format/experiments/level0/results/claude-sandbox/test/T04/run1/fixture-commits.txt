@@ -1,0 +1,4 @@
+a12e83c Medium bag note: sample testing completed (2026-10-28)
+63db412 pin source versions (14 pages)
+1e00862 baseline: Level 0 test arm
+cf9e378 pilot: split questions from answer keys for runtime parity experiment

@@ -1,0 +1,95 @@
+diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
+index 8154162..b0ba722 100644
+--- a/concepts/drone-delivery-integration-strategy.md
++++ b/concepts/drone-delivery-integration-strategy.md
+@@ -8,8 +8,8 @@ tags:
+   - drone-delivery
+   - grubhub
+ status: disputed
+-updated: 2026-10-26
+-updated_by: process:cook
++updated: 2026-10-30
++updated_by: claude-code/fable-5.1
+ verified: 2026-07-17
+ verified_by: process:cook
+ aliases:
+@@ -56,7 +56,7 @@ Eligibility and package data (2026-08-20 → 2026-10-26)
+ - The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
+ 
+ Partner contract (2026-07-28 → 2026-08-03)
+-- A direct-order Quote requires reliable mass, so package-data completeness is a hard eligibility dependency; Pack is not a mandatory single-Zip proof for the MVP (src: s10) ^c18
++- A direct-order Quote requires reliable mass, so package-data completeness is a hard eligibility dependency; Pack is not a mandatory single-Zip proof for the MVP (src: s10, s33) #disputed ^c18
+ - Eligibility requires Wonder weight/dimension checks plus a serviceable Zipline Quote; Zipline lifecycle events are normalized into Wonder states for Consumer and Dispatch Portal (src: s22) ^c34
+ - Ground fallback is required for recoverable failures, but pre-custody Reallocation and post-custody refund/remake/new-delivery recovery are different workflows (src: s22, s19) ^c35
+ - `DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative, irreversible custody boundary; food that fails after custody is discarded near a Zipline charging site and never returns to Wonder (src: s10, s19, s20) ^c19
+@@ -101,6 +101,7 @@ Ops / Packaging measures top-selling packed items
+ - Is live tracking P1 defensible given it is a stated customer use case, and is custody-aware cancellation required for safe recovery? Bears on [[#^c23]] (src: s22) ^q5
+ - Remaining launch gates: Intent timing, mapped delivery-site semantics, webhook reason/state mapping, station occupancy, loading-code rotation and post-custody recovery (src: s22, s10) ^q6
+ - Which Zipline terminology and limits are current integration truth where P2 fact-sheet language, site-visit assumptions and partner API documentation differ? Bears on [[#^c4]] ^q7
++- Does a fulfillment-capable Quote require outer package dimensions in addition to mass? The owner-edited Summary of the 2026-07-30 Record (s33) says mass and outer dimensions; its own Detail table, the Create Quote API doc (mass_grams only, no dimension fields) and the 2026-08-11 sandbox evidence say mass only. Needs human:jay to confirm the source (partner answer? Pack-path conflation?) before [[#^c18]] is superseded (src: s10, s33, s34) ^q8
+ 
+ ## Sources
+ - s1 · [[sp13-delivery-bi-weekly-outcomes-2026-06-10]] · sha256:1905ccc757e882176fa324b4b4a44d9e3e41f060b7e02d3ba4d5eb4751f49362 · record · blob:eb2ea0b3076248867b8440f7e08f5c6e634bc08f
+@@ -135,8 +136,11 @@ Ops / Packaging measures top-selling packed items
+ - s30 · [[region-2-latest-expansion-plan-2026-09-20]] · sha256:22426b2c03bfe6a787fe8b855653f5c3c915a685f9352e4522fb5265b2cefa30 · record · blob:dc4b345e50c41757eaf16de85acfac58d985424d
+ - s31 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery High-Level System Alignment - MVP]] · sha256:ffcc8f90f4ce03df5f1f70ad5e0bd5d501d267429820b75aa8134699c35b4af6 · source · blob:e0c6f87b6f6c6e377541e028f08841c42dd21801
+ - s32 · [[drone-delivery-overview-slides-readout-2026-06-17]] · sha256:3aeb5f64fdcdc6593267d71f3c5e0eda40e4263734cb6c3d6f8126250496e375 · record · blob:b9f62eca404961f1b72c6586d1a633b120897dd8
++- s33 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · sha256:9dc23efb43893253e334e409774fd52a34760179d2003d08c7524a708f047e00 · record · blob:aaf3640da0e5b644c63538ba2764b2eea51046c3 · owner-revised 2026-10-30: Summary now says fulfillment Quote requires mass and outer dimensions
++- s34 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Quote]] · sha256:059b57ec16e35b69dfd698c69026241795d1c82d0906ed7528ba2b1241883924 · source · blob:c664f3611823b03e23aeef8acbea9673adcc73a7 · Quote schema carries mass_grams only, no dimension fields
+ 
+ ## History
++- 2026-10-30 · [[#^c18]] marked disputed; [[#^q8]] opened · s10 evidence scope changed by owner edit (sha256:980486cf… → 9dc23efb…); [[#^c10]] [[#^c13]] [[#^c19]] [[#^c20]] also cite s10 but their statements are unchanged in the new version · src: s33, s34 · by claude-code/fable-5.1
+ - 2026-10-26 · [[#^c11]] [[#^c12]] added; Cookbook/Delivery Catalog sync boundary · src: s11 · by process:cook
+ - 2026-10-19 · [[#^c24]] added and marked disputed; [[#^q1]] opened · src: s23, s24 · by process:cook
+ - Region 2 launch reference: 2027-01-11 Friends & Family and 2027-01-14 Grand Opening per the 2026-09-20 snapshot (src: s30) · superseded 2026-10-19 by [[#^c24]] · tracker Rob shared on 2026-10-19 shows different dates; difference unconfirmed · src: s23 · by process:cook ^c26
+diff --git a/log.md b/log.md
+index 9def2c5..4124a37 100644
+--- a/log.md
++++ b/log.md
+@@ -1,4 +1,8 @@
+ # log
+ 
+ ## 2026-10-30
++- 09:10 · claude-code/fable-5.1 · ANSWER.md · created: report on owner edit f09aba1 and vault follow-up
++- 09:09 · claude-code/fable-5.1 · records/drone-mvp-medium-bag-outer-package-decision · appended s15 (new version of partner-contract Record) and History review line; envelope claim unaffected
++- 09:08 · claude-code/fable-5.1 · concepts/drone-delivery-integration-strategy · ^c18 marked #disputed, ^q8 opened, s33/s34 appended, History line; s10 evidence scope changed by owner edit
++- 09:07 · claude-code/fable-5.1 · records/zipline-mvp-partner-confirmed-contract-2026-07-30 · frontmatter updated/updated_by set to 2026-10-30/human:jay; History "revised by" line appended for owner edit of frozen Summary (edit itself kept)
+ - 00:00 · process:build · vault · Level 0 Test-arm baseline built from Pilot cf9e378 + v0.3.1 overlay
+diff --git a/records/drone-mvp-medium-bag-outer-package-decision.md b/records/drone-mvp-medium-bag-outer-package-decision.md
+index 0ba37b9..abac565 100644
+--- a/records/drone-mvp-medium-bag-outer-package-decision.md
++++ b/records/drone-mvp-medium-bag-outer-package-decision.md
+@@ -144,8 +144,10 @@ See [[drone-package-recommendation-ownership-and-kds-boundary|Drone Package Reco
+ - s12 · human:jay · stated:2026-08-20 · attestation · SKU interpretation: the samples mailed to Zipline are most plausibly the new August Medium (13 × 10 × 13 in, paper twist handle), an inference pending confirmation
+ - s13 · [[zipline-pack-as-eligibility-oracle-direction-2026-08-20]] · sha256:933f991a4d0b72475d192a8a75ee5901868f863af2868ec15900ba97957bd7e1 · record · blob:a05f3daa791a430fc65a39268f4af823fe3f5941
+ - s14 · https://wonder.atlassian.net/wiki/spaces/~5f811730e31b69006feed38a/pages/5706907865/Drone+Eligibility+Check+-+MVP+Plan?focusedCommentId=5707792556 · fetched:2026-08-12 · source · no-snapshot · Drone Eligibility Check - MVP Plan comment
++- s15 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · sha256:9dc23efb43893253e334e409774fd52a34760179d2003d08c7524a708f047e00 · record · blob:aaf3640da0e5b644c63538ba2764b2eea51046c3 · 2026-10-30 owner-revised version; envelope figures unchanged
+ 
+ ## History
++- 2026-10-30 · reviewed by claude-code/fable-5.1 · cited Record s7 revised by its owner (Quote now mass and dimensions; digest sha256:980486cf… → 9dc23efb…); this Record uses s7 only for the 338 × 254 × 205 mm / 2495 g envelope, which is unchanged, so no revision needed; see s15
+ - 2026-10-19 · verified by process:cook
+ - 2026-10-19 · revised by process:cook · Current status (2026-10-19)
+ - 2026-08-20 · revised by process:cook · Jay's working interpretation (2026-08-20)
+diff --git a/records/zipline-mvp-partner-confirmed-contract-2026-07-30.md b/records/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+index aaf3640..7a41fef 100644
+--- a/records/zipline-mvp-partner-confirmed-contract-2026-07-30.md
++++ b/records/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+@@ -10,8 +10,8 @@ tags:
+   - mvp
+   - webhook
+ status: current
+-updated: 2026-09-15
+-updated_by: process:cook
++updated: 2026-10-30
++updated_by: human:jay
+ verified: 2026-09-15
+ verified_by: process:cook
+ aliases:
+@@ -158,6 +158,7 @@ The same answer establishes that the current ReadMe is the latest documentation
+ - s6 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] · sha256:811e891e6b30a6ed6851a7b4fde7a026fbde7c7c7ac3387a2b9f109147770f0d · source · blob:9b5a9ac7e6f58d29e933c6bf2c93b1a820f33e4c
+ 
+ ## History
++- 2026-10-30 · revised by human:jay · frozen Summary edited in commit f09aba1 ("dimensions also required"): fulfillment Quote now stated to require valid mass **and outer dimensions**; record digest sha256:980486cf… → sha256:9dc23efb…, blob 9fef7255/e23d5c6f → aaf3640d; no new source cited and the Detail table and the Create Quote API doc still state mass only — citing pages flagged for review (noted by claude-code/fable-5.1)
+ - 2026-09-15 · verified by process:cook
+ - 2026-09-15 · revised by process:cook · Current Payload Envelope (Week of 2026-09-07)
+ - 2026-08-04 · revised by process:cook · Pre-Production And Documentation Readiness
