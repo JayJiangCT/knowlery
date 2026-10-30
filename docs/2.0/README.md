@@ -12,7 +12,8 @@ Knowlery 2.0 的方向是 **Agent-native、Markdown-first、Format-first**：人
 | [GOALS.md](./GOALS.md) | 产品愿景、目标、非目标和成功标准 | 目标基线 |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 高层组件关系和职责边界 | 已确认方向；实现待设计 |
 | [DECISIONS.md](./DECISIONS.md) | 确认事项、候选方案和开放问题 | 持续维护 |
-| [Knowledge Format v0](../../format/KNOWLEDGE-FORMAT-v0.md) | 知识组织、表达、来源和治理契约 | **Draft，非批准 Schema** |
+| [Knowledge Format v0.2](../../format/KNOWLEDGE-FORMAT-v0.2.md) | 知识组织、表达、来源和治理契约（当前提案，待 Level 0 实验验证） | **Draft，非批准 Schema** |
+| [Knowledge Format v0](../../format/KNOWLEDGE-FORMAT-v0.md) | 早期问题框架与评测场景 | 历史草案 |
 | [REPOSITORY-PLAN.md](./REPOSITORY-PLAN.md) | 目录边界、旧代码处置和分阶段迁移 | 执行计划 |
 | [VALIDATION.md](./VALIDATION.md) | 跨 Agent、无 Obsidian 和更新安全性验收 | 待执行 |
 | [SOURCES.md](./SOURCES.md) | 共识来源与文档重建说明 | 溯源记录 |
