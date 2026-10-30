@@ -1,5 +1,8 @@
 # Level 0 — claude-sandbox report (run 1 of each task, both arms)
 
+> [!warning] Pre-freeze calibration data, not scored results
+> All 24 runs below ran on kit `6cef470`, before `level0-frozen-1`. That kit's Control overlay still suspended the 1.x page-writing rules and kept the Obsidian CLI rules, skills and query engine; its T04 fixture said only "Medium bag"; its `collect.sh` missed new files; and the human equivalence gate (PROTOCOL, Arms) was open, with three high-severity migration drifts on the strategy page later fixed. Under PROTOCOL's Frozen inputs rule these rows carry `kit_tag=pre-freeze` and are calibration data. No scored run exists on any harness until the gate is signed and the kit is tagged.
+
 **Harness:** sub-agents of a Claude session (`general-purpose`), model `claude-fable-5-1`, file tools + read-only git, no network, fresh agent per run, cwd = the built vault. **Token figure** = harness `subagent_tokens` (total per run, includes the ~400-token run prompt; instruction-file tokens not separable). **Kit:** `develop/2.0` @ `6cef470`; Pilot `cf9e378`. One repetition only; treat every number as a first observation.
 
 ## Pass table

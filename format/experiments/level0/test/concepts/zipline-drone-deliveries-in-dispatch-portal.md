@@ -70,6 +70,7 @@ Design references named by the tickets:
 - s3 · [[drone-delivery-integration-strategy#^c19]] · @pin · derived
 
 ## History
+- 2026-10-30 · [[#^c17]] added (Level 0 experiment fixture) · src: s2, s3 · by process:build
 - 2026-10-10 · verified by process:cook
 - 2026-10-10 · [[#^c1]] to [[#^c16]] added · src: s1, s2 · by process:cook
 

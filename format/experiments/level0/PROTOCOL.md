@@ -7,21 +7,28 @@
 | Input | Value |
 |---|---|
 | Pilot vault | `JayJiangCT/Knowlery-Pilot` @ `cf9e378` |
-| Format | `format/KNOWLEDGE-FORMAT-v0.3.md` as of `a9a5485` (v0.3.1), plus the §1 figure correction in the commit that adds this file |
+| Format | `format/KNOWLEDGE-FORMAT-v0.3.md` as of `2976e62`: v0.3.1 (`a9a5485`), the §1 figure correction in the commit that adds this file, and the Record evidence-scope fix (§7.2/§8; scope ends at `## Sources`) found while building the kit. No further Format edits until the run ends |
+| Kit | This directory at git tag `level0-frozen-1`; every `scores.csv` row records the tag. Runs on any earlier commit (the 2026-10-30 T01 smoke test) are pre-freeze and not scored |
 | Scope | 10–15 compiled pages from the 1P Drone Delivery thread, listed in `pages.txt` once chosen; their cited Sources and Records come along unchanged |
-| Model and harness | Recorded in `RESULTS.md` before the first run; identical for both arms |
-| Token budget | Identical per task for both arms; recorded |
+| Model and harness | Recorded in each harness's `results/<harness>/REPORT.md` (with the exact command line) before the first run; identical for both arms |
+| Token budget | No cap; both arms run with the harness defaults; tokens recorded per run |
 
 ## Arms
 
 | Arm | Material | Agent instructions |
 |---|---|---|
-| Control | The scoped pages in their 1.x form | The Pilot's `AGENTS.md`, Obsidian CLI commands removed (headless) |
+| Control | The scoped pages in their 1.x form | The Pilot's `AGENTS.md` / `.claude/CLAUDE.md` made headless by `tools/build.py`: the Pilot's read-only banner (which also suspended the page-writing rules) replaced by an experiment header that keeps the Agent-Maintained Pages rules in force; Obsidian CLI rules, the Pilot skills and the `.knowlery/bin` query engine removed, and rules that point at removed skills rewritten for file tools; Activity Ledger off (`.knowlery/activity-disabled`) |
 | Test | The same pages migrated by hand to v0.3.1 | `CONVENTIONS.md` written from spec §13 |
 
 Before any run, a human checks each migrated page against its 1.x original for semantic equivalence: no claim added, none dropped, none sharpened. A log of migration ambiguities is kept; each entry is a potential Format revision.
 
-Both arms run headless with file tools only. Nothing about atomic writes, concurrent edits, or enforcement of `protected` is tested here.
+The check is a gate: it is recorded in the sign-off table below, one row per page in `pages.txt`, and no scored run starts while a row is open. `tools/validate.py` checks structure only and does not count.
+
+| Page | Reviewer | Date | Result |
+|---|---|---|---|
+| (all 14 pages in `pages.txt`) | — | — | **open** |
+
+Both arms run headless with file tools only (no Knowlery runtime: `.knowlery/bin` is removed in both). Nothing about atomic writes, concurrent edits, or enforcement of `protected` is tested here.
 
 ## Tasks
 
@@ -42,9 +49,11 @@ Each task runs in both arms, with the same prompt, same budget, and at least thr
 | **T11** | Upstream claim text unchanged but marked `#disputed` (fingerprint identical) | Status propagation along `derived` | Agent notices the status change on the dependency when answering or updating downstream; if it cannot, record as a Format gap (candidate: status propagation mechanism) |
 | **T12** | Source body unchanged, Source frontmatter changes meaning (e.g. `decision_status: approved → withdrawn`) | Evidence scope boundary | Agent does not keep relying on the withdrawn decision; if it does, record as a Format gap (candidate: distinguish administrative from semantic frontmatter on Sources) |
 
+T01 Q1, T02 and T05 all turn on the same Pilot defect (the payload-slide Source says 252 mm is the envelope; the compiled pages hold 254 mm). They are analysed as one finding cluster, not three independent results. T01 does not score Source-level detection: CONVENTIONS §3 tells the Test arm to stop at tier 3 when evidence is not requested, so that criterion would measure the instruction text; T02 and T05 ask for evidence and carry the probe.
+
 T11 and T12 were added at the reviewer's request; they probe the v0.3.1 evidence scope. A failure there is a finding, not a reason to redesign before the run.
 
-Granularity sub-experiment: 3–4 Test-arm pages prepared at coarse / working / fine claim granularity; T4 and T5 run on each.
+Granularity sub-experiment (**deferred**, not in this kit): 3–4 Test-arm pages prepared at coarse / working / fine claim granularity; T4 and T5 run on each.
 
 ## Metrics
 
@@ -57,11 +66,11 @@ Granularity sub-experiment: 3–4 Test-arm pages prepared at coarse / working / 
 | Tokens per correct answer | Total input tokens ÷ correct answers |
 | Migration cost | Human minutes per page; count of ambiguities logged |
 
-Correctness and history preservation are reported first; token and maintenance cost second.
+Correctness and history preservation are reported first; token and maintenance cost second. With three runs per arm, rates are descriptive: no difference is claimed from them alone (3/3 vs 0/3 is Fisher's exact p ≈ 0.10); the decision record rests on case findings.
 
 ## Outputs
 
-1. `RESULTS.md`: per task, per arm, per repetition: pass/fail, the metric values, and the transcript path.
+1. `results/<harness>/REPORT.md` per harness (RUNBOOK §4), and `RESULTS.md` beside this file combining them: per task, per arm, per repetition: pass/fail, the metric values, and the transcript path.
 2. The migration ambiguity log.
 3. A decision record under `docs/2.0/decisions/` that classifies every v0.3.1 Hypothesis and Conformance item as **pass**, **fail**, **insufficient evidence**, or **revise clause §N**. A single successful run approves nothing.
 
