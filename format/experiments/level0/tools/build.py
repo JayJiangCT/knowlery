@@ -35,11 +35,41 @@ def copy_pilot(pilot, dest):
 
 # ---------------------------------------------------------------- overlays
 CONTROL_HEADER = """> [!note] LEVEL 0 EXPERIMENT — CONTROL ARM
-> This is a working copy for an experiment. The read-only pilot rule below is suspended: you MAY create and edit
-> files in this vault to carry out the task you are given. Obsidian is NOT running; use your file tools (and
-> `node .knowlery/bin/query.mjs` if node is available). Do not use the network. Do not commit or push.
+> This is a working copy for an experiment. You may create and edit compiled pages (`concepts/`, `entities/`,
+> `comparisons/`, `queries/`) and `log.md` under the Agent-Maintained Pages rules below; user notes stay read-only.
+> Obsidian is NOT running and no Knowlery CLI is installed: use your file tools. Do not use the network.
+> Do not commit or push.
 
 """
+# Headless 1.x: the Pilot's read-only banner is replaced (it also suspended the page-writing rules), Obsidian CLI
+# rules, skills and the query engine are removed so both arms work with file tools only (PROTOCOL, Arms).
+CONTROL_RETRIEVAL = """## Knowledge Retrieval
+
+When answering questions from this vault (not general knowledge):
+
+1. Search compiled pages and user notes with your file tools for the subject terms
+   (names, terms, nouns), not the request phrasing
+2. Read promising candidates — prefer `status: reviewed` over `draft`, recent `updated`,
+   and any `evidence via source:` notes
+3. If nothing in the vault covers the question, say so — do not answer from general knowledge
+4. Synthesize a direct answer with `[[wikilink]]` citations and explicit gaps
+
+Every claim must be backed by vault notes.
+
+"""
+OBSIDIAN_CLI_LINES = ["- Use Obsidian CLI for all operations\n", "- Use Obsidian CLI for reading: `obsidian read file=\"...\"`\n"]
+
+def headless_instructions(s):
+    assert s.startswith("> [!warning] PILOT"), "Pilot banner not found"
+    s = s.split("\n\n", 1)[1]
+    s, n = re.subn(r"^### Obsidian CLI Only\n.*?(?=^### Writing Conventions)", "", s, flags=re.S | re.M)
+    assert n == 1, "Obsidian CLI section not found"
+    s, n = re.subn(r"^## Knowledge Retrieval\n.*?(?=^## Available Skills)", CONTROL_RETRIEVAL, s, flags=re.S | re.M)
+    assert n == 1, "Knowledge Retrieval section not found"
+    s, n = re.subn(r"^## Available Skills\n.*?(?=^# |^@)", "", s, flags=re.S | re.M)
+    assert n == 1, "Available Skills section not found"
+    for l in OBSIDIAN_CLI_LINES: s = s.replace(l, "")
+    return CONTROL_HEADER + s
 CONTROL_DERIVED_NOTE = """
 
 ## Custody and fallback note (2026-10-30)
@@ -47,11 +77,23 @@ CONTROL_DERIVED_NOTE = """
 Once a Zipline job's Delivery Intent has reached `IN_PROGRESS` the drone has custody, so a Ground job that appears after it is a post-custody recovery rather than a reallocation of the same delivery. See [[concepts/drone-delivery-integration-strategy|Drone Delivery Integration Strategy]] (Partner-Confirmed MVP Integration Contract) and DELI-4660.
 """
 
+def remove_runtime(vault):
+    q = os.path.join(vault, ".knowlery", "bin")
+    if os.path.isdir(q): shutil.rmtree(q)
+
 def overlay_control(vault):
-    p = os.path.join(vault, "AGENTS.md"); s = open(p, encoding="utf-8").read()
-    open(p, "w", encoding="utf-8").write(CONTROL_HEADER + s)
-    p = os.path.join(vault, ".claude", "CLAUDE.md"); s = open(p, encoding="utf-8").read()
-    open(p, "w", encoding="utf-8").write(CONTROL_HEADER + s)
+    for rel in ["AGENTS.md", os.path.join(".claude", "CLAUDE.md")]:
+        p = os.path.join(vault, rel); s = open(p, encoding="utf-8").read()
+        open(p, "w", encoding="utf-8").write(headless_instructions(s))
+    for f in os.listdir(os.path.join(vault, ".agents", "rules")):
+        p = os.path.join(vault, ".agents", "rules", f); s = open(p, encoding="utf-8").read()
+        for l in OBSIDIAN_CLI_LINES: s = s.replace(l, "")
+        open(p, "w", encoding="utf-8").write(s)
+    for d in [os.path.join(".claude", "skills"), os.path.join(".agents", "skills")]:
+        q = os.path.join(vault, d)
+        if os.path.isdir(q): shutil.rmtree(q)
+    remove_runtime(vault)
+    open(os.path.join(vault, ".knowlery", "activity-disabled"), "w").close()  # Activity Ledger off, as in Test
     p = os.path.join(vault, "concepts", "zipline-drone-deliveries-in-dispatch-portal.md")
     open(p, "a", encoding="utf-8").write(CONTROL_DERIVED_NOTE)
 
@@ -63,6 +105,7 @@ def overlay_test(vault):
     for d in [".claude", ".agents"]:
         q = os.path.join(vault, d)
         if os.path.isdir(q): shutil.rmtree(q)
+    remove_runtime(vault)
     for q in SCOPED_QUERIES:
         os.remove(os.path.join(vault, "queries", q.strip()))
     src = os.path.join(KIT, "test")

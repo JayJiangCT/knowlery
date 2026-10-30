@@ -7,6 +7,12 @@ This kit is deterministic: anyone with the Pilot checkout at `cf9e378` and this 
 - `git`, Python 3.8+ (stdlib only; `pyyaml` only for `tools/validate.py`).
 - The Pilot checkout: `git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot checkout cf9e378`.
 - A harness that can run an Agent with **file tools only** (read, search, edit, shell for `sed`/`sha256sum`/`git` read commands) and **no network**. Record its name, model id, and any system prompt it injects.
+- The kit at tag `level0-frozen-1` (`git checkout level0-frozen-1`). Put the tag in the `kit_tag` column of every row.
+- **An isolated harness config.** A local harness otherwise loads the operator's own instructions, skills, plugins, memory and MCP servers, which neither the other harnesses nor the other arm see. Run from an empty config home and with no MCP servers, for example:
+  - Claude Code: `CLAUDE_CONFIG_DIR=$(mktemp -d) claude --strict-mcp-config` (sign in once in that home; nothing else in it). User-level `~/.claude/CLAUDE.md`, skills, plugins and memory must not load.
+  - Codex: `CODEX_HOME=$(mktemp -d) codex` (copy only the auth file into it). `~/.codex/AGENTS.md` and user config must not load.
+
+  Check these names against the harness's current docs. Record the exact command line in `REPORT.md`, and confirm in the first transcript that only the vault's own instruction files were loaded.
 
 ## 1. Build the working copies
 
@@ -22,7 +28,8 @@ What the arms contain:
 | | Control | Test |
 |---|---|---|
 | Pages | Pilot as is | Pilot with the 14 scoped pages replaced by `test/` (queries → `records/`), `tools/digest.py` added |
-| Instructions | Pilot `AGENTS.md` / `.claude/CLAUDE.md` with a header suspending the read-only rule | `CONVENTIONS.md`; `AGENTS.md` / `.claude/CLAUDE.md` point to it |
+| Instructions | Pilot `AGENTS.md` / `.claude/CLAUDE.md` made headless: read-only banner replaced by an experiment header (Agent-Maintained Pages rules in force, user notes read-only), Obsidian CLI rules and the Skills section removed | `CONVENTIONS.md`; `AGENTS.md` / `.claude/CLAUDE.md` point to it |
+| Removed | `.claude/skills`, `.agents/skills`, `.knowlery/bin`; Activity Ledger off | `.claude`, `.agents`, `.knowlery/bin`, 1.x `AGENTS.md`/`KNOWLEDGE.md`/`SCHEMA.md`/`INDEX.base` |
 | Extra | the T10/T11 "custody → recovery" sentence appended to the Dispatch Portal concept page | the same fact as claim ^c17 with a `derived` source |
 
 ## 2. Run one task
@@ -34,7 +41,7 @@ What the arms contain:
    ```
    tools/collect.sh work/<arm>/<task> results/<harness>/<arm>/<task>/run<N>
    ```
-   which copies `ANSWER.md`, `git diff` (changes the Agent made), `git status`, and the list of files it touched.
+   which copies `ANSWER.md`, the diff of everything the Agent changed (new files included), `git status`, and the list of files it touched.
 5. Fill the run's row in `results/<harness>/scores.csv` using the task's **Pass criteria** and **Record per run** sections. Token numbers come from the harness; record input tokens total and, where the harness exposes it, tokens attributable to reading the instruction files (`AGENTS.md` + rules / `CONVENTIONS.md`).
 
 Repetitions: 3 per task per arm where budget allows; the same model for both arms. Order: alternate arms (control T01, test T01, control T02, …) so drift affects both equally.

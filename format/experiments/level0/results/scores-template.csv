@@ -1,1 +1,1 @@
-harness,model,arm,task,run,result(pass|partial|fail|abstained),q_parts_correct,unnecessary_rewrite_rate,unsupported_current_claim_rate,silent_resolution(y/n),history_preserved(y/n),files_read,input_tokens,instruction_tokens,notes
+kit_tag,harness,model,arm,task,run,result(pass|partial|fail|abstained),q_parts_correct,unnecessary_rewrite_rate,unsupported_current_claim_rate,silent_resolution(y/n),history_preserved(y/n),files_read,input_tokens,instruction_tokens,notes
