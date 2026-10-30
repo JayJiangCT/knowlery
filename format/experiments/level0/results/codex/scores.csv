@@ -1,0 +1,5 @@
+harness,model,arm,task,run,result(pass|partial|fail|abstained),q_parts_correct,unnecessary_rewrite_rate,unsupported_current_claim_rate,silent_resolution(y/n),history_preserved(y/n),files_read,input_tokens,instruction_tokens,notes
+codex,gpt-6.1-terra,control,T01,1,pass,3/3,,,,,,,"Completed; answer cites current and historical width, loading trade-off, package envelope, and custody."
+codex,gpt-6.1-terra,control,T02,1,abstained,0/1,,,,,,,"Model capacity error before ANSWER.md was written."
+codex,gpt-6.1-terra,test,T02,1,partial,1/1,,,,,,,"ANSWER.md was written, but session ended with model capacity errors before a complete run transcript/verification."
+codex,gpt-6.1-sol,control,T03,1,abstained,0/1,,,,,,,"Model capacity/timeout; no ANSWER.md."
