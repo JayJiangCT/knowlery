@@ -115,17 +115,17 @@ Rules:
 ## Related
 ```
 
-The **evidence scope** of a Record is everything after the frontmatter up to the first of `## History` / `## Related`. Once a Record is not `draft`, that part is never rewritten. New facts go in a new Record with `followed_by` on the old one. If an owner has edited the frozen part anyway, append `- <date> · revised by <actor> · <why>` to its `## History` and treat every page citing it as needing review.
+The **evidence scope** of a Record is everything after the frontmatter up to the first of `## Sources` / `## History` / `## Related` (Summary and Detail). Once a Record is not `draft`, that part is never rewritten. New facts go in a new Record with `followed_by` on the old one. If an owner has edited the frozen part anyway, append `- <date> · revised by <actor> · <why>` to its `## History` and treat every page citing it as needing review.
 
 ## 7. Sources and versions
 
 Each `## Sources` line: `- <id> · <resource> · <version> · <kind> [· blob:<40 hex>] [· note]`.
 
 - `version` is a change-detection digest: `sha256:` over the resource's **evidence scope**, or `fetched:<date>` for a URL, `stated:<date>` for an attestation, `unverified` if unknown.
-- Evidence scope: a **Source** = its body after the frontmatter (whole file if none); a **Record** = frontmatter end → first `## History`/`## Related`; a **claim** (`derived`) = the claim line with `(src: …)`, `#disputed` and `^id` removed and whitespace collapsed.
-- Digest procedure: take the scope, normalize line endings to `\n`, strip trailing whitespace on each line, strip leading/trailing blank lines, SHA-256 the UTF-8 bytes. `tools/digest.py <file> [--scope source|record|claim]` does exactly this if present; otherwise do it by hand with `sed`/`sha256sum`.
+- Evidence scope: a **Source** = its body after the frontmatter (whole file if none); a **Record** = frontmatter end → first `## Sources`/`## History`/`## Related`; a **claim** (`derived`) = the claim line with `(src: …)`, `#disputed` and `^id` removed and whitespace collapsed.
+- Digest procedure: take the scope, normalize line endings to `\n`, strip trailing whitespace on each line, strip leading/trailing blank lines, SHA-256 the UTF-8 bytes. `tools/digest.py <file>` does exactly this if present (it picks the record scope for `type: record` files; `--claim ^cN` for a claim fingerprint); otherwise do it by hand with `sed`/`sha256sum`.
 - `blob:` is the git blob of the **whole file** as committed, i.e. `git rev-parse HEAD:<path>` at citation time. It is the only thing that recovers text: `git cat-file -p <blob>` then strip the frontmatter yourself. A `sha256:` alone recovers nothing; say so rather than claiming recovery.
-- A change in frontmatter only, a History line appended to a Record, or an unrelated claim edited on a page cited as `derived` is **not** an evidence change.
+- A change in frontmatter only, a Sources or History line appended to a Record, or an unrelated claim edited on a page cited as `derived` is **not** an evidence change.
 
 **To absorb a changed Source:** compute its new digest; find pages citing that path (grep `## Sources` lines); for each cited claim whose `version` no longer matches, judge whether the claim still holds; if not, supersede it (rule in §5) with a new `## Sources` line for the new version; never overwrite; write one line to `log.md`.
 

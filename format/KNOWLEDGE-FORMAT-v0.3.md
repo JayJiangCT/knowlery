@@ -188,7 +188,7 @@ Free structure.
 ## Related
 ```
 
-The **evidence scope** of a Record is everything from the end of the frontmatter up to the first of `## History` or `## Related`. Only that part is versioned (Section 8); appending a History line or editing Related never changes the Record's version.
+The **evidence scope** of a Record is everything from the end of the frontmatter up to the first of `## Sources`, `## History` or `## Related`, i.e. Summary and Detail. Only that part is versioned (Section 8); appending a Sources or History line or editing Related never changes the Record's version. (v0.3.1 ended the scope at History; that made a Record's digest depend on the versions written in its own `## Sources`, so pinning a Record changed the Record. Found while building the Level 0 kit, 2026-10-30.)
 
 A Record's body is frozen in the logical sense: once the Record leaves `draft`, its body is never rewritten without a trace. Files remain editable by their owner; the Format defines what the edit means.
 
@@ -228,7 +228,7 @@ Evidence scope, by resource:
 | Resource | Digest covers |
 |---|---|
 | Source (user note) | Body after the frontmatter; the whole file if it has none |
-| Record | Frontmatter end → first of `## History` / `## Related` (Section 7.2) |
+| Record | Frontmatter end → first of `## Sources` / `## History` / `## Related`: Summary and Detail (Section 7.2) |
 | Claim (`derived`) | The claim's fingerprint: the list-item text with `(src: …)`, `#disputed` and the `^id` removed and whitespace collapsed. One claim, not the page |
 
 Digests are computed over the scope after normalizing line endings to `\n` and stripping trailing whitespace; the exact procedure is in `CONVENTIONS.md`.

@@ -6,7 +6,8 @@ Usage:
 
 Scopes (CONVENTIONS.md §7):
   source  body after the frontmatter (whole file if no frontmatter)      [default]
-  record  frontmatter end -> first "## History" or "## Related" heading
+  record  frontmatter end -> first "## Sources", "## History" or "## Related" heading
+          (auto-selected when the file's frontmatter has `type: record`)
   claim   one claim line (--claim ^cN) with "(src: …)", "#disputed" and the id removed,
           whitespace collapsed
 
@@ -30,7 +31,7 @@ def scope_source(text):
 
 def scope_record(text):
     body = split_frontmatter(text)
-    m = re.search(r"^## (History|Related)\s*$", body, re.M)
+    m = re.search(r"^## (Sources|History|Related)\s*$", body, re.M)
     return body[:m.start()] if m else body
 
 def scope_claim(text, cid):
@@ -55,6 +56,7 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not args: sys.exit(__doc__)
     path = args[0]; scope = "source"; claim = None
+    if re.match(r"^---\n.*?^type:\s*record\s*$.*?\n---\n", open(path, encoding="utf-8").read(), re.S | re.M): scope = "record"
     if "--scope" in args: scope = args[args.index("--scope") + 1]
     if "--claim" in args: claim = args[args.index("--claim") + 1]; scope = "claim"
     print(digest(open(path, encoding="utf-8").read(), scope, claim))
