@@ -187,7 +187,7 @@ MEDIUM_BAG_ADDENDUM = """
 
 ## Update (2026-10-28)
 
-Jay relayed Rob's follow-up: IKC Ops completed the sample testing. The Medium bag and the guest-packaging samples fit the production Pod; the Medium bag is confirmed as the MVP outer package and no further bag testing is planned before launch.
+Jay relayed Rob's follow-up: IKC Ops completed the sample testing. The mailed samples (the new August 2026 Medium bag, the PRD v26 default, and the guest packaging) fit the production Pod; the new Medium is confirmed as the MVP outer package and no further bag testing is planned before launch.
 """
 
 def fixture(arm, task, vault):

@@ -42,7 +42,7 @@ System ownership (2026-07-15 alignment)
 - Consumer owns the Drone customer journey on Web, iOS and Android and calls only Wonder-owned eligibility and ETA contracts (src: s7) ^c5
 - Fulfillment/Delivery builds and operates the Drone Eligibility Service as Consumer's single internal decision boundary; the final service name and the detailed API contract remain open (src: s7, s8) ^c6
 - Delivery ETA Service owns Consumer-facing drone ETA; Fulfillment/Delivery supplies normalized Zipline timing inputs rather than raw provider fields (src: s7) ^c7
-- KOS is the current Delivery Task creation trigger and Delivery Task Service owns Task and Job lifecycle; the post-order sequence is Place Order → persistence → Assign to Pod → Delivery Task → Delivery Intent, which is compatible with Zipline submit-order guidance (src: s7, s9) ^c8
+- KOS is strongly supported as the current Delivery Task creation trigger, and Delivery Task Service owns Task and Job lifecycle; the post-order sequence is Place Order → persistence → Assign to Pod → Delivery Task → Delivery Intent, which is compatible with Zipline submit-order guidance (src: s7, s9) ^c8
 - Fulfillment/Delivery owns all outbound and inbound Zipline protocol concerns through the provider boundary; OMS/CCP owns order state and its `fulfillment-service` does not own provider Task or Job lifecycle (src: s7) ^c9
 - Multi-drone delivery is outside the MVP, so single-delivery enforcement and safe cancellation/fallback remain explicit provider-contract gaps (src: s7, s10) ^c10
 
@@ -51,7 +51,7 @@ Eligibility and package data (2026-08-20 → 2026-10-26)
 - Cookbook owns item-level weight and packed-dimension profiles and exposes the API/Kafka sync contract; Delivery Catalog stores the local projection, applies classification fallback per line when no usable profile exists, and owns runtime orchestration (src: s11, s12) ^c12
 - Delivery-owned Eligibility calls Zipline Pack and treats `total_deliveries == 1` as the proposed affirmative fit result; Zipline does not mandate Pack, Wonder is evaluating it as the eligibility oracle so it need not maintain its own fit algorithm (src: s13, s10) ^c13
 - The Robotic Arm is out of MVP scope; manual scale capture is the active measurement path (src: s13) ^c14
-- The measurement spreadsheet's `Primary Container` field is reference-only; its green weight/dimension cells are direct measurements usable as initial criteria but not a maintained current-pack source of truth (src: s14) ^c15
+- The measurement spreadsheet's `Primary Container` field is reference-only; its green weight/dimension cells are direct measurements usable as initial criteria but not a maintained current-pack source of truth; the data still needs currentness checks, packaging-change handling and governed mapping before it is reused for uncovered items or sent to Pack (src: s14) ^c15
 - The current single-Zip provider limit is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); implementation stays canonical in grams and millimetres (src: s15, s16) ^c16
 - The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
 
@@ -65,7 +65,7 @@ Partner contract (2026-07-28 → 2026-08-03)
 
 Product scope and launch (PRD V6, 2026-07-29 → 2026-10-19)
 - Launch is a checkout-only Drone option for eligible Rowlett orders with one Zipline Delivery Intent per Wonder order and the default mapped delivery site; customer drop pins, multi-stop and multi-drone splitting are out of scope (src: s22) ^c22
-- PRD V6 timeline: API/architecture alignment by 2026-08-17, build by 2026-09-28, E2E validation 2026-11-16 to 2026-12-07, controlled Rowlett launch from 2027-01-08; eligibility, Quote, status sync, completion evidence and recoverable fallback are P0, telemetry and cancellation are listed P1 (src: s22) ^c23
+- PRD V6 timeline: API/architecture alignment by 2026-08-17, build by 2026-09-28, E2E validation 2026-11-16 to 2026-12-07, controlled Rowlett launch from 2027-01-08; eligibility, Quote, status sync, completion evidence and recoverable fallback are P0, telemetry and cancellation are listed P1; the P1 classification is not a closed implementation decision, because live tracking is a stated customer use case and custody-aware cancellation is required for safe recovery (src: s22) ^c23
 - Rowlett and Frisco are selected for MVP production Partner Site configuration; the Wonder × Zipline tracker shows 2027-01-11 Soft Opening, 2027-01-20 Grand Opening and Q1 2027 hub launch, all planning fields rather than sign-offs (src: s23, s24) #disputed ^c24
 - Wonder's public announcement commits select Texas locations to begin service in January 2027 with Dallas first and most Texas locations offering drone delivery by end of 2027; it does not mention Grubhub or exclusivity (src: s25) ^c25
 
@@ -98,7 +98,7 @@ Ops / Packaging measures top-selling packed items
 - Does Grubhub DaaS have a committed roadmap for drone support, and could it expose quote, eligibility, vehicle type, tracking, cancellation, weather and fallback reasons? Bears on [[#^c1]] (src: s26) ^q2
 - What policy applies when Drone eligibility or provider availability is lost after the customer selects Drone at Checkout? Bears on [[#^c10]] ^q3
 - How should drone-specific statuses appear in Dispatch Portal and PPX? Bears on [[#^c9]] ^q4
-- Is live tracking P1 defensible given it is a stated customer use case, and is custody-aware cancellation required for safe recovery? Bears on [[#^c23]] (src: s22) ^q5
+- Will live tracking and custody-aware cancellation stay P1, or move to P0? Bears on [[#^c23]] (src: s22) ^q5
 - Remaining launch gates: Intent timing, mapped delivery-site semantics, webhook reason/state mapping, station occupancy, loading-code rotation and post-custody recovery (src: s22, s10) ^q6
 - Which Zipline terminology and limits are current integration truth where P2 fact-sheet language, site-visit assumptions and partner API documentation differ? Bears on [[#^c4]] ^q7
 

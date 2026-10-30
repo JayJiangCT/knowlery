@@ -10,8 +10,8 @@
 | Format | `format/KNOWLEDGE-FORMAT-v0.3.md` as of `2976e62`: v0.3.1 (`a9a5485`), the §1 figure correction in the commit that adds this file, and the Record evidence-scope fix (§7.2/§8; scope ends at `## Sources`) found while building the kit. No further Format edits until the run ends |
 | Kit | This directory at git tag `level0-frozen-1`; every `scores.csv` row records the tag. Runs on any earlier commit (the 2026-10-30 T01 smoke test) are pre-freeze and not scored |
 | Scope | 10–15 compiled pages from the 1P Drone Delivery thread, listed in `pages.txt` once chosen; their cited Sources and Records come along unchanged |
-| Model and harness | Recorded in `RESULTS.md` before the first run; identical for both arms |
-| Token budget | Identical per task for both arms; recorded |
+| Model and harness | Recorded in each harness's `results/<harness>/REPORT.md` (with the exact command line) before the first run; identical for both arms |
+| Token budget | No cap; both arms run with the harness defaults; tokens recorded per run |
 
 ## Arms
 
@@ -53,7 +53,7 @@ T01 Q1, T02 and T05 all turn on the same Pilot defect (the payload-slide Source 
 
 T11 and T12 were added at the reviewer's request; they probe the v0.3.1 evidence scope. A failure there is a finding, not a reason to redesign before the run.
 
-Granularity sub-experiment: 3–4 Test-arm pages prepared at coarse / working / fine claim granularity; T4 and T5 run on each.
+Granularity sub-experiment (**deferred**, not in this kit): 3–4 Test-arm pages prepared at coarse / working / fine claim granularity; T4 and T5 run on each.
 
 ## Metrics
 
@@ -66,11 +66,11 @@ Granularity sub-experiment: 3–4 Test-arm pages prepared at coarse / working / 
 | Tokens per correct answer | Total input tokens ÷ correct answers |
 | Migration cost | Human minutes per page; count of ambiguities logged |
 
-Correctness and history preservation are reported first; token and maintenance cost second.
+Correctness and history preservation are reported first; token and maintenance cost second. With three runs per arm, rates are descriptive: no difference is claimed from them alone (3/3 vs 0/3 is Fisher's exact p ≈ 0.10); the decision record rests on case findings.
 
 ## Outputs
 
-1. `RESULTS.md`: per task, per arm, per repetition: pass/fail, the metric values, and the transcript path.
+1. `results/<harness>/REPORT.md` per harness (RUNBOOK §4), and `RESULTS.md` beside this file combining them: per task, per arm, per repetition: pass/fail, the metric values, and the transcript path.
 2. The migration ambiguity log.
 3. A decision record under `docs/2.0/decisions/` that classifies every v0.3.1 Hypothesis and Conformance item as **pass**, **fail**, **insufficient evidence**, or **revise clause §N**. A single successful run approves nothing.
 
