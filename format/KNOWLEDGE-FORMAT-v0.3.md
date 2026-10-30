@@ -1,22 +1,23 @@
 # Knowlery 2.0 — Knowledge Format Specification
 
-**Status:** v0.3 discussion draft · 2026-10-30
+**Status:** v0.3.1 discussion draft · 2026-10-30
+**Changes in v0.3.1** (after independent re-review of v0.3, commit `d5215d6`): source versions split into a change-detection digest and a recoverability reference (a git body blob is not a stored object, so v0.3's recovery claim was wrong); evidence scope defined per page role so Record history lines and unrelated claims do not look like evidence changes; claim fingerprints for `derived` references; §15 classification separated from approval status; migration versions marked as candidates; three failure tests added to §16; every §1 figure now printed by the evidence script.
 **Changes in v0.3** (after independent review of v0.2): block-id anchoring rules fixed; source versions redefined on git blobs with a body-only hash scope; `derived` source kind; Record freeze defined as logical immutability; `updated_by` demoted to provenance; link rules split for pages vs. Sources; statements reclassified as Constraint / Decision / Hypothesis / Conformance; experiment gains a 1.x control group and three new metrics; evidence script and snapshot added under `format/evidence/`.
-**Refines:** the Architecture Baseline ([docs/2.0/ARCHITECTURE.md](../docs/2.0/ARCHITECTURE.md), Layer L1). Supersedes [KNOWLEDGE-FORMAT-v0.2.md](./KNOWLEDGE-FORMAT-v0.2.md) (reviewed 2026-10-30; review findings incorporated) and the field-level proposals of [KNOWLEDGE-FORMAT-v0.md](./KNOWLEDGE-FORMAT-v0.md).
+**Refines:** the Architecture Baseline ([docs/2.0/ARCHITECTURE.md](../docs/2.0/ARCHITECTURE.md), Layer L1). Supersedes [KNOWLEDGE-FORMAT-v0.2.md](./KNOWLEDGE-FORMAT-v0.2.md) and the field-level proposals of [KNOWLEDGE-FORMAT-v0.md](./KNOWLEDGE-FORMAT-v0.md). A mirror of this file is kept as `design/knowledge-format.md` in the Knowlery 2.0 Claude Project workspace; the repository copy governs.
 **How to read:** Section 15 classifies each statement as **Constraint** (imposed by an upstream decision or a platform; not up for experiment), **Decision** (chosen under the constraints; revisited only if a constraint changes), **Hypothesis** (settled by the Section 16 experiment), or **Conformance** (a decided design whose correct behavior still has to be tested). Field names are final only after the Level 0 experiment.
 
 ---
 
 ## 1. What the evidence from 1.x says
 
-The Pilot vault (194 compiled pages, ~220 raw notes; `JayJiangCT/Knowlery-Pilot` at commit `cf9e378`) was analyzed before writing this document. The script and its output are in `format/evidence/pilot-stats.py` and `format/evidence/pilot-stats-cf9e378.txt`; classification rules are in the script. Four findings drive the design:
+The Pilot vault (194 compiled pages, ~220 raw notes; `JayJiangCT/Knowlery-Pilot` at commit `cf9e378`) was analyzed before writing this document. The script and its output are in `format/evidence/pilot-stats.py` and `format/evidence/pilot-stats-cf9e378.txt`; every figure below is printed under the script's `SECTION 1 FIGURES` heading, and classification rules are in the script. Four findings drive the design:
 
 | Finding | Evidence | Consequence for 2.0 |
 |---|---|---|
 | Trust is expressed by three overlapping page-level fields, none complete | `status` 192/194, `freshness_status` 97/194, `retrieval_priority` 91/194; `supersedes` 0, `contradictions` 4, `freshness_sidecar` defined but used 0 times | One status axis; status at claim level, not only page level |
-| Sources carry no version | 1,449 `sources` entries: 1,050 paths, 161 URLs, 225 free text, 13 wikilinks; 0 with a hash or date | Every source reference carries a version; free-text sources become typed attestations |
-| Query pages are the primary landing place of new knowledge, not a cache | 95/131 query files are dated snapshots; 71 cite other queries; 17 concept/entity pages cite queries as sources | Queries become immutable **Records**; the dependency chain is straightened: Source → Record → Knowledge |
-| Pages have no structural contract | Only `## Related` (101) and `## Short Answer` (38) recur; 48 pages carry appended `## Cook Refresh (date)` sections; median body 109 lines, max 593 | Fixed section order; `## Current` first; history in its own section; section-level writes become deterministic |
+| Sources carry no version | 1,449 `sources` entries: 1,050 paths, 161 URLs, 225 free text, 13 wikilinks. No vault path or URL entry carries a version; the only version pins are 10 free-text entries naming an external code commit | Every source reference carries a version; free-text sources become typed attestations |
+| Query pages are the primary landing place of new knowledge, not a cache | 95/131 query files are dated snapshots; 77 cite other queries in `sources`; 20 concept/entity pages cite queries in `sources` | Queries become immutable **Records**; the dependency chain is straightened: Source → Record → Knowledge |
+| Pages have no structural contract | Only `## Related` (156) and `## Short Answer` (39) recur across the four directories; 48 pages carry appended `## Cook Refresh (date)` sections; body after frontmatter: median 109 lines, max 563 | Fixed section order; `## Current` first; history in its own section; section-level writes become deterministic |
 
 Secondary findings: three wikilink forms for the same target (`[[zipline]]`, `[[entities/zipline|Zipline]]`, `[[concepts/x.md]]`); 134 unique dangling link targets across all Pilot Markdown (this count includes targets the Pilot deliberately excluded when sanitizing and targets missing from the source vault itself; the Pilot's own `pilot/AUDIT.md` separates them as 79 and 171 on a per-link basis); conventions split across `SCHEMA.md`, `KNOWLEDGE.md`, `AGENTS.md`, and a skill, and they disagree on legal `status` values; `domain` carries no information (185 of 194 are `delivery`).
 
@@ -42,7 +43,7 @@ Secondary findings: three wikilink forms for the same target (`[[zipline]]`, `[[
 | **Attestation** | A source that is a person's statement rather than a document ("Rob confirmed on Slack, 2026-07-28"). |
 | **Actor** | Who did something: `human:<id>`, `<agent>/<model>`, or `process:<id>` (OKF convention). |
 
-The dependency rule: **Knowledge pages cite Records and Sources as evidence. Records cite Sources and other Records.** A Knowledge page may cite a claim on another Knowledge page with source kind `derived` (Section 8); that is a legitimate reference, but the autonomy policy counts it as zero independent evidence, because a synthesis is not a new observation. `related` and plain wikilinks express relationships, not evidence.
+The dependency rule: **Knowledge pages cite Records and Sources as evidence. Records cite Sources and other Records.** A Knowledge page may cite a claim on another Knowledge page with source kind `derived` (Section 8). Two guarantees come with it: (1) a `derived` reference is a reasoning dependency, never a new independent observation; when evidence strength matters, the policy follows the chain down to Sources and Records and de-duplicates them; (2) the reference pins the specific claim's fingerprint, so a change to that claim, and only that claim, marks the dependent claim for review. `related` and plain wikilinks express relationships, not evidence.
 
 ## 4. Layout
 
@@ -142,11 +143,11 @@ Optional prose, tables, or data that support the claims above. May be long.
 - <unresolved question> about [[#^c6]] (src: s4) ^q1
 
 ## Sources
-- s1 · [[Wonder/…/Create Quote]] · git:<40 hex> · source
+- s1 · [[Wonder/…/Create Quote]] · sha256:<digest> · source · blob:<40 hex>
 - s2 · https://wonder.atlassian.net/… · fetched:2026-07-16 · source · no-snapshot
-- s3 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · git:<40 hex> · record
+- s3 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · sha256:<digest> · record · blob:<40 hex>
 - s4 · human:rob-knudson · stated:2026-07-28 · attestation · Confirmed package never returns after Dropbox lock
-- s5 · [[dropbox-loading#^c2]] · git:<40 hex> · derived
+- s5 · [[dropbox-loading#^c2]] · sha256:<claim fingerprint> · derived
 
 ## History
 - <original claim text> · superseded 2026-09-03 by [[#^c5]] · <reason> · src: s7 · by <actor> ^c2
@@ -178,8 +179,16 @@ Three to five sentences: what was found or decided.
 ## Detail
 Free structure.
 
+## Sources
+(as in 7.1)
+
+## History
+- 2026-09-10 · revised by human:jay · <why> (only if the frozen part was ever changed)
+
 ## Related
 ```
+
+The **evidence scope** of a Record is everything from the end of the frontmatter up to the first of `## History` or `## Related`. Only that part is versioned (Section 8); appending a History line or editing Related never changes the Record's version.
 
 A Record's body is frozen in the logical sense: once the Record leaves `draft`, its body is never rewritten without a trace. Files remain editable by their owner; the Format defines what the edit means.
 
@@ -209,18 +218,29 @@ Sources are listed in the body section `## Sources`, one line per source, five f
 |---|---|
 | `id` | Short stable key (`s1`, `s2`, …) used by `(src: …)` on claims. Never reused within a page |
 | `resource` | A wikilink for anything in the vault (so Obsidian backlinks and `obsidian backlinks` find every page citing a source), a URL for external pages, or an actor (`human:<id>`) for attestations |
-| `version` | Vault files: the git blob hash of the file's **body** (everything after the frontmatter), `git:<40 hex>`; display may truncate, the stored value never does. URLs: `fetched:<date>`, which is an observation time, not a content version. Attestations: `stated:<date>`. A value of `unverified` means the citing page could not establish what version it relied on |
+| `version` | Change-detection digest: `sha256:<hex>` over the resource's **evidence scope** (table below), computed by the citing Agent at citation time and recomputable anywhere with no git. URLs: `fetched:<date>`, an observation time, not a content version. Attestations: `stated:<date>`. `unverified` means the citing page could not establish what it relied on |
 | `kind` | `source` \| `record` \| `attestation` \| `derived` (a claim on another Knowledge page; resource is `[[page#^cN]]`) |
-| note | Optional; required for attestations (what was said) and for URLs without a stored snapshot (`no-snapshot`) |
+| `blob:<40 hex>` | Optional recoverability reference: the git blob of the **whole file** as committed, i.e. an object that actually exists in the repository and that `git cat-file -p` returns. Present only when the cited version was committed. A digest alone recovers nothing |
+| note | Optional; required for attestations (what was said), for URLs without a stored snapshot (`no-snapshot`), and for migrated entries (`candidate`, Section 17) |
+
+Evidence scope, by resource:
+
+| Resource | Digest covers |
+|---|---|
+| Source (user note) | Body after the frontmatter; the whole file if it has none |
+| Record | Frontmatter end → first of `## History` / `## Related` (Section 7.2) |
+| Claim (`derived`) | The claim's fingerprint: the list-item text with `(src: …)`, `#disputed` and the `^id` removed and whitespace collapsed. One claim, not the page |
+
+Digests are computed over the scope after normalizing line endings to `\n` and stripping trailing whitespace; the exact procedure is in `CONVENTIONS.md`.
 
 Two guarantees, kept apart:
 
-| Guarantee | What it means | Provided when |
+| Guarantee | What it means | Provided by |
 |---|---|---|
-| **Change detection** | "Is the source still what this page cited?" | Always: compare the current body hash with `version` |
-| **Historical recoverability** | "Show me what this page actually read" | Only when the cited version is in git history (vault files that were committed) or stored as a Record (a snapshot of an external page). `fetched:` and `unverified` versions give no recoverability and must not be presented as if they did |
+| **Change detection** | "Is the evidence still what this page cited?" | `version`, always, in any environment |
+| **Historical recoverability** | "Show me what this page actually read" | `blob:` when present (the Agent strips the frontmatter from the recovered file itself); a Record holding a snapshot for external pages. `fetched:`, `unverified`, and a `version` with no `blob:` give no recoverability and are never presented as if they did |
 
-Why the body and not the whole file: frontmatter changes (`followed_by`, `verified`, a tag) must not look like evidence changes. Why git blobs and not a free hash: the same hash is the key `git cat-file` needs to return the exact text, so recoverability costs nothing extra in a git-tracked vault.
+Why two values: git stores only the blobs it committed, which are whole files; a digest over part of a file is not a git object and cannot be fetched (verified 2026-10-30). The digest therefore carries detection and the blob carries recovery. Why the scope is narrower than the file: frontmatter changes (`followed_by`, `verified`, a tag), appended History lines on a Record, and edits to unrelated claims on a Knowledge page must not look like changes to the evidence a page relied on; a wide scope would turn every bookkeeping edit into a false "source changed" signal and defeat targeted updates.
 
 How the Evolve flow uses it: compute the body hash of a changed Source; with Obsidian running, `backlinks` lists every citing page in one call; headless, grep the path. Pages whose `version` differs are candidates for review. In-place edits of Sources are therefore safe: older Records keep pointing at older blobs.
 
@@ -305,7 +325,7 @@ Indexes, search caches, backlink maps, OKF exports, and freshness sidecars live 
 
 ## 15. Classification of statements
 
-Mapping to the baseline's vocabulary: Constraint ≈ Approved; Decision and Hypothesis ≈ Proposal; Conformance is new and was previously hidden inside Proposal.
+These four classes say how a statement is handled: a Constraint is satisfied, a Decision is applied, a Hypothesis is tested, a Conformance item is verified. They are not approval states. Approval (Baseline / Proposed / Accepted) is tracked in `docs/2.0/DECISIONS.md`, and any class can sit at any approval level: a Decision below is a draft choice until recorded as Accepted there, and a Decision is reopened when a constraint changes or when an implementation assumption behind it is shown false, as happened with v0.3's version scheme. The Open questions list is a to-do, not a fifth class.
 
 **Constraints** (not up for experiment)
 - Format-first; Markdown + minimal metadata; no database; relationships as wikilinks. (brief)
@@ -315,9 +335,9 @@ Mapping to the baseline's vocabulary: Constraint ≈ Approved; Decision and Hypo
 - Frontmatter is flat. (Obsidian Properties / Bases)
 - Only Obsidian-native syntax. (Obsidian as first-class environment)
 
-**Decisions** (chosen under the constraints; revisited only if a constraint changes)
+**Decisions** (chosen under the constraints)
 - Record as a logically immutable page role replacing `query`.
-- `## Sources` in the body; versions on git body blobs; `derived` source kind.
+- `## Sources` in the body; `version` digest over a per-role evidence scope plus optional `blob:` for recovery; `derived` source kind with claim fingerprints.
 - Claim-level status by position and block id; anchor rules of Section 7.1.
 - One `status` axis; removal of `freshness_status`, `retrieval_priority`, `domain`.
 - Progressive-disclosure tiers; `## Current` first.
@@ -335,7 +355,10 @@ Mapping to the baseline's vocabulary: Constraint ≈ Approved; Decision and Hypo
 - Dangling `(src:)` references and evidence/claim mismatches are detectable.
 - Change detection works and non-recoverable versions are reported as such, never silently.
 - Wikilinks resolve identically with Obsidian and headless.
-- Block-id anchors survive the move from `## Current` to `## History`.
+- Block-id anchors survive the move from `## Current` to `## History`; `[[page#^cN]]` resolves to the same claim before and after, with Obsidian and headless.
+- A frontmatter-only change, an appended Record History line, or an edit to an unrelated claim does not register as an evidence change.
+- Recovery through `blob:` returns the cited text; a `version` without `blob:` is reported as not recoverable, never as recovered.
+- A change to a claim cited as `derived` marks exactly the dependent claims, and the root-evidence chain de-duplicates.
 
 **Open questions** (need a decision, not an experiment)
 1. Entity attribute keys: leave free or list the allowed ones in `CONVENTIONS.md`?
@@ -358,6 +381,9 @@ Tasks (each run in both arms):
 | Two conflicting sources | `#disputed` rather than silent resolution |
 | Owner edited a published Record | Logical immutability, `revised` line |
 | Cited version not recoverable | Honest `unverified` reporting |
+| Frontmatter changed, evidence scope unchanged | No false "source changed" |
+| Record history exists in git, body blob not stored separately | Recovery goes through the whole-file `blob:`; a bare digest is not claimed as recovered |
+| Unrelated claim edited on a page cited as `derived` | Dependent claims are not flagged |
 
 Metrics, beyond pass rate:
 
@@ -390,7 +416,7 @@ Output: a decision record under `design/decisions/` resolving the Hypotheses and
 | `domain` | dropped |
 | `references` | `related` |
 | `contradictions` | claim marked `#disputed`, question in `## Open` |
-| `sources: [path]` | `## Sources` line `sN · [[path]] · git:<blob of that file's body at the last commit on or before the page's `updated` date> · source`. Never the current hash: that would present today's content as what the page relied on. If the vault has no git history for the file, `unverified`. Frontmatter key dropped |
+| `sources: [path]` | `## Sources` line `sN · [[path]] · sha256:<digest of that blob's evidence scope> · source · blob:<whole-file blob at the last commit on or before the page's `updated` date> · candidate`. The blob is the best available candidate for what the page read, not a read log, so the note says `candidate` until a human or a later cook confirms it. Never the current hash. No git history for the file → `unverified`. Frontmatter key dropped |
 | `sources: [free text]` | `## Sources` line `sN · human:<id> · stated:<date> · attestation · <text>` |
 | `sources: [url]` | `## Sources` line `sN · <url> · fetched:<page updated date> · source · no-snapshot` |
 | `## Cook Refresh (D)` | lines in `## History` |
@@ -429,8 +455,8 @@ Zipline is the drone operator for Wonder's 1P drone delivery pilot.
 - Is `IN_PROGRESS` authoritative for custody ([[#^c6]]) or only in-transit telemetry? (src: s2) ^q1
 
 ## Sources
-- s1 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Quote]] · git:9f3a1c0e5b2d7a4f8c1e6b3d9a2f5c8e1b4d7a0c · source
-- s2 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · git:71be02d4a9c3e6f1b8d5a2c7e0f3b6d9a1c4e7f2 · record
+- s1 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Quote]] · sha256:4e1b…c9d0 · source · blob:9f3a1c0e5b2d7a4f8c1e6b3d9a2f5c8e1b4d7a0c
+- s2 · [[zipline-mvp-partner-confirmed-contract-2026-07-30]] · sha256:a77f…02e3 · record · blob:71be02d4a9c3e6f1b8d5a2c7e0f3b6d9a1c4e7f2
 - s3 · human:rob-knudson · stated:2026-07-28 · attestation · Package never returns after Dropbox lock (Slack)
 
 ## History

@@ -1,4 +1,5 @@
 # Usage: python3 -I pilot-stats.py <path-to-Knowlery-Pilot-checkout>
+# Every number quoted in KNOWLEDGE-FORMAT §1 is printed under the heading "SECTION 1 FIGURES".
 # Input for the committed snapshot: JayJiangCT/Knowlery-Pilot @ cf9e378
 # Classification of `sources` entries: wikilink = starts with "[["; url = starts with "http";
 # path = contains "/"; other = everything else (free-text attestations, BigQuery table ids, bare names).
@@ -89,3 +90,30 @@ print("\ndangling link targets:", len(dang), "top:", dang.most_common(10))
 for key in ["superseded_by","supersedes","related","freshness_sidecar","freshness_reviewed","aliases"]:
     n=sum(1 for _,_,fm,_ in pages if fm.get(key))
     print(f"{key} present(non-empty): {n}")
+
+
+# ---------------- SECTION 1 FIGURES (every number cited in the spec) ----------------
+print("\n==== SECTION 1 FIGURES ====")
+print("compiled pages:", len(pages), dict(collections.Counter(d for d,_,_,_ in pages)))
+for key in ["status","freshness_status","retrieval_priority","supersedes","contradictions","freshness_sidecar"]:
+    print(f"pages with non-empty {key}:", sum(1 for _,_,fm,_ in pages if fm.get(key)))
+tot = sum(src_forms.values())
+print("sources entries total:", tot, "=", " + ".join(f"{v} {k}" for k,v in sorted(src_forms.items(), key=lambda x:-x[1])))
+ver = sum(1 for d,f,fm,b in pages for x in (fm.get("sources") or []) if re.search(r"@[0-9a-f]{7,40}\b|sha256:|blob:", str(x)))
+verp = sum(1 for d,f,fm,b in pages for x in (fm.get("sources") or []) if ("/" in str(x) or str(x).startswith("http")) and re.search(r"@[0-9a-f]{7,40}\b|sha256:|blob:", str(x)))
+print("sources entries carrying a commit/content hash:", ver, "| of which path/URL entries:", verp)
+qfiles=[f for d,f,_,_ in pages if d=="queries"]
+print("query files with a date in the filename:", sum(1 for f in qfiles if re.search(r"\d{4}-\d{2}-\d{2}", f)), "of", len(qfiles))
+def cites_queries(fm): return any(str(x).startswith("queries/") for x in (fm.get("sources") or []))
+print("query pages citing other queries in sources:", sum(1 for d,f,fm,b in pages if d=="queries" and cites_queries(fm)))
+print("concept/entity pages citing queries in sources:", sum(1 for d,f,fm,b in pages if d in("concepts","entities") and cites_queries(fm)))
+allh = collections.Counter()
+for (d,h),c in hdrs.items(): allh[h]+=c
+print("header '## Related' across all four dirs:", allh.get("Related",0), "| '## Short Answer':", allh.get("Short Answer",0))
+print("pages with a '## Cook Refresh (date)' section:", sum(1 for d,f,fm,b in pages if re.search(r"^## Cook Refresh \(", b, re.M)))
+bl=[s_ for s_,_,_ in sizes]
+print("body lines (after frontmatter): median", statistics.median(bl), "max", max(bl), "min", min(bl))
+print("unique dangling wikilink targets (compiled-page bodies -> any .md basename in checkout):", len(dang))
+print("  scope note: includes targets the Pilot excluded when sanitizing AND targets missing in the source vault; basename match only, aliases not resolved")
+dom = collections.Counter(str(fm.get("domain")) for _,_,fm,_ in pages)
+print("domain values:", dict(dom))

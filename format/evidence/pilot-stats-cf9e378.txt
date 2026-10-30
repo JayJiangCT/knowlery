@@ -54,3 +54,23 @@ related present(non-empty): 0
 freshness_sidecar present(non-empty): 0
 freshness_reviewed present(non-empty): 185
 aliases present(non-empty): 105
+
+==== SECTION 1 FIGURES ====
+compiled pages: 194 {'entities': 14, 'concepts': 46, 'comparisons': 3, 'queries': 131}
+pages with non-empty status: 192
+pages with non-empty freshness_status: 97
+pages with non-empty retrieval_priority: 91
+pages with non-empty supersedes: 0
+pages with non-empty contradictions: 4
+pages with non-empty freshness_sidecar: 0
+sources entries total: 1449 = 1050 path + 225 other + 161 url + 13 wikilink
+sources entries carrying a commit/content hash: 10 | of which path/URL entries: 7
+query files with a date in the filename: 95 of 131
+query pages citing other queries in sources: 77
+concept/entity pages citing queries in sources: 20
+header '## Related' across all four dirs: 156 | '## Short Answer': 39
+pages with a '## Cook Refresh (date)' section: 48
+body lines (after frontmatter): median 109.0 max 563 min 25
+unique dangling wikilink targets (compiled-page bodies -> any .md basename in checkout): 134
+  scope note: includes targets the Pilot excluded when sanitizing AND targets missing in the source vault; basename match only, aliases not resolved
+domain values: {'delivery': 185, 'data': 9}
