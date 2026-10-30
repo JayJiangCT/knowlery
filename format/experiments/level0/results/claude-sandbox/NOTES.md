@@ -2,6 +2,8 @@
 
 Harness: this Claude session's sub-agents (general-purpose), model claude-fable-5-1, file tools only, no network, one fresh agent per run, working directory = the built vault. Token figures are the harness's `subagent_tokens` (total, includes the run prompt; instruction-file tokens not separable here).
 
+All runs in this directory (T01–T12, run 1) are pre-freeze calibration data; see the banner in `REPORT.md`.
+
 ## T01 run 1 (smoke test, 2026-10-30) — pre-freeze, not scored
 
 Ran before the Record-scope fix and before the Control overlay was made headless (the Pilot banner still suspended Control's page-writing rules). Its Q1 outcome is also the predicted effect of the two instruction files (CONVENTIONS §3 "Stop at tier 3" vs Control's "Quote key passages"), not yet evidence about the Format. Kept as a debugging record; rerun on `level0-frozen-1`.

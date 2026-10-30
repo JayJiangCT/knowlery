@@ -1,0 +1,54 @@
+diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
+index 8154162..4362618 100644
+--- a/concepts/drone-delivery-integration-strategy.md
++++ b/concepts/drone-delivery-integration-strategy.md
+@@ -8,8 +8,8 @@ tags:
+   - drone-delivery
+   - grubhub
+ status: disputed
+-updated: 2026-10-26
+-updated_by: process:cook
++updated: 2026-10-30
++updated_by: claude-code/fable-5.1
+ verified: 2026-07-17
+ verified_by: process:cook
+ aliases:
+@@ -52,7 +52,7 @@ Eligibility and package data (2026-08-20 → 2026-10-26)
+ - Delivery-owned Eligibility calls Zipline Pack and treats `total_deliveries == 1` as the proposed affirmative fit result; Zipline does not mandate Pack, Wonder is evaluating it as the eligibility oracle so it need not maintain its own fit algorithm (src: s13, s10) ^c13
+ - The Robotic Arm is out of MVP scope; manual scale capture is the active measurement path (src: s13) ^c14
+ - The measurement spreadsheet's `Primary Container` field is reference-only; its green weight/dimension cells are direct measurements usable as initial criteria but not a maintained current-pack source of truth (src: s14) ^c15
+-- The current single-Zip provider limit is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); implementation stays canonical in grams and millimetres (src: s15, s16) ^c16
++- The current single-Zip provider limit is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); implementation stays canonical in grams and millimetres (src: s15, s16) #disputed ^c16
+ - The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
+ 
+ Partner contract (2026-07-28 → 2026-08-03)
+@@ -101,6 +101,7 @@ Ops / Packaging measures top-selling packed items
+ - Is live tracking P1 defensible given it is a stated customer use case, and is custody-aware cancellation required for safe recovery? Bears on [[#^c23]] (src: s22) ^q5
+ - Remaining launch gates: Intent timing, mapped delivery-site semantics, webhook reason/state mapping, station occupancy, loading-code rotation and post-custody recovery (src: s22, s10) ^q6
+ - Which Zipline terminology and limits are current integration truth where P2 fact-sheet language, site-visit assumptions and partner API documentation differ? Bears on [[#^c4]] ^q7
++- Is the current single-Zip width 254 mm or 252 mm? [[#^c16]] cites s15 and s16 for 254 mm, but s15 (the week-of-2026-09-07 slide Source, digest unchanged) states the Envelope card reads `338 × 252 × 205 mm`, calls the 3D label `10 in / 254 mm` a rounded-imperial pairing, and says not to treat 254 mm as a superseding width; s16 and the Records [[zipline-mvp-partner-confirmed-contract-2026-07-30]], [[1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16]] and [[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]] read the same slide as revising width to 254 mm; later Sources (the 2026-09-17 Drone Eligibility Check MVP Plan and the 2026-10-26 Cookbook backfill review) still use 252 mm. Needs a human or Zipline to confirm which value is the provider limit (src: s15, s16, s33, s34) ^q8
+ 
+ ## Sources
+ - s1 · [[sp13-delivery-bi-weekly-outcomes-2026-06-10]] · sha256:1905ccc757e882176fa324b4b4a44d9e3e41f060b7e02d3ba4d5eb4751f49362 · record · blob:eb2ea0b3076248867b8440f7e08f5c6e634bc08f
+@@ -135,8 +136,11 @@ Ops / Packaging measures top-selling packed items
+ - s30 · [[region-2-latest-expansion-plan-2026-09-20]] · sha256:22426b2c03bfe6a787fe8b855653f5c3c915a685f9352e4522fb5265b2cefa30 · record · blob:dc4b345e50c41757eaf16de85acfac58d985424d
+ - s31 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery High-Level System Alignment - MVP]] · sha256:ffcc8f90f4ce03df5f1f70ad5e0bd5d501d267429820b75aa8134699c35b4af6 · source · blob:e0c6f87b6f6c6e377541e028f08841c42dd21801
+ - s32 · [[drone-delivery-overview-slides-readout-2026-06-17]] · sha256:3aeb5f64fdcdc6593267d71f3c5e0eda40e4263734cb6c3d6f8126250496e375 · record · blob:b9f62eca404961f1b72c6586d1a633b120897dd8
++- s33 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17]] · sha256:7400c51df6cd2b4bf3236e89a94628c775c379caa8f9f5f95b131b90220bf741 · source · blob:fc2882e4b5f066a2a2cd98ba5bec93bed4c36ca9 · uses dropbox envelope 338 × 252 × 205 mm after the week-of-2026-09-07 slide
++- s34 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26]] · sha256:ab046473f057bce22a5c86ef5ae868d3aa92fae36c627c9b4fa9c00bfc7be9a3 · source · blob:3e4b6c2d8db41598d82478bcfdc5f22b3e59a3e5 · compares footprints against a 252 mm envelope axis
+ 
+ ## History
++- 2026-10-30 · [[#^c16]] marked disputed; [[#^q8]] opened · cited Source s15 states the Envelope card reads 338 × 252 × 205 mm and rejects 254 mm as a superseding width, contradicting s16 and the Records; later Sources s33, s34 still use 252 mm · src: s15, s16, s33, s34 · by claude-code/fable-5.1
+ - 2026-10-26 · [[#^c11]] [[#^c12]] added; Cookbook/Delivery Catalog sync boundary · src: s11 · by process:cook
+ - 2026-10-19 · [[#^c24]] added and marked disputed; [[#^q1]] opened · src: s23, s24 · by process:cook
+ - Region 2 launch reference: 2027-01-11 Friends & Family and 2027-01-14 Grand Opening per the 2026-09-20 snapshot (src: s30) · superseded 2026-10-19 by [[#^c24]] · tracker Rob shared on 2026-10-19 shows different dates; difference unconfirmed · src: s23 · by process:cook ^c26
+diff --git a/log.md b/log.md
+index 9def2c5..7b81255 100644
+--- a/log.md
++++ b/log.md
+@@ -1,4 +1,5 @@
+ # log
+ 
+ ## 2026-10-30
++- 04:58 · claude-code/fable-5.1 · concepts/drone-delivery-integration-strategy · marked ^c16 (single-Zip width 254 mm) #disputed, opened ^q8, appended s33, s34 and a History line: cited slide Source states Envelope card 338 × 252 × 205 mm and contradicts the 254 mm reading
+ - 00:00 · process:build · vault · Level 0 Test-arm baseline built from Pilot cf9e378 + v0.3.1 overlay

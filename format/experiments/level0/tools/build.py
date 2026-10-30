@@ -58,6 +58,26 @@ Every claim must be backed by vault notes.
 
 """
 OBSIDIAN_CLI_LINES = ["- Use Obsidian CLI for all operations\n", "- Use Obsidian CLI for reading: `obsidian read file=\"...\"`\n"]
+# The skills are removed, so rules that send the Agent to them are rewritten for file tools.
+CONTROL_MD_WRITING = """# Obsidian Markdown Writing
+
+When creating or editing a note, write Obsidian-flavored Markdown with your file tools:
+
+- Correct wikilink syntax (`[[note]]` or `[[folder/note]]`)
+- Proper YAML frontmatter structure
+- Valid callout blocks and embeds
+- Consistent heading hierarchy
+- Proper tag placement and formatting
+
+"""
+SKILL_REFS = [("These notes are raw material for knowledge compilation via /cook.", "These notes are raw material for knowledge compilation."),
+              ("See the /cook skill specification for the complete frontmatter schema. Key required fields:", "Key required fields:")]
+
+def strip_skill_refs(s):
+    s = re.sub(r"^# Obsidian Markdown Writing\n.*?(?=^# |\Z)", CONTROL_MD_WRITING, s, flags=re.S | re.M)
+    for old, new in SKILL_REFS: s = s.replace(old, new)
+    for l in OBSIDIAN_CLI_LINES: s = s.replace(l, "")
+    return s
 
 def headless_instructions(s):
     assert s.startswith("> [!warning] PILOT"), "Pilot banner not found"
@@ -68,8 +88,7 @@ def headless_instructions(s):
     assert n == 1, "Knowledge Retrieval section not found"
     s, n = re.subn(r"^## Available Skills\n.*?(?=^# |^@)", "", s, flags=re.S | re.M)
     assert n == 1, "Available Skills section not found"
-    for l in OBSIDIAN_CLI_LINES: s = s.replace(l, "")
-    return CONTROL_HEADER + s
+    return CONTROL_HEADER + strip_skill_refs(s)
 CONTROL_DERIVED_NOTE = """
 
 ## Custody and fallback note (2026-10-30)
@@ -85,9 +104,10 @@ def overlay_control(vault):
     for rel in ["AGENTS.md", os.path.join(".claude", "CLAUDE.md")]:
         p = os.path.join(vault, rel); s = open(p, encoding="utf-8").read()
         open(p, "w", encoding="utf-8").write(headless_instructions(s))
-    for f in os.listdir(os.path.join(vault, ".agents", "rules")):
-        p = os.path.join(vault, ".agents", "rules", f); s = open(p, encoding="utf-8").read()
-        for l in OBSIDIAN_CLI_LINES: s = s.replace(l, "")
+    rules = [os.path.join(".agents", "rules", f) for f in os.listdir(os.path.join(vault, ".agents", "rules"))]
+    for rel in rules + ["SCHEMA.md"]:
+        p = os.path.join(vault, rel); s = strip_skill_refs(open(p, encoding="utf-8").read())
+        assert not re.search(r"`obsidian-markdown` skill|/cook|vault-conventions", s), f"skill reference left in {rel}"
         open(p, "w", encoding="utf-8").write(s)
     for d in [os.path.join(".claude", "skills"), os.path.join(".agents", "skills")]:
         q = os.path.join(vault, d)

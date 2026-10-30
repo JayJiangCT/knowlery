@@ -2,12 +2,23 @@
 
 This kit is deterministic: anyone with the Pilot checkout at `cf9e378` and this directory builds the same working copies and runs the same prompts. Results from different harnesses are comparable only if the steps below are followed exactly.
 
-## 0. Prerequisites
+## 0. Prerequisites — two repositories
+
+The kit and the data live in **different repositories**; do not look for one inside the other.
+
+| What | Repository | Ref |
+|---|---|---|
+| This kit (`format/experiments/level0/`) | `https://github.com/JayJiangCT/knowlery` | tag `level0-frozen-1` (on `develop/2.0`) |
+| The Pilot vault (data only; has no kit) | `https://github.com/JayJiangCT/Knowlery-Pilot` | commit `cf9e378` on `main` |
+
+```
+git clone https://github.com/JayJiangCT/knowlery && git -C knowlery checkout level0-frozen-1
+git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot checkout cf9e378
+```
 
 - `git`, Python 3.8+ (stdlib only; `pyyaml` only for `tools/validate.py`).
-- The Pilot checkout: `git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot checkout cf9e378`.
 - A harness that can run an Agent with **file tools only** (read, search, edit, shell for `sed`/`sha256sum`/`git` read commands) and **no network**. Record its name, model id, and any system prompt it injects.
-- The kit at tag `level0-frozen-1` (`git checkout level0-frozen-1`). Put the tag in the `kit_tag` column of every row.
+- Put the kit tag (`level0-frozen-1`) in the `kit_tag` column of every row.
 - **An isolated harness config.** A local harness otherwise loads the operator's own instructions, skills, plugins, memory and MCP servers, which neither the other harnesses nor the other arm see. Checked on 2026-10-30 (Claude Code 2.1.314, codex-cli 0.144.1):
   - Claude Code: `--setting-sources project,local` is **not enough**; the user-level `~/.claude/CLAUDE.md` still loads. `--bare` and `--safe-mode` go too far: they also drop the vault's own `.claude/CLAUDE.md`. Use a fresh config home instead, log in to it once, and run every task from it:
     ```
@@ -28,9 +39,11 @@ This kit is deterministic: anyone with the Pilot checkout at `cf9e378` and this 
 ## 1. Build the working copies
 
 ```
-cd format/experiments/level0
+cd knowlery/format/experiments/level0
 python3 tools/build.py /path/to/Knowlery-Pilot --out ./work
 ```
+
+Success looks like: `git -C work/test/T01 log --oneline` shows `baseline` and `pin source versions` commits on top of `cf9e378`; `grep -c "@pin" work/test/T01/concepts/*.md` is 0 everywhere; `work/control/T01/AGENTS.md` starts with the CONTROL ARM note.
 
 Produces `work/<arm>/<task>/` for `control` and `test` × `T01..T12`. Each is an independent git repo: baseline commit(s) + the task's fixture commit. Rebuild between repetitions (`rm -rf work/<arm>/<task>` then rerun with `--tasks TNN --arms <arm>`); never reuse a vault an Agent has already edited.
 
@@ -39,7 +52,7 @@ What the arms contain:
 | | Control | Test |
 |---|---|---|
 | Pages | Pilot as is | Pilot with the 14 scoped pages replaced by `test/` (queries → `records/`), `tools/digest.py` added |
-| Instructions | Pilot `AGENTS.md` / `.claude/CLAUDE.md` made headless: read-only banner replaced by an experiment header (Agent-Maintained Pages rules in force, user notes read-only), Obsidian CLI rules and the Skills section removed | `CONVENTIONS.md`; `AGENTS.md` / `.claude/CLAUDE.md` point to it |
+| Instructions | Pilot `AGENTS.md` / `.claude/CLAUDE.md` made headless: read-only banner replaced by an experiment header (Agent-Maintained Pages rules in force, user notes read-only), Obsidian CLI rules and the Skills section removed, rules that point at removed skills rewritten for file tools | `CONVENTIONS.md`; `AGENTS.md` / `.claude/CLAUDE.md` point to it |
 | Removed | `.claude/skills`, `.agents/skills`, `.knowlery/bin`; Activity Ledger off | `.claude`, `.agents`, `.knowlery/bin`, 1.x `AGENTS.md`/`KNOWLEDGE.md`/`SCHEMA.md`/`INDEX.base` |
 | Extra | the T10/T11 "custody → recovery" sentence appended to the Dispatch Portal concept page | the same fact as claim ^c17 with a `derived` source |
 

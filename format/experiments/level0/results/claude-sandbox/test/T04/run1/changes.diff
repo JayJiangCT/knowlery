@@ -1,0 +1,136 @@
+diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
+index 8154162..93a61e3 100644
+--- a/concepts/drone-delivery-integration-strategy.md
++++ b/concepts/drone-delivery-integration-strategy.md
+@@ -1,15 +1,15 @@
+ ---
+ type: concept
+ title: Drone Delivery Integration Strategy
+-description: Current architecture, ownership, provider-contract and launch position for Wonder 1P drone delivery with Zipline, as of 2026-10-26; historical DaaS/Dexa frames are in History; commercial terms are not covered.
++description: Current architecture, ownership, provider-contract and launch position for Wonder 1P drone delivery with Zipline, as of 2026-10-30; historical DaaS/Dexa frames are in History; commercial terms are not covered.
+ tags:
+   - architecture
+   - delivery-service
+   - drone-delivery
+   - grubhub
+ status: disputed
+-updated: 2026-10-26
+-updated_by: process:cook
++updated: 2026-10-30
++updated_by: claude-code/fable-5.1
+ verified: 2026-07-17
+ verified_by: process:cook
+ aliases:
+@@ -53,7 +53,7 @@ Eligibility and package data (2026-08-20 → 2026-10-26)
+ - The Robotic Arm is out of MVP scope; manual scale capture is the active measurement path (src: s13) ^c14
+ - The measurement spreadsheet's `Primary Container` field is reference-only; its green weight/dimension cells are direct measurements usable as initial criteria but not a maintained current-pack source of truth (src: s14) ^c15
+ - The current single-Zip provider limit is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); implementation stays canonical in grams and millimetres (src: s15, s16) ^c16
+-- The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
++- The Wonder-side outer package that must fit that envelope is the Medium bag, confirmed as the MVP outer package after IKC Ops completed sample testing in which the Medium bag and guest-packaging samples fit the production Pod; no further bag testing is planned before launch, and the confirmation does not pin which Medium specification (existing or PRD v26 new 12 × 8.5 × 13 in) was tested (src: s33, s34, s18) ^c36
+ 
+ Partner contract (2026-07-28 → 2026-08-03)
+ - A direct-order Quote requires reliable mass, so package-data completeness is a hard eligibility dependency; Pack is not a mandatory single-Zip proof for the MVP (src: s10) ^c18
+@@ -101,6 +101,7 @@ Ops / Packaging measures top-selling packed items
+ - Is live tracking P1 defensible given it is a stated customer use case, and is custody-aware cancellation required for safe recovery? Bears on [[#^c23]] (src: s22) ^q5
+ - Remaining launch gates: Intent timing, mapped delivery-site semantics, webhook reason/state mapping, station occupancy, loading-code rotation and post-custody recovery (src: s22, s10) ^q6
+ - Which Zipline terminology and limits are current integration truth where P2 fact-sheet language, site-visit assumptions and partner API documentation differ? Bears on [[#^c4]] ^q7
++- Which Medium specification did IKC Ops confirm in the completed Pod-fit test, and is it the same bag Zipline validated per PRD v26 (new Medium 12 × 8.5 × 13 in)? The 2026-10-28 follow-up says only "the Medium bag". Bears on [[#^c36]] (src: s33, s18) ^q8
+ 
+ ## Sources
+ - s1 · [[sp13-delivery-bi-weekly-outcomes-2026-06-10]] · sha256:1905ccc757e882176fa324b4b4a44d9e3e41f060b7e02d3ba4d5eb4751f49362 · record · blob:eb2ea0b3076248867b8440f7e08f5c6e634bc08f
+@@ -135,8 +136,12 @@ Ops / Packaging measures top-selling packed items
+ - s30 · [[region-2-latest-expansion-plan-2026-09-20]] · sha256:22426b2c03bfe6a787fe8b855653f5c3c915a685f9352e4522fb5265b2cefa30 · record · blob:dc4b345e50c41757eaf16de85acfac58d985424d
+ - s31 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery High-Level System Alignment - MVP]] · sha256:ffcc8f90f4ce03df5f1f70ad5e0bd5d501d267429820b75aa8134699c35b4af6 · source · blob:e0c6f87b6f6c6e377541e028f08841c42dd21801
+ - s32 · [[drone-delivery-overview-slides-readout-2026-06-17]] · sha256:3aeb5f64fdcdc6593267d71f3c5e0eda40e4263734cb6c3d6f8126250496e375 · record · blob:b9f62eca404961f1b72c6586d1a633b120897dd8
++- s33 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12]] · sha256:820f7c42284566ac0ea714714e47523ae4348ddf8ef7592b5d0ac5a7a82df431 · source · blob:f427b7f0522370fcd5d7fc071b1c1b53efc0e10a · new version with Update (2026-10-28): sample testing completed
++- s34 · [[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]] · sha256:95187b9537fde2f6bfa4ac78d64d0513f25d891322bef45ff417839508206e5a · record · uncommitted at citation time, no blob
+ 
+ ## History
++- 2026-10-30 · [[#^c36]] added, [[#^q8]] opened · src: s33, s34 · by claude-code/fable-5.1
++- The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) · superseded 2026-10-30 by [[#^c36]] · owner's 2026-10-28 update to the Slack note: IKC Ops completed sample testing, Medium bag confirmed, no further bag testing before launch · src: s33, s34 · by claude-code/fable-5.1 ^c17
+ - 2026-10-26 · [[#^c11]] [[#^c12]] added; Cookbook/Delivery Catalog sync boundary · src: s11 · by process:cook
+ - 2026-10-19 · [[#^c24]] added and marked disputed; [[#^q1]] opened · src: s23, s24 · by process:cook
+ - Region 2 launch reference: 2027-01-11 Friends & Family and 2027-01-14 Grand Opening per the 2026-09-20 snapshot (src: s30) · superseded 2026-10-19 by [[#^c24]] · tracker Rob shared on 2026-10-19 shows different dates; difference unconfirmed · src: s23 · by process:cook ^c26
+diff --git a/log.md b/log.md
+index 9def2c5..8ad01d4 100644
+--- a/log.md
++++ b/log.md
+@@ -1,4 +1,10 @@
+ # log
+ 
+ ## 2026-10-30
++- 05:10 · claude-code/fable-5.1 · queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13 · legacy page: appended dated update note pointing to the 2026-10-28 sample-testing finding
++- 05:10 · claude-code/fable-5.1 · queries/drone-package-recommendation-ownership-and-kds-boundary · legacy page: appended dated update note pointing to the 2026-10-28 sample-testing finding
++- 05:08 · claude-code/fable-5.1 · records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16 · s14 source changed; History line appended, followed_by added; frozen scope unchanged
++- 05:08 · claude-code/fable-5.1 · records/drone-mvp-medium-bag-outer-package-decision · s2 source changed; History line appended, followed_by added; frozen scope unchanged
++- 05:05 · claude-code/fable-5.1 · concepts/drone-delivery-integration-strategy · superseded ^c17 by ^c36 (Medium bag confirmed after completed IKC Ops sample testing); added s33, s34; opened ^q8 on which Medium spec was tested
++- 05:00 · claude-code/fable-5.1 · records/drone-mvp-medium-bag-sample-testing-completed-2026-10-28 · created Record from the owner's 2026-10-28 update to the Slack clarification note
+ - 00:00 · process:build · vault · Level 0 Test-arm baseline built from Pilot cf9e378 + v0.3.1 overlay
+diff --git a/queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md b/queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md
+index 8bfaded..97a112a 100644
+--- a/queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md
++++ b/queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md
+@@ -219,3 +219,8 @@ Wonder-local Force Failed or Force Completed actions do not prove that Zipline c
+ - Product and evaluation: [[queries/1p-drone-delivery-consumer-scope-alignment-2026-07-15|1P Drone Delivery Consumer Scope Alignment (2026-07-15)]], [[queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16|1P Drone Delivery Eligibility Evaluation Trigger and Revalidation Contract (2026-07-16)]], and [[queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16|1P Drone Delivery Checkout Package Dimensions Contract (2026-07-16)]].
+ - Packaging: [[drone-mvp-medium-bag-outer-package-decision]] and [[drone-package-recommendation-ownership-and-kds-boundary]].
+ - Provider and custody: [[zipline-sandbox-quote-mass-gating-contract]], [[zipline-mvp-partner-confirmed-contract-2026-07-30]], and [[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]].
++
++
++## Update note (2026-10-30)
++
++The source [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12]] was updated by its owner on 2026-10-28: IKC Ops completed the sample testing, the Medium bag and guest-packaging samples fit the production Pod, the Medium bag is confirmed as the MVP outer package, and no further bag testing is planned before launch. The statement above that the Medium bag "is not yet a final approved profile" and open item 1 ("Zipline sample approval") are therefore dated; the Medium SKU, fill/fold/orientation/closure profile remain unconfirmed. See [[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]. Appended by claude-code/fable-5.1; legacy page body left unchanged.
+diff --git a/queries/drone-package-recommendation-ownership-and-kds-boundary.md b/queries/drone-package-recommendation-ownership-and-kds-boundary.md
+index a9d104e..50ef143 100644
+--- a/queries/drone-package-recommendation-ownership-and-kds-boundary.md
++++ b/queries/drone-package-recommendation-ownership-and-kds-boundary.md
+@@ -127,3 +127,8 @@ The PRD's KDS-reuse language reflects an earlier multi-bag-selection hypothesis.
+ - [[queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15|1P Drone Delivery System Responsibility Boundaries (2026-07-15)]]
+ - [[queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16|1P Drone Delivery Eligibility Evaluation Trigger and Revalidation Contract (2026-07-16)]]
+ - [[drone-mvp-medium-bag-outer-package-decision]]
++
++
++## Update note (2026-10-30)
++
++The source [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12]] was updated by its owner on 2026-10-28: IKC Ops completed the sample testing, the Medium bag and guest-packaging samples fit the production Pod, the Medium bag is confirmed as the MVP outer package, and no further bag testing is planned before launch. The 2026-09-20 "Bag status update" callout and open question 1 ("has Zipline approved the mailed sample?") above are therefore dated. Which Medium specification was confirmed is still not stated. See [[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]. Appended by claude-code/fable-5.1; legacy page body left unchanged.
+diff --git a/records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md b/records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+index a3dcb8f..d02b1fa 100644
+--- a/records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
++++ b/records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+@@ -14,6 +14,8 @@ updated: 2026-09-29
+ updated_by: process:cook
+ verified: 2026-09-29
+ verified_by: process:cook
++followed_by:
++  - "[[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]"
+ aliases:
+   - Drone Checkout Dimensions Contract
+   - Pre-order Bag Recommendation Contract
+@@ -338,6 +340,7 @@ Slide labels: `13.25 × 10 × 8 in`. Mass is unchanged from the 2026-07-30 partn
+ - s24 · https://wonder.atlassian.net/wiki/spaces/~5f811730e31b69006feed38a/pages/5706907865/Drone+Eligibility+Check+-+MVP+Plan?focusedCommentId=5707792556 · fetched:2026-07-16 · source · no-snapshot · Drone Eligibility Check - MVP Plan comment; no fetch date on the 1.x page
+ 
+ ## History
++- 2026-10-30 · source s14 changed (owner added Update 2026-10-28: IKC Ops sample testing completed, Medium bag confirmed as MVP outer package, no further bag testing before launch) · new version sha256:820f7c42284566ac0ea714714e47523ae4348ddf8ef7592b5d0ac5a7a82df431 blob:f427b7f0522370fcd5d7fc071b1c1b53efc0e10a · the 2026-09-20 Outer Package Status ("final bag pending Zipline validation") is dated; see [[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]; frozen Summary/Detail unchanged · by claude-code/fable-5.1
+ - 2026-09-29 · verified by process:cook
+ - 2026-09-29 · contradiction recorded in 1.x against [[drone-mvp-medium-bag-outer-package-decision]] · kept in Detail
+ - 2026-09-20 · revised by process:cook · Outer Package Status
+diff --git a/records/drone-mvp-medium-bag-outer-package-decision.md b/records/drone-mvp-medium-bag-outer-package-decision.md
+index 0ba37b9..928bc3a 100644
+--- a/records/drone-mvp-medium-bag-outer-package-decision.md
++++ b/records/drone-mvp-medium-bag-outer-package-decision.md
+@@ -13,6 +13,8 @@ updated: 2026-10-19
+ updated_by: process:cook
+ verified: 2026-10-19
+ verified_by: process:cook
++followed_by:
++  - "[[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]"
+ aliases:
+   - Drone MVP Medium Bag Decision
+   - Drone Delivery Envelope Bag Choice
+@@ -146,6 +148,7 @@ See [[drone-package-recommendation-ownership-and-kds-boundary|Drone Package Reco
+ - s14 · https://wonder.atlassian.net/wiki/spaces/~5f811730e31b69006feed38a/pages/5706907865/Drone+Eligibility+Check+-+MVP+Plan?focusedCommentId=5707792556 · fetched:2026-08-12 · source · no-snapshot · Drone Eligibility Check - MVP Plan comment
+ 
+ ## History
++- 2026-10-30 · source s2 changed (owner added Update 2026-10-28: IKC Ops sample testing completed, Medium bag confirmed) · new version sha256:820f7c42284566ac0ea714714e47523ae4348ddf8ef7592b5d0ac5a7a82df431 blob:f427b7f0522370fcd5d7fc071b1c1b53efc0e10a · continued in [[drone-mvp-medium-bag-sample-testing-completed-2026-10-28]]; frozen Summary/Detail unchanged · by claude-code/fable-5.1
+ - 2026-10-19 · verified by process:cook
+ - 2026-10-19 · revised by process:cook · Current status (2026-10-19)
+ - 2026-08-20 · revised by process:cook · Jay's working interpretation (2026-08-20)

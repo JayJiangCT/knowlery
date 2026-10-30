@@ -1,0 +1,7 @@
+ concepts/drone-delivery-integration-strategy.md             | 13 +++++++++----
+ log.md                                                      |  6 ++++++
+ ...e-delivery-high-level-system-alignment-mvp-2026-08-13.md |  5 +++++
+ ...one-package-recommendation-ownership-and-kds-boundary.md |  5 +++++
+ ...ivery-checkout-package-dimensions-contract-2026-07-16.md |  3 +++
+ records/drone-mvp-medium-bag-outer-package-decision.md      |  3 +++
+ 6 files changed, 31 insertions(+), 4 deletions(-)

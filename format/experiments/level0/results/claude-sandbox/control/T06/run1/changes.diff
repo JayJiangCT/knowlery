@@ -1,0 +1,81 @@
+diff --git a/queries/zipline-discovery-vs-fulfillment-quote-mass-contract.md b/queries/zipline-discovery-vs-fulfillment-quote-mass-contract.md
+index 144527d..f885913 100644
+--- a/queries/zipline-discovery-vs-fulfillment-quote-mass-contract.md
++++ b/queries/zipline-discovery-vs-fulfillment-quote-mass-contract.md
+@@ -2,7 +2,7 @@
+ title: Zipline Discovery vs Fulfillment Quote Mass Contract
+ date: 2026-08-27
+ created: 2026-08-27
+-updated: 2026-09-29
++updated: 2026-10-30
+ type: query
+ domain: delivery
+ tags:
+@@ -31,6 +31,9 @@ freshness_reviewed: 2026-09-29
+ 
+ # Zipline Discovery vs Fulfillment Quote Mass Contract
+ 
++> [!note] Disputed owner edit on the 2026-07-30 page — 2026-10-30
++> [[zipline-mvp-partner-confirmed-contract-2026-07-30]] now states that a fulfillment-capable Quote requires valid mass **and outer dimensions**. That statement conflicts with the Quote contract on this page (Quote carries `mass_grams` only; dimensions are evaluated by Wonder's envelope rule and Zipline Pack) and has no captured source. Treat the mass-only Quote contract here as current until the dimensions claim is sourced; the 2026-07-30 page is marked `freshness_status: disputed`.
++
+ > [!important] Product scope override — 2026-08-28
+ > Nina's PRD v19 removes Drone ETA from RDP and no longer requires an RDP Quote for the MVP. The mass-optional Quote behavior below remains valid API evidence, but the RDP discovery use case is historical rather than current Product scope. Checkout and execution mass-bearing Quote requirements remain active. Consumer reaches the current Quote path through OMS/CCP; Delivery Catalog Service owns Quote source data and KOETA owns the customer-facing ETA. See [[queries/1p-drone-delivery-consumer-scope-alignment-2026-07-15|1P Drone Delivery Consumer Scope Alignment (2026-07-15)]].
+ 
+diff --git a/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md b/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
+index 008dde5..8632930 100644
+--- a/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
++++ b/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
+@@ -2,7 +2,7 @@
+ title: Zipline Drone Quote and Package Eligibility Contract (2026-07-02)
+ date: 2026-07-02
+ created: 2026-07-02
+-updated: 2026-09-29
++updated: 2026-10-30
+ type: query
+ domain: delivery
+ tags:
+@@ -37,6 +37,9 @@ retrieval_priority: high
+ 
+ # Zipline Drone Quote and Package Eligibility Contract (2026-07-02)
+ 
++> [!note] Disputed owner edit on the 2026-07-30 page — 2026-10-30
++> [[zipline-mvp-partner-confirmed-contract-2026-07-30]] now states that a fulfillment-capable Quote requires valid mass **and outer dimensions**. That statement conflicts with the Quote contract on this page (Quote carries `mass_grams` only; dimensions are evaluated by Wonder's envelope rule and Zipline Pack) and has no captured source. Treat the mass-only Quote contract here as current until the dimensions claim is sourced; the 2026-07-30 page is marked `freshness_status: disputed`.
++
+ > [!important] “Not required” versus “chosen by Wonder”
+ > The 2026-07-30 partner contract established that Pack is not mandatory merely to prove one-Zip capacity when one approved outer package is already known to be within the confirmed limits. That remains true. The current Wonder direction is for OMS/CCP to forward the request to Delivery Catalog Service, which resolves approved profiles and uses Pack as the preferred affirmative fit oracle when the Pack representation is available. These statements are compatible: Zipline does not require Pack, while Wonder may choose Pack as its eligibility path. Medium-bag representation, Pack-to-Intent binding, and checkout reliability remain open. See [[zipline-pack-as-eligibility-oracle-direction-2026-08-20]].
+ 
+diff --git a/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md b/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+index 4b985f7..1692805 100644
+--- a/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
++++ b/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+@@ -2,7 +2,7 @@
+ title: Zipline MVP Partner-Confirmed Contract
+ date: 2026-07-30
+ created: 2026-07-30
+-updated: 2026-09-15
++updated: 2026-10-30
+ type: query
+ domain: delivery
+ tags:
+@@ -27,12 +27,19 @@ aliases:
+   - Zipline 有效载荷尺寸
+   - 338 254 205
+ retrieval_priority: high
+-freshness_status: active
+-freshness_reviewed: 2026-09-15
++freshness_status: disputed
++freshness_reviewed: 2026-10-30
++contradictions:
++  - "[[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]]"
++  - "[[zipline-discovery-vs-fulfillment-quote-mass-contract]]"
++  - "[[zipline-sandbox-quote-mass-gating-contract]]"
+ ---
+ 
+ # Zipline MVP Partner-Confirmed Contract
+ 
++> [!warning] Unverified owner edit — 2026-10-30
++> Jay edited the Short Answer directly (commit `d64dfa9`, "dimensions also required") so that a fulfillment-capable Quote "requires valid mass **and outer dimensions**" before Delivery Intent. No note in this vault currently supports a dimensions requirement on Quote or Delivery Intent: the `QuoteRequest` schema in [[Create Quote]] carries only `partner_site_id`, `prep_time_minutes`, `recipient`, and optional `mass_grams`; [[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]] states "Quote accepts optional total mass but not dimensions"; [[zipline-sandbox-quote-mass-gating-contract]] and [[zipline-discovery-vs-fulfillment-quote-mass-contract]] gate Intent on `1 <= mass_grams <= 2495` only; and the 2026-08-04 partner responses and 2026-08-27 runtime annotations record no dimension parameter. Dimensions are enforced today through Wonder's deterministic envelope rule (below) and Zipline Pack, not through Quote. The edit is kept as the owner's statement but is treated as **disputed until a source is captured** (new partner answer, API change, or Jay's clarification). Until then, rely on the mass-only Quote contract in the related pages and on the package envelope rule for dimensions.
++
+ ## Short Answer
+ 
+ Zipline answered the core partner questions for the Wonder 1P Drone Delivery MVP. A fulfillment-capable direct-order Quote requires valid mass and outer dimensions before Delivery Intent creation, while a separate mass-optional RDP discovery Quote is allowed for serviceability and KOETA timing features and is never consumed by Intent. An approved standard package within the confirmed limits is a single-Zip package; `DELIVERY_INTENT_STATUS_IN_PROGRESS` confirms successful loading and custody transfer; the exact planned customer drop-off point is not exposed; Dropbox loading summons the Drone; and `loading_window` is advisory rather than an expiration deadline. Zipline can also provision a separate non-production Partner Site, although the concrete access package is still pending.

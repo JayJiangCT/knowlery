@@ -17,7 +17,7 @@
 
 | Arm | Material | Agent instructions |
 |---|---|---|
-| Control | The scoped pages in their 1.x form | The Pilot's `AGENTS.md` / `.claude/CLAUDE.md` made headless by `tools/build.py`: the Pilot's read-only banner (which also suspended the page-writing rules) replaced by an experiment header that keeps the Agent-Maintained Pages rules in force; Obsidian CLI rules, the Pilot skills and the `.knowlery/bin` query engine removed; Activity Ledger off (`.knowlery/activity-disabled`) |
+| Control | The scoped pages in their 1.x form | The Pilot's `AGENTS.md` / `.claude/CLAUDE.md` made headless by `tools/build.py`: the Pilot's read-only banner (which also suspended the page-writing rules) replaced by an experiment header that keeps the Agent-Maintained Pages rules in force; Obsidian CLI rules, the Pilot skills and the `.knowlery/bin` query engine removed, and rules that point at removed skills rewritten for file tools; Activity Ledger off (`.knowlery/activity-disabled`) |
 | Test | The same pages migrated by hand to v0.3.1 | `CONVENTIONS.md` written from spec §13 |
 
 Before any run, a human checks each migrated page against its 1.x original for semantic equivalence: no claim added, none dropped, none sharpened. A log of migration ambiguities is kept; each entry is a potential Format revision.
