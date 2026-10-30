@@ -68,3 +68,18 @@ Correctness and history preservation are reported first; token and maintenance c
 ## Non-goals
 
 No Format edits during the run. No stable-v1 claim from this experiment. No Connector, Obsidian, or MCP involvement.
+
+## Kit (added 2026-10-30)
+
+| Path | What |
+|---|---|
+| `pages.txt` | the 14 scoped pages |
+| `test/` | the migrated v0.3.1 pages, `CONVENTIONS.md`, with `@pin` placeholders resolved at build |
+| `MIGRATION-GUIDE.md`, `migration-log.md` | how the pages were migrated and every ambiguity met (several are Format findings already) |
+| `tools/build.py` | builds `work/<arm>/<task>/` from the Pilot checkout: overlays, version pinning, fixtures |
+| `tools/digest.py`, `tools/srcline.py`, `tools/validate.py`, `tools/collect.sh` | digest per evidence scope; source-line helper; conformance validator; result collection |
+| `tasks/T01..T12.md` | verbatim prompts, fixtures, pass criteria, what to record |
+| `RUNBOOK.md` | how to run on any harness; scoring; reporting |
+| `results/` | one directory per harness; `scores-template.csv` |
+
+Fixture changes from the protocol table above, decided while building: T04's "changed source" is an addendum to the Medium Bag Slack note (clean supersession of one claim), and T05 needs no fabricated conflict because the Pilot already contains a real one (the payload-slide Source note says 252 mm is the envelope and 254 mm a rounded label, while the compiled pages hold 254 mm as current). T09 reuses the T04 fixture.

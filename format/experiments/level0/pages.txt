@@ -1,0 +1,15 @@
+# Level 0 scope — Knowlery-Pilot @ cf9e378 — 14 pages (5 Knowledge, 9 Records)
+concepts/drone-delivery-integration-strategy.md
+concepts/ikc-drone-delivery-setting.md
+concepts/packaged-size.md
+concepts/zipline-drone-deliveries-in-dispatch-portal.md
+comparisons/zipline-loading-methods.md
+queries/zipline-mvp-final-partner-qa-working-draft-2026-07-26.md
+queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
+queries/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md
+queries/drone-mvp-medium-bag-outer-package-decision.md
+queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+queries/packaging-signature-configuration-space-for-drone-eligibility-2026-08-13.md
+queries/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md
+queries/drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18.md
