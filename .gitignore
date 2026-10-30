@@ -42,3 +42,4 @@ data.json
 
 # Level 0 experiment working copies (rebuild with tools/build.py)
 format/experiments/level0/work/
+__pycache__/
