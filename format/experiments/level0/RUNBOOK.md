@@ -2,18 +2,31 @@
 
 This kit is deterministic: anyone with the Pilot checkout at `cf9e378` and this directory builds the same working copies and runs the same prompts. Results from different harnesses are comparable only if the steps below are followed exactly.
 
-## 0. Prerequisites
+## 0. Prerequisites — two repositories
+
+The kit and the data live in **different repositories**; do not look for one inside the other.
+
+| What | Repository | Ref |
+|---|---|---|
+| This kit (`format/experiments/level0/`) | `https://github.com/JayJiangCT/knowlery` | branch `develop/2.0` |
+| The Pilot vault (data only; has no kit) | `https://github.com/JayJiangCT/Knowlery-Pilot` | commit `cf9e378` on `main` |
+
+```
+git clone -b develop/2.0 https://github.com/JayJiangCT/knowlery
+git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot checkout cf9e378
+```
 
 - `git`, Python 3.8+ (stdlib only; `pyyaml` only for `tools/validate.py`).
-- The Pilot checkout: `git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot checkout cf9e378`.
 - A harness that can run an Agent with **file tools only** (read, search, edit, shell for `sed`/`sha256sum`/`git` read commands) and **no network**. Record its name, model id, and any system prompt it injects.
 
 ## 1. Build the working copies
 
 ```
-cd format/experiments/level0
+cd knowlery/format/experiments/level0
 python3 tools/build.py /path/to/Knowlery-Pilot --out ./work
 ```
+
+Success looks like: `git -C work/test/T01 log --oneline` shows `baseline` and `pin source versions` commits on top of `cf9e378`; `grep -c "@pin" work/test/T01/concepts/*.md` is 0 everywhere; `work/control/T01/AGENTS.md` starts with the CONTROL ARM note.
 
 Produces `work/<arm>/<task>/` for `control` and `test` × `T01..T12`. Each is an independent git repo: baseline commit(s) + the task's fixture commit. Rebuild between repetitions (`rm -rf work/<arm>/<task>` then rerun with `--tasks TNN --arms <arm>`); never reuse a vault an Agent has already edited.
 
