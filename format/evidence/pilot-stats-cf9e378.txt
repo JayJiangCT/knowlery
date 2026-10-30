@@ -1,0 +1,56 @@
+pages: 194 Counter({'queries': 131, 'concepts': 46, 'entities': 14, 'comparisons': 3})
+
+FIELD COVERAGE (field: count):
+  title: 194
+  type: 194
+  date: 194
+  created: 194
+  updated: 194
+  tags: 194
+  domain: 194
+  sources: 194
+  status: 192
+  freshness_reviewed: 185
+  description: 128
+  aliases: 105
+  freshness_status: 97
+  retrieval_priority: 91
+  references: 39
+  superseded_by: 11
+  contradictions: 4
+  table id: 3
+  name: 3
+  jira: 3
+  paths: 2
+
+type: {'query': 130, 'concept': 46, 'entity': 14, 'comparison': 3, 'reference': 1}
+
+status: {'active': 154, 'draft': 24, 'reviewed': 12, 'None': 2, 'archived': 2}
+
+freshness_status: {'None': 97, 'active': 67, 'watch': 23, 'superseded': 5, 'partially_stale': 2}
+
+retrieval_priority: {'None': 103, 'high': 76, 'medium': 12, 'low': 3}
+
+domain: {'delivery': 185, 'data': 9}
+
+confidence: {'None': 194}
+
+sources count dist: {1: 13, 2: 15, 3: 15, 4: 16, 5: 22, 6: 22, 7: 17, 8: 14, 9: 8, 10: 10, 11: 8, 12: 5, 13: 6, 14: 6, 16: 3, 17: 3, 19: 2, 20: 3, 21: 1, 22: 2, 24: 1, 26: 1, 30: 1} no sources: 0
+sources forms: {'url': 161, 'path': 1050, 'other': 225, 'wikilink': 13}
+
+body lines: median 109.0 max (563,) min (25,)
+outbound wikilinks/page: median 7.0 zero-link pages 1
+
+TOP HEADERS by type:
+  entities [('Related', 13), ('Cook Refresh (2026-07-08)', 6), ('Performance (180-Day Analysis)', 4), ('Late Night Performance', 3), ('Cancellation Policy', 3), ('Refund API', 2), ('Pickup Location Caveat', 2), ('Acquisition', 2), ('Geographic Distribution', 2), ('Pickup Coordinate Caveat', 2), ('Business Model', 2), ('AG-588 — 3P Aggregator Pickup QR Handshake', 1), ('API Integration', 1), ('Scope', 1)]
+  concepts [('Related', 40), ('Cook Refresh (2026-07-08)', 17), ('Problem', 8), ('Open Questions', 5), ('Architecture', 4), ('BigQuery Tables', 3), ('Relationship to Existing Systems', 3), ('Scope', 3), ('Root Cause', 3), ('Data Storage', 2), ('Data Model', 2), ('Providers', 2), ('Solution', 2), ('Status', 2)]
+  comparisons [('Related', 2), ('Delivery Providers Comparison', 1), ('Performance Summary (180-Day Analysis)', 1), ('Assignment Speed (Reactive Orders)', 1), ('Travel Time (Assignment to Pickup)', 1), ('Never Arrived Rate', 1), ('Cancellation Policy', 1), ('Refund API', 1), ('Geographic Distribution', 1), ('Late Night Performance (2026-04-13 to 2026-04-15)', 1), ('Strategic Context', 1), ('Location Routing Semantics', 1), ('Provider-Attempt Lifecycle (2026-07-24)', 1), ('Parallel Search Cooldown: Four-Stage Comparison', 1)]
+  queries [('Related', 101), ('Short Answer', 38), ('Cook Refresh (2026-07-08)', 21), ('Open Questions', 16), ('Cook Refresh (2026-07-13)', 9), ('Summary', 8), ('Question', 7), ('Interpretation', 6), ('Post-order Address Change — Current Product Direction', 5), ('Executive Summary', 5), ('Decision', 5), ('Freshness Review — 2026-07-17', 5), ('Open Decisions', 4), ('Caveats', 4)]
+
+dangling link targets: 134 top: [('ikc', 35), ('rob-knudson', 25), ('zipline', 23), ('bigquery-tables', 17), ('Wonder', 17), ('Codebase Reference', 10), ('post-purchase-experience-ppx', 8), ('koeta', 8), ('grubhub-connect-api', 7), ('gemini-enterprise-agent-platform', 6)]
+superseded_by present(non-empty): 8
+supersedes present(non-empty): 0
+related present(non-empty): 0
+freshness_sidecar present(non-empty): 0
+freshness_reviewed present(non-empty): 185
+aliases present(non-empty): 105
