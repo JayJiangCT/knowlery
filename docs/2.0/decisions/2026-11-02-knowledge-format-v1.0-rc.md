@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-02 · **Owner:** Jay (Knowlery 2.0) · **Status:** ACCEPTED — 2026-11-02 (Owner-authorized recording by reviewing Agent)
 **Decides:** F-001, F-002, F-003, F-004, F-006, F-008 (fixed in Format); F-005, F-007 partial (Format side fixed, Connector side open)
-**Artifacts:** `format/KNOWLEDGE-FORMAT-v1.0-rc.md`, `format/CONVENTIONS.md`, `format/experiments/level0/RESULTS.md`
+**Artifacts:** accepted `format/KNOWLEDGE-FORMAT-v1.0.md`, historical RC `format/KNOWLEDGE-FORMAT-v1.0-rc.md`, authoritative `format/CONVENTIONS.md`, evidence `format/experiments/level0/RESULTS.md`
 
 ## Acceptance (2026-11-02)
 
