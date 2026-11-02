@@ -83,7 +83,8 @@ Repetitions: 3 per task per arm where budget allows; the same model for both arm
 ## 3. Scoring rules
 
 - **Pass / partial / fail** per the task file. "Partial" is allowed only where the task file defines it.
-- **Unnecessary Rewrite Rate (T04, T05, T06, T08, T10):** from the collected diff, count modified lines the fixture did not justify ÷ all modified lines. Moving a claim to History per the rules is justified; rewording an untouched claim is not.
+- **Unnecessary Rewrite Rate (T04, T05, T06, T08, T10):** from the collected diff, count rewritten **body** lines (frontmatter dates excluded from both numerator and denominator). A rewritten line is unjustified unless the new input changes what that line asserts. Moving a claim to History per the rules is justified; relabelling a callout "previous status", restructuring a list, rewriting a description or a Sources line, and rewording an untouched claim are unjustified. Record numerator and denominator in the notes column (`URR 10/13`), not only the ratio.
+- **Conditional answers (T11-type):** an answer that gives the rule with its condition ("reallocation if before custody, recovery if after") is a pass; an answer that picks one branch and rejects the vault's stated conclusion is partial; both must surface the dispute to pass.
 - **Unsupported Current Claim Rate (Test arm, T04–T06):** run `python3 tools/validate.py` on the edited pages; claims in `## Current` without `(src:)` or with a `(src:)` id that does not exist count as unsupported ÷ all current claims on those pages.
 - **Protocol overhead ratio:** instruction-file tokens ÷ total input tokens, when the harness exposes it; otherwise estimate from the transcript (bytes of instruction files read ÷ bytes of all files read).
 - **Abstained:** counts as fail for correctness, but note it separately.

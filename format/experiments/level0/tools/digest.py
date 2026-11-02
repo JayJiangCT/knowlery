@@ -55,8 +55,14 @@ def digest(text, scope="source", claim=None):
 if __name__ == "__main__":
     args = sys.argv[1:]
     if not args: sys.exit(__doc__)
-    path = args[0]; scope = "source"; claim = None
-    if re.match(r"^---\n.*?^type:\s*record\s*$.*?\n---\n", open(path, encoding="utf-8").read(), re.S | re.M): scope = "record"
-    if "--scope" in args: scope = args[args.index("--scope") + 1]
-    if "--claim" in args: claim = args[args.index("--claim") + 1]; scope = "claim"
+    scope = None; claim = None; positional = []
+    i = 0
+    while i < len(args):
+        if args[i] == "--scope": scope = args[i + 1]; i += 2
+        elif args[i] == "--claim": claim = args[i + 1]; scope = "claim"; i += 2
+        else: positional.append(args[i]); i += 1
+    if len(positional) != 1: sys.exit("usage: digest.py <file> [--scope source|record|claim] [--claim ^cN]")
+    path = positional[0]
+    if scope is None:
+        scope = "record" if re.match(r"^---\n.*?^type:\s*record\s*$.*?\n---\n", open(path, encoding="utf-8").read(), re.S | re.M) else "source"
     print(digest(open(path, encoding="utf-8").read(), scope, claim))

@@ -46,7 +46,7 @@ def check(path):
     ids = re.findall(r"\s(\^[cq]\d+)\s*$", body, re.M)
     dup = {i for i in ids if ids.count(i) > 1}
     if dup: errs.append(f"duplicate ids {sorted(dup)}")
-    stray = re.findall(r"(\^[cq]\d+)(?!\]\])(?=\S)", body)
+    stray = re.findall(r"(?<!#)(\^[cq]\d+)(?!\]\])(?=\S)", body)
     for s_ in set(stray):
         if s_ not in ids: errs.append(f"id {s_} not at end of a line")
     # sources
