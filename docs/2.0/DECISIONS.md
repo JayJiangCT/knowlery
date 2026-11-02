@@ -10,6 +10,9 @@
 | A-004 | 技术分工 | **BASELINE** | Skills 管智能行为；CLI/Adapter 管确定性操作；MCP 可选；Obsidian Plugin 专注 UI |
 | A-005 | 资产可靠性 | **BASELINE** | 重要证据、人工决定、当前与历史知识不能因替换客户端而丢失 |
 | A-006 | 自治治理 | **BASELINE** | Agent 默认自主，重要证据冲突或高风险不可逆变更触发人工升级 |
+| I-001 | MCP Connector 术语边界 | **ACCEPTED · 2026-11-02** | Connector 特指 **MCP Connector**（MCP 能力接入）；它不是 CLI/MCP/Adapter 的总容器。Agent Skills 管工作流，Agent Plugin 管平台集成与分发；MCP 如何调用底层操作仍待设计。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
+| I-002 | CLI 优先设计 | **ACCEPTED · 2026-11-02** | 下一轮先重新设计 Knowlery CLI 的确定性操作能力，再讨论 Agent Skills、MCP Connector、Agent Plugin。这是**设计讨论优先级**，非已批准的实施依赖图或发布顺序。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
+| P-001 | 设计决定入库 | **ACCEPTED · 2026-11-02** | Owner 要求：后续讨论明确确认的 2.0 决定及时提交到 `develop/2.0` 的本索引与 `docs/2.0/decisions/` 对应记录；未确认建议仍为 OPEN / PROPOSED，不视为实施授权。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
 | R-001 | GitHub 组织 | **ACCEPTED FOR BOOTSTRAP** | 继续同一仓库；`develop/2.0` 独立开发；暂保留 1.x 代码与发布配置 |
 | F-001 | Wiki 结构 | **ACCEPTED · 2026-11-02** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2） |
 | F-002 | Frontmatter 字段 | **ACCEPTED · 2026-11-02** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
@@ -25,6 +28,8 @@
 **Knowledge Format v1.0 接受记录（2026-11-02）：** Owner 在对话中授权独立审查通过后由 Agent 代为登记。审核已确认 F-008 当前 Source digest 校验及 T13 回归证据，因此正式接受 F-001、F-002、F-003、F-004、F-006、F-008，依据见 [决策记录](./decisions/2026-11-02-knowledge-format-v1.0.md)。这是 Owner 授权后的代记录，不表示 Owner 亲自编辑了文件。F-005、F-007 仍为 **PARTIAL**；接受 Format v1.0 不表示 Level 1 Connector 的强制保障已完成。
 
 ## 状态规则
+
+- **对新设计决定的记录纪律**：仅在 Owner 明确确认或已存在有效授权且必要审核条件满足后，才写为 ACCEPTED；在 `develop/2.0` 维护索引和对应历史记录。CLI/MCP 的命令形状、包结构、调用路径在明确决定前均为 OPEN。
 
 - **BASELINE**：Owner 已确认的高层方向，原则可以直接约束设计；具体实现仍需评审。
 - **ACCEPTED FOR BOOTSTRAP**：仅适用于本次分支搭建的工程决定，不是永久的多包/发布策略。
