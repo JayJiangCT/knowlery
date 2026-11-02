@@ -1,6 +1,6 @@
 # CONVENTIONS — how this knowledge base works
 
-> Knowledge Format v1.0-rc (2026-11-02). The copy under `experiments/level0/test/` is the v0.3.1 text used in the experiment and stays frozen; this is the current one. Changes from v0.3.1 are marked **[v1.0-rc]**.
+> Knowledge Format **v1.0** (accepted 2026-11-02). This is the authoritative Agent contract. The copy under `experiments/level0/test/` is the frozen v0.3.1 experiment version and remains unchanged. Historical amendments from v0.3.1 retain their **[v1.0-rc]** annotations for traceability; no operational rule changed at acceptance.
 
 You are reading a Knowlery 2.0 vault. This file is the whole contract. There is no runtime, no plugin, no index you must use; everything below is readable and writable with ordinary file tools.
 
