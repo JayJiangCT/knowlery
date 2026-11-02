@@ -1,0 +1,5 @@
+Start by reading the instruction file at the vault root (`AGENTS.md`; and `CONVENTIONS.md` if it exists) and follow it. Obsidian is not running: use file tools (read, search, edit) and the shell for read-only `git` commands and any script the vault provides. Do not use the network. Do not run git commit or push. Work only inside this vault.
+
+A reviewer claims the compiled pages are wrong about the current single-Zip width limit. Check the compiled statement against the sources it cites and against any other source in the vault about the Zipline payload envelope. Then act according to the vault's rules: if the sources agree, say so; if they conflict, record the conflict in the vault the way the rules require, and do not pick a winner on your own.
+
+When you are done, write your answer to a new file `ANSWER.md` at the vault root: the answer itself, the vault-relative paths you relied on, and anything you were unable to establish. If the task asked you to change the vault, `ANSWER.md` also lists every file you changed and why.

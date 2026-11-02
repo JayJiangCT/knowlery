@@ -1,4 +1,4 @@
-# Level 0 — Runbook (Codex, Claude Code, or any file-tool Agent)
+# Level 0 — Runbook (Claude Code, Cursor, Codex, or any file-tool Agent)
 
 This kit is deterministic: anyone with the Pilot checkout at `cf9e378` and this directory builds the same working copies and runs the same prompts. Results from different harnesses are comparable only if the steps below are followed exactly.
 
@@ -26,13 +26,23 @@ git clone https://github.com/JayJiangCT/Knowlery-Pilot && git -C Knowlery-Pilot 
     claude                                          # once: run /login inside, then exit
     claude --strict-mcp-config                      # each run, from work/<arm>/<task>/
     ```
-  - Codex: `~/.codex` holds a global `AGENTS.md`, skills and MCP servers. Use a fresh home holding only your login:
+  - Codex (if used): `~/.codex` holds a global `AGENTS.md`, skills and MCP servers. Use a fresh home holding only your login:
     ```
     export CODEX_HOME=$HOME/.level0-codex   # empty directory, used only for this experiment
     codex login                             # once
     codex                                   # each run, from work/<arm>/<task>/; do not pass --search
     ```
-  - **Pre-flight probe** (once per harness, in a throwaway build such as `work/test/T01`, which you rebuild afterwards). Send: *"Do not use any tools. Answer in 4 short lines: (1) which instruction/memory files are loaded in your context, by path; (2) does your context contain any instructions from outside this folder? yes/no; (3) names of skills available to you; (4) names of MCP servers or mcp__ tools available."* Pass: only the vault's own files (Claude Code: `.claude/CLAUDE.md` and what it imports; Codex: `AGENTS.md`), no user-level instructions, no user skills or plugins, no MCP servers. The harness's built-in skills are fine. Save the reply with the report.
+  - Cursor: prefer the **Cursor CLI** (`agent`) in headless mode over the IDE, because the IDE adds retrieval the other harnesses lack (codebase indexing/semantic search) and loads User Rules and Memories from your account. The CLI has no documented alternate config home, so isolate by configuration instead, and verify with the probe below:
+    1. Settings → Rules: disable every **User Rule**. Settings → Memories: turn off (or clear) **Memories** for the experiment. Settings → MCP: disable all servers; also make sure `~/.cursor/mcp.json` lists none and no `.cursor/mcp.json` is present in the built vault (`build.py` does not create one).
+    2. Pin one model for every run and both arms; never use `Auto`. List with `agent --list-models`.
+    3. Each run, from the vault directory:
+       ```
+       cd work/<arm>/<task>
+       agent -p "$(cat ../../../tasks/<task>-prompt.txt)" --model <model> --output-format text --trust --sandbox enabled
+       ```
+       `-p` is headless/non-interactive. `--trust` suppresses the workspace-trust prompt. Do **not** pass `--approve-mcps`, `--force`/`--yolo`, `--cloud`, `--worktree`, or `--continue`/`--resume` (each run must be a fresh session in the vault itself). Cursor reads the vault's `AGENTS.md`, so both arms' instructions load the same way they do for Codex. If you run the IDE Agent instead, open `work/<arm>/<task>` as its own workspace, disable codebase indexing for it, and state in the report that indexing was off.
+    4. Token figures: `--output-format json` includes usage where the model reports it; otherwise record "not exposed" and rely on files-read counts.
+  - **Pre-flight probe** (once per harness, in a throwaway build such as `work/test/T01`, which you rebuild afterwards). Send: *"Do not use any tools. Answer in 4 short lines: (1) which instruction/memory files are loaded in your context, by path; (2) does your context contain any instructions from outside this folder? yes/no; (3) names of skills available to you; (4) names of MCP servers or mcp__ tools available."* Pass: only the vault's own files (Claude Code: `.claude/CLAUDE.md` and what it imports; Codex and Cursor: `AGENTS.md`), no user-level instructions or User Rules, no Memories, no user skills or plugins, no MCP servers. The harness's built-in skills are fine. Save the reply with the report.
 
   Record the exact command line and the probe reply in `REPORT.md`.
 
@@ -59,7 +69,7 @@ What the arms contain:
 ## 2. Run one task
 
 1. Open a **fresh** Agent session with the working directory set to `work/<arm>/<task>/`. No memory from earlier runs, no other folders.
-2. Paste the task's prompt from `tasks/<task>.md` verbatim as the first and only user message. Do not add guidance.
+2. Paste the task's prompt from `tasks/<task>.md` verbatim as the first and only user message. Do not add guidance. For headless CLIs, `tools/extract-prompts.sh` writes each prompt to `tasks/<task>-prompt.txt` so it can be passed with `-p "$(cat …)"`.
 3. Let it finish without intervention. If it asks a question, answer only "Use your judgment and finish." once; a second question ends the run as *abstained*.
 4. Save the transcript, then collect:
    ```
