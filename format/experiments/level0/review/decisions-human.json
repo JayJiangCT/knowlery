@@ -1,0 +1,681 @@
+[
+ {
+  "at": "2026-11-02T05:46:03.819Z",
+  "decision": "fix",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add4",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:39:28.632Z",
+  "decision": "drop-ok",
+  "id": "packaged-size:B1",
+  "page": "packaged-size",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:29:30.499Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A24",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:08:08.467Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A9",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T02:53:25.332Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A5",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:41:23.501Z",
+  "decision": "ok",
+  "id": "zipline-loading-methods:A4",
+  "page": "zipline-loading-methods",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:14:46.394Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A16",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:39:16.101Z",
+  "decision": "drop-ok",
+  "id": "packaged-size:A2",
+  "page": "packaged-size",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:33:10.456Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A27",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:33:56.414Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A67",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:25:45.652Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A20",
+  "note": "目前Dexa项目已经pilot失败，Wonder后续达成了和Zipline的合作，但是对方不希望把Zipline提供的Drone Delivery的能力集成到Grubhub，因此Drone目前仅集成到Wonder自己的Delivery Service中",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:44:40.199Z",
+  "decision": "ok",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add1",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:34:37.233Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A68",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:43:32.569Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A41",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:59:08.725Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A61",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:07:54.530Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A8",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:39:54.637Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A36",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:12:09.029Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A14",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:53:44.300Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A55",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:45:47.134Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A46",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:58:06.646Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A59",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:26:49.771Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A21",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T05:40:47.601Z",
+  "decision": "fix",
+  "id": "zipline-loading-methods:A3",
+  "page": "zipline-loading-methods",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T05:45:46.020Z",
+  "decision": "drop-ok",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add3",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:46:36.539Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A48",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:12:05.179Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A13",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:33:44.232Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A66",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:28:10.121Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A22",
+  "note": "",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:35:42.989Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A32",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:46:13.152Z",
+  "decision": "ok",
+  "id": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add1",
+  "page": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:14:19.161Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A15",
+  "note": "最新的信息是Soft Opening在1/11 2027, 而Grand opening在11/20 2027",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:39:45.168Z",
+  "decision": "ok",
+  "id": "zipline-drone-deliveries-in-dispatch-portal:B1",
+  "page": "zipline-drone-deliveries-in-dispatch-portal",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:48:12.286Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A51",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:43:28.065Z",
+  "decision": "ok",
+  "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add1",
+  "page": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:36:43.169Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A33",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T04:00:01.962Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A63",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:59:33.676Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A62",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:33:29.914Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A65",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:20:38.642Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A17",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T02:54:55.083Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A6",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:45:18.569Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A45",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:08:15.733Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A10",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:47:43.419Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A50",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:41:19.087Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A38",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:45:08.701Z",
+  "decision": "fix",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add2",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:41:40.632Z",
+  "decision": "drop-ok",
+  "id": "zipline-loading-methods:B1",
+  "page": "zipline-loading-methods",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T02:48:56.823Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A3",
+  "note": "\"Delivery Catalog periodically syncs profiles and applies Kafka updates\"已经更新为\"Once Fully syncs and applies Kafka updates\"",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:41:18.550Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A37",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:42:01.752Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A40",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:33:44.657Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A29",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:35:09.359Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A31",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:07:04.325Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A7",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T03:34:44.781Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A30",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:41:41.137Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A39",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:40:26.199Z",
+  "decision": "ok",
+  "id": "zipline-loading-methods:A2",
+  "page": "zipline-loading-methods",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:55:39.183Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A56",
+  "note": "Load profiles with one full pull through Cookbook APIs, then apply incremental Kafka updates. ",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T05:44:09.869Z",
+  "decision": "ok",
+  "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add3",
+  "page": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:31:16.742Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A25",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:57:00.851Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A57",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:43:14.168Z",
+  "decision": "fix",
+  "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add3",
+  "page": "zipline-mvp-final-partner-qa-working-draft-2026-07-26",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:29:28.336Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A23",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:32:41.504Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A64",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:11:46.076Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A12",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:46:01.433Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A47",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:42:42.414Z",
+  "decision": "fix",
+  "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add2",
+  "page": "zipline-mvp-final-partner-qa-working-draft-2026-07-26",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:51:37.218Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A52",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:22:48.741Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A18",
+  "note": "和Zipline进行对接和集成不假，但是后续不会将Zipline集成到Grubhub的DaaS中",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:58:22.811Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A60",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:44:33.522Z",
+  "decision": "ok",
+  "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add4",
+  "page": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:37:56.649Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:B1",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:52:38.828Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A54",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:47:25.117Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A49",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:11:22.279Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A11",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:33:14.974Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A28",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:43:49.764Z",
+  "decision": "ok",
+  "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add2",
+  "page": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:40:03.802Z",
+  "decision": "ok",
+  "id": "zipline-loading-methods:A1",
+  "page": "zipline-loading-methods",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T05:38:19.862Z",
+  "decision": "ok",
+  "id": "ikc-drone-delivery-setting:B1",
+  "page": "ikc-drone-delivery-setting",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T05:36:11.568Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A70",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T02:46:28.909Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A2",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:45:08.502Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A44",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T05:46:22.368Z",
+  "decision": "drop-ok",
+  "id": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add2",
+  "page": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-10-30T10:20:24.892Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A1",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T02:49:23.332Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A4",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:44:21.235Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A43",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ },
+ {
+  "at": "2026-11-02T05:35:19.233Z",
+  "decision": "fix",
+  "id": "drone-delivery-integration-strategy:A69",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:38:58.818Z",
+  "decision": "drop-ok",
+  "id": "packaged-size:A1",
+  "page": "packaged-size",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:44:06.919Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A42",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:42:06.466Z",
+  "decision": "ok",
+  "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add1",
+  "page": "zipline-mvp-final-partner-qa-working-draft-2026-07-26",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:36:47.666Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A71",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "fix"
+ },
+ {
+  "at": "2026-11-02T03:38:30.323Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A34",
+  "note": "",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:31:59.540Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A26",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:52:30.798Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A53",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:57:26.143Z",
+  "decision": "ok",
+  "id": "drone-delivery-integration-strategy:A58",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T03:39:12.537Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A35",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "ok"
+ },
+ {
+  "at": "2026-11-02T05:39:55.901Z",
+  "decision": "ok",
+  "id": "zipline-drone-deliveries-in-dispatch-portal:B2",
+  "page": "zipline-drone-deliveries-in-dispatch-portal",
+  "proposed": ""
+ },
+ {
+  "at": "2026-11-02T03:23:03.006Z",
+  "decision": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A19",
+  "page": "drone-delivery-integration-strategy",
+  "proposed": "drop-ok"
+ }
+]
