@@ -1,0 +1,578 @@
+[
+  {
+    "id": "drone-delivery-integration-strategy:A1",
+    "decision": "drop-ok",
+    "where": "^c1",
+    "reason": "lead-in; DaaS/Dexa as history is carried by History ^c30 and current direction ^c1"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A2",
+    "decision": "fix",
+    "where": "History ^c28",
+    "reason": "^c28 turns the earlier 'proposals' into an asserted 'Eligibility uses… may reuse' (sharpened); 'narrower than' framing is not stated"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A3",
+    "decision": "fix",
+    "where": "Evidence pipeline",
+    "reason": "Evidence pipeline drops 'reusable' (configuration identity) and 'local' (Cookbook-backed profile); belongs in the block and ^c12"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A4",
+    "decision": "fix",
+    "where": "^c13",
+    "reason": "Wonder-owns-orchestration / provider-owns-packing-logic boundary (and 'Pack owns the provider-specific fit result') is not stated; add to ^c13"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A5",
+    "decision": "ok",
+    "where": "^c11",
+    "reason": "'not an MVP runtime dependency' restated as 'does not resolve a Cookbook packaging signature at Checkout'"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A6",
+    "decision": "ok",
+    "where": "^c13",
+    "reason": "Zipline does not mandate Pack; Wonder evaluates it as oracle to avoid its own fit algorithm; ^c18 covers 'not mandatory'"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A7",
+    "decision": "drop-ok",
+    "where": "^c33",
+    "reason": "lead-in to the bullets, which are carried by ^c33"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A8",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "early-2027 Texas expansion"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A9",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "Dallas/Houston/Austin–San Antonio triangle"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A10",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "day-one drone as a goal (hedge 'if possible'/'major' compressed, acceptable)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A11",
+    "decision": "fix",
+    "where": "",
+    "reason": "draft Q3 planning readout framing 1P drone discovery as prep for a Q1 2027 launch path is absent; ^c24 is unrelated"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A12",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "verbatim in substance"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A13",
+    "decision": "fix",
+    "where": "^c24",
+    "reason": "'Drone availability at Wonder launch marked Y' and 'both rows' are missing from ^c24"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A14",
+    "decision": "ok",
+    "where": "^c24",
+    "reason": "'planning fields rather than sign-offs'"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A15",
+    "decision": "ok",
+    "where": "^c26",
+    "reason": "History keeps the 01-11 Friends & Family / 01-14 Grand Opening snapshot"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A16",
+    "decision": "ok",
+    "where": "^q1",
+    "reason": "14-vs-20 difference, launch-owner confirmation and F&F≠Soft Opening kept; tracker-as-working-reference in ^c26"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A17",
+    "decision": "fix",
+    "where": "",
+    "reason": "Software Production Ready in SP23 / Partner Site provisioning / 2027 launch being separate milestones is absent; add a claim"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A18",
+    "decision": "ok",
+    "where": "^c1",
+    "reason": "shift from Grubhub-mediated to direct Zipline; DELI-4518 in ^c30 History"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A19",
+    "decision": "drop-ok",
+    "where": "^c30",
+    "reason": "framing; DaaS frame kept as History ^c30 and migration path in ^c1"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A20",
+    "decision": "ok",
+    "where": "^c30",
+    "reason": "earlier DaaS/Dexa-abstraction frame kept in superseded ^c30"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A21",
+    "decision": "fix",
+    "where": "^c1",
+    "reason": "'possible marketplace-brand flow' from the current-frame question is missing"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A22",
+    "decision": "drop-ok",
+    "where": "^c4",
+    "reason": "framing sentence; precedence itself in ^c4 (but see notes: 'P2 pages useful official terminology' is lost)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A23",
+    "decision": "ok",
+    "where": "^c30",
+    "reason": "DaaS-first recommendation kept as superseded historical target"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A24",
+    "decision": "fix",
+    "where": "",
+    "reason": "'do not assume DaaS can support the Zipline path quickly in short/medium term' is not in Test"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A25",
+    "decision": "fix",
+    "where": "",
+    "reason": "list of what discovery should clarify (direct APIs, lifecycle, eligibility, loading workflow, status mapping, fallback, field normalization) is absent; ^c8 is unrelated"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A26",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "pilot proposal assigning Delivery Product to integrate DEXA and Consumer Product to drone selection/drop-pin/disable tips is missing"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A27",
+    "decision": "ok",
+    "where": "Evidence",
+    "reason": "Tasks/Jobs provider-capability fact kept"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A28",
+    "decision": "ok",
+    "where": "Evidence",
+    "reason": "core fact kept; 'courier-name regex' and ROBOT/DRONE detail compressed"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A29",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "card/receipt treatment and 'Drone Delivery is Ready' alerting are lost; only 'drone handling' remains"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A30",
+    "decision": "fix",
+    "where": "",
+    "reason": "Rob's Green Brook customer-facing drone launch update for 2026-03-18 is absent; ^c22 is unrelated"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A31",
+    "decision": "ok",
+    "where": "Evidence ^c33",
+    "reason": "SP12 anchor: Texas early-2027 expansion with day-one drone"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A32",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "'did not surface a clear DaaS support plan' becomes 'found nothing' (sharpened)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A33",
+    "decision": "ok",
+    "where": "Evidence",
+    "reason": "allocation-layer capability, not a separate order rail"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A34",
+    "decision": "fix",
+    "where": "",
+    "reason": "'allocation decision chooses a standard or a drone-capable path' is missing; table row is a different statement"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A35",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "'keep the provider adapter narrow' dropped; migration-friendly kept in ^c1"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A36",
+    "decision": "fix",
+    "where": "",
+    "reason": "'configurable provider/capability in allocation settings only for eligible HDRs' not in Test"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A37",
+    "decision": "ok",
+    "where": "Evidence",
+    "reason": "gate list kept ('delivery address/drop zone' shortened to 'drop zone')"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A38",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "'where possible' hedge dropped (sharpened to an unconditional instruction)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A39",
+    "decision": "ok",
+    "where": "Evidence",
+    "reason": "normalized statuses into order tracking, Dispatch Portal, analytics"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A40",
+    "decision": "fix",
+    "where": "Evidence",
+    "reason": "fallback list (Grubhub DaaS, Relay, DoorDash) and 'when drone is unavailable' reduced to 'human-courier providers'"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A41",
+    "decision": "drop-ok",
+    "where": "",
+    "reason": "rhetorical lead-in to the next sentence"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A42",
+    "decision": "fix",
+    "where": "",
+    "reason": "question whether a DaaS-first path can support the early-2027 timeline is not an Open item; ^q2 asks only about roadmap/exposed fields"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A43",
+    "decision": "fix",
+    "where": "",
+    "reason": "'use Q3 2026 discovery to clarify DaaS roadmap certainty' action is missing; ^q2 is a question, not this plan item"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A44",
+    "decision": "fix",
+    "where": "",
+    "reason": "'identify the minimum direct-provider fallback needed for launch confidence' is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A45",
+    "decision": "fix",
+    "where": "Open",
+    "reason": "question of who owns support, SLA, pricing and incident handling under direct Dexa integration is missing"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A46",
+    "decision": "drop-ok",
+    "where": "",
+    "reason": "section lead-in; the slide-readout bullets are ^c31–^c33"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A47",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "Texas plan makes drone readiness expansion readiness for 2027–2028"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A48",
+    "decision": "fix",
+    "where": "",
+    "reason": "'SP14 Delivery Bi-Weekly raised drone delivery to a high-priority initiative' is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A49",
+    "decision": "fix",
+    "where": "",
+    "reason": "Rob drafting a formal PRD and exploring a Slack channel with the Zipline technical team are absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A50",
+    "decision": "fix",
+    "where": "^c3",
+    "reason": "Jay's concern (Grubhub-app orders also flow into IKCs and could compete for the same Dropbox) is lost; only the conclusion remains"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A51",
+    "decision": "fix",
+    "where": "^c3",
+    "reason": "reason Zipline won't partner with Grubhub (also a food-delivery platform and competes with it) is lost; 'only with Wonder' is only implicit"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A52",
+    "decision": "fix",
+    "where": "",
+    "reason": "still-needed Zipline confirmation on Dropbox capacity, loading windows, availability, queue depth, ready-for-handoff event is absent (^q6 lists different gates)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A53",
+    "decision": "drop-ok",
+    "where": "^c25",
+    "reason": "lead-in to the bullets, which are ^c25"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A54",
+    "decision": "ok",
+    "where": "^c25",
+    "reason": "Dallas first"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A55",
+    "decision": "fix",
+    "where": "",
+    "reason": "operating model (Zipline integrated with Wonder ordering and kitchen workflows; Dropbox hardware for handoff) is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A56",
+    "decision": "fix",
+    "where": "",
+    "reason": "stated value (cost, speed, access, food quality, demand growth, delivery resilience) is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A57",
+    "decision": "fix",
+    "where": "^c25",
+    "reason": "'strengthens the direct-provider scale case' is missing; 'does not mention Grubhub/exclusivity' is kept"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A58",
+    "decision": "ok",
+    "where": "^c2",
+    "reason": "1P-only scope with src s3 (SP14 meeting) vs ^c25 saying the announcement is silent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A59",
+    "decision": "drop-ok",
+    "where": "",
+    "reason": "summary of dependencies each carried by ^c18, ^c19, ^c20, ^c21, ^c35 and ^q6"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A60",
+    "decision": "ok",
+    "where": "^c6",
+    "reason": "Fulfillment/Delivery builds and operates the Drone Eligibility Service (s8)"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A61",
+    "decision": "drop-ok",
+    "where": "^c22",
+    "reason": "framing of PRD V6 as baseline; content carried by ^c22/^c23, src s22"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A62",
+    "decision": "ok",
+    "where": "^c23",
+    "reason": "timeline and P0/P1 kept"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A63",
+    "decision": "drop-ok",
+    "where": "",
+    "reason": "lead-in to the bullet list"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A64",
+    "decision": "fix",
+    "where": "^c16",
+    "reason": "'one approved package within the limit guarantees one initial Zip' is not stated; ^c16 only gives the limit"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A65",
+    "decision": "fix",
+    "where": "",
+    "reason": "remaining strategy work (Wonder-side data readiness, normalized recovery, cross-surface custody guards, customer messaging) is absent; ^q6 lists provider gates instead"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A66",
+    "decision": "ok",
+    "where": "History ^c27",
+    "reason": "252 mm / 9.92 in per 2026-07-30 QA kept"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A67",
+    "decision": "ok",
+    "where": "^c16",
+    "reason": "canonical in grams and millimetres"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A68",
+    "decision": "fix",
+    "where": "History",
+    "reason": "PRD v16 (2026-08-11) aligning the Weight and Dimension Eligibility PRD to the July envelope is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A69",
+    "decision": "ok",
+    "where": "^c16, ^c17",
+    "reason": "provider limit plus Wonder outer package that must fit it"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A70",
+    "decision": "fix",
+    "where": "",
+    "reason": "architecture consequence (one provider workflow through delayed prep, refresh ETA/operational messaging, fallback only for real failures) is absent; ^c21 gives only the contract"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:A71",
+    "decision": "fix",
+    "where": "",
+    "reason": "'removes loading-window expiry as a default FIFO-priority signal' is absent"
+  },
+  {
+    "id": "drone-delivery-integration-strategy:B1",
+    "decision": "ok",
+    "where": "^c33",
+    "reason": "origin is 1.x New Planning Signal closing sentence plus 2027-2028 slide-readout sentence"
+  },
+  {
+    "id": "ikc-drone-delivery-setting:B1",
+    "decision": "ok",
+    "where": "^c4",
+    "reason": "1.x 'On:' bullet is ^c4; the paired ^c6 comes from 1.x 'Check points', so it also has an origin"
+  },
+  {
+    "id": "packaged-size:A1",
+    "decision": "ok",
+    "where": "^c12",
+    "reason": "main dish / sauce-side rows kept in the grain claim"
+  },
+  {
+    "id": "packaged-size:A2",
+    "decision": "ok",
+    "where": "^c12",
+    "reason": "main dish / sauce-side rows kept in the grain claim"
+  },
+  {
+    "id": "packaged-size:B1",
+    "decision": "ok",
+    "where": "^c12",
+    "reason": "origin is the 1.x Grain bullet list"
+  },
+  {
+    "id": "zipline-drone-deliveries-in-dispatch-portal:B1",
+    "decision": "ok",
+    "where": "^c7",
+    "reason": "origin is 1.x 'Everything not listed here matches the ground detail page'; ^c6 carries the click-through"
+  },
+  {
+    "id": "zipline-drone-deliveries-in-dispatch-portal:B2",
+    "decision": "fix",
+    "where": "^c17",
+    "reason": "no 1.x origin: post-custody Ground job is recovery, not reallocation, is a new claim (History calls it a Level 0 fixture); 1.x line on 'Assigned drone' is ^c10"
+  },
+  {
+    "id": "zipline-loading-methods:A1",
+    "decision": "ok",
+    "where": "^c15",
+    "reason": "one of the four conditions in ^c15"
+  },
+  {
+    "id": "zipline-loading-methods:A2",
+    "decision": "ok",
+    "where": "^c15",
+    "reason": "one of the four conditions in ^c15"
+  },
+  {
+    "id": "zipline-loading-methods:A3",
+    "decision": "ok",
+    "where": "^c15",
+    "reason": "one of the four conditions in ^c15"
+  },
+  {
+    "id": "zipline-loading-methods:A4",
+    "decision": "ok",
+    "where": "^c16",
+    "reason": "more staff time and tighter synchronization"
+  },
+  {
+    "id": "zipline-loading-methods:B1",
+    "decision": "ok",
+    "where": "^c15",
+    "reason": "origin is 1.x condition 3"
+  },
+  {
+    "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add1",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "1.x description 'Working source of truth for the four MVP-blocking questions' restated"
+  },
+  {
+    "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add2",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates the four 1.x question headings"
+  },
+  {
+    "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add3",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "1.x section 'Partner Answers Received (2026-07-30)' and superseded_by"
+  },
+  {
+    "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add1",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "1.x description (IN_PROGRESS authoritative, failed-package disposal) restated"
+  },
+  {
+    "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add2",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x Confirmed Contract paragraph"
+  },
+  {
+    "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add3",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x 'never returned…' paragraph"
+  },
+  {
+    "id": "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add4",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x MVP custody rule callout"
+  },
+  {
+    "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add1",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "1.x description 'Historical BigQuery analysis…' restated"
+  },
+  {
+    "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add2",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x Question section (57.46%)"
+  },
+  {
+    "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add3",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x Question bold sentence on the packaging signature"
+  },
+  {
+    "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add4",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x description/superseded callout"
+  },
+  {
+    "id": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add1",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "1.x description and Robotic Arm section restated"
+  },
+  {
+    "id": "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add2",
+    "decision": "ok",
+    "where": "Summary",
+    "reason": "restates 1.x superseded callout"
+  }
+]
