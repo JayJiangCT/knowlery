@@ -8,7 +8,7 @@ The kit and the data live in **different repositories**; do not look for one ins
 
 | What | Repository | Ref |
 |---|---|---|
-| This kit (`format/experiments/level0/`) | `https://github.com/JayJiangCT/knowlery` | tag `level0-frozen-1` for T01–T12; tag `level0-frozen-2` adds T13 (on `develop/2.0`) |
+| This kit (`format/experiments/level0/`) | `https://github.com/JayJiangCT/knowlery` | tag `level0-frozen-1` for T01–T12; commit `2ba5db3` adds T13 (no tag; the hash is the pin) (on `develop/2.0`) |
 | The Pilot vault (data only; has no kit) | `https://github.com/JayJiangCT/Knowlery-Pilot` | commit `cf9e378` on `main` |
 
 ```

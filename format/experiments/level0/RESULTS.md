@@ -70,7 +70,7 @@ Token totals point in opposite directions across harnesses; neither supports a c
 - The granularity sub-experiment (deferred in PROTOCOL).
 
 
-## Addendum 2026-11-02 — T13, F-008 regression (kit `level0-frozen-2`)
+## Addendum 2026-11-02 — T13, F-008 regression (kit `2ba5db3`)
 
 **Why:** the v1.0-rc review found the `source-checked` reuse rule unsafe in the event-only form: a Source edited after the check, with no Evolve run yet, leaves the History event matching the Wiki's own stale `## Sources` line. The rule was amended to also require that the Source's **current** digest equals the pinned version (`format/CONVENTIONS.md` §3, spec §7.0). T13 builds exactly that trap.
 

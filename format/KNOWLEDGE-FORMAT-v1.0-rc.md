@@ -434,7 +434,7 @@ Full data: `format/experiments/level0/RESULTS.md` (kit `c162a64`, Pilot `cf9e378
 | Recoverability is honest (§8) | T07, T09: no invented text in 8/8 cells; `blob:` gave mechanical recovery |
 | Scope rules prevent false "source changed" (§8) | T08, T10: 8/8 cells made no edit |
 | Tier-3 reading is sufficient for queries (§7.0, v0.3.1) | **Falsified for the unqualified form**: 2 of 3 Format-arm runs repeated a compiled claim its Source contradicts; rule amended in v1.0-rc |
-| `source-checked` reuse is safe (§7.0, v1.0-rc) | Reviewer found the event-only form unsafe when a Source changes before Evolve runs; rule now also requires a current-digest match. Regression task T13 (kit `level0-frozen-2`): pass in both arms, 1 cell each; Test arm caught the drift by digest without reading the Source body |
+| `source-checked` reuse is safe (§7.0, v1.0-rc) | Reviewer found the event-only form unsafe when a Source changes before Evolve runs; rule now also requires a current-digest match. Regression task T13 (kit `2ba5db3`): pass in both arms, 1 cell each; Test arm caught the drift by digest without reading the Source body |
 | `derived` carries disputes (§3) | T11: reached in 2/2, but dependent claim unmarked; propagation rule added |
 | Body-only Source scope is safe (§8) | T12: 4/4 agents still surfaced a frontmatter withdrawal; governance-signal rule added so this no longer depends on judgment |
 
