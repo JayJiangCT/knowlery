@@ -12,7 +12,7 @@ Knowlery 2.0 的方向是 **Agent-native、Markdown-first、Format-first**：人
 | [GOALS.md](./GOALS.md) | 产品愿景、目标、非目标和成功标准 | 目标基线 |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 高层组件关系和职责边界 | 已确认方向；实现待设计 |
 | [DECISIONS.md](./DECISIONS.md) | 确认事项、候选方案和开放问题 | 持续维护 |
-| [Knowledge Format v1.0-rc](../../format/KNOWLEDGE-FORMAT-v1.0-rc.md) | 知识组织、表达、来源和治理契约；经 Level 0 实验验证并修订 | **Release candidate，待 Owner 标记 Accepted** |
+| [Knowledge Format v1.0](../../format/KNOWLEDGE-FORMAT-v1.0.md) | 知识组织、表达、来源和治理契约；Level 0 验证与 F-008 T13 回归后，经 Owner 授权接受 | **ACCEPTED · 2026-11-02（Format 语义契约）** |
 | [Level 0 RESULTS](../../format/experiments/level0/RESULTS.md) | 两个 harness、48 格的对照实验结果与发现 | 已完成 run 1 |
 | [Knowledge Format v0.3.1](../../format/KNOWLEDGE-FORMAT-v0.3.md) | 实验所用版本 | 历史 |
 | [Knowledge Format v0](../../format/KNOWLEDGE-FORMAT-v0.md) | 早期问题框架与评测场景 | 历史草案 |
