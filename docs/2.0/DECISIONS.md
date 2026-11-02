@@ -13,14 +13,15 @@
 | I-001 | MCP Connector 术语边界 | **ACCEPTED · 2026-11-02** | Connector 特指 **MCP Connector**（MCP 能力接入）；它不是 CLI/MCP/Adapter 的总容器。Agent Skills 管工作流，Agent Plugin 管平台集成与分发；MCP 如何调用底层操作仍待设计。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
 | I-002 | CLI 优先设计 | **ACCEPTED · 2026-11-02** | 下一轮先重新设计 Knowlery CLI 的确定性操作能力，再讨论 Agent Skills、MCP Connector、Agent Plugin。这是**设计讨论优先级**，非已批准的实施依赖图或发布顺序。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
 | P-001 | 设计决定入库 | **ACCEPTED · 2026-11-02** | Owner 要求：后续讨论明确确认的 2.0 决定及时提交到 `develop/2.0` 的本索引与 `docs/2.0/decisions/` 对应记录；未确认建议仍为 OPEN / PROPOSED，不视为实施授权。见[决策记录](./decisions/2026-11-02-cli-first-and-mcp-connector.md) |
+| CLI-001 | CLI 的适用范围、KF 权威及安全保证 | **ACCEPTED · 2026-11-02** | 有文件工具时 CLI 可选；仅能通过 Knowlery MCP 访问 Vault 时 CLI 支撑的 MCP 是唯一通路。CLI 实现而不定义 KF；强制写入保障仅适用于经 CLI 的操作，外部写入只能有条件检测；MCP 进程可常驻但不持有权威状态，`.knowlery/` 派生缓存可重建。Level 1 尚待实现与验收。见[决策记录](./decisions/2026-11-02-cli-execution-contract.md) |
 | R-001 | GitHub 组织 | **ACCEPTED FOR BOOTSTRAP** | 继续同一仓库；`develop/2.0` 独立开发；暂保留 1.x 代码与发布配置 |
 | F-001 | Wiki 结构 | **ACCEPTED · 2026-11-02** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2） |
 | F-002 | Frontmatter 字段 | **ACCEPTED · 2026-11-02** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
 | F-003 | Note 身份 | **ACCEPTED · 2026-11-02** | 受管理页按 slug 链接，Source 按路径链接；主张锚点 `^cN` 行尾、页内唯一、随行移动；不注入 UUID。T04/T09 验证锚点在移动后可解析 |
 | F-004 | 来源版本 | **ACCEPTED · 2026-11-02** | 两个值：`version`（证据范围的 sha256，负责变化检测）+ 可选 `blob:`（整文件 git 对象，负责恢复）；范围按角色定义（Source 正文 / Record 到 `## Sources` 止 / Claim 指纹）。T07–T10 验证：8/8 诚实恢复或不恢复，8/8 无误判 |
-| F-005 | Governance 持久化 | **PARTIAL** | Format 侧：`protected`、`## History`、`log.md`、Source frontmatter 治理信号已定（Format §10–11、§8）；跨设备权威存储与冲突语义属 Connector（Level 1），未验证 |
+| F-005 | Governance 持久化 | **PARTIAL** | Format 侧：`protected`、`## History`、`log.md`、Source frontmatter 治理信号已定（Format §10–11、§8）；跨设备权威存储与冲突语义由 Level 1 确定性操作能力承担，CLI 经 MCP 可供无文件工具的 Agent 使用；未验证。见 CLI-001 |
 | F-006 | 知识关系 | **ACCEPTED · 2026-11-02** | 依赖规则：Knowledge 引用 Record/Source 为证据；`derived` 引用另一页的单条主张，证据权重为零，争议沿其传播（§9.2，T11 验证 2/2 到达） |
-| F-007 | 写入安全 | **PARTIAL** | 约定层已定（移入 History、不删除、追加式 Sources/History、`log.md`）并在 T04–T06 两 harness 下成立；确定性保证（原子写、并发、`protected` 强制）留给 Connector |
+| F-007 | 写入安全 | **PARTIAL** | 约定层已定（移入 History、不删除、追加式 Sources/History、`log.md`）并在 T04–T06 两 harness 下成立；Level 1 CLI/确定性操作能力需实现原子写、并发及 `protected` 强制，**仅对经过受控写入的操作强制**；外部写入只能有条件检测。见 CLI-001 |
 | F-008 | 读取规则 | **ACCEPTED · 2026-11-02** | 渐进式披露分层；**新增**：作为答案给出的主张需读其首个 vault 内 Source，除非 History 有 `source-checked` 事件**且 Source 当前 digest 仍等于所记版本**（审查 2026-11-02 指出仅凭事件会复用过期验证；RESULTS F1：Test 臂 3 次中 2 次漏检编译期错误）。T13 回归（kit `2ba5db3`）两臂各 1 格通过，Test 臂仅凭 digest 比对即发现漂移、未读 Source 正文 |
 | E-001 | 对照实验 | **DONE (run 1)** | 1.x vs v0.3.1，12 任务 × 2 臂 × 2 harness（同一模型），47/48 通过；见 `format/experiments/level0/RESULTS.md`。Owner 于 2026-11-02 接受单模型范围 |
 | E-002 | 无 Obsidian 测试 | **DONE (run 1)** | 两臂均 headless、仅文件工具；Level 0 成立。Connector 相关保证未测 |
