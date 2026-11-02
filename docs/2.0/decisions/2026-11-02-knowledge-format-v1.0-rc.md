@@ -1,8 +1,12 @@
 # Decision record — Knowledge Format v1.0-rc
 
-**Date:** 2026-11-02 · **Owner:** Jay (Knowlery 2.0) · **Status:** PROPOSED → awaiting Owner `Accepted`
+**Date:** 2026-11-02 · **Owner:** Jay (Knowlery 2.0) · **Status:** ACCEPTED — 2026-11-02 (Owner-authorized recording by reviewing Agent)
 **Decides:** F-001, F-002, F-003, F-004, F-006, F-008 (fixed in Format); F-005, F-007 partial (Format side fixed, Connector side open)
 **Artifacts:** `format/KNOWLEDGE-FORMAT-v1.0-rc.md`, `format/CONVENTIONS.md`, `format/experiments/level0/RESULTS.md`
+
+## Acceptance (2026-11-02)
+
+Owner explicitly authorized the reviewing Agent to record ACCEPTED after independent review and clearance of F-008. Review verified the amended current-Source-digest guard and the T13 regression (one Test and one Control pass; single model, one repetition). **F-001, F-002, F-003, F-004, F-006 and F-008** are accepted as the Knowledge Format v1.0 decisions. **F-005 and F-007 remain PARTIAL**: Level 1 Connector guarantees are not implied by this acceptance. This is a delegated recording of Owner authorization, not a claim that the Owner manually edited this file.
 
 ## Decision
 
@@ -14,6 +18,7 @@ Adopt the v0.3.1 Knowledge Format, with the three amendments the Level 0 experim
 - Level 0 controlled experiment: 1.x Control vs v0.3.1 Test, 12 tasks × 2 arms × 2 harnesses (`claude-sandbox`, `claude-code-local`), same model, 47/48 cells pass. Human equivalence gate on all 96 fixture items plus a blind agent re-review (36 disagreements adjudicated by Owner).
 - Key quantitative result: Unnecessary Rewrite Rate on the supersession task 0.77 / 0.70 (1.x) vs 0.00 / 0.00 (Format).
 - Owner accepted single-model scope on 2026-11-02 ("单模型不会太大的问题").
+- F-008 regression T13 (kit `2ba5db3`): current Source digest must match the pinned `source-checked` version before a previous check may be reused. One Test and one Control run passed; the Test agent detected source drift before Evolve and refused to reuse a stale check. See `format/experiments/level0/RESULTS.md`.
 
 ## Amendments carried into v1.0-rc
 
@@ -34,6 +39,7 @@ Adopt the v0.3.1 Knowledge Format, with the three amendments the Level 0 experim
 - Single model, one repetition per cell: results are case findings, not statistics. Mitigation: repeat with a second model when one is usable locally; the kit is frozen and rebuildable.
 - Token/overhead hypothesis unmeasured (harnesses disagree on direction). Needs an instruction-token split.
 - Connector guarantees (atomic writes, concurrency, `protected` enforcement, automatic propagation) untested at Level 0 — Level 1 scope.
+- A governance-only Source frontmatter change before Evolve can leave an unchanged evidence digest. The Source-governance rule exists, but stale-read behavior in that interval is not independently validated by T13; include it in Level 1 reading/governance conformance.
 - `queries/` → `records/` rename in a live vault needs a link-rewrite pass (3,109 links in the Pilot).
 
 ## Escalation path
