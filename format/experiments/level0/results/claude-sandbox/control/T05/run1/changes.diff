@@ -1,5 +1,54 @@
+diff --git a/.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json b/.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
+new file mode 100644
+index 0000000..61a4ed2
+--- /dev/null
++++ b/.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
+@@ -0,0 +1,43 @@
++{
++  "id": "zipline-single-zip-width-252-vs-254",
++  "reviewed": "2026-11-02",
++  "reviewer": "agent (claude-code), prompted by external reviewer claim",
++  "status": "disputed",
++  "claim_under_review": "The current Zipline Single-Zip width limit is 254 mm and the 2026-07-30 partner QA value of 252 mm is superseded (compiled pages).",
++  "finding": "Unsupported by the cited source. The compiled pages cite the week-of-2026-09-07 Payload Dimensions slide note as the basis for 254 mm. That note records two artifacts: a 3D render labelled 13.25 in / 338 mm, 10 in / 254 mm, 8 in / 205 mm, and an Envelope card reading 338 x 252 x 205 mm. The note states the Envelope card is the numeric payload envelope, calls the 10 in / 254 mm label a rounded-imperial pairing, and says: Do not treat 254 mm as a superseding envelope width. Every other vault source, including sources dated after the slide, uses 252 mm. The compiled pages therefore contradict their own cited source. Because the raw artifacts themselves show two different numbers (render 254 mm, card 252 mm), the numeric question is recorded as disputed rather than resolved by the agent.",
++  "evidence": [
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07.md", "says": "Envelope card 338 x 252 x 205 mm; 254 mm is a rounded-imperial pairing of 10 in; do not treat 254 mm as superseding"},
++    {"path": "Attachments/zipline-payload-dimensions-wk-of-2026-09-07/payload-dimensions-3d-wk-of-2026-09-07.png", "says": "3D render labels: 13.25in/338mm, 10in/254mm, 8in/205mm"},
++    {"path": "Attachments/zipline-payload-dimensions-wk-of-2026-09-07/payload-envelope-card-338-252-205.png", "says": "Envelope 338 x 252 x 205 mm"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17.md", "says": "dropbox envelope 338 x 252 x 205 mm (13.31 x 9.92 x 8.07 in); DIMENSION_EXCEEDED example 'exceeds envelope width 252 mm' (dated after the slide)"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Drone Eligibility Check - Research Log and Plan - 2026-09-07.md", "says": "Pack envelope 205 x 252 x 338 mm"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26.md", "says": "252 mm envelope axis; prescreen rejects 321 > 252 mm (dated after the slide)"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Zipline API Documentation Runtime Annotations - 2026-08-27.md", "says": "Pack accepted isolated 252 x 205 x 338 mm / 2495 g"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery MVP Dimensions Eligibility Proposal (2026-08-12).md", "says": "partner-confirmed envelope 338 x 252 x 205 mm, 2495 g"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery Weight and Dimensions MVP Eligibility Proposal (2026-08-19).md", "says": "envelope 338 x 252 x 205 mm"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery High-Level System Alignment - MVP.md", "says": "Width 252 mm"},
++    {"path": "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md", "says": "Zipline provider envelope 338 x 252 x 205 mm / 2495 g"}
++  ],
++  "not_established": [
++    "Whether the 2 mm difference between the 3D render label (254 mm) and the Envelope card (252 mm) is a rounding artifact or a hardware change: the vault contains no Zipline statement resolving it beyond the user note's interpretation.",
++    "The original 2026-07-30 partner QA document is a Google Doc URL not present in the vault; its 252 mm value is known only through vault notes and compiled pages."
++  ],
++  "affected_pages": [
++    "concepts/drone-delivery-integration-strategy.md",
++    "queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md",
++    "queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md",
++    "queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md",
++    "queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md",
++    "queries/zipline-integration-readiness-guide-2026-06-17.md",
++    "queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md",
++    "queries/zipline-wonder-weekly-deck-readout-2026-09-15.md",
++    "queries/drone-mvp-medium-bag-outer-package-decision.md",
++    "queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md",
++    "queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md"
++  ],
++  "pages_consistent_with_sources": [
++    "queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md"
++  ],
++  "action_taken": "Set freshness_status: disputed, freshness_reviewed: 2026-11-02, freshness_sidecar on each affected page; added a Disputed callout under each H1. Numeric width values on the pages were not changed. No source notes were modified.",
++  "resolution_needed": "Human (Jay) to confirm with Zipline whether the Single-Zip width limit is 252 mm or 254 mm, then either correct the compiled pages to 252 mm or supply a source that supports 254 mm."
++}
 diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
-index 6377103..fbf2d95 100644
+index 6377103..22f3ff3 100644
 --- a/concepts/drone-delivery-integration-strategy.md
 +++ b/concepts/drone-delivery-integration-strategy.md
 @@ -3,7 +3,7 @@ title: Drone Delivery Integration Strategy
@@ -7,28 +56,47 @@ index 6377103..fbf2d95 100644
  date: 2026-04-24
  created: 2026-04-24
 -updated: 2026-10-26
-+updated: 2026-10-30
++updated: 2026-11-02
  tags:
    - architecture
    - DaaS
-@@ -49,10 +49,15 @@ aliases:
- freshness_status: active
- freshness_reviewed: 2026-10-26
+@@ -46,13 +46,17 @@ domain: delivery
+ aliases:
+   - 1P Drone Delivery Strategy
+   - Texas Drone Delivery Integration Strategy
+-freshness_status: active
+-freshness_reviewed: 2026-10-26
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
  retrieval_priority: high
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Drone Delivery Integration Strategy
  
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
  > [!important] MVP profile identity and sync boundary (2026-10-26)
  > The current MVP does not resolve a Cookbook packaging signature at Checkout. Consumer Cart fields form the configuration identity, OMS Order fields validate it post-order, and Delivery Catalog serves a local profile projection populated by Cookbook periodic sync and Kafka updates. If no usable Cookbook profile exists, the existing classification resolution is applied per line. Zipline Pack owns the provider-specific fit result.
  
+diff --git a/log.md b/log.md
+new file mode 100644
+index 0000000..33ff1b2
+--- /dev/null
++++ b/log.md
+@@ -0,0 +1,9 @@
++# Agent Page Log
++
++## 2026-11-02 — Single-Zip width dispute recorded (252 mm vs 254 mm)
++
++- Trigger: reviewer claim that compiled pages misstate the current Single-Zip width limit.
++- Finding: eleven compiled pages assert `254 mm` is current and `252 mm` superseded, citing `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07.md`. That source note states the Envelope card reads `338 × 252 × 205 mm`, calls `254 mm` a rounded pairing of `10 in`, and says not to treat `254 mm` as superseding. All other vault sources (including 2026-09-17 PRD and 2026-10-26 investigation) use `252 mm`.
++- Action: marked the affected pages `freshness_status: disputed` (`freshness_reviewed: 2026-11-02`, `updated: 2026-11-02`), added a Disputed callout under each H1, and wrote the sidecar `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`. Width values on the pages were left unchanged; no winner picked. No user notes modified.
++- Pages: `concepts/drone-delivery-integration-strategy.md`, `queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md`, `queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md`, `queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md`, `queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md`, `queries/zipline-integration-readiness-guide-2026-06-17.md`, `queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md`, `queries/zipline-wonder-weekly-deck-readout-2026-09-15.md`, `queries/drone-mvp-medium-bag-outer-package-decision.md`, `queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md`, `queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md`.
++- Activity ledger: not written (`.knowlery/activity-disabled` present).
 diff --git a/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md b/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
-index 238f916..d3a3288 100644
+index 238f916..3b43d29 100644
 --- a/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
 +++ b/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
 @@ -2,7 +2,7 @@
@@ -36,31 +104,33 @@ index 238f916..d3a3288 100644
  date: 2026-07-16
  created: 2026-07-16
 -updated: 2026-09-29
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -45,6 +45,7 @@ retrieval_priority: high
- freshness_status: watch
- freshness_reviewed: 2026-09-29
+@@ -42,14 +42,18 @@ aliases:
+   - Pre-order Bag Recommendation Contract
+   - 无人机配送结账前包裹尺寸契约
+ retrieval_priority: high
+-freshness_status: watch
+-freshness_reviewed: 2026-09-29
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
  contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
    - "[[drone-mvp-medium-bag-outer-package-decision]]"
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
-@@ -341,6 +342,10 @@ The v16 bag table still predates the 2026-08-12 Medium-bag direction: it calls S
+ # 1P Drone Delivery Checkout Package Dimensions Contract
  
- ## Current Payload Envelope (Week of 2026-09-07)
- 
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
-+
- The current provider envelope is the Zipline Payload Dimensions slide dated week of 2026-09-07:
+ > [!warning] Current Checkout profile direction (2026-09-01)
+ > The provider envelope, conservative missing-data principle, KDS boundary, and Medium-bag questions remain current. The Cookbook-dependent configuration allowlist/signature below is historical. The current MVP candidate derives identity from Consumer Cart fields, serves a Delivery-owned physical profile and `containers[]`, and calls Zipline Pack. See [[queries/1p-drone-delivery-weight-and-dimension-eligibility-current-proposal-2026-08-31|1P Drone Delivery Weight and Dimension Eligibility Current Proposal (2026-08-31)]].
  
- ```text
 diff --git a/queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md b/queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md
-index 850e1a0..ef98b84 100644
+index 850e1a0..b26cf22 100644
 --- a/queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md
 +++ b/queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md
 @@ -2,7 +2,7 @@
@@ -68,32 +138,31 @@ index 850e1a0..ef98b84 100644
  date: 2026-07-16
  created: 2026-07-16
 -updated: 2026-10-14
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -40,6 +40,8 @@ aliases:
+@@ -38,12 +38,16 @@ aliases:
+   - Drone Quote Revalidation State Machine
+   - 无人机配送资格检查触发与重验证
  retrieval_priority: high
- freshness_status: watch
- freshness_reviewed: 2026-10-14
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
+-freshness_status: watch
+-freshness_reviewed: 2026-10-14
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # 1P Drone Delivery Eligibility Evaluation Trigger and Revalidation Contract
-@@ -271,6 +273,10 @@ This section remains valid as API capability history, but PRD v19 no longer requ
  
- ## Exact Eligibility Units (2026-07-30)
- 
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
-+
- The Eligibility Service must evaluate package inputs using the exact provider units and thresholds: `2495 g / 338 × 254 × 205 mm`. The current slide labels are `5.50 lb / 13.25 × 10 × 8 in`. The 2026-07-30 partner QA used width `252 mm`.
+ ## Post-order Address Change — Current Product Direction
  
- API contracts, cache identity, invalidation, tests, and eligibility-rule versions should use grams and millimeters to avoid conversion and rounding drift. PRD and operator-facing documentation may show both unit systems. The earlier `12.5 × 9.5 × 7.75 in` loader reference is not the current eligibility maximum, and since PRD v16 (2026-08-11) it no longer appears as the PRD threshold either; see [[queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16|1P Drone Delivery Checkout Package Dimensions Contract (2026-07-16)]].
+ For an allowed upstream physical-address change after order placement and before Zipline custody transfer, cancel the current Drone execution and switch directly to Ground, even if the new address remains Drone-eligible. Do not recreate a Drone Intent for the changed address. This supersedes both the earlier conditional fallback (only when the new address is ineligible) and the older cancel/re-Quote/recreate-Drone proposal.
 diff --git a/queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md b/queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md
-index 2f16747..ebe8671 100644
+index 2f16747..5a580a7 100644
 --- a/queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md
 +++ b/queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md
 @@ -2,7 +2,7 @@
@@ -101,28 +170,63 @@ index 2f16747..ebe8671 100644
  date: 2026-07-15
  created: 2026-07-15
 -updated: 2026-10-23
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -39,10 +39,15 @@ aliases:
+@@ -37,12 +37,16 @@ aliases:
+   - Drone Delivery System Boundaries
+   - 1P Drone Delivery High-Level Alignment
  retrieval_priority: high
- freshness_status: watch
- freshness_reviewed: 2026-10-14
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
+-freshness_status: watch
+-freshness_reviewed: 2026-10-14
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # 1P Drone Delivery System Responsibility Boundaries
  
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
  ## Post-order Address Change — Current Product Direction
  
  For an allowed upstream physical-address change after order placement and before Zipline custody transfer, cancel the current Drone execution and switch directly to Ground, even if the new address remains Drone-eligible. Do not recreate a Drone Intent for the changed address. This supersedes both the earlier conditional fallback (only when the new address is ineligible) and the older cancel/re-Quote/recreate-Drone proposal.
+diff --git a/queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md b/queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md
+index 55e97ac..737d6c1 100644
+--- a/queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md
++++ b/queries/drone-fit-exclusion-test-and-container-count-limits-2026-08-12.md
+@@ -2,7 +2,7 @@
+ title: Drone Fit Exclusion Test and Container Count Limits (2026-08-12)
+ date: 2026-08-12
+ created: 2026-08-12
+-updated: 2026-09-15
++updated: 2026-11-02
+ type: query
+ domain: delivery
+ tags:
+@@ -26,12 +26,16 @@ aliases:
+   - Why Container Counts Are Not a Safety Net
+   - 无人机装箱排除判据与容器计数的局限
+ retrieval_priority: high
+-freshness_status: active
+-freshness_reviewed: 2026-08-12
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
+ ---
+ 
+ # Drone Fit Exclusion Test and Container Count Limits
+ 
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
++
+ ## Short Answer
+ 
+ Container counts must never be used as a safety property for Drone dimension eligibility. They detect **accumulation** — many small containers — and carry no information about a **single oversized object**. A one-item pizza order passes every plausible count threshold while being physically impossible to load.
 diff --git a/queries/drone-mvp-medium-bag-outer-package-decision.md b/queries/drone-mvp-medium-bag-outer-package-decision.md
-index 0e0a7b2..228e832 100644
+index 0e0a7b2..c9a783e 100644
 --- a/queries/drone-mvp-medium-bag-outer-package-decision.md
 +++ b/queries/drone-mvp-medium-bag-outer-package-decision.md
 @@ -2,7 +2,7 @@
@@ -130,28 +234,63 @@ index 0e0a7b2..228e832 100644
  date: 2026-08-12
  created: 2026-08-12
 -updated: 2026-10-19
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -34,10 +34,15 @@ aliases:
+@@ -32,12 +32,16 @@ aliases:
+   - Approved Outer Package Medium Bag
+   - 无人机 MVP Medium 袋外包装选择
  retrieval_priority: high
- freshness_status: active
- freshness_reviewed: 2026-10-19
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
+-freshness_status: active
+-freshness_reviewed: 2026-10-19
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Drone MVP Medium Bag Outer Package Decision
  
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
  > [!important] Current status (2026-10-19)
  > Rob Knudson's [Weight and Dimension Eligibility PRD](https://wonder.atlassian.net/wiki/spaces/~712020f40ba91c0864455e9792d8f51b9f008d/pages/5462392836/PRD+Weight+and+Dimension+Eligibility+for+1P+Drone+Delivery), version 26, reports that the **new Medium Wonder bag, 12 × 8.5 × 13 in**, has been validated by Zipline across multiple Wonder packaging configurations and is the default bag for MVP launch SOPs. Small is an IKC-staff operational fallback only; Large is out of scope. This supersedes the September 20 candidate-testing status. The source is Rob's PRD; a separate Zipline test report was not inspected in this update.
  
+diff --git a/queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md b/queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md
+index ece43d5..f61c91d 100644
+--- a/queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md
++++ b/queries/order-packaging-geometry-feasibility-for-drone-dimension-eligibility-2026-08-12.md
+@@ -2,7 +2,7 @@
+ title: Order Packaging Geometry Feasibility for Drone Dimension Eligibility (2026-08-12)
+ date: 2026-08-12
+ created: 2026-08-12
+-updated: 2026-09-15
++updated: 2026-11-02
+ type: query
+ domain: delivery
+ tags:
+@@ -31,12 +31,16 @@ aliases:
+   - Why Container Bin-Packing Fails for Drone Eligibility
+   - 无人机尺寸资格的包装几何可行性
+ retrieval_priority: high
+-freshness_status: active
+-freshness_reviewed: 2026-08-12
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
+ ---
+ 
+ # Order Packaging Geometry Feasibility for Drone Dimension Eligibility
+ 
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
++
+ ## Executive Conclusion
+ 
+ The per-container dimension resolution approach — resolve Cart items into packaging SKUs, look up each SKU's length/width/height, then 3D bin-pack against the Zipline envelope — **is not viable**, and the blocker is not data completeness.
 diff --git a/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md b/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
-index 008dde5..209e628 100644
+index 008dde5..ca5b076 100644
 --- a/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
 +++ b/queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
 @@ -2,7 +2,7 @@
@@ -159,32 +298,32 @@ index 008dde5..209e628 100644
  date: 2026-07-02
  created: 2026-07-02
 -updated: 2026-09-29
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -33,6 +33,8 @@ aliases:
- freshness_status: active
- freshness_reviewed: 2026-09-29
+@@ -30,13 +30,17 @@ aliases:
+   - Zipline Package Eligibility Contract
+   - Zipline Quote and Pack Contract
+   - Zipline 有效载荷尺寸
+-freshness_status: active
+-freshness_reviewed: 2026-09-29
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
  retrieval_priority: high
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Zipline Drone Quote and Package Eligibility Contract (2026-07-02)
-@@ -170,6 +172,10 @@ The remaining implementation work is Wonder package-data completeness, gross-mas
  
- ## Canonical Dual-Unit Eligibility Threshold (2026-07-30)
- 
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
-+
- For Eligibility Service and Quote orchestration, use the exact provider contract values:
+ > [!important] “Not required” versus “chosen by Wonder”
+ > The 2026-07-30 partner contract established that Pack is not mandatory merely to prove one-Zip capacity when one approved outer package is already known to be within the confirmed limits. That remains true. The current Wonder direction is for OMS/CCP to forward the request to Delivery Catalog Service, which resolves approved profiles and uses Pack as the preferred affirmative fit oracle when the Pack representation is available. These statements are compatible: Zipline does not require Pack, while Wonder may choose Pack as its eligibility path. Medium-bag representation, Pack-to-Intent binding, and checkout reliability remain open. See [[zipline-pack-as-eligibility-oracle-direction-2026-08-20]].
  
- ```text
 diff --git a/queries/zipline-integration-readiness-guide-2026-06-17.md b/queries/zipline-integration-readiness-guide-2026-06-17.md
-index d106ae4..f81e4e2 100644
+index d106ae4..d303ae1 100644
 --- a/queries/zipline-integration-readiness-guide-2026-06-17.md
 +++ b/queries/zipline-integration-readiness-guide-2026-06-17.md
 @@ -2,7 +2,7 @@
@@ -192,28 +331,32 @@ index d106ae4..f81e4e2 100644
  date: 2026-06-17
  created: 2026-06-17
 -updated: 2026-09-15
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -34,10 +34,15 @@ aliases:
- freshness_status: watch
- freshness_reviewed: 2026-08-12
+@@ -31,13 +31,17 @@ sources:
+ aliases:
+   - Zipline Readiness Guide
+   - Texas Zipline Integration Readiness
+-freshness_status: watch
+-freshness_reviewed: 2026-08-12
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
  retrieval_priority: medium
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Zipline Integration Readiness Guide (2026-06-17)
  
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
  > [!important] Baseline
  > This guide uses the latest dated direct Zipline answers as the authority for provider-contract details. The 2026-06-16 `Wonder/Zipline Product Intro Sync` remains the broad integration baseline where later answers do not supersede it. Nina's `Region 2 Expansion: Drone Delivery` document remains the current program-scope framing for Consumer, IKC, and Delivery workstreams.
  
 diff --git a/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md b/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
-index 2016db1..e2efd21 100644
+index 2016db1..2a77974 100644
 --- a/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
 +++ b/queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md
 @@ -2,7 +2,7 @@
@@ -221,32 +364,31 @@ index 2016db1..e2efd21 100644
  date: 2026-07-30
  created: 2026-07-30
 -updated: 2026-09-15
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -29,6 +29,8 @@ aliases:
+@@ -27,12 +27,16 @@ aliases:
+   - Zipline 有效载荷尺寸
+   - 338 254 205
  retrieval_priority: high
- freshness_status: active
- freshness_reviewed: 2026-09-15
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
+-freshness_status: active
+-freshness_reviewed: 2026-09-15
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Zipline MVP Partner-Confirmed Contract
-@@ -118,6 +120,10 @@ The earlier `12.5 in × 9.5 in × 7.75 in` value is a superseded PRD loader refe
  
- ## Current Payload Envelope (Week of 2026-09-07)
- 
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
-+
- Jay supplied a Zipline **Payload Dimensions** slide dated week of 2026-09-07. This is the current hardware envelope for eligibility comparison. Source: [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]].
+ ## Short Answer
  
- | Limit | Slide metric | Slide imperial | 2026-07-30 partner QA |
+ Zipline answered the core partner questions for the Wonder 1P Drone Delivery MVP. A fulfillment-capable direct-order Quote requires valid mass before Delivery Intent creation, while a separate mass-optional RDP discovery Quote is allowed for serviceability and KOETA timing features and is never consumed by Intent. An approved standard package within the confirmed limits is a single-Zip package; `DELIVERY_INTENT_STATUS_IN_PROGRESS` confirms successful loading and custody transfer; the exact planned customer drop-off point is not exposed; Dropbox loading summons the Drone; and `loading_window` is advisory rather than an expiration deadline. Zipline can also provision a separate non-production Partner Site, although the concrete access package is still pending.
 diff --git a/queries/zipline-wonder-weekly-deck-readout-2026-09-15.md b/queries/zipline-wonder-weekly-deck-readout-2026-09-15.md
-index 9840ab6..5b57c7f 100644
+index 9840ab6..a89574a 100644
 --- a/queries/zipline-wonder-weekly-deck-readout-2026-09-15.md
 +++ b/queries/zipline-wonder-weekly-deck-readout-2026-09-15.md
 @@ -2,7 +2,7 @@
@@ -254,27 +396,26 @@ index 9840ab6..5b57c7f 100644
  date: 2026-09-15
  created: 2026-09-15
 -updated: 2026-09-20
-+updated: 2026-10-30
++updated: 2026-11-02
  type: query
  domain: delivery
  tags:
-@@ -24,6 +24,8 @@ sources:
+@@ -22,12 +22,16 @@ sources:
+   - Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Sync - Webhook HMAC Eligibility Direction and MVP Timeline - 2026-08-17.md
+   - Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07.md
  retrieval_priority: high
- freshness_status: active
- freshness_reviewed: 2026-09-20
-+contradictions:
-+  - "[[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]"
+-freshness_status: active
+-freshness_reviewed: 2026-09-20
++freshness_status: disputed
++freshness_reviewed: 2026-11-02
++freshness_sidecar: .knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json
  ---
  
  # Zipline x Wonder Weekly Deck Readout (Captured 2026-09-15)
-@@ -81,6 +83,10 @@ These findings add current, site-specific evidence to [[queries/zipline-p2-vs-wo
  
- ## Payload Envelope (Week of 2026-09-07)
- 
-+> [!warning] Disputed claim (2026-10-30)
-+> The width revision `252 mm` → `254 mm` asserted on this page is contested. The cited source note [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07]] states the Envelope card reads `338 × 252 × 205 mm` and that `254 mm` is a rounded `10 in` label, not a superseding width; later sources (PRD 2026-09-17, investigation 2026-10-26) also use `252 mm`. Unresolved — see [[queries/zipline-single-zip-width-252-vs-254-conflict-2026-10-30]]. Text below is left as compiled.
++> [!warning] Disputed — Single-Zip width (252 mm vs 254 mm), flagged 2026-11-02
++> This page states that the current Single-Zip width limit is `254 mm` and that the 2026-07-30 value of `252 mm` is superseded, citing [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Payload Dimensions Slide - Week of 2026-09-07|Zipline Payload Dimensions Slide - Week of 2026-09-07]]. That source note does not support this reading: its Envelope card reads `338 × 252 × 205 mm`, it describes the 3D render's `10 in / 254 mm` label as a rounded-imperial pairing, and it says "Do not treat `254 mm` as a superseding envelope width." The only vault artifact showing `254 mm` is the 3D render label. Every other vault source, including sources dated after the slide ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17|Drone Eligibility Check - MVP Plan - 2026-09-17]], [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26|Cookbook Weight and Dimension Backfill Review - 2026-10-26]]), uses `252 mm`. The width figures on this page are left as written pending human resolution; see `.knowlery/freshness/notes/zipline-single-zip-width-252-vs-254.json`.
 +
-+
- A later-captured Zipline **Payload Dimensions** slide from the same week as the packaging tests gives the current hardware bay:
+ > [!summary]
+ > The deck shows the Wonder–Zipline program moving from integration discovery into launch preparation. The operating model is defined, four DFW sites are feasible, and the initial launch plan is visible. The main unresolved execution risks are Dropbox fit for large payloads, site-specific construction and approvals, and uncertainty in the initial demand forecast.
  
- | Axis | Slide metric | Slide imperial |

@@ -1,0 +1,12 @@
+diff --git a/log.md b/log.md
+index 9def2c5..b5577ec 100644
+--- a/log.md
++++ b/log.md
+@@ -1,4 +1,7 @@
+ # log
+ 
++## 2026-11-02
++- 00:00 · claude-code/fable-5.1 · ANSWER.md · created; investigation of missing source s6 on packaged-size, no page changes
++
+ ## 2026-10-30
+ - 00:00 · process:build · vault · Level 0 Test-arm baseline built from Pilot cf9e378 + v0.3.1 overlay

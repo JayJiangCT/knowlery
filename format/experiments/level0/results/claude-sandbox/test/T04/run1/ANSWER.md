@@ -1,51 +1,51 @@
-# ANSWER — absorbing the 2026-10-28 update to the Medium Bag Slack clarification note
+# ANSWER — absorbing the 2026-10-28 revision of the Medium bag Slack note
 
-## What changed in the Source
+## What changed in the source
 
-`Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` gained one section, `## Update (2026-10-28)` (commit a12e83c, blob `deaef9a…` → `f427b7f…`; evidence digest `sha256:79548617…` → `sha256:820f7c42…`). It says Jay relayed Rob's follow-up: IKC Ops completed the sample testing; the Medium bag and guest-packaging samples fit the production Pod; the Medium bag is confirmed as the MVP outer package; no further bag testing is planned before launch. Nothing else in the note changed.
+`Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` gained one section, `## Update (2026-10-28)` (commit 1c64033; blob deaef9a → 3e52313; evidence digest 79548617… → sha256:89ef80b2450e8a54906ffdbbe805e54019810ecc4b27e72834da85ab8fcd9161). The original 2026-08-12 thread text and its Evidence Boundary are unchanged. The new facts: IKC Ops completed the sample testing; the mailed samples (the new August 2026 Medium bag, described as the PRD v26 default, plus guest packaging) fit the production Pod; the new Medium is confirmed as the MVP outer package; no further bag testing is planned before launch.
 
-## Pages depending on this Source and what was affected
+## Pages that depend on this note and what was affected
 
-| Page | Dependency | Affected? | Action |
-|---|---|---|---|
-| `concepts/drone-delivery-integration-strategy.md` | s17 → claim ^c17 ("existing Medium bag … samples still need testing") | Yes: the "still need testing" condition is now false | Superseded ^c17 → new ^c36; added s33 (new source version) and s34 (new Record); opened ^q8 |
-| `records/drone-mvp-medium-bag-outer-package-decision.md` | s2 | Frozen Record; its Detail already treats 2026-08-12 as historical and PRD v26 as current, so no contradiction | History line appended; `followed_by` → new Record |
-| `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` | s14; "Outer Package Status (2026-09-20)" says final bag pending Zipline validation | Frozen Record; that status is now dated | History line appended; `followed_by` → new Record |
-| `queries/drone-package-recommendation-ownership-and-kds-boundary.md` | legacy 1.x, lists source in frontmatter; 2026-09-20 callout "wait for validation" | Dated | Dated note appended at end (§2a) |
-| `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` | legacy 1.x, lists source; "not yet a final approved profile" | Dated | Dated note appended at end (§2a) |
-| `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` | cites the medium-bag Record, not this Source; that Record's frozen scope did not change | No | Untouched |
-| `pilot/FILES.txt`, Archive proposal note | file listing / user Source | No | Untouched |
+Five pages cite the note by path (grep of `## Sources` lines and legacy `sources:` frontmatter):
 
-No page cites ^c17 as `derived`, so there was no downstream claim to re-fingerprint.
+| Page | Kind | Dependency | Affected? | Action |
+|---|---|---|---|---|
+| `concepts/drone-delivery-integration-strategy.md` | Knowledge page | claim `^c17` (src s17 = this note, s18 = decision record): "existing Medium bag … samples still need testing" | Yes: the testing condition is closed and the bag is now the *new* Medium, confirmed | `^c17` superseded by `^c38`; `^q12` opened; s33 (new source version) and s34 (new Record) appended; History line; `updated`/`updated_by`/description date |
+| `records/drone-mvp-medium-bag-outer-package-decision.md` | Record (frozen) | s2 = this note; its Detail carries "Not Confirmed" test evidence and Jay's inference that mailed samples are the new Medium | Yes, but a Record's Summary/Detail is never rewritten | New Record created; `followed_by` added; History line recording the source revision |
+| `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` | Record (frozen) | s14 = this note, cited for the 2026-08-12 direction; "Outer Package Status (2026-09-20)" and open decision 3 say sample approval is pending | The cited text is unchanged; the pending-approval status is now historical | History line only, pointing forward |
+| `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` | Legacy 1.x page | frontmatter source; "Open MVP Contract 1: … Zipline sample approval" | Partly: sample approval reported complete | Dated Update Note appended at end (§2a) |
+| `queries/drone-package-recommendation-ownership-and-kds-boundary.md` | Legacy 1.x page | frontmatter source; "Remaining Decision 1: … has Zipline approved the mailed sample?" | Partly: sample passed, new Medium confirmed; KDS boundary unchanged | Dated Update Note appended at end (§2a) |
 
-## New Record
-
-`records/drone-mvp-medium-bag-sample-testing-completed-2026-10-28.md` (kind: finding) captures the 2026-10-28 facts and what they do not establish, citing the new source version (sha256 + blob) and the medium-bag decision Record.
-
-## Unable to establish
-
-- Which Medium specification IKC Ops confirmed. The update says only "the Medium bag"; the vault has three candidates (current `10.5×10.5×12 in`, August 2026 `13×10×13 in`, PRD v26 new `12×8.5×13 in`). Recorded as open question ^q8 on the concept page rather than resolved.
-- Whether the IKC Ops Pod-fit test and the Zipline validation reported in PRD v26 used the same bag.
-- Fill line, folded height, orientation, handle/closure treatment, tare, SKU. Not in the update.
-- The new Record has no `blob:` because the vault is not committed (no commit permitted); its Sources line says so.
-
-## Files read (vault-relative)
-
-- AGENTS.md, CONVENTIONS.md, log.md, tools/digest.py
-- Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md (HEAD and the prior blob via `git cat-file`)
-- concepts/drone-delivery-integration-strategy.md
-- records/drone-mvp-medium-bag-outer-package-decision.md
-- records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md (frontmatter, Summary/Detail excerpts, Sources, History)
-- queries/drone-package-recommendation-ownership-and-kds-boundary.md (frontmatter, bag-related passages, tail)
-- queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md (frontmatter, bag-related passages, tail)
+Pages that only cite the decision Record (e.g. `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md`, other `queries/*`) were not touched: the decision Record's evidence scope did not change (digest fd7e1f24… still matches their citations), so by §7 nothing they depend on changed.
 
 ## Files changed and why
 
-1. `records/drone-mvp-medium-bag-sample-testing-completed-2026-10-28.md` — created; Record of the new finding.
-2. `concepts/drone-delivery-integration-strategy.md` — ^c17 moved to History with supersession line; ^c36 added to Current; s33, s34 appended to Sources; ^q8 appended to Open; History line added; `updated`/`updated_by`/description date updated.
-3. `records/drone-mvp-medium-bag-outer-package-decision.md` — `followed_by` added; History line appended. Frozen scope untouched.
-4. `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` — `followed_by` added; History line appended. Frozen scope untouched.
-5. `queries/drone-package-recommendation-ownership-and-kds-boundary.md` — dated note appended at end (legacy page).
-6. `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` — dated note appended at end (legacy page).
-7. `log.md` — six write entries added.
+1. `records/drone-mvp-medium-bag-sample-testing-completed-2026-10-28.md` — **new** Record (kind finding, date 2026-10-28) holding the new facts, what they resolve, and what they do not; cites the note at its new digest/blob and the decision Record.
+2. `records/drone-mvp-medium-bag-outer-package-decision.md` — frontmatter `followed_by` → new Record; one History line. Summary/Detail untouched.
+3. `concepts/drone-delivery-integration-strategy.md` — `^c17` moved to History with the supersession suffix (original text kept); new claim `^c38` in Current; `^q12` in Open; `s33`, `s34` appended to Sources; History line; frontmatter `updated: 2026-11-02`, `updated_by: claude-code/fable-5.1`, description date. `status: disputed` kept (it is about `^c24`, unrelated).
+4. `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` — one History line pointing forward. Body untouched.
+5. `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` — dated Update Note appended at the end.
+6. `queries/drone-package-recommendation-ownership-and-kds-boundary.md` — dated Update Note appended at the end.
+7. `log.md` — six lines under `## 2026-11-02`.
 8. `ANSWER.md` — this file.
+
+Nothing was deleted; every superseded statement remains in place (History or the frozen Record bodies).
+
+## Not established / surfaced rather than resolved
+
+- **Which dimensions the confirmed "new Medium" has.** The source calls it "the new August 2026 Medium bag, the PRD v26 default"; the decision Record lists the August 2026 new Medium as 13 × 10 × 13 in and the PRD v26 new Medium as 12 × 8.5 × 13 in. Whether these are one bag or two specs cannot be decided from the vault; recorded as `^q12` on the concept page and in the new Record. Not marked `#disputed` because `^c38` asserts no dimensions.
+- SKU, tare, fill line, folded height, orientation, handle/closure rule, and a written test report are still absent; the evidence is a relayed Slack message (Jay → Rob → IKC Ops) with no screenshot retained.
+- The new Record is uncommitted, so its `s34` citation has a digest but no `blob:`; it can be filled in once committed (`git rev-parse HEAD:records/drone-mvp-medium-bag-sample-testing-completed-2026-10-28.md`).
+- Pre-existing, not caused by this change and left alone: the concept page's `s18` blob (f89d270…) differs from the decision Record's HEAD blob (0ba37b9…) because of the "pin source versions" commit; the evidence digest still matches, so it is not an evidence change.
+
+## Files read (vault-relative)
+
+- `AGENTS.md`, `CONVENTIONS.md`, `log.md`, `.claude/CLAUDE.md`
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (and its git diff HEAD~1..HEAD)
+- `records/drone-mvp-medium-bag-outer-package-decision.md`
+- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (frontmatter, bag sections, History, Related)
+- `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` (frontmatter, for Record format)
+- `concepts/drone-delivery-integration-strategy.md`
+- `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` (frontmatter, bag lines, tail)
+- `queries/drone-package-recommendation-ownership-and-kds-boundary.md` (frontmatter, bag lines, tail)
+- `tools/digest.py` (run, not read)

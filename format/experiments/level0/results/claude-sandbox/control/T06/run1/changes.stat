@@ -1,4 +1,7 @@
- .../zipline-discovery-vs-fulfillment-quote-mass-contract.md |  5 ++++-
- ...one-quote-and-package-eligibility-contract-2026-07-02.md |  5 ++++-
- .../zipline-mvp-partner-confirmed-contract-2026-07-30.md    | 13 ++++++++++---
- 3 files changed, 18 insertions(+), 5 deletions(-)
+ concepts/drone-delivery-integration-strategy.md        |  6 +++---
+ log.md                                                 | 18 ++++++++++++++++++
+ ...ion-trigger-and-revalidation-contract-2026-07-16.md |  7 +++++--
+ ...ine-discovery-vs-fulfillment-quote-mass-contract.md |  7 +++++--
+ ...ipline-mvp-partner-confirmed-contract-2026-07-30.md | 17 +++++++++++++----
+ queries/zipline-sandbox-quote-mass-gating-contract.md  |  6 +++---
+ 6 files changed, 47 insertions(+), 14 deletions(-)

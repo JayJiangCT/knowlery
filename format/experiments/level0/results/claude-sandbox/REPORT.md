@@ -1,49 +1,53 @@
-# Level 0 — claude-sandbox report (run 1 of each task, both arms)
+# Level 0 — claude-sandbox report
 
-> [!warning] Pre-freeze calibration data, not scored results
-> All 24 runs below ran on kit `6cef470`, before `level0-frozen-1`. That kit's Control overlay still suspended the 1.x page-writing rules and kept the Obsidian CLI rules, skills and query engine; its T04 fixture said only "Medium bag"; its `collect.sh` missed new files; and the human equivalence gate (PROTOCOL, Arms) was open, with three high-severity migration drifts on the strategy page later fixed. Under PROTOCOL's Frozen inputs rule these rows carry `kit_tag=pre-freeze` and are calibration data. No scored run exists on any harness until the gate is signed and the kit is tagged.
+**Harness:** sub-agents (`general-purpose`) of a cloud Claude Code session, model `claude-fable-5-1`, file tools + read-only git, no network (prompt-enforced, not sandbox-enforced), one fresh agent per run, cwd = the built vault. **Kit:** `develop/2.0` @ `c162a64` (after the signed equivalence gate; tag `level0-frozen-1` predates the Test-page fixes). **Pilot:** `cf9e378`. **Tokens** = harness `subagent_tokens` per run (includes the ~400-token run prompt). One repetition per task per arm. Scoring by the operator against `tasks/*.md`; not blind.
 
-**Harness:** sub-agents of a Claude session (`general-purpose`), model `claude-fable-5-1`, file tools + read-only git, no network, fresh agent per run, cwd = the built vault. **Token figure** = harness `subagent_tokens` (total per run, includes the ~400-token run prompt; instruction-file tokens not separable). **Kit:** `develop/2.0` @ `6cef470`; Pilot `cf9e378`. One repetition only; treat every number as a first observation.
+**Deviations from RUNBOOK §0:** no isolated config home and no pre-flight probe (sub-agents inherit the session's tool set; they were told which directory is the vault and not to read outside it, and every report lists files read); tasks were run sequentially by task but not alternating arms within a task; `files_read` is the count the agent reported.
 
-## Pass table
+Rows marked `pre-freeze` in `scores.csv` are the 2026-10-30 calibration runs on the earlier kit and are not scored here.
+
+## Pass table (run 1, post-gate)
 
 | Task | Control | Test | Note |
 |---|---|---|---|
-| T01 Q&A | pass | **partial** | Test stopped at tier 3 and missed the Source-level 252/254 contradiction |
-| T02 historical vs current | pass | pass | both found the disputing Source note |
-| T03 evidence | pass | pass | Test reports sha256+blob; Control correctly says none recorded |
-| T04 targeted update | pass | pass | **URR 0.77 vs 0.00** (below) |
-| T05 conflict | pass | pass | Control touched 9 pages + new page; Test touched 2 files |
-| T06 owner-edited Record | pass | pass | both refused to propagate the owner's edit as fact |
+| T01 Q&A | pass | pass* | *Source-level 252/254 detection (recorded, not scored): Control **yes**, Test **no** — identical to the pre-freeze run |
+| T02 historical vs current | pass | pass | both found the Source note disputing the change |
+| T03 evidence | pass | pass | Test reports sha256+blob; Control says none recorded; both flag "re-Quote" as a compiled inference |
+| T04 targeted update | pass | pass | **URR Control 0.77 vs Test 0.00** |
+| T05 conflict | pass | pass | Control annotated 11 pages + sidecar; Test touched 2 files |
+| T06 owner-edited Record | pass | pass | neither reverted nor propagated the edit as fact |
 | T07 not recoverable | pass | pass | neither invented text |
 | T08 frontmatter-only | pass | pass | neither edited; Test by digest, Control by git diff |
-| T09 recover cited text | pass | pass | Test via `blob:` + digest match; Control via exhaustive git history |
-| T10 unrelated claim on derived source | pass | pass | Test by fingerprint; Control by reading |
-| T11 upstream disputed, text unchanged | pass | pass | Test surfaced the dispute through the `derived` link |
+| T09 recover cited text | pass | pass | Test via `blob:` + digest match; Control via exhaustive history |
+| T10 unrelated claim on derived source | pass | pass | Test by fingerprint |
+| T11 upstream disputed, text unchanged | pass | pass | both surfaced the dispute; Test also named the propagation gap on ^c17 |
 | T12 Source frontmatter withdrawn | pass | pass | both surfaced `decision_status: withdrawn` |
 
-Correctness: 12/12 Control, 11/12 Test (one partial). Tokens: Control 1,632k total, Test 1,577k total (−3%); per task within ±15%, no consistent direction.
+Correctness 12/12 both arms. Tokens: Control 1,592,277; Test 1,637,929 (+2.9%). Files read: Control 151, Test 112 (−26%).
 
-## Unnecessary Rewrite Rate (body lines rewritten that the input did not justify ÷ all body lines rewritten)
+## Rates
 
-| Task | Control | Test |
+| Metric | Control | Test |
 |---|---|---|
-| T04 | 10/13 = **0.77** — rewrote descriptions, a status table, two callouts and a "Sources:" line across 5 pages; prior text was kept but relabelled "historical" | 0/1 = **0.00** — moved ^c17 to History, added ^c36 + two Sources lines + ^q8; frozen Records got only `followed_by` and a History line; new Record created |
-| T05 | 0 (annotations only, 9 pages) | 0 (annotations only, 1 page) |
-| T06 | 0 | 0 |
-| T08, T10 | 0 (no edits) | 0 (no edits) |
+| Unnecessary Rewrite Rate, T04 | 10/13 = 0.77 (callouts relabelled, status table, Short Answer and a Sources line rewritten across 6 files; old text kept as "previous status") | 0/1 = 0.00 (one claim moved to History; new claim, new Record, pointers on frozen Records) |
+| Unnecessary Rewrite Rate, T05 / T06 / T08 / T10 | 0 / 0 (3 in-place annotations, justified) / 0 / 0 | 0 / 0 / 0 / 0 |
+| Unsupported Current Claim Rate, Test T04–T06 | — | 0 (validator OK; one false positive, see kit bugs) |
 
-Unsupported Current Claim Rate (Test, pages edited in T04–T06): 0 — every edited page passes `tools/validate.py`.
+## Findings
 
-## Findings (Format, not scoring)
+1. **Tier-3 stopping hides compile-time errors — reproduced.** Test T01 again answered 254 mm from `^c16` without opening the cited Source; Control again followed the citation and caught the contradiction. Two for two on this model. Same Test Agent found it immediately in T02 and T05 when pointed at it. Candidate rule stands: before citing a claim as an answer, read its first vault-file Source, or let compile record a `source-checked` verification event.
+2. **Claim-level supersession produced the targeted update (T04, again).** Control rewrote 13 body lines across 6 files to express one new fact; Test moved one claim. This is the second observation at the same magnitude (0.77 vs 0.00).
+3. **Scope rules behaved as designed (T08, T10) and the two boundary probes passed again (T11, T12)**, with the Test Agent in T12 explicitly reasoning "frontmatter-only, not an evidence change under §7, but a human withdrawal flag bears on the decision" — i.e. judgment compensating for the Format's silence. Status propagation along `derived` (T11) and semantic Source frontmatter (T12) remain open design items, now with two clean runs each suggesting Agents compensate.
+4. **Honesty tasks (T07, T09)** pass in both arms; the Test arm's `blob:` mechanism gave a mechanical proof where Control needed a history argument.
+5. **Records revised in place by 1.x cook runs** were flagged independently by the Test Agent in T01, T02, T03 and T12 as §6 violations. The Format makes a 1.x practice visible that 1.x itself could not express.
+6. **Token cost did not fall** this run (+2.9% Test) even though Test read 26% fewer files: Test agents spent tokens verifying digests and blobs. Files read is the better proxy for retrieval efficiency; token efficiency needs the instruction-file split the harness cannot give.
 
-1. **Tier-3 stopping hides compile-time errors (T01).** The Test Agent did what `CONVENTIONS.md` §3 says — answer from `## Current`, open Sources only when evidence is asked for — and therefore repeated a compiled claim its own cited Source contradicts. The Control Agent, following the 1.x "quote key passages" rule, opened the Source and caught it. When the question pointed at the conflict (T02, T05) the Test Agent found it immediately and handled it by the rules. Candidate rule: before citing a claim as an answer, read the first-listed Source of that claim when it is a vault file (cheap: one file), or let the compile step record a `source-checked` verification event that tier-3 readers can trust. To be decided after repetitions.
-2. **Claim-level supersession produces the targeted update the project is after (T04).** One claim moved, one added, frozen Records untouched, Open question for what the new fact does not establish. The 1.x arm preserved history too, but by rewriting five pages.
-3. **`derived` propagation worked in both directions (T10, T11)** — unchanged fingerprint → no edit; disputed upstream → surfaced downstream. The Test Agent also pointed out the representation gap: the dependent claim ^c17 is not itself marked `#disputed`, so a reader of only the Dispatch Portal page would not see it. Status propagation along `derived` remains an open design item, but the Agent compensated by following the link.
-4. **Body-only evidence scope did not cause the feared T12 miss**, because the Agent read the Source's frontmatter anyway and reasoned that a withdrawal flag bears on the decision even though it is "not an evidence change". The Format currently leaves this to Agent judgment; one run is not enough to call it safe.
-5. **1.x evidence-chain violation surfaced by migration and confirmed by the Test Agent (T02):** the 2026-07-30 contract page's frozen content had been rewritten in place on 2026-09-15 in 1.x. Under v0.3.1 that is exactly what `## History · revised by` lines are for.
-6. **Kit:** Record digest scope corrected before run 1 of T02–T12 (see NOTES.md). The T01 Test run predates that fix; its answer is unaffected.
+## Kit bugs found during the run (fix after the run, not during)
+
+- `tools/digest.py` crashes when flags precede the file path (`digest.py --claim ^c16 file.md`); file-first works.
+- `tools/validate.py` false positive: a `[[#^q12]]` link inside a History line trips the "id not at end of line" check.
+- Fixture commits (T10) do not bump `updated` or add a History line; a Test Agent noticed and reported it as a bookkeeping gap on the strategy page.
 
 ## What this does not show
 
-Single repetition, single model, same model in both arms, sandbox harness. No atomic-write, concurrency or `protected` enforcement claims. Cross-harness results (Codex, Claude Code) are collected separately under `results/codex/` and `results/claude-code/`.
+Single repetition, one model, same model in both arms, no isolated harness config, no second harness yet. Cross-harness comparison waits on the local Claude Code run with an isolated config (RUNBOOK §0). Nothing here speaks to atomic writes, concurrency or `protected` enforcement.

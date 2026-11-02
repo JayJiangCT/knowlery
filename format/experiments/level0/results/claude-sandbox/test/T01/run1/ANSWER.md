@@ -1,54 +1,63 @@
-# ANSWER — three Zipline questions (answered 2026-10-30 from this vault only)
+# Answer — three Zipline questions (answered 2026-11-02, vault-only)
 
-## 1. Single-Zip width limit, and whether a direct-order Quote may omit mass
+## 1. Single-Zip width limit (252 vs 254 mm) and whether a direct-order Quote can omit mass
 
-**Current answer: 254 mm. A direct-order (fulfillment) Quote may NOT omit mass; only the non-binding RDP discovery Quote may.**
+**Current answer: 254 mm.** The current single-Zip envelope is 2495 g gross and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in). **A direct-order (fulfillment) Quote cannot omit mass**; only the non-binding RDP discovery Quote may omit or send `null` mass, and that Quote must never be used to create a Delivery Intent.
 
-- Width: the current single-Zip envelope is `2495 g`, `338 mm L × 254 mm W × 205 mm H`. Current claim: [[drone-delivery-integration-strategy#^c16]] — "The current single-Zip provider limit is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in)" (src: s15 Payload Dimensions slide week of 2026-09-07, s16 weekly deck readout). Record detail: [[zipline-mvp-partner-confirmed-contract-2026-07-30]] §"Current Payload Envelope (Week of 2026-09-07)" — "Width is the only metric change: `252 mm` → `254 mm`. Length and height stay `338 mm` and `205 mm`. … Mass remains `2495 g`."
-- **Earlier answer replaced: yes.** `252 mm` was the 2026-07-30 partner-QA width. It is in History on the concept page: [[drone-delivery-integration-strategy#^c27]] "…338 × 252 × 205 mm … per the 2026-07-30 partner QA · superseded 2026-09-15 by [[#^c16]] · week-of-2026-09-07 Payload Dimensions slide revised width to 254 mm". An even earlier `12.5 × 9.5 × 7.75 in` PRD loader reference was superseded on 2026-07-30 (same page History). Note that 252 mm still appears as the historical value inside frozen Record text (e.g. the "Canonical Dual-Unit Package Limits (2026-07-30)" table in the partner-confirmed record and [[zipline-mvp-final-partner-qa-working-draft-2026-07-26]]); those are dated snapshots, not current.
-- Mass on a direct-order Quote: [[drone-delivery-integration-strategy#^c18]] — "A direct-order Quote requires reliable mass, so package-data completeness is a hard eligibility dependency; Pack is not a mandatory single-Zip proof for the MVP" (src: s10). Record statement: [[zipline-mvp-partner-confirmed-contract-2026-07-30]] "Confirmed Contract" table, row "Quote mass by lifecycle role": "A Quote used for direct-order fulfillment requires valid package mass. Create Quote also accepts omitted or `null` mass for the earlier RDP discovery use case." Sandbox evidence in [[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]]: "Zipline staging created Quotes whose mass was `null` or `0`, but Create Delivery Intent rejected those Quote IDs."
-- **Earlier answer replaced: yes.** The partner-confirmed record states: "These 2026-07-30 partner answers supersede the assumption that a no-mass Quote can be used for direct-order fulfillment." The discovery (RDP) no-mass Quote remains allowed but "must not be used for Delivery Intent".
+**Earlier answer replaced: yes.** The width was 252 mm per the 2026-07-30 partner QA; it was superseded on 2026-09-15 by the week-of-2026-09-07 Zipline Payload Dimensions slide. Length, height and mass did not change. On mass, the 2026-07-30 partner answers superseded the earlier assumption that a no-mass Quote could be used for direct-order fulfillment.
 
-## 2. Drone Loading vs Dropbox Loading trade-off at a store
+Relied on:
+- `[[drone-delivery-integration-strategy#^c16]]` (concepts/drone-delivery-integration-strategy.md): "The current single-Zip provider limit, the current hardware maximum, is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); one approved package within it guarantees one initial Zip" (src: s15, s16, s10).
+- Same page, History `^c27`: "The current single-Zip provider limit is 2495 g and 338 × 252 × 205 mm … per the 2026-07-30 partner QA … superseded 2026-09-15 by [[#^c16]] · week-of-2026-09-07 Payload Dimensions slide revised width to 254 mm".
+- `[[drone-delivery-integration-strategy#^c18]]`: "A direct-order Quote requires reliable mass, so package-data completeness is a hard eligibility dependency" (src: s10).
+- `[[zipline-mvp-partner-confirmed-contract-2026-07-30]]` (records/…, Record, date 2026-07-30, refreshed 2026-09-15): Confirmed Contract table, row "Quote mass by lifecycle role": "A Quote used for direct-order fulfillment requires valid package mass. Create Quote also accepts omitted or `null` mass for the earlier RDP discovery use case." Row "Single-Zip package": "the 2026-07-30 dimensions were `338 mm L × 252 mm W × 205 mm H` … The current hardware envelope revises width to `254 mm`." Section "Current Payload Envelope (Week of 2026-09-07)": "Width is the only metric change: `252 mm` → `254 mm`."
+- `[[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]]` (records/…): sandbox evidence 2026-08-11 — "Zipline staging created Quotes whose mass was `null` or `0`, but Create Delivery Intent rejected those Quote IDs."
 
-**Current answer** (all from [[zipline-loading-methods]], `status: current`, as of the 2026-09-15 Zipline x Wonder weekly deck):
+## 2. Trade-off between Drone Loading and Dropbox Loading at a store
 
-- [[zipline-loading-methods#^c1]]: "Drone Loading is operationally flexible and more tolerant of large payloads in the September test, but it requires a longer, precisely timed associate handoff."
-- [[zipline-loading-methods#^c2]]: "Dropbox Loading shortens the associate action and is the intended repeatable infrastructure model, but it adds equipment, approvals, construction dependencies, and a demonstrated large-payload fit risk."
-- Specifics: associate time 2–3 min vs ~1 min ([[#^c6]]); approvals partner-only vs partner + landlord + city ([[#^c4]]); Drone Loading needs coordination with aircraft arrival and a "load now" signal, Dropbox waits for Dropbox-ready state ([[#^c7]]); Dropbox needs an installed Dropbox and possible window/footing/curb/awning/roof work ([[#^c3]], [[#^c9]]); test signal 12/12 successes for Drone Loading vs the largest payload failing 3 of 6 pickups under Dropbox ([[#^c10]]).
-- Decision rule: [[zipline-loading-methods#^c17]] "Prefer Dropbox Loading when the site and bag are validated and the goal is repeatable, low-touch store handoff"; [[#^c18]] "Prefer Drone Loading during early launch, construction dependency, or payload-fit uncertainty"; [[#^c19]] "Do not use staff packout discipline as the primary mitigation for a marginal Dropbox fit; address the bag or app eligibility boundary." Dropbox's long-term labor advantage applies only after four conditions are met ([[#^c15]]).
-- **Earlier answer replaced: no.** The page's History has only the 2026-09-15 creation line (c1–c19 added); no superseded claims exist on this subject in the vault.
+**Current answer.** Drone Loading (associate loads the aircraft directly) is operationally flexible, needs only partner approval and no permanent equipment, and tolerated large payloads in the September test (12/12 deliveries succeeded), but it costs a longer, precisely timed associate handoff (about 2–3 minutes, coordinated with aircraft arrival and the "load now" signal). Dropbox Loading (associate places the order in an installed Dropbox) cuts the associate action to about 1 minute and is the intended repeatable steady-state model, but it requires installed hardware, partner + landlord + city approvals, possible site construction (window, footing, curb, awning, roof), and showed a large-payload fit risk (largest payload failed 3 of 6 pickups). Decision rule: prefer Dropbox when site and bag are validated and the goal is low-touch repeatable handoff; prefer Drone Loading during early launch, construction dependency or payload-fit uncertainty; do not rely on staff packout discipline to fix a marginal Dropbox fit.
 
-## 3. Package Zipline guarantees to carry in a single Zip, and when custody transfers
+**Earlier answer replaced: no.** The comparison page has no superseded claims; all claims `^c1`–`^c19` were added 2026-09-15 and are current.
 
-**Current answer:**
+Relied on (`[[zipline-loading-methods]]`, comparisons/zipline-loading-methods.md, status current):
+- `^c1`: "Drone Loading is operationally flexible and more tolerant of large payloads in the September test, but it requires a longer, precisely timed associate handoff".
+- `^c2`: "Dropbox Loading shortens the associate action and is the intended repeatable infrastructure model, but it adds equipment, approvals, construction dependencies, and a demonstrated large-payload fit risk".
+- `^c4`, `^c6`, `^c9`, `^c10` (approvals, 2–3 min vs ~1 min, construction dependency, 12/12 vs 3-of-6 failures).
+- `^c17`, `^c18`, `^c19` (decision rule).
+- Evidence is the 2026-09-15 Zipline x Wonder weekly deck (s1, no snapshot) and the legacy readout `queries/zipline-wonder-weekly-deck-readout-2026-09-15.md` (s2; digest verified).
 
-- Guarantee: one approved standard outer package within all four limits — `gross_mass_g <= 2495`, `length_mm <= 338`, `width_mm <= 254`, `height_mm <= 205`, `approved_outer_package = true` — "uses exactly one initial Zip". Source statement: [[zipline-mvp-partner-confirmed-contract-2026-07-30]] "Single-Zip package" row: "One approved outer package within all four limits uses exactly one initial Zip. The current hardware envelope revises width to `254 mm` … Operational replacement after a failure is outside this guarantee." Also [[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]] §"Partner-Confirmed Mass And Single-Zip Contract (2026-07-30)": "One approved outer package within all limits is guaranteed to use exactly one initial Zip; failure replacement is outside that guarantee." Current concept claims: [[drone-delivery-integration-strategy#^c16]] (envelope) and [[#^c18]] (Pack not mandatory as single-Zip proof).
-- Custody: `DELIVERY_INTENT_STATUS_IN_PROGRESS`. Current claim [[drone-delivery-integration-strategy#^c19]]: "`DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative, irreversible custody boundary; food that fails after custody is discarded near a Zipline charging site and never returns to Wonder" (src: s10, s19, s20). Record statement: [[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]] §"Partner-Confirmed API Boundary (2026-07-30)": "Zipline confirmed that `DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative event that the P2 package was successfully loaded and custody transferred to Zipline. This closes the earlier open lock-event mapping." Operationally, custody passes at successful P2/Dropbox loading, which also summons the drone ([[drone-delivery-integration-strategy#^c21]]).
-- **Earlier answer replaced: partly.** (a) The single-Zip envelope's width was 252 mm before 2026-09-15 (see Q1; [[drone-delivery-integration-strategy#^c27]] in History). (b) Before 2026-07-30 the vault treated single-delivery as *not* guaranteed by static rules — [[zipline-drone-quote-and-package-eligibility-contract-2026-07-02]] §"Single-Delivery MVP Guardrail (2026-07-15)": "the current documentation does not make them a single-delivery guarantee" and Pack `total_deliveries = 1` was "the strongest currently documented pre-Intent signal"; the 2026-07-30 partner confirmation replaced that with the explicit one-Zip guarantee. (c) For custody, the exact lock/custody event was an open question in the 2026-07-28 record ("Does `DELIVERY_INTENT_STATUS_IN_PROGRESS` exactly represent that boundary?") until Zipline's 2026-07-30 answer closed it. The ReadMe's "package returns to partner" wording is documented as incorrect and overridden by the dated partner answers.
+## 3. What package Zipline guarantees to carry in a single Zip, and when Zipline takes custody
+
+**Current answer.** One approved standard Wonder outer package (the existing Medium bag) that is within all four limits — gross mass ≤ 2495 g, length ≤ 338 mm, width ≤ 254 mm, height ≤ 205 mm — is guaranteed to use exactly one initial Zip. Operational replacement after a failure is outside that guarantee, and Zipline Pack is not required merely to prove one-Zip capacity. Zipline takes custody when the Delivery Intent reaches `DELIVERY_INTENT_STATUS_IN_PROGRESS`, which confirms successful P2 loading; this is the authoritative, irreversible custody boundary. After it, the package never returns to Wonder; a failed delivery is taken near a Zipline charging site and discarded, so recovery is refund/remake/new delivery, not same-package Ground fallback.
+
+**Earlier answer replaced: partly.** The guaranteed envelope's width moved from 252 mm to 254 mm (see Q1). The custody boundary itself has not been superseded; it was an open P0 question ("Which API status/event is the authoritative Dropbox-lock and custody-transfer signal?") until Zipline confirmed `IN_PROGRESS` on 2026-07-30. The Zipline ReadMe's "returned to the Partner" wording was confirmed incorrect on 2026-08-04 and is overridden by the direct partner answer.
+
+Relied on:
+- `[[drone-delivery-integration-strategy#^c16]]` (envelope and one-Zip guarantee, quoted above) and `#^c17`: "The Wonder-side outer package that must fit that envelope is the existing Medium bag".
+- `[[drone-delivery-integration-strategy#^c19]]`: "`DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative, irreversible custody boundary; food that fails after custody is discarded near a Zipline charging site and never returns to Wonder" (src: s10, s19, s20).
+- `[[zipline-mvp-partner-confirmed-contract-2026-07-30]]`: "One approved outer package within all four limits uses exactly one initial Zip … Operational replacement after a failure is outside this guarantee." and "`DELIVERY_INTENT_STATUS_IN_PROGRESS` confirms successful P2 loading and transfer of custody to Zipline."
+- `[[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]]` (records/…): "Zipline confirmed that `DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative event that the P2 package was successfully loaded and custody transferred to Zipline. This closes the earlier open lock-event mapping." and the Current-Documentation Correction (2026-08-04).
 
 ## Files relied on (vault-relative)
 
-- `AGENTS.md`, `CONVENTIONS.md`, `.claude/CLAUDE.md` (instructions)
-- `concepts/drone-delivery-integration-strategy.md`
-- `comparisons/zipline-loading-methods.md`
-- `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md`
-- `records/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md`
-- `records/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md` (partial: §Partner-Confirmed API Boundary, History, frontmatter)
-- `records/zipline-mvp-final-partner-qa-working-draft-2026-07-26.md` (grep hits only)
-- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md`, `records/drone-mvp-medium-bag-outer-package-decision.md` (grep hits only)
-- `queries/zipline-wonder-weekly-deck-readout-2026-09-15.md` (frontmatter and digest only)
-- `log.md`, `tools/digest.py`
+- AGENTS.md, CONVENTIONS.md (contract)
+- concepts/drone-delivery-integration-strategy.md
+- comparisons/zipline-loading-methods.md
+- records/zipline-mvp-partner-confirmed-contract-2026-07-30.md
+- records/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md
+- records/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md
+- records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md (grep only, lines 220, 290)
+- queries/zipline-wonder-weekly-deck-readout-2026-09-15.md (frontmatter + digest only)
+- tools/digest.py (run read-only to verify cited sha256 digests; all matched)
 
 ## Unable to establish / caveats
 
-- `concepts/drone-delivery-integration-strategy.md` is `status: disputed` (because of launch-date claim ^c24), and its `verified` date (2026-07-17) predates the claims used here; the claims relied on (c16, c18, c19, c21) are not themselves disputed.
-- Source-version drift (computed with `tools/digest.py --scope record`): the strategy page's s10 (`735dd357…`) and s19 (`310e67cf…`) digests no longer match the current records (`f7eb0926…`, `d65d4ba1…`), and `zipline-loading-methods` s2 (`14aff2c4…`) no longer matches the readout (`271534b0…`; legacy page updated 2026-09-20). The records' History lines show only additive revisions, and the quoted statements remain in the current texts, so the answers above stand, but the cited claims are formally due for re-verification. Not changed here (read-only task).
-- Mass `2495 g` is carried forward from the 2026-07-30 partner QA; the week-of-2026-09-07 slide "does not show" mass, so no newer mass confirmation exists in the vault.
-- No vault page records an earlier, now-replaced answer for the Drone Loading vs Dropbox Loading trade-off.
-- The original Zipline Google Doc/Slides sources are `no-snapshot` URLs; their text was not accessible (no network) and was not needed.
+- `concepts/drone-delivery-integration-strategy.md` has page `status: disputed`, but the dispute is `^c24` (launch dates), unrelated to the claims used here; `verified` is 2026-07-17, older than the 2026-09-15 width change.
+- The 2026-09-15 weekly deck (s1 on the comparison page) is a Google Slides URL with `no-snapshot`; the claims rest on the compiled readout and the deck image attachments, which I did not open.
+- The three `records/` pages carry `date` values of July 2026 but have "revised by process:cook" History lines through 2026-10-19, i.e. their frozen scope was edited after creation. Per CONVENTIONS §6 that means pages citing them need review; however their current digests match the versions cited by the concept and comparison pages, so no citation is stale today.
+- Mass (2495 g) comes only from the 2026-07-30 partner QA; the week-of-2026-09-07 slide does not show mass.
+- Whether an in-flight cancellation after custody physically sends the package to a charging station, and whether `DELIVERY_STATUS_FAILED` carries a reason, remain open in the vault.
 
 ## Files changed
 
-- `ANSWER.md` (new) — this answer, as the task required.
-- `log.md` — one line appended under 2026-10-30 recording the ANSWER.md write (CONVENTIONS §10). No knowledge pages, records or sources were modified.
+- ANSWER.md (this file, new). No other vault file was created, edited, moved or deleted; no git commit or push.

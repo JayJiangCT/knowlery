@@ -1,5 +1,5 @@
  concepts/drone-delivery-integration-strategy.md              | 10 +++++++---
- log.md                                                       |  4 ++++
- records/drone-mvp-medium-bag-outer-package-decision.md       |  2 ++
+ log.md                                                       |  7 +++++++
+ records/drone-mvp-medium-bag-outer-package-decision.md       |  1 +
  records/zipline-mvp-partner-confirmed-contract-2026-07-30.md |  5 +++--
- 4 files changed, 16 insertions(+), 5 deletions(-)
+ 4 files changed, 18 insertions(+), 5 deletions(-)

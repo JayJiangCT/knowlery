@@ -1,59 +1,52 @@
-# Answer: Ground job after a Zipline job for the same order — reallocation or post-custody recovery?
+# Answer: Ground job after a Zipline job — reallocation or post-custody recovery?
 
 ## Current answer
 
-It depends on whether Zipline had taken custody of the package when the Ground job was created, and the vault's current (but now disputed) custody marker is the Zipline Delivery Intent reaching `DELIVERY_INTENT_STATUS_IN_PROGRESS`:
+**It depends on whether the Zipline Delivery Intent had already reached `DELIVERY_INTENT_STATUS_IN_PROGRESS` (custody transfer).** The vault's current claim is:
 
-- **Before custody** (Intent not yet `IN_PROGRESS`; IKC staff still hold the package): the Ground job is a **Reallocation** of the same delivery — the Zipline Job is terminated, a new Ground Job is created, the Task persists, and the original food is re-used. Reallocation is the Dispatch Portal "Reallocate to Ground with a Drone-specific reason" path. ([[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]] Operational State Contract table and MVP SOP step 1; [[Wonder/Glossary/Reallocation]])
-- **After custody** (Intent has reached `IN_PROGRESS`): the Ground job is a **post-custody recovery** (remake + new delivery, or refund), not a reallocation. The original package never returns to Wonder; same-package Ground fallback is explicitly ruled out. ([[zipline-drone-deliveries-in-dispatch-portal#^c17]]; [[drone-delivery-integration-strategy#^c35]]; [[drone-delivery-integration-strategy#^c19]]; [[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]] "Partner-Confirmed API Boundary (2026-07-30)" and "Webhook Confirmation"; [[zipline-mvp-partner-confirmed-contract-2026-07-30]] custody-transfer row)
+> Once a Zipline job's Delivery Intent has reached `IN_PROGRESS` the drone has custody, so a Ground job that appears after it is a post-custody recovery rather than a reallocation of the same delivery
+> — [[zipline-drone-deliveries-in-dispatch-portal#^c17]] (src: s3, s2)
 
-The Dispatch Portal itself does not label the distinction: a Ground job "created after a Zipline fallback" is rendered as an ordinary Ground job with the normal Ground timeline ([[zipline-drone-deliveries-in-dispatch-portal#^c12]], from DELI-4660 acceptance criteria), and the portal uses one shared "Assigned" status for Ground and Zipline jobs ([[zipline-drone-deliveries-in-dispatch-portal#^c2]]). So the classification must come from the Zipline Intent status at the moment the Ground job was created, not from how the portal displays it.
+The two cases the vault distinguishes:
 
-Direct quote answering the question — [[zipline-drone-deliveries-in-dispatch-portal#^c17]]:
+| Zipline Intent state when the Ground job appears | What the Ground job is | Evidence |
+|---|---|---|
+| Before `IN_PROGRESS` (package still under IKC control, e.g. load failure, Dropbox weight rejection, mechanical failure) | **Reallocation** to Ground of the same delivery/package, with a Drone-specific reason | [[drone-delivery-integration-strategy#^c35]]; `records/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md` ("Operational State Contract" table and "Pre-lock loading failure" SOP) |
+| After `IN_PROGRESS` (Dropbox locked, Zipline custody) | **Post-custody customer recovery** (refund / remake / new delivery). The original package never returns to Wonder; the Ground job carries a *new* delivery, not the original one | [[zipline-drone-deliveries-in-dispatch-portal#^c17]]; [[drone-delivery-integration-strategy#^c19]]; same Record, "Partner-Confirmed API Boundary (2026-07-30)" and "Terminology and metric correction" |
 
-> Once a Zipline job's Delivery Intent has reached `IN_PROGRESS` the drone has custody, so a Ground job that appears after it is a post-custody recovery rather than a reallocation of the same delivery (src: s3, s2)
+The Dispatch Portal itself does not label the difference: both Ground and Zipline jobs share one "Assigned" status ([[zipline-drone-deliveries-in-dispatch-portal#^c2]], [[#^c3]]), and the only UI statement about a Ground job created after a Zipline fallback is that it keeps rendering expected-but-missing events as empty circles ([[zipline-drone-deliveries-in-dispatch-portal#^c12]], src: s2 = DELI-4660 acceptance criteria). So the portal shows *that* a Ground job followed; the reallocation-vs-recovery classification must come from the custody state, not from the portal row.
 
-## How much it can be trusted right now
+## How much it can be trusted right now: **low-to-moderate; treat as disputed**
 
-**The two-workflow split (pre-custody Reallocation vs post-custody recovery) is well supported. The exact custody *signal* is currently disputed, so the rule "Ground after `IN_PROGRESS` = recovery" should be treated as provisional.**
+1. **The claim rests on a single `derived` dependency that is now `#disputed`.** `^c17` cites s3 = `[[drone-delivery-integration-strategy#^c19]]` as `derived` (zero independent evidence per CONVENTIONS §1) plus s2 = DELI-4660, which only says a post-fallback Ground job shows empty circles — it does not itself say anything about custody or recovery. The reasoning substance comes entirely from `^c19`.
+2. **`^c19` was marked `#disputed` on 2026-10-29** (git commit `8de8ecc`, History line `2026-10-29 · [[#^c19]] marked disputed; [[#^q8]] opened`). The open question reads: "A Zipline engineer reportedly said on 2026-10-27 that `DELIVERY_STATUS_PICKED_UP`, not `DELIVERY_INTENT_STATUS_IN_PROGRESS`, marks custody; unconfirmed" ([[drone-delivery-integration-strategy#^q8]]). The page-level `status` of `drone-delivery-integration-strategy` is `disputed`.
+3. **The dispute has no source in the vault.** `^q8` carries no `(src: …)` and there is no attestation line for a 2026-10-27 Zipline statement in `## Sources`; a grep for `PICKED_UP` / `2026-10-27` finds nothing supporting it. It is an unsourced report, so it cannot be ranked against the partner-confirmed 2026-07-30 contract — which is exactly the §8 situation where the agent should surface, not resolve.
+4. **What is *not* disputed:** the *shape* of the rule — a custody boundary exists, pre-custody = Reallocation, post-custody = refund/remake/new-delivery recovery, the original package never returns to Wonder ([[drone-delivery-integration-strategy#^c35]], not disputed; Record `zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md`, status `current`, verified 2026-10-19, digest matches the cited `sha256:b89be957…`; Record `zipline-mvp-partner-confirmed-contract-2026-07-30.md`, digest matches `sha256:980486cf…`). What *is* disputed is only **which Zipline webhook event marks that boundary** (`DELIVERY_INTENT_STATUS_IN_PROGRESS` vs `DELIVERY_STATUS_PICKED_UP`). If the engineer's statement is right, a Ground job appearing between `IN_PROGRESS` and `PICKED_UP` could still be a true Reallocation, so the exact wording of `^c17` ("has reached `IN_PROGRESS`") may be wrong at the margin.
+5. **Provenance caveat:** `^c17` is flagged in its own History as an "EXPERIMENT FIXTURE, not from 1.x: inserted by the Level 0 kit … by process:build" (2026-10-30). Its sources s1–s3 digests all re-verify (`tools/digest.py` output matches the recorded `sha256:` for DELI-4641, DELI-4660 and the `^c19` claim fingerprint), so the citation chain is intact, but the claim was added by a build process rather than by compiling new evidence.
+6. **`^c17` has not yet been propagated as disputed.** Under CONVENTIONS §7/§8, a `derived` claim whose upstream is disputed should itself be marked `#disputed` with an `## Open` question. That has not been done on `zipline-drone-deliveries-in-dispatch-portal.md` (still `status: current`, no `#disputed` on `^c17`). I did not change the page, since the task only asked for an answer; this is the recommended follow-up.
 
-Trust assessment by claim:
-
-1. **Pre-custody = Reallocation, post-custody = recovery (the split itself)** — high trust. It rests on two independent evidence lines: Rob Knudson's 2026-07-28 attestation after a live Zipline call, PRD V6 (2026-07-29), and Zipline's own partner confirmation on 2026-07-30 ([[drone-delivery-integration-strategy#^c35]], src s22 and s19; [[zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28]], s2 attestation; [[zipline-mvp-partner-confirmed-contract-2026-07-30]]). Both Records are `status: current`; the 2026-07-28 Record was last verified 2026-10-19. Caveat: s22 (PRD V6) is a URL with `no-snapshot` and `fetched:2026-07-29`, so its text is not recoverable from the vault.
-
-2. **`DELIVERY_INTENT_STATUS_IN_PROGRESS` is the custody boundary** — disputed since 2026-10-29. [[drone-delivery-integration-strategy#^c19]] carries `#disputed`, the page is `status: disputed`, and `## Open` ^q8 records that "A Zipline engineer reportedly said on 2026-10-27 that `DELIVERY_STATUS_PICKED_UP`, not `DELIVERY_INTENT_STATUS_IN_PROGRESS`, marks custody; unconfirmed". The Zipline-confirmed answer of 2026-07-30 is the only sourced position; the 2026-10-27 counter-claim has **no Sources line, no attestation, and no Source note anywhere in the vault** (grep for `DELIVERY_STATUS_PICKED_UP` finds only the ^q8 line). It is hearsay recorded as an Open question, exactly per CONVENTIONS §8. Until resolved, which specific webhook marks the cut-over is uncertain; the practical consequence is that a Ground job created between `IN_PROGRESS` and a hypothetical later `PICKED_UP` event might be either a Reallocation or a recovery depending on which signal is right.
-
-3. **The Dispatch-Portal claim [[zipline-drone-deliveries-in-dispatch-portal#^c17]]** — medium trust, and specifically weaker than it looks. Its sources are s3 = `derived` from `[[drone-delivery-integration-strategy#^c19]]` (the disputed claim) and s2 = DELI-4660. Per CONVENTIONS §1 a `derived` citation counts as zero independent evidence, and DELI-4660 only says a Ground job "created after a Zipline fallback" keeps the Ground timeline — it does not mention custody, `IN_PROGRESS`, or recovery. So ^c17 effectively has no independent evidence for the custody-signal part; it inherits the ^c19 dispute but is **not itself marked `#disputed`** and the page is still `status: current` (updated 2026-10-10, before the dispute was raised 2026-10-29). Also, ^c17 is not listed in the page's `## History` (History records only ^c1–^c16 added on 2026-10-10), so its provenance line is missing.
-
-Version checks performed (all match, so the cited evidence is unchanged since citation):
-- `tools/digest.py --claim ^c19 concepts/drone-delivery-integration-strategy.md` → `sha256:9db9352c…db59d`, equal to s3 on the Dispatch Portal page (the `#disputed` tag is excluded from the fingerprint by design, so the dispute does not register as an evidence change).
-- DELI-4660 digest `sha256:f07bfc96…8a8f17d` and DELI-4641 digest `sha256:6900cada…bef8233` match s2/s1; blob `064502ad…` matches `git rev-parse HEAD:` for DELI-4660.
-- Record digests for the 2026-07-28 custody Record (`b89be957…9006a`) and the 2026-07-30 partner contract (`980486cf…8be2a`) match the Strategy page's s19 and s10.
-- `git log`: the dispute was committed as `42a3c1f Strategy: custody signal disputed` (process:cook, 2026-10-30), adding only `#disputed`, ^q8 and a History line.
-
-## Bottom line
-
-Current vault answer: a Ground job that appears after a Zipline job is a **Reallocation if it was created before the Zipline Intent reached `IN_PROGRESS`, and a post-custody recovery (new fulfillment for a package Wonder can never get back) if created after**. The split is solid; the `IN_PROGRESS` trigger is under an unsourced dispute (possible `DELIVERY_STATUS_PICKED_UP` instead) and the Dispatch Portal page's ^c17 silently depends on that disputed claim. Confirm with Zipline before building any Dispatch Portal logic or SOP on the exact signal.
+**Bottom line:** The current vault answer is "post-custody recovery if the Zipline Intent was already `IN_PROGRESS`, otherwise a Reallocation." The pre/post-custody split is well supported by two current Records and a partner confirmation; the *specific trigger* `IN_PROGRESS` that `^c17` hinges on is under an unconfirmed, unsourced dispute since 2026-10-29 and must be confirmed with Zipline before being relied on operationally.
 
 ## Files relied on (vault-relative)
 
-- `CONVENTIONS.md`, `AGENTS.md`, `.claude/CLAUDE.md`, `log.md`, `tools/digest.py`
-- `concepts/zipline-drone-deliveries-in-dispatch-portal.md` (^c2, ^c12, ^c17, s2, s3)
-- `concepts/drone-delivery-integration-strategy.md` (^c19 #disputed, ^c35, ^q8, s10, s19, s20, s22, History 2026-10-29)
+- `AGENTS.md`
+- `CONVENTIONS.md`
+- `log.md`
+- `tools/digest.py`
+- `concepts/zipline-drone-deliveries-in-dispatch-portal.md`
+- `concepts/drone-delivery-integration-strategy.md`
 - `records/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md`
-- `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` (grep of custody lines)
+- `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` (grep for `IN_PROGRESS` only; digest verified)
 - `Wonder/Wonder Fulfillment/Sprints/2026/SP20-21/JIRA Tickets/DELI-4660.md`
-- `Wonder/Glossary/Reallocation.md`
-- git history (`git log`, `git show 42a3c1f`, `git rev-parse HEAD:…`), read-only
+- `Wonder/Wonder Fulfillment/Sprints/2026/SP20-21/JIRA Tickets/DELI-4641.md` (digest verified only)
+- git history (read-only): `git log`, `git show 8de8ecc`
 
 ## Unable to establish
 
-- Any source for the 2026-10-27 `DELIVERY_STATUS_PICKED_UP` claim; it exists only as ^q8 text with no attestation or document.
-- PRD V6 text (s22 is `no-snapshot`), so the "two different workflows" wording there is taken from the Record's paraphrase and Rob's attestation.
-- Whether `DELIVERY_STATUS_CANCELED` is an equivalent terminal recovery signal, and the in-flight cancellation physical outcome — both still open in the 2026-07-28 Record.
-- Any Dispatch Portal data field or label that distinguishes a recovery Ground job from a reallocation Ground job; the vault records none (only `external_id` timestamp suffixing for reallocations in `entities/delivery-task-mappings.md`, which I did not open in full).
+- Any vault source for the 2026-10-27 Zipline engineer statement that `DELIVERY_STATUS_PICKED_UP` marks custody; `^q8` is unsourced.
+- Whether Zipline has since confirmed or retracted the `IN_PROGRESS` custody boundary (no Record newer than 2026-10-19 on custody).
+- Whether the portal exposes any field that distinguishes a Reallocated Ground job from a recovery Ground job (DELI-4641/DELI-4660 say nothing about such a field).
 
 ## Files changed
 
-- `ANSWER.md` (this file) — created, as required by the task.
-- `log.md` — one line appended under `## 2026-10-30` recording the ANSWER.md write (CONVENTIONS §10). No knowledge pages, Records or Sources were modified; the ^c17 dependency problem noted above is reported here rather than fixed, because the task was a question, not an update.
+- `ANSWER.md` (new) — this answer. No other vault file was modified; `log.md` not appended because no knowledge page or Record was written.

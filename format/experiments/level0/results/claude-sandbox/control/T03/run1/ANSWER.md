@@ -2,68 +2,48 @@
 
 ## Answer
 
-The statement rests on a single primary source: a Slack thread between Wonder and the Zipline team, captured in the vault as a user note with the original screenshot attached.
+The statement rests on a single primary source: a Zipline Slack thread, captured as a screenshot and transcribed in the user note [[Zipline Slack Clarification - Dropbox Loading Window and Drone Summon - 2026-08-03]]. The compiled pages [[zipline-dropbox-loading-window-contract]] and [[zipline-mvp-partner-confirmed-contract-2026-07-30]] both derive from it.
 
-**Primary source (user note + screenshot)**
-`Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Slack Clarification - Dropbox Loading Window and Drone Summon - 2026-08-03.md`
-Screenshot: `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Attachments/Zipline Dropbox loading window Slack confirmation - 2026-08-03.png`
-(frontmatter: `type: reference`, `date: 2026-08-03`, `source: Slack screenshot shared by Jay Jiang`)
+### Who said it, and when (from the Slack screenshot)
 
-Who said what, and when (from the screenshot):
+Thread in the Wonder x Zipline Slack channel, 2026-07-31 (Fri) to 2026-08-03 (Mon; the screenshot shows "Monday", which the note dates as 2026-08-03):
 
-| Speaker | Role | When | What was said |
-| --- | --- | --- | --- |
-| Rob Knudson (Wonder) | asked the question | Fri 2026-07-31, 4:14 PM | "If Wonder misses the drone loading window upper bound, what happens next? ... Does Wonder proactively need to make a net new delivery intents call? Does Zipline offer a retry option?" |
-| Sophie Davidson (Zipline) | part 1 of the statement — summon trigger | Fri 2026-07-31, 4:54 PM | "For Dropbox loading, Wonder would load the order into the Dropbox, and once the order is loaded, that action triggers the drone to be summoned. Since Wonder is planning to use Dropbox loading, they shouldn't separately need to summon the drone or risk missing it, the load itself is the trigger." |
-| Rob Knudson | scoped the question to the Delivery Intent `loading_window` field (start/end) | Fri 2026-07-31, 5:20 PM | "This would be for Dropbox loading! ... So what happens if we miss this loading end time?" |
-| Muneeb Ahmad (Zipline) | part 2 of the statement — advisory window | Mon 2026-08-03, 1:32 PM | "nothing happens if you miss the loading window. Think of the loading window as more of a suggestion." |
-| Rob Knudson | acknowledgement | Mon 2026-08-03, 1:49 PM | "perfect thanks for confirming! this is great news as well." (cc Pratik Busi) |
+1. **Rob Knudson (Wonder), Jul 31, 4:14 PM** — asked Sophie Davidson and Casey Sheldon: "If Wonder misses the drone loading window upper bound, what happens next? ... Does Wonder proactively need to make a net new delivery intents call? Does Zipline offer a retry option? etc"
+2. **Sophie Davidson (Zipline), Jul 31, 4:54 PM** — "For Dropbox loading, Wonder would load the order into the Dropbox, and once the order is loaded, that action triggers the drone to be summoned. Since Wonder is planning to use Dropbox loading, they shouldn't separately need to summon the drone or risk missing it, the load itself is the trigger."
+   → This is the evidence for **"completing the Dropbox load summons the drone."**
+3. **Rob Knudson, Jul 31, 5:20 PM** — confirmed the question was about Dropbox loading and the `loading_window` (start/end) field in the `delivery_intents` response; attached `zipline_loading_window.png` showing the API field "loading_window object required — The time window during which the drone will be loaded at the partner site."
+4. **Muneeb Ahmad (Zipline), Monday [2026-08-03], 1:32 PM** — "nothing happens if you miss the loading window. Think of the loading window as more of a suggestion."
+   → This is the evidence for **"`loading_window` is advisory — missing its end time does not lose the reservation."**
+5. **Rob Knudson, Monday, 1:49 PM** — "perfect thanks for confirming! ... there may be times we miss it when the kitchen is very busy." (cc Pratik Busi)
 
-So: the "completing the Dropbox load summons the drone" half is Sophie Davidson's statement of 2026-07-31; the "`loading_window` is advisory" half is Muneeb Ahmad's statement of 2026-08-03. Both are Zipline-side people answering Rob Knudson of Wonder.
+### Supporting API definition
 
-**Compiled page that states the claim in the exact wording asked about**
-`queries/zipline-dropbox-loading-window-contract.md` (`status: active`, `retrieval_priority: high`, `freshness_status: active`, `freshness_reviewed: 2026-08-12`, `updated: 2026-08-10`). Its Short Answer: "completing the Dropbox load summons the Drone. Wonder does not need a separate summon call. The Delivery Intent `loading_window` is advisory: missing its end time does not by itself cancel the Intent, fail the Job, or require a replacement Intent, re-Quote, retry, or reschedule." It lists the Slack note above as its first source.
+`Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Delivery Intent.md` defines `loading_window` (OpenAPI "Zipline APIs" **version 0.1.0**) as "The time window during which the drone will be loaded at the partner site." It says nothing about expiry or consequences of a miss, which is why the Slack clarification was needed.
 
-The near-verbatim phrasing in the question ("does not create a lost reservation or require re-Quote ...") comes from `concepts/drone-delivery-integration-strategy.md`, section "Advisory Loading Window and Summon Trigger (2026-08-03)", which cites `[[zipline-dropbox-loading-window-contract]]`.
+### Versions recorded in the vault
 
-**Supporting/field-definition source**
-`Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Delivery Intent.md` — the Zipline OpenAPI definition (`"version": "0.1.0"`) defines `loading_window` as a required `TimeWindow`: "The time window during which the drone will be loaded at the partner site." It does not itself say the window is advisory; that semantics comes only from the Slack thread. The same field appears in `Zipline API Doc/Get Delivery Intent By Id.md`, `Cancel Delivery Intent.md`, and `Webhooks.md`.
+- Slack clarification note: `date: 2026-08-03`, `created/updated: 2026-08-09`; source listed as "Slack screenshot shared by Jay Jiang". No Slack permalink or message IDs are recorded.
+- `queries/zipline-dropbox-loading-window-contract.md`: `updated: 2026-08-10`, `freshness_reviewed: 2026-08-12`, `status: active`, `retrieval_priority: high`.
+- `queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md`: `updated: 2026-09-15`, section "Dropbox Trigger and Advisory Loading Window (2026-08-03)".
+- Zipline API doc: OpenAPI `info.version: 0.1.0`; the vault does not record a fetch date for the page itself (a runtime annotation dated 2026-08-21/2026-08-27 exists but concerns Quote/409 behavior, not `loading_window`).
+- Git history: the vault's git log holds only two repo-level commits (baseline/pilot split), so no per-note revision history is available.
 
-**Corroborating compiled pages (all derive from the same Slack note, not independent evidence)**
-- `queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md` (row "Loading-window semantics")
-- `queries/zipline-zipping-station-loading-queue-guardrail-2026-07-02.md` (line 133)
-- `queries/zipline-drone-dropoff-status-and-fallback-contract-gaps-2026-07-02.md` (line 188)
-- `queries/zipline-integration-readiness-guide-2026-06-17.md` (line 389)
-- `queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md` (line 260)
-- `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` (line 181)
+## What the sources do and do not establish
 
-The original open question that this answered is recorded in `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Questions for Zipline Team - 1P Drone Delivery (2026-07-01).md` (line 44) and the archived `1P Drone Delivery System Orchestration Alignment Draft (2026-06-29).md` (lines 148, 431: "Is `loading_window.end` a hard latest-load deadline, an operational target, or an ETA modeling output?").
-
-## Versions
-
-- The Slack thread has no version; the vault records it as a screenshot dated 2026-08-03 (note `created`/`updated` 2026-08-09).
-- The Zipline API doc backing the `loading_window` field definition records OpenAPI `info.version: 0.1.0`.
-- The compiled contract page is `updated: 2026-08-10`, freshness-reviewed 2026-08-12, status active; no `superseded_by`.
-- Git history for both files shows a single commit (`cf9e378`, shallow clone), so no earlier vault versions are recoverable.
-
-## Caveats / what could not be established
-
-- **"Re-Quote" and "lose the reservation" are Wonder-side paraphrases, not Zipline's words.** Rob asked about a "net new delivery intents call" and a "retry option"; Muneeb answered "nothing happens." Neither Zipline person mentioned Quotes or reservations. The extension to "no re-Quote needed" is an inference made in `queries/zipline-dropbox-loading-window-contract.md`; its own "Not Confirmed" section notes it does not establish that an Intent remains valid indefinitely, nor override provider cancellation, site downtime, operating-hours, or load-rejection behavior.
-- No entity pages exist for Rob Knudson, Sophie Davidson, or Muneeb Ahmad (`entities/` has none; the wikilinks in the Slack note are unresolved), so roles are inferred from context: Sophie and Muneeb appear with the Zipline "Z" badge in the screenshot and are referred to as Zipline contacts elsewhere (e.g. `Slack Sync - Webhook HMAC Eligibility Direction and MVP Timeline - 2026-08-17.md`).
-- The year in the screenshot is not shown; 2026 is taken from the note's date and the surrounding project timeline (Jul 31, 2026 is a Friday and the following Monday is Aug 3, consistent with "Monday" timestamps).
-- The vault has no `.knowlery/freshness/notes/` sidecar for this page.
+- **Established by a named person:** load-triggers-summon (Sophie Davidson, Zipline, 2026-07-31); missing the window has no consequence / window is a suggestion (Muneeb Ahmad, Zipline, 2026-08-03).
+- **"Does not require a re-Quote":** Rob's question covered "net new delivery intents call" and "retry option"; Muneeb's "nothing happens" answers that no replacement Intent or retry is needed. The word "re-Quote" does not appear in the Slack thread. It appears only in the compiled pages ([[zipline-dropbox-loading-window-contract]] Short Answer; [[zipline-mvp-partner-confirmed-contract-2026-07-30]] § 2026-08-03) as Wonder's inference from "nothing happens". So that specific clause is a compiled-page interpretation, not a verbatim partner statement.
+- **Not established** (per the note's own "Evidence Boundary" and the contract page's "Not Confirmed" list): that an Intent remains valid indefinitely; behaviour under provider cancellation, site downtime, operating-hours changes, or load rejection; that any attempted load will succeed.
+- Not verified from outside the vault (no network); the Slack screenshot is the only primary artifact.
 
 ## Files relied on (vault-relative)
 
-- `AGENTS.md`
 - `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline Slack Clarification - Dropbox Loading Window and Drone Summon - 2026-08-03.md`
 - `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Attachments/Zipline Dropbox loading window Slack confirmation - 2026-08-03.png`
 - `queries/zipline-dropbox-loading-window-contract.md`
-- `concepts/drone-delivery-integration-strategy.md`
 - `queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md`
 - `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Delivery Intent.md`
-- grep hits (not read in full): `queries/zipline-zipping-station-loading-queue-guardrail-2026-07-02.md`, `queries/zipline-drone-dropoff-status-and-fallback-contract-gaps-2026-07-02.md`, `queries/zipline-integration-readiness-guide-2026-06-17.md`, `queries/1p-drone-delivery-system-responsibility-boundaries-2026-07-15.md`, `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md`, `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Questions for Zipline Team - 1P Drone Delivery (2026-07-01).md`, `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Archive/Eligibility and Architecture/1P Drone Delivery System Orchestration Alignment Draft (2026-06-29).md`, `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Sync - Webhook HMAC Eligibility Direction and MVP Timeline - 2026-08-17.md`
+- Also consulted: `AGENTS.md`, `KNOWLEDGE.md`, `.claude/CLAUDE.md`, `.agents/rules/*.md`, `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Discussion - RFP-Based FIFO for Dropbox Loading (2026-07-30).md` (grep only), `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` (grep only)
 
 ## Files changed
 
-- `ANSWER.md` (this file) — created to hold the answer, as the task required. No other vault files were modified.
+- `ANSWER.md` (this file, new). No other vault files were created or modified. Activity ledger not written: `.knowlery/activity-disabled` is present.

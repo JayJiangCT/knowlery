@@ -1,50 +1,55 @@
-# ANSWER — MVP outer package for Zipline drone orders
+# ANSWER — MVP outer package for Zipline drone orders, and whether the decision stands
 
-## Answer
+Date of this answer: 2026-11-02. Read-only task; the only file written is this one.
 
-**What the vault says the MVP outer package is.** The Wonder-side outer package for 1P Drone Delivery (Zipline) MVP orders is a **Wonder Medium bag**. The most recent statement is in the Record `records/drone-mvp-medium-bag-outer-package-decision.md` (status `current`, updated/verified 2026-10-19 by `process:cook`), Summary:
+## Short answer
 
-> The MVP default is the **new Medium Wonder bag, 12 × 8.5 × 13 in**, per PRD v26. Small may be used at IKC staff discretion when a specific order can safely be packed smaller; Large must not be used for Drone delivery.
+**What the vault records as current:** the MVP default outer package is the **new Medium Wonder bag, nominal 12 × 8.5 × 13 in**, per Rob Knudson's Weight and Dimension Eligibility PRD v26 as read 2026-10-19. Small may be used at IKC staff discretion; Large is out of scope. The original 2026-08-12 direction ("use the existing Medium bag because it fits the 3D-printed Pod sample", IKC Ops / Stephen Acciaioli) is already classed as historical by the Record itself.
+— `records/drone-mvp-medium-bag-outer-package-decision.md` (`status: current`, `updated: 2026-10-19`), Summary and the "Current status (2026-10-19)" callout; source `s1` (PRD v26, `fetched:2026-10-19`, `no-snapshot`).
 
-That Record's own "What Changed" table traces the lineage: 2026-08-12 IKC Ops / Stephen Acciaioli preferred the *existing* Medium bag because it fit the 3D-printed Pod sample (historical working direction, "not final approval"); 2026-09-20 Rob reported Stephen had requested two new, slightly-smaller bag sizes for Zipline testing (superseded); 2026-10-19 PRD v26 reports the *new* Medium (12 × 8.5 × 13 in) validated by Zipline and set as the default launch bag. The bag's SKU, tare, tested fill/fold limits and the Zipline test report are explicitly "Not Confirmed" on that Record. The provider envelope is a separate fact: `338 × 254 × 205 mm / 2495 g` ([[zipline-mvp-partner-confirmed-contract-2026-07-30]], Payload Dimensions slide week of 2026-09-07).
+**Is it still in force?** The vault **does not establish that it is.** Three independent things cut against treating it as settled, and under CONVENTIONS §8 ("two sources that contradict each other are a finding to surface, never a choice to make silently") I am surfacing them rather than ranking them:
 
-The Knowledge-page claim is `concepts/drone-delivery-integration-strategy.md` [[drone-delivery-integration-strategy#^c17]]:
+1. **A human marked the decision withdrawn on 2026-11-02, in a way the digest chain cannot see.** Commit `ec3f9eb` (Jay Jiang, "Medium bag note: decision withdrawn (frontmatter)") added `decision_status: withdrawn` to the frontmatter of the Source note `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md`. Per §7 a frontmatter-only change is *not* an evidence change: I recomputed the body digest with `tools/digest.py` and it is still `sha256:79548617cec2…`, matching `s2` in the Record and `s17` in `concepts/drone-delivery-integration-strategy.md`; only the blob moved (`deaef9a…` → `d07a7b6…`). So no digest-driven absorb would ever flag this. The flag gives no reason, date or scope: it is unclear whether it withdraws only the 2026-08-12 "existing Medium" direction (which the Record already calls historical) or the PRD v26 new-Medium default. It is a single human signal against a `current` Record — exactly the §8 case to stop and ask.
 
-> The Wonder-side outer package that must fit that envelope is the existing Medium bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
+2. **A later-updated Source says the bag is not final.** `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17.md` (`status: draft`, `updated: 2026-10-27`, i.e. eight days *after* the Record's PRD v26 reading) states in §2.1: "Zipline rejected Wonder's medium bag on 2026-09-17 and a replacement is being sourced; the plan … uses the dropbox interior as the envelope until then", and in risk 10: "**Bag not final.** Zipline rejected the medium bag; the replacement's inner dimensions and empty weight are unknown." This Source is cited by no Record or Knowledge page. It *may* be reconcilable (the rejected bag = the old existing Medium; v26 validated a different, new Medium), but the 2026-10-27 text still treats the bag as open, so I cannot rank it against the Record's `s1`.
 
-## Is the decision still in force? — Not cleanly. Treat it as disputed.
+3. **The Record's own evidence is weak for the current claim.** `s1` (PRD v26) is a URL with `no-snapshot`; nothing in the vault can recover what v26 said. The Record also lists under "Not Confirmed": the Zipline test report, the SKU, tare, fill/fold limits, and a signed physical profile.
 
-Three things in the vault bear on whether the decision stands, and they do not agree:
+## Further evidence bearing on whether the decision stands
 
-1. **The underlying Source has been marked withdrawn by a human (2026-10-30).** `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` now carries frontmatter `decision_status: withdrawn`. Git shows this was added in commit `94b06af` ("Medium bag note: decision withdrawn (frontmatter)", author Jay Jiang, 2026-10-30), changing the blob from `deaef9a7…` (the blob pinned by every citing page as s2/s14/s17) to `d07a7b6a…`. The body of the note is unchanged — its evidence-scope digest is still `sha256:79548617…`, matching the pinned version — so under CONVENTIONS §7 this is "not an evidence change", but it is an explicit human signal that the 2026-08-12 Medium-bag decision has been withdrawn. No Record, no `## History` line, no `log.md` entry, and no explanation accompanies it; the body still reads "This exchange selects the existing Wonder Medium bag as the preferred MVP outer package". Nothing in the vault says *what* replaced the withdrawn decision.
+- **Record integrity (§6):** `records/drone-mvp-medium-bag-outer-package-decision.md` is dated 2026-08-12 but its frozen Summary/Detail were rewritten (History: "2026-10-19 · revised by process:cook · Current status (2026-10-19)" and "2026-08-20 · revised by process:cook …") instead of a new Record with `followed_by`. §6 says every page citing it then needs review: `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (s15), `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` (s7), `concepts/drone-delivery-integration-strategy.md` (s18). The Record's evidence-scope digest today (`sha256:fd7e1f24…`) matches those citations, so the pins were taken after the rewrite.
+- **Citing pages disagree with each other:**
+  - `concepts/drone-delivery-integration-strategy.md` `^c17` (status of page: `disputed`, but the dispute is about launch dates, `^c24`/`^q1`, not the bag) still says the outer package "is the existing Medium bag … bag and guest-packaging samples still need testing" — the 2026-08-12 state.
+  - `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (`updated: 2026-09-29`) carries a 2026-09-20 warning: "The earlier existing-Medium direction is no longer a final package decision. Stephen has requested two new bag sizes …", and its History has "2026-09-29 · contradiction recorded in 1.x against [[drone-mvp-medium-bag-outer-package-decision]] · kept in Detail".
+  - `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` repeats the PRD v26 new-Medium default (2026-10-19).
+- **Planning sources:** `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/CrossTeam/1P Drone Delivery MVP Iteration Plan SP20-SP23 - 2026-09-18.md` lists "Finalize bag/provider configuration" as TBD for Ops / Rob / Zipline.
+- **What the Slack Source itself claims (unchanged body):** it "selects the existing Wonder Medium bag as the preferred MVP outer package and rejects a newly produced drone-specific bag", and explicitly does not pin which Medium, a folded height, fill line, or complete the sample test.
+- **Unaffected by all this:** the Zipline provider envelope `338 × 254 × 205 mm / 2495 g` (`records/zipline-mvp-partner-confirmed-contract-2026-07-30.md`, cited as s7) is a separate fact and is not touched by the bag question.
 
-2. **A Source says Zipline rejected the Medium bag.** `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17.md` (status `draft`, updated 2026-10-27), §2.1:
-   > Zipline rejected Wonder's medium bag on 2026-09-17 and a replacement is being sourced; the plan assumes the final bag is as close to the dropbox interior as possible and uses the dropbox interior as the envelope until then.
+## Digest / version checks performed
 
-   This is consistent with the Record's 2026-09-20 row (new sizes requested for testing) and with the "Bag status update (2026-09-20)" / "Outer Package Status" callouts in `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` ("The earlier existing-Medium direction is no longer a final package decision … Do not treat the earlier Medium dimensions or Pod-fit observation as final approval"). That Record's History notes "2026-09-29 · contradiction recorded in 1.x against [[drone-mvp-medium-bag-outer-package-decision]]". The only thing that overrides the rejection is the Record's 2026-10-19 reading of PRD v26 (source s1, a Confluence URL, `fetched:2026-10-19 · no-snapshot`), which cannot be re-verified from inside this vault.
+All `## Sources` lines of the Record that point into the vault still match: s2 `79548617…`, s3 `b4e93403…`, s4 `a3275215…`, s5 `508fb12c…`, s6 `f6ed62d1…`, s7 `980486cf…`, s8 `811e891e…`, s13 `933f991a…` (recomputed with `python3 -I tools/digest.py`). Blobs for s5/s7/s13 differ from the pinned blobs only because commit `e9f53e9` ("pin source versions") rewrote their `## Sources` lines, which §7 says is not an evidence change.
 
-3. **The Knowledge-page claim is stale relative to its own cited Record.** `^c17` still says "the *existing* Medium bag … samples still need testing", while its source s18 (the Record, digest `fd7e1f24…`, which I recomputed and which still matches) says the default is the *new* 12 × 8.5 × 13 in Medium, validated. The Record's frozen Summary/Detail was "revised by process:cook" on 2026-08-20 and 2026-10-19 (its `## History`), which under CONVENTIONS §6 means every page citing it needs review; `^c17` was never updated (History: "2026-08-12 · ^c17 added"). The concept page is `status: disputed` and was last `verified: 2026-07-17`.
+## Recommendation (not performed — the task did not ask for vault changes)
 
-**Net:** the best-supported current statement in the vault is "a Wonder Medium bag — per PRD v26 the new 12 × 8.5 × 13 in Medium — is the MVP default outer package", but (a) a human has flagged the originating 2026-08-12 decision as withdrawn without recording a replacement, (b) a draft planning source records Zipline rejecting the Medium bag on 2026-09-17 and a replacement being sourced, and (c) the compiled claim `^c17` lags its evidence. Under CONVENTIONS §8 (a single human flag against a current Record, with no ranked resolution) this is a conflict to surface, not resolve: the outer-package decision should be treated as **disputed / not confirmed in force** until a human (Jay, Rob Knudson, or Stephen Acciaioli) states the current bag.
+Mark the "new Medium 12 × 8.5 × 13 in default" conclusion `#disputed`, open a question on `records/drone-mvp-medium-bag-outer-package-decision.md` / `concepts/drone-delivery-integration-strategy.md#^c17` citing (a) commit `ec3f9eb`'s `decision_status: withdrawn` as a `human:jay` attestation `stated:2026-11-02`, and (b) the MVP Plan's 2026-10-27 "Bag not final"; then ask Jay / Rob Knudson / Stephen Acciaioli what "withdrawn" covers and whether PRD v26's new Medium still stands.
 
 ## Files relied on (vault-relative)
 
-- `AGENTS.md`, `CONVENTIONS.md`, `log.md`
+- `AGENTS.md`, `CONVENTIONS.md`, `.claude/CLAUDE.md`, `log.md`
 - `records/drone-mvp-medium-bag-outer-package-decision.md`
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (and its git history: commit `ec3f9eb`)
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17.md`
+- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md`
+- `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` (grep of bag passages and Sources)
 - `concepts/drone-delivery-integration-strategy.md`
-- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (Summary, "Outer Package Status", "PRD v16" sections, History)
-- `records/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` (grep only: PRD v26 callout, lines 43, 94, 115)
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md`
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/PRD/Drone Eligibility Check - MVP Plan - 2026-09-17.md` (frontmatter and §2.1)
-- git history (read-only): `git log`, `git show 94b06af`, `git rev-parse HEAD:<Slack note>`; `tools/digest.py` on the Slack note and the Medium-bag Record
+- `concepts/packaged-size.md` (checked; confirms it does not cover drone outer-package eligibility)
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/CrossTeam/1P Drone Delivery MVP Iteration Plan SP20-SP23 - 2026-09-18.md` (grep)
+- `Wonder/Wonder Fulfillment/Sprints/2026/SP20-21/Agenda/Meeting Notes - 20260929.md`, `…/Speaking Notes - 2026-09-30.md`, `Wonder/…/Raw/Investigation - Cookbook Weight and Dimension Backfill Review - 2026-10-26.md` (grep only; no bag-decision content)
+- `tools/digest.py` (run, not edited); git log/show of commits `ec3f9eb`, `e9f53e9`
 
 ## Unable to establish
 
-- Why the 2026-08-12 Source was marked `decision_status: withdrawn` on 2026-10-30, and what the replacement outer package (if any) is — no Record, note or log line explains it.
-- Whether PRD v26's "new Medium 12 × 8.5 × 13 in validated by Zipline" (Confluence, `no-snapshot`) is still accurate as of 2026-10-30; it cannot be re-fetched here.
-- The relationship between the 2026-09-17 Zipline rejection of "Wonder's medium bag" and the later PRD v26 validation (presumably the rejected bag was the old Medium and the validated one the new Medium, but no vault note states this).
-- The new Medium's SKU, tare, fill/fold limits, and the Zipline test report (listed as Not Confirmed on the Record).
-
-## Files changed
-
-- `ANSWER.md` (this file) — created as the task requested. No other vault file was modified; no `log.md` line was added because the task did not ask for a vault change beyond this file.
+- Whether `decision_status: withdrawn` refers to the 2026-08-12 existing-Medium direction only or to the current new-Medium default, and why it was set.
+- The content of PRD v26 (`s1` is `no-snapshot`), hence whether "new Medium 12 × 8.5 × 13 in validated by Zipline" and the MVP Plan's "Zipline rejected the medium bag / bag not final" describe the same or different bags.
+- The bag SKU, tare, tested fill/fold limits and the Zipline test report (the Record itself lists these as Not Confirmed).

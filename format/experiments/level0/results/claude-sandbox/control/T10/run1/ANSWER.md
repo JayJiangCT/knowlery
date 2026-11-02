@@ -1,34 +1,37 @@
 # Answer
 
-## Verdict
-
-`concepts/zipline-drone-deliveries-in-dispatch-portal.md` is **not affected** by the change to `concepts/drone-delivery-integration-strategy.md`. No edit was made to the dependent page.
+**The dependent page `concepts/zipline-drone-deliveries-in-dispatch-portal.md` is NOT affected. No change was made to it.**
 
 ## Reasoning
 
-- The change to the strategy page is commit `50e69c3` ("Strategy: clarify measurement path wording"), a one-line diff in the section "Current Eligibility Direction Under Evaluation (2026-08-20)":
-  - before: "manual scale capture is the active measurement path"
-  - after: "manual scale capture **on a calibrated kitchen scale** is the active measurement path"
-  - Frontmatter (`updated: 2026-10-26`, `freshness_reviewed: 2026-10-26`) was not changed by the commit.
-- This is a clarification of how item weight/dimension data is captured for the drone eligibility (Zipline Pack) path. It introduces no new decision, no contradiction, and touches no custody, status, or UI semantics.
-- The dependent page relies on the strategy page in exactly two places:
-  1. A `[[concepts/drone-delivery-integration-strategy|Drone Delivery Integration Strategy]]` entry in its Related list (link target unchanged).
-  2. The "Custody and fallback note (2026-10-30)", which cites the strategy page's "Partner-Confirmed MVP Integration Contract (2026-07-30)" section for the `DELIVERY_INTENT_STATUS_IN_PROGRESS` custody boundary. That section is untouched by the diff, and its claim ("`DELIVERY_INTENT_STATUS_IN_PROGRESS` is the authoritative irreversible custody boundary") still supports the dependent note.
-- The dependent page's own subject (deliveries list and detail page rendering of Zipline jobs in the Dispatch Portal, DELI-4641 / DELI-4660) does not reference measurement, scales, Cookbook profiles, or eligibility data capture anywhere.
+The change to `concepts/drone-delivery-integration-strategy.md` is commit `7f435da` ("Strategy: clarify measurement path wording"), a one-line edit at line 92 in the weight/dimension eligibility section:
 
-Conclusion: the dependency remains valid and the dependent page's content remains accurate; it needs no content update, no freshness-status change, and no `updated` bump.
+- before: "manual scale capture is the active measurement path"
+- after: "manual scale capture **on a calibrated kitchen scale** is the active measurement path"
 
-## Files relied on
+This is a wording clarification of the MVP package-measurement path (how item weight/dimensions are captured for eligibility). It introduces no new decision, no contradiction, and no change to any status, contract, or boundary.
 
-- `AGENTS.md` (vault instructions; `CONVENTIONS.md` does not exist)
-- `concepts/drone-delivery-integration-strategy.md` (current version, plus `git show 50e69c3` diff against the baseline)
+The dependent page relies on the strategy page in exactly two places:
+
+1. `## Related` — a bare link to `[[concepts/drone-delivery-integration-strategy]]` (line 72).
+2. `## Custody and fallback note (2026-10-30)` (line 77) — cites the strategy page's **"Partner-Confirmed MVP Integration Contract"** section for the claim that `DELIVERY_INTENT_STATUS_IN_PROGRESS` is the irreversible custody boundary, so a later Ground job is post-custody recovery, not a reallocation.
+
+The cited custody section (strategy page lines 265–275) is untouched by the commit; the `IN_PROGRESS` custody-boundary claim still reads the same. The Dispatch Portal page says nothing about the measurement path, scales, the Robotic Arm, or Pack/eligibility, so the edited sentence has no bearing on any claim it makes. Its frontmatter (`status: active`, `freshness_status: active`, `updated: 2026-10-10`) remains accurate.
+
+Per the Agent-Maintained Pages rules ("when updating, check for contradictions — never silently overwrite"), no contradiction exists, so no edit, freshness downgrade, or log entry is warranted.
+
+## Files relied on (vault-relative)
+
+- `AGENTS.md` (instructions; `CONVENTIONS.md` does not exist)
+- `concepts/drone-delivery-integration-strategy.md` (read via `git show HEAD` diff and grep of the custody section)
 - `concepts/zipline-drone-deliveries-in-dispatch-portal.md`
+- git history: `git log`, `git show 7f435da`
 
 ## Files changed
 
-- `ANSWER.md` (this file, created) — nothing else. No knowledge page was modified, so no `log.md` entry was warranted (and no `log.md` exists at the vault root).
+- `ANSWER.md` (this file, created as instructed). No compiled pages or user notes were modified; `log.md` was not created since no page was modified.
 
 ## Unable to establish
 
-- Whether the calibrated-kitchen-scale wording is itself backed by a source: the commit touched only the sentence and added no new `sources` entry. This does not affect the dependent page, but it is a provenance gap on the strategy page.
-- Whether other pages (beyond the one named in the task) depend on the measurement-path sentence; checking them was outside the task scope.
+- Whether "calibrated kitchen scale" is itself supported by a user note was not verified; it is out of scope for the dependency question (the dependent page does not rely on that claim).
+- The vault has no `log.md` or `.knowlery/activity/` directory; no activity record was written because no knowledge page changed and the task asked only for `ANSWER.md`.

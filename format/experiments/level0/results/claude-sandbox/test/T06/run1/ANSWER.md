@@ -2,45 +2,57 @@
 
 ## What changed
 
-Commit `f09aba1` ("Partner contract: dimensions also required (owner edit)", author Jay Jiang, 2026-10-30) changed one sentence in the frozen `## Summary` of `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md`:
+Commit `244084f` ("Partner contract: dimensions also required (owner edit)", author Jay Jiang / `human:jay`, 2026-11-02) changed one sentence in the **frozen Summary** of `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md`:
 
 - before: "A fulfillment-capable direct-order Quote requires valid mass before Delivery Intent creation"
-- after:  "A fulfillment-capable direct-order Quote requires valid mass **and outer dimensions** before Delivery Intent creation"
+- after: "A fulfillment-capable direct-order Quote requires valid mass **and outer dimensions** before Delivery Intent creation"
 
-Nothing else changed: no new `## Sources` line, no History line, frontmatter untouched (`updated` still said 2026-09-15 / process:cook). The Record's evidence-scope digest moved from `sha256:980486cf…` (identical at baseline `77a8727` and pin commit `c298e4b`) to `sha256:9dc23efb43893253e334e409774fd52a34760179d2003d08c7524a708f047e00`; blob `9fef7255…` / `e23d5c6f…` → `aaf3640d…`.
+Nothing else in the file changed: the Detail table still says "A Quote used for direct-order fulfillment requires valid package mass", no new `## Sources` line was added, frontmatter was untouched. The Record's evidence-scope digest moved from `sha256:980486cf…` (blob `e23d5c6f…`) to `sha256:9dc23efb…` (blob `aaf3640d…`), so every page pinning the old version was out of date.
 
-## What it means
+## What it means for the vault
 
-1. **It is an edit to the frozen part of a Record** (CONVENTIONS §6). The rule is: do not undo it, append `revised by` to its History, and treat every page citing it as needing review. Done.
-2. **It is an unsupported claim change, not a mere wording fix.** Inside the same Record, the Detail table ("Quote mass by lifecycle role") and the eligibility rule still say mass only; the Create Quote API doc (`Wonder/.../Zipline API Doc/Create Quote.md`) has `mass_grams` and no dimension fields; the 2026-08-11 sandbox evidence gates Intent on mass only. Dimensions are inputs to the separate Pack endpoint (`/v1/pack/`, `width_mm`/`height_mm`…), so the edit may conflate the Pack path with the Quote path, or may reflect a newer partner answer that is not in the vault. Per §8 (single human statement against documents, no rankable source) this is a finding to surface, not a choice to resolve.
-3. **Citing pages.** Two migrated pages pin this Record's version:
-   - `concepts/drone-delivery-integration-strategy.md` (s10) — claim `^c18` ("A direct-order Quote requires reliable mass…") is directly affected: marked `#disputed`, question `^q8` opened, new version pinned as s33, Create Quote doc pinned as s34 for the counter-evidence. Claims `^c10`, `^c13`, `^c19`, `^c20` also cite s10 but the statements they rely on (single-delivery gap, Pack not mandatory, custody boundary, drop-off not exposed) are unchanged in the new version, so they stand.
-   - `records/drone-mvp-medium-bag-outer-package-decision.md` (s7) — cites the Record only for the 338 × 254 × 205 mm / 2495 g envelope, which is unchanged; review note appended, new version pinned as s15, no content revision.
-   The many legacy `queries/*.md` pages and Sources that wikilink the Record are plain links (not versioned evidence) and legacy pages are not restructured (§2a); several still say "Quote requires mass" and would need attention if the dimensions requirement is confirmed.
+1. **It is an edit to a frozen Record (§6).** The Record is `status: current`, not `draft`, so its Summary/Detail should never be rewritten; new facts belong in a new Record with `followed_by`. The edit is not undone (per the task), but it is recorded in the Record's `## History` as `revised by human:jay`, and every citing page was reviewed.
+2. **The new statement conflicts with current evidence in the vault.**
+   - The Record's own Detail table (unchanged) says mass only.
+   - The Create Quote API source (`Wonder/…/Zipline API Doc/Create Quote.md`) exposes `mass_grams` and no dimension fields; `records/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md` states "Quote accepts optional total mass but not dimensions".
+   - The only artifact that takes dimensions is Pack (`Pack items into deliveries`), which is a separate call from Quote.
+   - No partner source for "outer dimensions required at Quote" exists in the vault; the edit cites none.
+   Per §8 (two current sources conflict and cannot be ranked; a single human edit against a document), this is a finding to surface, not a choice to make: the affected claim is marked `#disputed` and an Open question is raised. Nothing was superseded.
+3. **Pages citing the Record as versioned evidence** (grep of `## Sources` lines): only two.
+   - `concepts/drone-delivery-integration-strategy.md` (s10) — claims c10, c13, c16, c18, c19, c20 and open item q6. Only **c18** ("A direct-order Quote requires reliable mass…") is touched by the changed sentence; it is now `#disputed`. c10/c13/c16/c19/c20/q6 rely on parts of the Record the edit did not change and still hold.
+   - `records/drone-mvp-medium-bag-outer-package-decision.md` (s7) — cites the Record only for the 338 × 254 × 205 mm / 2495 g envelope, which is unchanged; History line appended, no content change.
+   All other references (legacy `queries/*` pages, Source notes, other Records) are plain wikilinks or legacy frontmatter `sources` lists, i.e. relationships rather than versioned evidence, and legacy pages are not restructured (§2a). Several legacy query pages still say "direct-order Quote requires mass" (e.g. `queries/zipline-sandbox-quote-mass-gating-contract.md`, `queries/1p-drone-delivery-eligibility-evaluation-trigger-and-revalidation-contract-2026-07-16.md`); they are consistent with the pre-edit Record and the API doc and were left alone.
 
-## Files changed and why
+## What the owner should do
 
-| File | Change |
-|---|---|
-| `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` | `updated: 2026-10-30`, `updated_by: human:jay` (provenance of the actual last change); History line `2026-10-30 · revised by human:jay · …` describing the frozen-part edit and digest change. Colleague's Summary text kept as is. |
-| `concepts/drone-delivery-integration-strategy.md` | `^c18` → `(src: s10, s33) #disputed`; `^q8` added to `## Open`; `s33` (new Record version, sha256:9dc23efb…, blob aaf3640d…) and `s34` (Create Quote API doc, sha256:059b57ec…, blob c664f361…) appended; History line; frontmatter `updated`/`updated_by` set to 2026-10-30 / claude-code/fable-5.1 (status already `disputed`). |
-| `records/drone-mvp-medium-bag-outer-package-decision.md` | `s15` appended pinning the new Record version; History review line stating the envelope claim is unaffected (Sources/History appends only; evidence scope untouched). |
-| `log.md` | Four lines under `## 2026-10-30` for the writes above. |
+Confirm whether Zipline actually stated that a fulfillment Quote needs outer dimensions (and cite the source), or whether the intent was "the package must be within the dimension envelope / Pack needs dimensions". If confirmed, the right move is a new Record (with `followed_by` on the 2026-07-30 Record) and a superseding claim for `^c18`; if not, the Summary sentence should be reverted by the owner. Until then `^c18` stays `#disputed` and `^q12` stays open.
+
+## Files changed
+
+| File | Why |
+| --- | --- |
+| `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` | §6: appended `2026-11-02 · revised by human:jay …` History line with old/new digests and blobs; frontmatter `updated`/`updated_by` set to `2026-11-02` / `human:jay` to reflect the actual last content change (provenance only). Summary/Detail left exactly as the colleague wrote them. |
+| `concepts/drone-delivery-integration-strategy.md` | `^c18` marked `#disputed`; `^q12` opened in `## Open`; `s33` (the revised Record, new digest/blob) and `s34` (Create Quote schema, digest/blob) appended to `## Sources`; History line recording the review of c10/c13/c16/c19/c20/q6; frontmatter `updated`/`updated_by` set. Page `status` was already `disputed`. |
+| `records/drone-mvp-medium-bag-outer-package-decision.md` | History line only: s7 version changed, cited envelope unaffected. |
+| `log.md` | One line per write above, plus an after-the-fact line for the owner's unlogged commit. |
 | `ANSWER.md` | This file. |
 
-## Paths relied on
+No git commit or push was made; the changes are in the working tree.
+
+## Files read (vault-relative)
 
 - `AGENTS.md`, `CONVENTIONS.md`, `.claude/CLAUDE.md`, `log.md`, `tools/digest.py`
-- `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` (HEAD and `git show 77a8727:` / `c298e4b:` / `f09aba1`)
+- `records/zipline-mvp-partner-confirmed-contract-2026-07-30.md` (HEAD and `857de1b`/`573a3b6` versions via `git show`/`git rev-parse`)
 - `concepts/drone-delivery-integration-strategy.md`
 - `records/drone-mvp-medium-bag-outer-package-decision.md`
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Quote.md`
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Pack items into deliveries.md` (grep only)
-- grep across `Wonder/`, `records/`, `queries/`, `concepts/` for citations of the Record
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Create Quote.md` (field grep)
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Zipline API Doc/Zipline API Documentation Runtime Annotations - 2026-08-27.md` (grep)
+- `records/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md` (grep)
+- git history: `git log --stat`, `git show 244084f`
+- vault-wide grep for `zipline-mvp-partner-confirmed-contract-2026-07-30` and for Quote/dimension requirement statements
 
 ## Not established
 
-- **Why** the owner made the edit and on what evidence: the commit carries no source; no Source note in the vault dated after 2026-09-15 mentions a dimensions requirement for Quote. Only human:jay can answer `^q8`.
-- Whether `^c18` should be superseded (if a partner answer confirms dimensions are required for Quote) or the Summary sentence should itself be corrected (if it conflated Pack with Quote). I did neither.
-- The legacy `queries/` pages that restate "Quote requires mass" were not modified (§2a legacy rule; the dispute is unresolved).
-- Nothing enforces freezing or `protected` here (§9); the edit was only detectable via git history.
+- Whether Zipline really requires dimensions on a fulfillment Quote. The cited Google Doc (s1 of the Record) is `no-snapshot`, so it cannot be re-read offline; the vault has no source supporting the new sentence.
+- Why the owner made the edit (no commit body, no new source). The `updated_by` field I set is provenance from git, not proof of authorization or correctness (§4).
+- Whether the Production Quote API differs from the documented/sandbox schema (already an open point in the runtime annotations).

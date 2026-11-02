@@ -1,16 +1,18 @@
-# ANSWER — Medium Bag Slack note as cited by `drone-delivery-integration-strategy`
+# ANSWER — Medium Bag Slack note, as cited by `drone-delivery-integration-strategy`
 
-## 1. The cited version, verbatim
+## 1. The version the page cited
 
-`concepts/drone-delivery-integration-strategy.md` cites the note as source **s17** (used by claim `^c17`):
+`concepts/drone-delivery-integration-strategy.md` cites the note as source `s17` (used by claim `^c17`):
 
 ```
 - s17 · [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12]] · sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050 · source · blob:deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1
 ```
 
-The whole file as committed at blob `deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` (`git cat-file -p deaef9a7…`) is:
+Per CONVENTIONS §7, `blob:` is the git blob of the whole file at citation time and is the only thing that recovers text. `git cat-file -p deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` returns the file below. The evidence scope (body after the frontmatter) is reproduced exactly; the frontmatter is shown too for completeness.
 
-````markdown
+### Frontmatter (as committed)
+
+```yaml
 ---
 title: Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12
 type: reference
@@ -24,7 +26,11 @@ tags:
   - slack
 source: Slack screenshot shared by Jay in the 2026-08-12 agent session
 ---
+```
 
+### Body — exact text as cited (evidence scope)
+
+````markdown
 # Slack Clarification: Drone MVP Medium Bag Selection
 
 Screenshot of a Slack thread supplied by Jay on 2026-08-12. The original image file was not retained in the vault after the session, so this note records the thread text.
@@ -66,46 +72,46 @@ This exchange selects the existing Wonder Medium bag as the preferred MVP outer 
 - [[queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16|1P Drone Delivery Checkout Package Dimensions Contract (2026-07-16)]]
 ````
 
-(The committed file has no trailing newline after the last line. The evidence scope per CONVENTIONS §7 for a Source is the body after the frontmatter, i.e. everything from `# Slack Clarification: …` onward.)
+(The committed file ends without a trailing newline after the last `Related` line.)
 
-## 2. How I established this is the cited version (and not another)
+## 2. How I established that this is the cited version
 
-Three independent checks, all consistent:
+Three independent checks agree:
 
-1. **Blob pointer → content.** CONVENTIONS §7 says `blob:` is the git blob of the whole file at citation time and is the only thing that recovers text. `git cat-file -p deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` returned the text above. A git blob id is the SHA-1 of the content, so the content cannot be any other version.
+1. **Blob id match.** The page's `s17` line records `blob:deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1`. `git cat-file -t` confirms that object exists in the vault's repository and is a blob; `git cat-file -p` of it produced the text above. Walking every commit (`git rev-list --all`) and resolving `<commit>:<path>` shows this exact blob is the note's content in commits `cf9e378` (pilot baseline), `ee89224` (Level 0 test arm) and `4f302c3` (`pin source versions`), i.e. in every commit before the edit. There is only one pre-edit version in history, so there is no ambiguity about which earlier text was cited.
 
-2. **Content → cited digest.** I ran the vault's own tool on the recovered text (`python3 tools/digest.py` on the blob dump, default `source` scope = body after frontmatter, normalized per §7). Result: `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050`, which is exactly the `version` on the s17 line. The same procedure on the current file (`HEAD` / working tree) gives `sha256:820f7c42284566ac0ea714714e47523ae4348ddf8ef7592b5d0ac5a7a82df431`, which does **not** match — so the page cites the pre-edit version, and the digest confirms the body of that blob is the body that was fingerprinted.
+2. **Digest match.** Running the vault's own `tools/digest.py` on the recovered blob (source scope: body after frontmatter, normalized per CONVENTIONS §7) yields `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050`, identical to the `sha256:` recorded on the `s17` line. The current working-tree file digests to `sha256:89ef80b2450e8a54906ffdbbe805e54019810ecc4b27e72834da85ab8fcd9161`, which does not match — confirming the citation points to the older version, not the present one.
 
-3. **Git history of the note.** `git log -- "<note path>"` shows exactly two commits touching the note:
-   - `cf9e378` (2026-10-29, "pilot: split questions from answer keys …") → blob `deaef9a7…` (the cited one)
-   - `98ed7e7` (2026-10-30, "Medium bag note: sample testing completed (2026-10-28)") → blob `f427b7f0…` (current; `git hash-object` on the working tree also gives `f427b7f0…`, so there are no uncommitted changes)
+3. **Citation commit.** `git show 4f302c3 -- concepts/drone-delivery-integration-strategy.md` shows the `s17` line being changed from a `@pin` placeholder to the `sha256:…/blob:deaef9a…` pair in commit `4f302c3`, whose parent-chain contains the note at exactly that blob. So the page pinned the note at the version in force at `4f302c3`, which is the recovered blob.
 
-   The page's s17 line was pinned to `blob:deaef9a7…` in commit `f4187b9` ("pin source versions (14 pages)"), which sits between `cf9e378` and `98ed7e7` in history; in the prior page version (`0c469a4`) the line read `@pin`, and before that the page did not exist in this arm. So the pin was taken while `deaef9a7…` was the only version of the note that had ever existed in the repo — there is no other candidate version it could refer to.
+## 3. What changed after the citation
 
-**What changed in the edit** (`git diff deaef9a7… f427b7f0…`): the frontmatter and everything through `## Related` are unchanged (apart from adding a trailing newline); the edit appended a new section:
+The current file (HEAD blob `3e52313b0ac30d71f0429d631b030362f91cf63e`, commit `01d08e2`, "Medium bag note: sample testing completed (2026-10-28)", author Jay Jiang) differs from the cited blob only by an appended section after `## Related`:
 
-```
+```markdown
 ## Update (2026-10-28)
 
-Jay relayed Rob's follow-up: IKC Ops completed the sample testing. The Medium bag and the guest-packaging samples fit the production Pod; the Medium bag is confirmed as the MVP outer package and no further bag testing is planned before launch.
+Jay relayed Rob's follow-up: IKC Ops completed the sample testing. The mailed samples (the new August 2026 Medium bag, the PRD v26 default, and the guest packaging) fit the production Pod; the new Medium is confirmed as the MVP outer package and no further bag testing is planned before launch.
 ```
 
-Side finding (not acted on, since the task did not ask me to change the vault): the s17 digest mismatch means claim `[[drone-delivery-integration-strategy#^c17]]` ("bag and guest-packaging samples still need testing") no longer matches its source and is a candidate for supersession under §7 "To absorb a changed Source". The same stale pin (`sha256:79548617…` / `blob:deaef9a7…`) appears as s2 in `records/drone-mvp-medium-bag-outer-package-decision.md`.
+(plus a newline added at the end of the former last line). Nothing in the cited text was altered or removed. Note that because this is a Source (not a Record), the whole body is evidence scope, so the append does change the digest; claim `^c17` ("bag and guest-packaging samples still need testing") is now backed by a stale source version and would warrant review under §7 "To absorb a changed Source" — that review was not part of this task and was not performed.
 
-## 3. Vault-relative paths relied on
+## 4. Vault-relative paths relied on
 
 - `AGENTS.md`
 - `CONVENTIONS.md`
-- `concepts/drone-delivery-integration-strategy.md` (working tree and versions at `f4187b9`, `0c469a4`)
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (working tree, blob `deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` at `cf9e378`, blob `f427b7f0522370fcd5d7fc071b1c1b53efc0e10a` at `98ed7e7`)
+- `concepts/drone-delivery-integration-strategy.md` (the `s17` Sources line and `^c17`)
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (current version, for the diff)
 - `tools/digest.py`
-- `records/drone-mvp-medium-bag-outer-package-decision.md` (grep only, to find the other citation of the same pin)
-- git metadata (read-only): `git log`, `git rev-parse`, `git cat-file`, `git diff`, `git show --stat`, `git hash-object`
+- `log.md`
+- git objects, read-only: blob `deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1`, blob `3e52313b0ac30d71f0429d631b030362f91cf63e`, commits `cf9e378`, `ee89224`, `4f302c3`, `01d08e2`
 
-## 4. Unable to establish
+## 5. Not established / caveats
 
-- Nothing material. The one limit: I cannot verify the Slack screenshot itself (the note says the image was not retained), only the note text as committed. The date in the commit message ("2026-10-28") is the date of the follow-up Rob relayed, not the commit date (2026-10-30); I report both as recorded.
+- I did not verify the Slack thread against the original screenshot; the note itself says the image was not retained. What is recovered is the note text as committed, not the Slack message itself.
+- The secondary citation `s18` (`records/drone-mvp-medium-bag-outer-package-decision.md`) was not re-verified; the question concerned only the Slack note.
+- Whether `^c17` still holds in light of the 2026-10-28 update was not adjudicated (see §3).
 
-## 5. Files changed
+## 6. Files changed
 
-- `ANSWER.md` (this file, new). No other file was created, edited, moved or deleted; nothing was committed.
+- `ANSWER.md` (this file) — created as the task deliverable. No vault pages, Records, Sources or `log.md` were modified; no git commit or push was made.

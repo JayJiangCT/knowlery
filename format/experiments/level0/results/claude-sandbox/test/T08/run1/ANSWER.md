@@ -1,51 +1,55 @@
-# Answer — Slack Clarification (Medium Bag Selection, 2026-08-12) was modified
+# ANSWER — Source change: Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12
 
 ## Answer
 
 **No compiled page needs to change.**
 
-The owner's modification (commit `4c4314c`, "Medium bag note: add aliases") adds three lines to the note's frontmatter only:
+The owner's edit (commit `8c0ae0d`, "Medium bag note: add aliases") added three lines to the Source's frontmatter only:
 
-```yaml
+```
 aliases:
   - Medium bag decision
   - MVP outer bag
 ```
 
-Nothing after the frontmatter changed. Under CONVENTIONS §7, a Source's evidence scope is its body after the frontmatter, and "a change in frontmatter only … is **not** an evidence change." I confirmed this by recomputing the digest with `tools/digest.py`:
+The body of the note is untouched. Per CONVENTIONS.md §7, a Source's evidence scope is its body after the frontmatter, and "a change in frontmatter only … is **not** an evidence change."
 
-| Version | blob | evidence-scope digest |
+Verification:
+
+- Digest before the change (`cf9e378` version, `tools/digest.py`): `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050`
+- Digest after the change (working tree / `8c0ae0d`): `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050` — identical.
+- Only the git blob changed: `deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` → `9b73c6effe1495da96ea4fb03c0ffeb4812d18f6`. The `blob:` field is defined as the blob "at citation time" and is a text-recovery pointer, not the change-detection version, so the existing `blob:` values remain correct and recover the same body text.
+
+Every `## Sources` line that cites this path still carries the matching digest, so no cited claim needs re-judging and nothing is superseded:
+
+| Citing page | Source id | Claim(s) |
 |---|---|---|
-| before (`cf9e378`) | `deaef9a7c4df9ae71172ee20e05ba8a8addc3cb1` | `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050` |
-| after (`4c4314c`, HEAD) | `9b73c6effe1495da96ea4fb03c0ffeb4812d18f6` | `sha256:79548617cec29684b66898ba08d83d74170a15dc2a35b6e75d6f34c0ad67c050` |
+| `concepts/drone-delivery-integration-strategy.md` | s17 | `^c17` (Medium bag as MVP outer package) — still holds |
+| `records/drone-mvp-medium-bag-outer-package-decision.md` | s2 | frozen Record; digest matches |
+| `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` | s14 | frozen Record; digest matches |
+| `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` | frontmatter `sources` | legacy 1.x page (no `updated_by`), unversioned; not restructured |
+| `queries/drone-package-recommendation-ownership-and-kds-boundary.md` | frontmatter `sources` | legacy 1.x page (no `updated_by`), unversioned; not restructured |
 
-Every `## Sources` line citing this note still records the matching digest `sha256:7954…c050`, so every claim that depends on it (`[[drone-delivery-integration-strategy#^c17]]`; Record sources s2 and s14) remains supported by an unchanged version. The `blob:` on those lines still points at the pre-edit blob, which is correct: it identifies the version actually cited, and that blob still recovers the cited text. Rewriting it would be an edit to append-only `## Sources` lines with no evidence reason.
-
-Pages that reference the note (checked, none need change):
-
-- `concepts/drone-delivery-integration-strategy.md` — s17, cited by `^c17`; digest matches.
-- `records/drone-mvp-medium-bag-outer-package-decision.md` — s2; digest matches (Record, frozen part untouched).
-- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` — s14; digest matches.
-- `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md`, `queries/drone-package-recommendation-ownership-and-kds-boundary.md` — legacy 1.x pages listing the path in frontmatter `sources` without versions; legacy pages are read as dated snapshots and are not restructured (§2a).
-
-The new aliases ("Medium bag decision", "MVP outer bag") are discovery hints only; per §4 aliases are never link targets, so no wikilink or citation needs updating.
-
-## Files changed
-
-- `ANSWER.md` (this file) — created as required by the task. No compiled page, Record, Source, or `log.md` line was written, because no vault write was needed (§10 logs writes, and there were none).
+Because no vault write was made, no `log.md` entry was added (§10 logs writes only).
 
 ## Paths relied on
 
 - `AGENTS.md`
 - `CONVENTIONS.md`
-- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (HEAD and `cf9e378` version via `git show`/`git diff`)
-- `tools/digest.py` (run on both versions)
-- `concepts/drone-delivery-integration-strategy.md` (frontmatter, `^c17`, s17, History)
-- `records/drone-mvp-medium-bag-outer-package-decision.md` (status, s2)
-- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (status, s14)
-- `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md`, `queries/drone-package-recommendation-ownership-and-kds-boundary.md` (frontmatter `sources` lines only)
-- `log.md` (read only)
+- `log.md`
+- `tools/digest.py`
+- `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` (working tree, and `cf9e378` version via `git show`)
+- `concepts/drone-delivery-integration-strategy.md` (lines 57, 127, 151)
+- `records/drone-mvp-medium-bag-outer-package-decision.md` (lines 50, 134)
+- `records/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` (line 328)
+- `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` (line 19)
+- `queries/drone-package-recommendation-ownership-and-kds-boundary.md` (line 23)
+- git: `git log`, `git show 8c0ae0d`, `git diff cf9e378 8c0ae0d`, `git rev-parse HEAD:<path>` (read-only)
 
 ## Unable to establish
 
-- Nothing material. Note that `concepts/drone-delivery-integration-strategy.md` carries `status: disputed`, but that status predates and is unrelated to this edit; I did not investigate it because the task scope was this one Source change.
+- Nothing material. One optional refinement was deliberately not made: the citing pages' `blob:` values point to the pre-edit blob (`deaef9a…`). That is correct by definition (blob at citation time) and the recovered body text is identical, so appending new Sources lines for blob `9b73c6e…` would add noise without changing evidence; the task asked to change only what must change.
+
+## Files changed
+
+- `ANSWER.md` (this file, new) — the only write. No compiled page, Record, Source, or `log.md` was modified.
