@@ -1,0 +1,223 @@
+diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
+index 6377103..e324a9e 100644
+--- a/concepts/drone-delivery-integration-strategy.md
++++ b/concepts/drone-delivery-integration-strategy.md
+@@ -3,7 +3,7 @@ title: Drone Delivery Integration Strategy
+ type: concept
+ date: 2026-04-24
+ created: 2026-04-24
+-updated: 2026-10-26
++updated: 2026-10-28
+ tags:
+   - architecture
+   - DaaS
+@@ -285,6 +285,8 @@ The earlier `12.5 × 9.5 × 7.75 in` loader reference is smaller and remains his
+ 
+ The provider envelope above is the current hardware maximum. The Wonder-side outer package that must fit inside it is now the existing Medium bag, not a newly produced drone-specific bag. IKC Ops selected Medium after confirming it fits the 3D printed Pod sample; bag and guest-packaging samples still need testing. See [[drone-mvp-medium-bag-outer-package-decision]].
+ 
++Update (2026-10-28): the sample testing is complete. IKC Ops confirmed that the mailed samples, the new August 2026 Medium bag and the guest packaging, fit the production Pod. The new Medium is confirmed as the MVP outer package and no further bag testing is planned before launch (Rob via Jay, [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|Slack Clarification note, Update 2026-10-28]]). The strategy consequence is that the outer-package choice and its sample fit are no longer open; the remaining packaging work is the published fill/fold profile, SKU, and tare that Checkout and Pack consume.
++
+ ## Advisory Loading Window and Summon Trigger (2026-08-03)
+ 
+ Zipline confirmed that completing the Dropbox load summons the Drone and that `loading_window` is advisory. Missing its end time does not create a lost reservation or require re-Quote, replacement Intent, retry, or reschedule.
+diff --git a/log.md b/log.md
+new file mode 100644
+index 0000000..9ee41f2
+--- /dev/null
++++ b/log.md
+@@ -0,0 +1,14 @@
++# Agent Log
++
++## 2026-10-28 — Propagate Medium bag sample-testing update
++
++Source change: `Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md` gained an "Update (2026-10-28)" section (IKC Ops completed sample testing; new August 2026 Medium and guest packaging fit the production Pod; new Medium confirmed as MVP outer package; no further bag testing before launch).
++
++Pages modified (additive only; no prior content removed):
++
++- `queries/drone-mvp-medium-bag-outer-package-decision.md` — new status callout, spec-identity warning (13 x 10 x 13 in vs 12 x 8.5 x 13 in not reconciled), What Changed row, confirmation of Jay's 2026-08-20 interpretation, Not Confirmed annotations; `updated` and `freshness_reviewed` bumped to 2026-10-28.
++- `queries/drone-package-recommendation-ownership-and-kds-boundary.md` — dated callout after the 2026-09-20 one; Remaining Decision 1 annotated; `updated` bumped.
++- `queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` — dated callout in Short Answer, Update subsection under Outer Package Status, Open Decision 3 annotated; `updated` bumped.
++- `concepts/drone-delivery-integration-strategy.md` — dated follow-up paragraph under "Preferred Outer Package Medium Bag (2026-08-12)"; `updated` bumped.
++
++Not modified: `queries/1p-drone-delivery-high-level-system-alignment-mvp-2026-08-13.md` (superseded historical snapshot).
+diff --git a/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md b/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+index 238f916..762e03c 100644
+--- a/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
++++ b/queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+@@ -2,7 +2,7 @@
+ title: 1P Drone Delivery Checkout Package Dimensions Contract (2026-07-16)
+ date: 2026-07-16
+ created: 2026-07-16
+-updated: 2026-09-29
++updated: 2026-10-28
+ type: query
+ domain: delivery
+ tags:
+@@ -58,6 +58,9 @@ contradictions:
+ > [!warning] Bag status update (2026-09-20)
+ > The earlier existing-Medium direction is no longer a final package decision. Stephen has requested two new bag sizes that are expected to be slightly smaller than the Dropbox and will be sent to Zipline for testing. The final SKU, filled/folded profile, tare, and partner-site configuration remain pending. Do not treat the earlier Medium dimensions or Pod-fit observation as final approval.
+ 
++> [!important] Bag sample testing complete (2026-10-28)
++> IKC Ops completed the sample testing: the new August 2026 Medium bag and the guest packaging fit the production Pod, the new Medium is confirmed as the MVP outer package, and no further bag testing is planned before launch (Rob via Jay, [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|Slack Clarification note, Update 2026-10-28]]). The bag choice is no longer pending. The filled/folded profile, SKU, tare, and Pack representation that Checkout needs are still not published, so the 2026-09-20 warning above still applies to those inputs. See [[drone-mvp-medium-bag-outer-package-decision]].
++
+ The current MVP direction does not expect Checkout to compute exact order geometry or reuse the KDS bag recommendation algorithm. Consumer sends cart and address context through OMS/CCP to Delivery Catalog Service. Delivery Catalog resolves the approved profile, calls Pack when the current representation is available, and supplies Quote timing source data to KOETA. Wonder expects one designated outer bag for eligible Drone orders, but the final bag SKU and filled/folded profile are still pending Zipline validation. See [[drone-mvp-medium-bag-outer-package-decision]].
+ 
+ The current candidate path uses manually measured packed-item weight and dimensions for top sellers in a Delivery-owned static dataset. Eligibility normalizes Consumer Cart item/option/bundle/quantity fields into a configuration identity, resolves the profile, and calls Zipline Pack. Cookbook is not required for MVP lookup. KDS/KOM remains operational only: instruct IKC staff to use the designated bag once the final package profile is approved.
+@@ -185,7 +188,7 @@ The raw photos and extracted order observations are evidence, not yet canonical
+ 
+ 1. Who approves the Delivery-owned MVP profiles and preserves the raw photos separately as evidence?
+ 2. What exact measurement convention applies to customization: exact configuration, maximal build, or another conservative profile?
+-3. How is the designated Medium bag represented in Pack, and has Zipline approved the final SKU/folded profile?
++3. How is the designated Medium bag represented in Pack, and has Zipline approved the final SKU/folded profile? *(2026-10-28: the designated bag is the new August 2026 Medium, confirmed by IKC Ops production-Pod sample testing; the Pack representation, SKU identifier, and folded profile remain open.)*
+ 4. Is `total_deliveries == 1` advisory or binding for the subsequent Delivery Intent?
+ 5. What checkout SLO, rate-limit, retry, algorithm-version, and fail-closed contract applies to Pack?
+ 6. Does any missing-data fallback remain within the Pack path, or is Wonder intentionally creating a second fit authority?
+@@ -321,6 +324,10 @@ The existing Wonder Medium bag was the preferred working direction after the 202
+ 
+ This does not change the provider envelope itself; that envelope is now `338 × 254 × 205 mm / 2495 g`. The final bag SKU, filled/folded profile, empty tare, and partner-site configuration are not yet confirmed. Checkout must use the validated physical profile rather than any nominal catalog dimensions.
+ 
++### Update (2026-10-28): sample testing complete
++
++Rob's follow-up relayed by Jay reports that IKC Ops completed the sample testing. The mailed samples were the new August 2026 Medium bag and the guest packaging; they fit the production Pod. The new Medium is confirmed as the MVP outer package and no further bag testing is planned before launch. The bag-choice uncertainty above is therefore historical. The provider envelope is unchanged, and the SKU identifier, filled/folded profile, empty tare, and partner-site configuration are still not published, so the Checkout requirement to use a validated physical profile rather than catalog dimensions stands.
++
+ See [[drone-mvp-medium-bag-outer-package-decision]].
+ 
+ ## PRD v16 Loader Threshold Aligned With Provider Envelope (2026-08-11, captured 2026-08-20)
+diff --git a/queries/drone-mvp-medium-bag-outer-package-decision.md b/queries/drone-mvp-medium-bag-outer-package-decision.md
+index 0e0a7b2..938de01 100644
+--- a/queries/drone-mvp-medium-bag-outer-package-decision.md
++++ b/queries/drone-mvp-medium-bag-outer-package-decision.md
+@@ -2,7 +2,7 @@
+ title: Drone MVP Medium Bag Outer Package Decision (2026-08-12)
+ date: 2026-08-12
+ created: 2026-08-12
+-updated: 2026-10-19
++updated: 2026-10-28
+ type: query
+ domain: delivery
+ tags:
+@@ -10,7 +10,7 @@ tags:
+   - drone-delivery
+   - mvp
+ status: active
+-description: "PRD v26 confirms the new 12 x 8.5 x 13 in Medium bag as the MVP default, validated by Zipline across multiple packaging configurations; Small is operational fallback only and Large is out of scope."
++description: "PRD v26 confirms the new 12 x 8.5 x 13 in Medium bag as the MVP default, validated by Zipline across multiple packaging configurations; Small is operational fallback only and Large is out of scope. 2026-10-28: IKC Ops sample testing complete, new Medium fits the production Pod, no further bag testing before launch."
+ sources:
+   - https://wonder.atlassian.net/wiki/spaces/~712020f40ba91c0864455e9792d8f51b9f008d/pages/5462392836/PRD+Weight+and+Dimension+Eligibility+for+1P+Drone+Delivery
+   - Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md
+@@ -33,7 +33,7 @@ aliases:
+   - 无人机 MVP Medium 袋外包装选择
+ retrieval_priority: high
+ freshness_status: active
+-freshness_reviewed: 2026-10-19
++freshness_reviewed: 2026-10-28
+ ---
+ 
+ # Drone MVP Medium Bag Outer Package Decision
+@@ -41,6 +41,12 @@ freshness_reviewed: 2026-10-19
+ > [!important] Current status (2026-10-19)
+ > Rob Knudson's [Weight and Dimension Eligibility PRD](https://wonder.atlassian.net/wiki/spaces/~712020f40ba91c0864455e9792d8f51b9f008d/pages/5462392836/PRD+Weight+and+Dimension+Eligibility+for+1P+Drone+Delivery), version 26, reports that the **new Medium Wonder bag, 12 × 8.5 × 13 in**, has been validated by Zipline across multiple Wonder packaging configurations and is the default bag for MVP launch SOPs. Small is an IKC-staff operational fallback only; Large is out of scope. This supersedes the September 20 candidate-testing status. The source is Rob's PRD; a separate Zipline test report was not inspected in this update.
+ 
++> [!important] Sample testing complete (2026-10-28)
++> Per Rob's follow-up relayed by Jay ([[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|Slack Clarification note, Update 2026-10-28]]): IKC Ops completed the sample testing. The mailed samples (the new August 2026 Medium bag, described in the note as the PRD v26 default, plus the guest packaging) fit the **production Pod**. The new Medium is confirmed as the MVP outer package and **no further bag testing is planned before launch**. This closes the sample-fit step that the 2026-08-12 thread left open and confirms Jay's 2026-08-20 interpretation that the mailed samples were the new Medium. It does not publish a fill line, folded height, orientation, handle/closure rule, SKU, or tare, and it is an IKC Ops result, not a separate Zipline test report.
++
++> [!warning] Spec identity not reconciled (2026-10-28)
++> The 2026-10-28 update treats "the new August 2026 Medium bag" and "the PRD v26 default" as the same bag. This page records them as two different nominal specs: the August 2026 new Medium is `13" × 10" × 13"` per [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Order Delivery Bag Specifications (for Jay)|Order Delivery Bag Specifications]], while PRD v26 states `12 × 8.5 × 13 in`. Both rows below are kept. Which tuple describes the bag that passed the Pod test, or whether one of the two numbers is a typo or an updated vendor spec, has not been established.
++
+ ## Short Answer
+ 
+ The MVP default is the **new Medium Wonder bag, 12 × 8.5 × 13 in**, per PRD v26. Small may be used at IKC staff discretion when a specific order can safely be packed smaller; Large must not be used for Drone delivery.
+@@ -51,7 +57,7 @@ This is a Wonder-side outer-package choice. It does not change the Zipline provi
+ 
+ ## What Changed
+ 
+-| Date | Claim | Status as of 2026-10-19 |
++| Date | Claim | Status as of 2026-10-28 |
+ | --- | --- | --- |
+ | 2026-07-22 | Explore a standardized Wonder bag as an MVP simplification. | Still the family of options; now narrowed. |
+ | 2026-07-29 | Catalog comparison: Small is the closest candidate; Medium and Large are likely ineligible. | Superseded for **bag selection**. Keep as historical uncompressed-dimension analysis. |
+@@ -60,8 +66,9 @@ This is a Wonder-side outer-package choice. It does not change the Zipline provi
+ | 2026-08-12 | IKC Ops / Stephen Acciaioli: use existing Medium bag because it fits the 3D printed Pod sample. | Historical working direction; not final approval. |
+ | 2026-09-20 | Rob: Stephen requested two new bag sizes, both expected to be slightly smaller than the Dropbox, for Zipline testing. | Historical candidate/testing status, superseded by PRD v26. |
+ | 2026-10-19 | PRD v26: new Medium, 12 × 8.5 × 13 in, validated by Zipline across multiple packaging configurations. | Current default launch bag; Small operational fallback only, Large out of scope. |
++| 2026-10-28 | Rob via Jay: IKC Ops completed sample testing; new August Medium and guest packaging fit the production Pod; no further bag testing planned before launch. | Current. Sample-fit step closed; new Medium confirmed as MVP outer package. Fill/fold profile, SKU, and tare still unpublished. |
+ 
+-Sources: [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|Slack thread captured 2026-08-12]], the September 20 comment listed in frontmatter, and Rob's PRD v26 (2026-10-19).
++Sources: [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|Slack thread captured 2026-08-12]] (including its 2026-10-28 update), the September 20 comment listed in frontmatter, and Rob's PRD v26 (2026-10-19).
+ 
+ ## Provider Envelope Versus Wonder Bag
+ 
+@@ -105,6 +112,9 @@ The August sources used "existing Medium bag" without pinning a SKU. These histo
+ 
+ Jay's read of the timeline: Stephen replied on 2026-08-12, the new Medium spec deploys in August 2026, and mailing a soon-to-be-retired bag spec for a launch later in the year would waste the test. So the samples Stephen is sending to Zipline are most plausibly the **new August Medium**. This is an inference pending confirmation from Stephen or the Zipline test result, not a stated fact.
+ 
++> [!success] Confirmed (2026-10-28)
++> Rob's follow-up states the mailed samples were the new August 2026 Medium bag and that they fit the production Pod. The interpretation above is now a stated fact rather than an inference. Note one divergence from the reasoning below: the completed test was reported as an **IKC Ops** sample test against the production Pod, not as a Zipline test result.
++
+ Geometry supports the interpretation. Against the current `338 × 254 × 205 mm` envelope:
+ 
+ | Axis | Envelope | New Medium | Delta |
+@@ -122,6 +132,8 @@ Two distinct test objects should not be conflated:
+ 
+ If the interpretation holds, the approved filled/folded profile and any Pack API item dimensions should be built on new-Medium numbers, and the launch risk inverts: instead of "re-test if production switches," the requirement becomes "IKC must have new-spec Medium bags in stock at launch."
+ 
++As of 2026-10-28 the interpretation holds, so the operative launch requirement is new-spec Medium stock at IKC. Because no further bag testing is planned before launch, any later switch of bag spec would reopen the fit question without a scheduled test to close it.
++
+ ## Eligibility And KDS Implications
+ 
+ - The default launch SOP uses the **new Medium, 12 × 8.5 × 13 in**, per PRD v26. Small is an operational fallback at IKC staff discretion; Large is out of scope. The PRD does not identify the new Medium's SKU.
+@@ -136,12 +148,16 @@ See [[drone-package-recommendation-ownership-and-kds-boundary|Drone Package Reco
+ 
+ ## Not Confirmed
+ 
+-- Separate Zipline test evidence identifying the tested configurations and limits; PRD v26 reports new-Medium validation but does not include the test report or establish the outcome for both September candidates.
+-- Maximum fill line, folded height, allowed orientation, or handle/closure treatment.
+-- The SKU corresponding to the new 12 × 8.5 × 13 in Medium, its empty-bag tare, and the mapping to the September candidates.
+-- A signed physical profile that Checkout can compare in millimeters.
+-- KDS/KOM implementation and rollout for the one-Medium-bag Runner instruction.
+-- That uncompressed Medium catalog dimensions fit the Zipline envelope.
++Status annotations in brackets reflect the 2026-10-28 update; the original items are kept.
++
++- Separate Zipline test evidence identifying the tested configurations and limits; PRD v26 reports new-Medium validation but does not include the test report or establish the outcome for both September candidates. *[Still open. The 2026-10-28 result is an IKC Ops production-Pod fit test, not a Zipline report, and no further bag testing is planned, so this evidence may never be produced as a separate document.]*
++- Maximum fill line, folded height, allowed orientation, or handle/closure treatment. *[Still open; not published by the 2026-10-28 update.]*
++- The SKU corresponding to the new 12 × 8.5 × 13 in Medium, its empty-bag tare, and the mapping to the September candidates. *[Still open. Additionally, the `13" × 10" × 13"` versus `12 × 8.5 × 13 in` identity question in the warning callout above is unresolved.]*
++- A signed physical profile that Checkout can compare in millimeters. *[Still open.]*
++- KDS/KOM implementation and rollout for the one-Medium-bag Runner instruction. *[Still open.]*
++- That uncompressed Medium catalog dimensions fit the Zipline envelope. *[Still not claimed; the Pod fit is a packed/folded result.]*
++
++Resolved by the 2026-10-28 update: the sample-fit test is complete; the mailed samples were the new August Medium plus guest packaging; they fit the production Pod (not only the 3D printed sample); the new Medium is confirmed as the MVP outer package.
+ 
+ ## Related
+ 
+diff --git a/queries/drone-package-recommendation-ownership-and-kds-boundary.md b/queries/drone-package-recommendation-ownership-and-kds-boundary.md
+index a9d104e..0f9c601 100644
+--- a/queries/drone-package-recommendation-ownership-and-kds-boundary.md
++++ b/queries/drone-package-recommendation-ownership-and-kds-boundary.md
+@@ -2,7 +2,7 @@
+ title: Drone Package Recommendation Ownership and KDS Boundary
+ date: 2026-08-11
+ created: 2026-08-11
+-updated: 2026-09-20
++updated: 2026-10-28
+ type: query
+ domain: delivery
+ tags:
+@@ -47,6 +47,9 @@ freshness_reviewed: 2026-09-20
+ > [!warning] Bag status update (2026-09-20)
+ > The earlier existing-Medium direction is now historical rather than final. Stephen has requested two new bag sizes expected to be slightly smaller than the Dropbox, and both will be sent to Zipline for testing. KDS can remain an operational instruction surface, but the designated SKU and physical profile must wait for validation.
+ 
++> [!important] Bag sample testing complete (2026-10-28)
++> Rob's follow-up, relayed by Jay in [[Wonder/Wonder Fulfillment/Projects/1P Drone Delivery/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12|the Slack Clarification note]]: IKC Ops completed the sample testing; the new August 2026 Medium bag and the guest packaging fit the production Pod; the new Medium is confirmed as the MVP outer package and no further bag testing is planned before launch. The "pending validation" language in the 2026-09-20 callout and the sections below is now historical for the *bag choice*. The designated bag for the KDS/KOM instruction is the new Medium. The SKU identity, fill line, folded height, orientation, closure, and tare are still not published. See [[drone-mvp-medium-bag-outer-package-decision]] for the full status and an unresolved spec-identity question.
++
+ ## Short Answer
+ 
+ The current MVP direction no longer expects the [[queries/kds-bag-recommendation-feature-and-algorithm-2026-07-22|KDS Bag Recommendation]] to drive Drone dimension eligibility. If one designated bag is used for every eligible Drone order, there is no bag-size selection to make. The final bag is still pending Zipline validation. The existing Expo-unit model also does not represent the folded bag profile's loaded height, container orientation, or stackability.
+@@ -107,7 +110,7 @@ This is not a Delivery reimplementation of KDS bag recommendation. The algorithm
+ 
+ ## Remaining Decisions
+ 
+-1. Which candidate bag SKU is final, and has Zipline approved the mailed sample?
++1. Which candidate bag SKU is final, and has Zipline approved the mailed sample? *(2026-10-28: the bag is the new August 2026 Medium and IKC Ops confirmed the mailed samples fit the production Pod; the SKU identifier is still not stated, and the completed test is reported as an IKC Ops result rather than a Zipline approval document.)*
+ 2. What signed fill line, folded height, orientation, and closure define the approved package profile?
+ 3. Who owns the measurement SOP, raw evidence, Delivery profile approval, and remeasurement intake queue?
+ 4. How will KDS/KOM receive the Drone eligibility outcome and present the designated-bag instruction?

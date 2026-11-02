@@ -1,0 +1,5 @@
+concepts/drone-delivery-integration-strategy.md
+log.md
+queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md
+queries/drone-mvp-medium-bag-outer-package-decision.md
+queries/drone-package-recommendation-ownership-and-kds-boundary.md

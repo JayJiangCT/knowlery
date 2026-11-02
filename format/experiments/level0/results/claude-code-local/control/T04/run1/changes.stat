@@ -1,0 +1,6 @@
+ concepts/drone-delivery-integration-strategy.md    |  4 ++-
+ log.md                                             | 14 ++++++++
+ ...ckout-package-dimensions-contract-2026-07-16.md | 11 +++++--
+ .../drone-mvp-medium-bag-outer-package-decision.md | 38 +++++++++++++++-------
+ ...ge-recommendation-ownership-and-kds-boundary.md |  7 ++--
+ 5 files changed, 58 insertions(+), 16 deletions(-)
