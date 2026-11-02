@@ -22,7 +22,7 @@
 | E-001 | 对照实验 | **DONE (run 1)** | 1.x vs v0.3.1，12 任务 × 2 臂 × 2 harness（同一模型），47/48 通过；见 `format/experiments/level0/RESULTS.md`。Owner 于 2026-11-02 接受单模型范围 |
 | E-002 | 无 Obsidian 测试 | **DONE (run 1)** | 两臂均 headless、仅文件工具；Level 0 成立。Connector 相关保证未测 |
 
-**Knowledge Format v1.0 接受记录（2026-11-02）：** Owner 在对话中授权独立审查通过后由 Agent 代为登记。审核已确认 F-008 当前 Source digest 校验及 T13 回归证据，因此正式接受 F-001、F-002、F-003、F-004、F-006、F-008，依据见 [决策记录](./decisions/2026-11-02-knowledge-format-v1.0-rc.md)。这是 Owner 授权后的代记录，不表示 Owner 亲自编辑了文件。F-005、F-007 仍为 **PARTIAL**；接受 Format v1.0 不表示 Level 1 Connector 的强制保障已完成。
+**Knowledge Format v1.0 接受记录（2026-11-02）：** Owner 在对话中授权独立审查通过后由 Agent 代为登记。审核已确认 F-008 当前 Source digest 校验及 T13 回归证据，因此正式接受 F-001、F-002、F-003、F-004、F-006、F-008，依据见 [决策记录](./decisions/2026-11-02-knowledge-format-v1.0.md)。这是 Owner 授权后的代记录，不表示 Owner 亲自编辑了文件。F-005、F-007 仍为 **PARTIAL**；接受 Format v1.0 不表示 Level 1 Connector 的强制保障已完成。
 
 ## 状态规则
 
