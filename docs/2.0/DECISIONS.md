@@ -11,16 +11,18 @@
 | A-005 | 资产可靠性 | **BASELINE** | 重要证据、人工决定、当前与历史知识不能因替换客户端而丢失 |
 | A-006 | 自治治理 | **BASELINE** | Agent 默认自主，重要证据冲突或高风险不可逆变更触发人工升级 |
 | R-001 | GitHub 组织 | **ACCEPTED FOR BOOTSTRAP** | 继续同一仓库；`develop/2.0` 独立开发；暂保留 1.x 代码与发布配置 |
-| F-001 | Wiki 结构 | **PROPOSED → v1.0-rc** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2）。待 Owner 标 Accepted |
-| F-002 | Frontmatter 字段 | **PROPOSED → v1.0-rc** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
-| F-003 | Note 身份 | **PROPOSED → v1.0-rc** | 受管理页按 slug 链接，Source 按路径链接；主张锚点 `^cN` 行尾、页内唯一、随行移动；不注入 UUID。T04/T09 验证锚点在移动后可解析 |
-| F-004 | 来源版本 | **PROPOSED → v1.0-rc** | 两个值：`version`（证据范围的 sha256，负责变化检测）+ 可选 `blob:`（整文件 git 对象，负责恢复）；范围按角色定义（Source 正文 / Record 到 `## Sources` 止 / Claim 指纹）。T07–T10 验证：8/8 诚实恢复或不恢复，8/8 无误判 |
+| F-001 | Wiki 结构 | **ACCEPTED · 2026-11-02** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2） |
+| F-002 | Frontmatter 字段 | **ACCEPTED · 2026-11-02** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
+| F-003 | Note 身份 | **ACCEPTED · 2026-11-02** | 受管理页按 slug 链接，Source 按路径链接；主张锚点 `^cN` 行尾、页内唯一、随行移动；不注入 UUID。T04/T09 验证锚点在移动后可解析 |
+| F-004 | 来源版本 | **ACCEPTED · 2026-11-02** | 两个值：`version`（证据范围的 sha256，负责变化检测）+ 可选 `blob:`（整文件 git 对象，负责恢复）；范围按角色定义（Source 正文 / Record 到 `## Sources` 止 / Claim 指纹）。T07–T10 验证：8/8 诚实恢复或不恢复，8/8 无误判 |
 | F-005 | Governance 持久化 | **PARTIAL** | Format 侧：`protected`、`## History`、`log.md`、Source frontmatter 治理信号已定（Format §10–11、§8）；跨设备权威存储与冲突语义属 Connector（Level 1），未验证 |
-| F-006 | 知识关系 | **PROPOSED → v1.0-rc** | 依赖规则：Knowledge 引用 Record/Source 为证据；`derived` 引用另一页的单条主张，证据权重为零，争议沿其传播（§9.2，T11 验证 2/2 到达） |
+| F-006 | 知识关系 | **ACCEPTED · 2026-11-02** | 依赖规则：Knowledge 引用 Record/Source 为证据；`derived` 引用另一页的单条主张，证据权重为零，争议沿其传播（§9.2，T11 验证 2/2 到达） |
 | F-007 | 写入安全 | **PARTIAL** | 约定层已定（移入 History、不删除、追加式 Sources/History、`log.md`）并在 T04–T06 两 harness 下成立；确定性保证（原子写、并发、`protected` 强制）留给 Connector |
-| F-008 | 读取规则 | **PROPOSED → v1.0-rc** | 渐进式披露分层；**新增**：作为答案给出的主张需读其首个 vault 内 Source，除非 History 有 `source-checked` 事件**且 Source 当前 digest 仍等于所记版本**（审查 2026-11-02 指出仅凭事件会复用过期验证；RESULTS F1：Test 臂 3 次中 2 次漏检编译期错误）。T13 回归（kit `2ba5db3`）两臂各 1 格通过，Test 臂仅凭 digest 比对即发现漂移、未读 Source 正文 |
+| F-008 | 读取规则 | **ACCEPTED · 2026-11-02** | 渐进式披露分层；**新增**：作为答案给出的主张需读其首个 vault 内 Source，除非 History 有 `source-checked` 事件**且 Source 当前 digest 仍等于所记版本**（审查 2026-11-02 指出仅凭事件会复用过期验证；RESULTS F1：Test 臂 3 次中 2 次漏检编译期错误）。T13 回归（kit `2ba5db3`）两臂各 1 格通过，Test 臂仅凭 digest 比对即发现漂移、未读 Source 正文 |
 | E-001 | 对照实验 | **DONE (run 1)** | 1.x vs v0.3.1，12 任务 × 2 臂 × 2 harness（同一模型），47/48 通过；见 `format/experiments/level0/RESULTS.md`。Owner 于 2026-11-02 接受单模型范围 |
 | E-002 | 无 Obsidian 测试 | **DONE (run 1)** | 两臂均 headless、仅文件工具；Level 0 成立。Connector 相关保证未测 |
+
+**Knowledge Format v1.0 接受记录（2026-11-02）：** Owner 在对话中授权独立审查通过后由 Agent 代为登记。审核已确认 F-008 当前 Source digest 校验及 T13 回归证据，因此正式接受 F-001、F-002、F-003、F-004、F-006、F-008，依据见 [决策记录](./decisions/2026-11-02-knowledge-format-v1.0-rc.md)。这是 Owner 授权后的代记录，不表示 Owner 亲自编辑了文件。F-005、F-007 仍为 **PARTIAL**；接受 Format v1.0 不表示 Level 1 Connector 的强制保障已完成。
 
 ## 状态规则
 
@@ -28,7 +30,8 @@
 - **ACCEPTED FOR BOOTSTRAP**：仅适用于本次分支搭建的工程决定，不是永久的多包/发布策略。
 - **RESEARCH / OPEN**：不应被代码或文档暗中固化成强制规范。
 - **PLANNED**：计划而非已经完成的实验。
-- **PROPOSED → v1.0-rc**：设计已在 Format v1.0-rc 中固定并经 Level 0 实验验证；等待 Owner 标记 Accepted（日期、备选方案与风险见 Format §15/§18 与 RESULTS.md）。
+- **PROPOSED → v1.0-rc**：候选设计已形成、尚待 Owner 接受（若出现此状态，不能视作正式批准）。
+- **ACCEPTED · YYYY-MM-DD**：Owner 授权后正式接受的 Format 设计决定；证据、备选方案、风险及升级路径以关联决策记录为准。
 - **PARTIAL**：Format 侧已定，Connector 侧未验证。
 - **DONE (run 1)**：实验已执行一轮；结论为案例发现，未达统计显著。
 
