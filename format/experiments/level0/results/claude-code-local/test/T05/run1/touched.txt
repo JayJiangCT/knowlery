@@ -1,0 +1,2 @@
+concepts/drone-delivery-integration-strategy.md
+log.md

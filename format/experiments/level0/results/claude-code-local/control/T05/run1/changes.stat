@@ -1,0 +1,13 @@
+ concepts/drone-delivery-integration-strategy.md    |  9 +++++++--
+ log.md                                             | 23 ++++++++++++++++++++++
+ ...ckout-package-dimensions-contract-2026-07-16.md | 10 +++++++---
+ ...trigger-and-revalidation-contract-2026-07-16.md | 10 ++++++++--
+ ...-system-responsibility-boundaries-2026-07-15.md |  9 +++++++--
+ ...n-test-and-container-count-limits-2026-08-12.md |  9 +++++++--
+ .../drone-mvp-medium-bag-outer-package-decision.md | 13 +++++++++---
+ ...y-for-drone-dimension-eligibility-2026-08-12.md |  9 +++++++--
+ ...-and-package-eligibility-contract-2026-07-02.md |  9 +++++++--
+ ...pline-integration-readiness-guide-2026-06-17.md | 10 ++++++++--
+ ...ne-mvp-partner-confirmed-contract-2026-07-30.md | 11 ++++++++---
+ ...ipline-wonder-weekly-deck-readout-2026-09-15.md | 11 ++++++++---
+ 12 files changed, 107 insertions(+), 26 deletions(-)

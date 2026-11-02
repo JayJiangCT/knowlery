@@ -1,0 +1,5 @@
+7e01dd5 Partner contract: dimensions also required (owner edit)
+6bc42c3 pin source versions (14 pages)
+b7a7007 baseline: Level 0 test arm
+cf9e378 pilot: split questions from answer keys for runtime parity experiment
+97e2815 Update SCHEMA.md

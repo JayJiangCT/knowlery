@@ -1,0 +1,53 @@
+diff --git a/concepts/drone-delivery-integration-strategy.md b/concepts/drone-delivery-integration-strategy.md
+index 54c007a..b8afeef 100644
+--- a/concepts/drone-delivery-integration-strategy.md
++++ b/concepts/drone-delivery-integration-strategy.md
+@@ -8,8 +8,8 @@ tags:
+   - drone-delivery
+   - grubhub
+ status: disputed
+-updated: 2026-10-26
+-updated_by: process:cook
++updated: 2026-11-02
++updated_by: claude-code/claude-fable-5-1
+ verified: 2026-07-17
+ verified_by: process:cook
+ aliases:
+@@ -53,7 +53,7 @@ Eligibility and package data (2026-08-20 → 2026-10-26)
+ - Delivery-owned Eligibility calls Zipline Pack and treats `total_deliveries == 1` as the proposed affirmative fit result; this preserves the strategic boundary that Wonder owns orchestration while the provider owns provider-specific packing logic, and Zipline Pack owns the provider-specific fit result. Zipline does not mandate Pack; Wonder is evaluating it as the eligibility oracle so it need not maintain its own fit algorithm, and the July partner confirmation that Pack is not required solely for one-Zip proof is not a contradiction (src: s13, s10, s11) ^c13
+ - The Robotic Arm is out of MVP scope; manual scale capture is the active measurement path (src: s13) ^c14
+ - The measurement spreadsheet's `Primary Container` field is reference-only; its green weight/dimension cells are direct measurements usable as initial criteria but not a maintained current-pack source of truth; the data still needs currentness checks, packaging-change handling and governed mapping before it is reused for uncovered items or sent to Pack (src: s14) ^c15
+-- The current single-Zip provider limit, the current hardware maximum, is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); one approved package within it guarantees one initial Zip; implementation stays canonical in grams and millimetres (src: s15, s16, s10) ^c16
++- The current single-Zip provider limit, the current hardware maximum, is 2495 g and 338 × 254 × 205 mm (5.50 lb, 13.25 × 10 × 8 in); one approved package within it guarantees one initial Zip; implementation stays canonical in grams and millimetres (src: s15, s16, s10) #disputed ^c16
+ - The Wonder-side outer package that must fit that envelope is the existing Medium bag, not a newly produced drone-specific bag, selected by IKC Ops after it fit the 3D-printed Pod sample; bag and guest-packaging samples still need testing (src: s17, s18) ^c17
+ 
+ Partner contract (2026-07-28 → 2026-08-03)
+@@ -96,6 +96,7 @@ Ops / Packaging measures top-selling packed items
+ ```
+ 
+ ## Open
++- Is the current single-Zip width limit 252 mm or 254 mm? [[#^c16]] states 254 mm citing s15, but s15's own text reads its Envelope card as `338 × 252 × 205 mm`, calls the 3D label `10 in / 254 mm` a rounded-imperial pairing, and says not to treat 254 mm as a superseding width; the two attached slide artifacts disagree with each other. s10 and s16 adopt 254 mm, but both read the same slide, and s10's 254 mm section was a post-freeze revision of a 2026-07-30 Record whose original partner QA width is 252 mm. Needs Zipline or the slide owner to confirm which artifact is authoritative (src: s15, s10, s16) ^q12
+ - The tracker's 2027-01-20 Grand Opening in [[#^c24]] differs from the 2026-09-20 snapshot's 2027-01-14; the launch owner has not confirmed which is right, and Friends & Family and Soft Opening may not be the same milestone (src: s23, s30) ^q1
+ - Does Grubhub DaaS have a committed roadmap for drone/Dexa support, and could it expose quote, eligibility, vehicle type, tracking, cancellation, weather and fallback reasons? Bears on [[#^c1]] (src: s26) ^q2
+ - What does Wonder need to learn to integrate directly with Zipline for 1P drone delivery and a possible marketplace-brand flow? Current discovery should clarify Zipline's direct APIs, delivery lifecycle, checkout eligibility, loading-station workflow, status mapping, operational fallback, and how drone-specific fields normalize into Delivery Fulfillment (src: s1) ^q11
+@@ -142,6 +143,7 @@ Ops / Packaging measures top-selling packed items
+ - s32 · [[drone-delivery-overview-slides-readout-2026-06-17]] · sha256:3aeb5f64fdcdc6593267d71f3c5e0eda40e4263734cb6c3d6f8126250496e375 · record · blob:b9f62eca404961f1b72c6586d1a633b120897dd8
+ 
+ ## History
++- 2026-11-02 · [[#^c16]] marked disputed; [[#^q12]] opened · cited source s15 reads the Envelope card as 252 mm and rejects 254 mm as a superseding width, while s10 and s16 adopt 254 mm from the same slide · src: s15, s10, s16 · by claude-code/claude-fable-5-1
+ - 2026-10-26 · [[#^c11]] [[#^c12]] added; Cookbook/Delivery Catalog sync boundary · src: s11 · by process:cook
+ - 2026-10-19 · [[#^c24]] [[#^c36]] added, [[#^c24]] marked disputed; [[#^q1]] opened · src: s23, s24 · by process:cook
+ - Region 2 launch reference: 2027-01-11 Friends & Family and 2027-01-14 Grand Opening per the 2026-09-20 snapshot (src: s30) · superseded 2026-10-19 by [[#^c24]] · tracker Rob shared on 2026-10-19 shows different dates; difference unconfirmed · src: s23 · by process:cook ^c26
+diff --git a/log.md b/log.md
+index 9def2c5..7102950 100644
+--- a/log.md
++++ b/log.md
+@@ -1,4 +1,8 @@
+ # log
+ 
++## 2026-11-02
++- 02:10 · claude-code/claude-fable-5-1 · ANSWER.md · created: single-Zip width review result (252 vs 254 mm conflict surfaced, not resolved)
++- 02:05 · claude-code/claude-fable-5-1 · concepts/drone-delivery-integration-strategy · ^c16 marked #disputed, ^q12 opened, History line added; s15 contradicts the 254 mm width it is cited for
++
+ ## 2026-10-30
+ - 00:00 · process:build · vault · Level 0 Test-arm baseline built from Pilot cf9e378 + v0.3.1 overlay

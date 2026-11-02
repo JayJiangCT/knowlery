@@ -1,0 +1,8 @@
+ log.md                                                   | 12 ++++++++++++
+ ...ation-trigger-and-revalidation-contract-2026-07-16.md |  4 ++--
+ ...elivery-high-level-system-alignment-mvp-2026-08-13.md |  4 ++--
+ ...pline-discovery-vs-fulfillment-quote-mass-contract.md |  4 ++--
+ ...-quote-and-package-eligibility-contract-2026-07-02.md |  4 ++--
+ .../zipline-mvp-partner-confirmed-contract-2026-07-30.md | 16 +++++++++++++---
+ queries/zipline-sandbox-quote-mass-gating-contract.md    |  4 ++--
+ 7 files changed, 35 insertions(+), 13 deletions(-)
