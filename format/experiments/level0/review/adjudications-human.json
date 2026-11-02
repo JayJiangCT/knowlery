@@ -1,0 +1,328 @@
+[
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:44.422Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add4",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:45.969Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A24",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:08:07.593Z",
+  "decision": "drop-ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A5",
+  "note": "这部分的方案已经发生了明显的改变了，现在Cookbook会提供API和Kafka消息， 采用”Load profiles with one full pull through Cookbook APIs, then apply incremental Kafka updates. The full pull can be run again on demand to rebuild the table from Cookbook.",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "ok"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:20:38.872Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A20",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "knowledge-update"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:58.022Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A36",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:21.557Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A55",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:43.341Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A21",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:35.957Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "zipline-loading-methods:A3",
+  "page": "zipline-loading-methods",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:11.139Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A48",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:17:29.466Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A13",
+  "note": "",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:52.221Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A32",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:17:56.596Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A15",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "knowledge-update"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:19.623Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A51",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:25.568Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A62",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:09.439Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A45",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:12.788Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A50",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:00.019Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A38",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:41.622Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add2",
+  "page": "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:01.821Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A40",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:50.005Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A29",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:23.335Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A57",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:39.589Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add3",
+  "page": "zipline-mvp-final-partner-qa-working-draft-2026-07-26",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:27.588Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A64",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:37.788Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add2",
+  "page": "zipline-mvp-final-partner-qa-working-draft-2026-07-26",
+  "recommended": "ok"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:20:22.355Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A18",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "knowledge-update"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:03:52.503Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A2",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:07.570Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A44",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:04:58.672Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A4",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:05.639Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A43",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "ok",
+  "at": "2026-11-02T06:21:29.938Z",
+  "decision": "ok",
+  "human": "fix",
+  "id": "drone-delivery-integration-strategy:A69",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "ok"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:03.822Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A42",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:31.872Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "drone-delivery-integration-strategy:A71",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:54.356Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A34",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:48.087Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A26",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:20:56.256Z",
+  "decision": "fix",
+  "human": "drop-ok",
+  "id": "drone-delivery-integration-strategy:A35",
+  "page": "drone-delivery-integration-strategy",
+  "recommended": "fix"
+ },
+ {
+  "agent": "fix",
+  "at": "2026-11-02T06:21:33.988Z",
+  "decision": "fix",
+  "human": "ok",
+  "id": "zipline-drone-deliveries-in-dispatch-portal:B2",
+  "page": "zipline-drone-deliveries-in-dispatch-portal",
+  "recommended": "fix"
+ }
+]

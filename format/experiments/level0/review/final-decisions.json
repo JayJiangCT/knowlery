@@ -1,0 +1,482 @@
+{
+ "drone-delivery-integration-strategy:A1": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A2": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A3": {
+  "decision": "fix",
+  "note": "\"Delivery Catalog periodically syncs profiles and applies Kafka updates\"已经更新为\"Once Fully syncs and applies Kafka updates\"",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A4": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A5": {
+  "decision": "drop-ok",
+  "note": "这部分的方案已经发生了明显的改变了，现在Cookbook会提供API和Kafka消息， 采用”Load profiles with one full pull through Cookbook APIs, then apply incremental Kafka updates. The full pull can be run again on demand to rebuild the table from Cookbook.",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A6": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A7": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A8": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A9": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A10": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A11": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A12": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A13": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A14": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A15": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A16": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A17": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A18": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A19": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A20": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A21": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A22": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A23": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A24": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A25": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A26": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A27": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A28": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A29": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A30": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A31": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A32": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A33": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A34": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A35": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A36": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A37": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A38": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A39": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A40": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A41": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A42": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A43": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A44": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A45": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A46": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A47": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A48": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A49": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A50": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A51": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A52": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A53": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A54": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A55": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A56": {
+  "decision": "fix",
+  "note": "Load profiles with one full pull through Cookbook APIs, then apply incremental Kafka updates. ",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A57": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A58": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A59": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A60": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A61": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A62": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A63": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A64": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A65": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A66": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A67": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A68": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A69": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:A70": {
+  "decision": "fix",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-delivery-integration-strategy:A71": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-delivery-integration-strategy:B1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "ikc-drone-delivery-setting:B1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaged-size:A1": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaged-size:A2": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaged-size:B1": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-drone-deliveries-in-dispatch-portal:B1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-drone-deliveries-in-dispatch-portal:B2": {
+  "decision": "fix",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "zipline-loading-methods:A1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-loading-methods:A2": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-loading-methods:A3": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "zipline-loading-methods:A4": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-loading-methods:B1": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add2": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "zipline-mvp-final-partner-qa-working-draft-2026-07-26:add3": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add2": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add3": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28:add4": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add2": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add3": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "packaging-signature-configuration-space-for-drone-eligibility-2026-08-13:add4": {
+  "decision": "ok",
+  "note": "",
+  "via": "adjudicated"
+ },
+ "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add1": {
+  "decision": "ok",
+  "note": "",
+  "via": "agreed"
+ },
+ "drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18:add2": {
+  "decision": "drop-ok",
+  "note": "",
+  "via": "agreed"
+ }
+}

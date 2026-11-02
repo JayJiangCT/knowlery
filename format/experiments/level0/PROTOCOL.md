@@ -22,11 +22,24 @@
 
 Before any run, a human checks each migrated page against its 1.x original for semantic equivalence: no claim added, none dropped, none sharpened. A log of migration ambiguities is kept; each entry is a potential Format revision.
 
-The check is a gate: it is recorded in the sign-off table below, one row per page in `pages.txt`, and no scored run starts while a row is open. `tools/validate.py` checks structure only and does not count.
+The check is a gate: it is recorded in the sign-off table below, one row per page in `pages.txt`, and no scored run starts while a row is open. Method used (2026-11-02): `tools/equivalence.py` listed every 1.x statement without an automatic landing place and every Test claim without a 1.x origin (96 items); the human reviewer decided each; an independent agent reviewed the same 96 items blind (`review/BLIND-REVIEW-PROMPT.md`); the 36 disagreements were adjudicated by the human; all `fix` decisions plus the agent's 7 out-of-packet findings were applied. Files: `review/decisions-human.json`, `review/decisions-agent.json`, `review/adjudication-items.json`, `review/final-decisions.json`, `review/knowledge-updates.md`. `tools/validate.py` checks structure only and does not count.
 
 | Page | Reviewer | Date | Result |
 |---|---|---|---|
-| (all 14 pages in `pages.txt`) | — | — | **open** |
+| `concepts/drone-delivery-integration-strategy.md` | human:jay + independent agent (blind) | 2026-11-02 | pass-with-notes — 36 fixes applied after dual review (human + independent agent) and adjudication; 4 reviewer notes are newer knowledge, filed in `review/knowledge-updates.md`, not applied |
+| `concepts/ikc-drone-delivery-setting.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `concepts/packaged-size.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `concepts/zipline-drone-deliveries-in-dispatch-portal.md` | human:jay + independent agent (blind) | 2026-11-02 | pass-with-notes — ^c17 is a declared experiment fixture (History line), mirrored in Control |
+| `comparisons/zipline-loading-methods.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/zipline-mvp-final-partner-qa-working-draft-2026-07-26.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/zipline-mvp-partner-confirmed-contract-2026-07-30.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/zipline-drone-quote-and-package-eligibility-contract-2026-07-02.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/zipline-dropbox-lock-custody-and-failure-disposition-contract-2026-07-28.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/drone-mvp-medium-bag-outer-package-decision.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/1p-drone-delivery-checkout-package-dimensions-contract-2026-07-16.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/packaging-signature-configuration-space-for-drone-eligibility-2026-08-13.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/zipline-pack-as-eligibility-oracle-direction-2026-08-20.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
+| `queries/drone-mvp-weight-gate-status-and-discrete-pivot-2026-08-18.md` | human:jay + independent agent (blind) | 2026-11-02 | pass |
 
 Both arms run headless with file tools only (no Knowlery runtime: `.knowlery/bin` is removed in both). Nothing about atomic writes, concurrent edits, or enforcement of `protected` is tested here.
 
