@@ -16,9 +16,10 @@ sys.path.insert(0, HERE)
 from digest import digest, scope_claim
 
 PILOT_COMMIT = "cf9e378"
-TASKS = [f"T{i:02d}" for i in range(1, 13)]
+TASKS = [f"T{i:02d}" for i in range(1, 14)]
 DRONE = "Wonder/Wonder Fulfillment/Projects/1P Drone Delivery"
 MEDIUM_BAG = f"{DRONE}/Slack Clarification - Drone MVP Medium Bag Selection - 2026-08-12.md"
+SP14_SUMMARY = "Wonder/Wonder Fulfillment/Sprints/2026/SP14/Agenda/Meeting Summary.md"
 SCOPED_QUERIES = [l.split("/", 1)[1] for l in open(os.path.join(KIT, "pages.txt")) if l.startswith("queries/")]
 
 def run(cmd, cwd, env=None):
@@ -247,6 +248,20 @@ def fixture(arm, task, vault):
     elif task == "T12":
         add_frontmatter_key(vault, MEDIUM_BAG, "decision_status: withdrawn")
         commit(vault, "Medium bag note: decision withdrawn (frontmatter)", HUMAN)
+    elif task == "T13":
+        # F-008 regression: Source changed, Evolve not yet run. The Wiki still pins the old
+        # version and (Test arm) carries a source-checked event that MATCHES that stale pin.
+        if T:
+            page = open(os.path.join(vault, strategy), encoding="utf-8").read()
+            m = re.search(r"^- s3 · \[\[[^\]]+\]\] · (sha256:[0-9a-f]{64}) · source", page, re.M)
+            assert m, "T13: s3 not pinned"
+            edit(vault, strategy, "## History\n",
+                 f"## History\n- 2026-10-27 · [[#^c2]] source-checked · s3@{m.group(1)} · by claude-code/claude-fable-5-1\n")
+            append(vault, "log.md", "- 2026-10-27 · concepts/drone-delivery-integration-strategy.md · source-checked [[#^c2]] against s3 · by claude-code/claude-fable-5-1\n")
+            commit(vault, "Strategy: record source check of ^c2", COOK)
+        edit(vault, SP14_SUMMARY, "- The team confirmed that this initiative is exclusive to 1P Wonder, not Grubhub.",
+             "- The team confirmed that this initiative is exclusive to 1P Wonder, not Grubhub.\n- **Correction (2026-10-30, Rob):** Grubhub-mediated 1P delivery is back in scope as a Q1 2027 pilot; the exclusivity statement above no longer holds.")
+        commit(vault, "SP14 meeting summary: scope correction (owner edit)", HUMAN)
     # T01, T02, T03, T05, T07: no fixture
 
 # ---------------------------------------------------------------- main

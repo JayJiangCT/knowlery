@@ -68,3 +68,19 @@ Token totals point in opposite directions across harnesses; neither supports a c
 - Repetitions (≥3 per cell) under the isolated config of RUNBOOK §0.
 - Resolution of F1 in `CONVENTIONS.md`, then a re-run of T01 to see whether the fix removes the miss without raising cost.
 - The granularity sub-experiment (deferred in PROTOCOL).
+
+
+## Addendum 2026-11-02 — T13, F-008 regression (kit `level0-frozen-2`)
+
+**Why:** the v1.0-rc review found the `source-checked` reuse rule unsafe in the event-only form: a Source edited after the check, with no Evolve run yet, leaves the History event matching the Wiki's own stale `## Sources` line. The rule was amended to also require that the Source's **current** digest equals the pinned version (`format/CONVENTIONS.md` §3, spec §7.0). T13 builds exactly that trap.
+
+**Fixture:** both arms — one owner-committed correction line appended to the SP14 Meeting Summary Source (Grubhub-mediated 1P delivery back in scope), no Wiki update. Test arm additionally — a `source-checked · s3@<pinned sha>` History event matching the stale pin.
+
+| Arm | Result | How it got there |
+|---|---|---|
+| Control (1.x) | pass | grep of Source + `git show`; surfaced the correction; leaned toward "treat as superseded" on a single appended line (caveated) |
+| Test (v1.0-rc) | pass | `tools/digest.py` first → mismatch → `git diff <pinned blob> HEAD` (one line) → `#disputed` per §8, explicit refusal to supersede; Source body never loaded; named the stale `source-checked` event as non-vouching |
+
+**Reading:** the amended F-008 behaves as intended in one cell per arm: the digest comparison is what caught the drift, and it cost a shell call rather than a Source read. Single model, single repetition — a case finding, like the rest of Level 0. The Control pass shows 1.x agents can also find such a correction by grepping, so the Format's gain here is the *mechanism* (deterministic check, no body read, dispute instead of resolution), not the detection itself.
+
+**Fixture defect found by the Test agent and fixed:** the inserted event was dated before an existing History line (violating newest-first) and had no `log.md` entry; `build.py` now dates it 2026-10-27 and writes the log line. The run above was on the defective fixture; the defect does not touch what the task measures.

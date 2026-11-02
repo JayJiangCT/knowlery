@@ -123,7 +123,7 @@ A page is read in tiers. Each tier must let an Agent decide whether the next one
 | 4 | `## Evidence`, `## Sources`, `## History`, `## Open` | Evidence is needed, or an update is being made |
 | 5 | Records and Sources | The Knowledge page is insufficient |
 
-A Query workflow stops at tier 3 by default, with one exception that the Level 0 experiment made necessary (RESULTS F1: two of three Test runs repeated a compiled claim that its own cited Source contradicts): **before a claim is given as an answer, the Agent reads that claim's first vault-file Source unless the page's `## History` carries a `source-checked` event for that claim at the Source version currently listed in `## Sources`.** The compile workflow writes that event (`- <date> · [[#^cN]] source-checked · s<k>@<version> · by <actor>`) when it has verified the claim against the Source, so routine queries stay at tier 3 and the check is paid once per claim per source version, not once per question. An Evolve workflow starts at tier 4.
+A Query workflow stops at tier 3 by default, with one exception that the Level 0 experiment made necessary (RESULTS F1: two of three Test runs repeated a compiled claim that its own cited Source contradicts): **before a claim is given as an answer, the Agent reads that claim's first vault-file Source unless the page's `## History` carries a `source-checked` event for that claim at the Source version listed in `## Sources` *and* the Source's current digest still equals that version.** The digest comparison is a shell step (`tools/digest.py`, or `sed`+`sha256sum`), not a read into context, so the saving the rule exists for is kept; a History event alone proves a past read, not the Source's state now (review finding 2026-11-02, regression task T13). The compile workflow writes that event (`- <date> · [[#^cN]] source-checked · s<k>@<version> · by <actor>`) when it has verified the claim against the Source, so routine queries stay at tier 3 and the check is paid once per claim per source version, not once per question. An Evolve workflow starts at tier 4.
 
 ### 7.1 Knowledge page
 
@@ -434,6 +434,7 @@ Full data: `format/experiments/level0/RESULTS.md` (kit `c162a64`, Pilot `cf9e378
 | Recoverability is honest (§8) | T07, T09: no invented text in 8/8 cells; `blob:` gave mechanical recovery |
 | Scope rules prevent false "source changed" (§8) | T08, T10: 8/8 cells made no edit |
 | Tier-3 reading is sufficient for queries (§7.0, v0.3.1) | **Falsified for the unqualified form**: 2 of 3 Format-arm runs repeated a compiled claim its Source contradicts; rule amended in v1.0-rc |
+| `source-checked` reuse is safe (§7.0, v1.0-rc) | Reviewer found the event-only form unsafe when a Source changes before Evolve runs; rule now also requires a current-digest match. Regression task T13 (kit `level0-frozen-2`): pass in both arms, 1 cell each; Test arm caught the drift by digest without reading the Source body |
 | `derived` carries disputes (§3) | T11: reached in 2/2, but dependent claim unmarked; propagation rule added |
 | Body-only Source scope is safe (§8) | T12: 4/4 agents still surfaced a frontmatter withdrawal; governance-signal rule added so this no longer depends on judgment |
 
