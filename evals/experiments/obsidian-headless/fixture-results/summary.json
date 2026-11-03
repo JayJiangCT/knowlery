@@ -1,0 +1,26 @@
+{
+  "A": {
+    "cases": 41,
+    "recallAt5": 0.9333333333333333,
+    "recallAt10": 0.9333333333333333,
+    "mrr": 0.8388888888888889,
+    "unanswerableAccuracy": 1,
+    "falseAbstainRate": 0.06666666666666667
+  },
+  "E": {
+    "cases": 41,
+    "recallAt5": 0.9333333333333333,
+    "recallAt10": 0.9333333333333333,
+    "mrr": 0.9,
+    "unanswerableAccuracy": 0.2727272727272727,
+    "falseAbstainRate": 0
+  },
+  "Esupp": {
+    "cases": 41,
+    "recallAt5": 0.8666666666666667,
+    "recallAt10": 0.8666666666666667,
+    "mrr": 0.8333333333333334,
+    "unanswerableAccuracy": 0.2727272727272727,
+    "falseAbstainRate": 0.03333333333333333
+  }
+}
