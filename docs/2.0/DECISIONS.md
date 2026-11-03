@@ -19,6 +19,7 @@
 | GR-002 | 未链接知识的潜在关联 | **ACCEPTED · 2026-11-03** | Agent 可在检索中发现无显式链接的 Raw Notes 等内容之间的潜在语义关联，但只作为**临时检索候选**，不得凭推断自动写回或宣称为 KF 证据。经后续独立知识更新流程验证后才可按 KF 规则持久化；发现算法、图扩展与上下文预算仍待设计。见[决策记录](./decisions/2026-11-03-implicit-relation-candidates.md) |
 | GR-003 | 意图驱动的选择性图扩展 | **ACCEPTED · 2026-11-03** | Graph Retrieval 区分发现（少量关联元数据）与展开（按需读取正文）；根据问题意图与证据需求决定扩展方向，不因关键词结果满 K 就阻止关系探索，也不按固定跳数无差别展开。停止条件、Token 预算、CLI 接口及实现仍待设计。见[决策记录](./decisions/2026-11-03-intent-guided-graph-expansion.md) |
 | GR-004 | 证据充分性导向停止与技术边界 | **ACCEPTED · 2026-11-03** | Agent 根据证据判断是否继续探索，但不能把主观充分性等同证明；CLI 在自身受控调用内提供检查/截断状态及确定性资源限制，不能保证 LLM 全部上下文或跨独立调用预算。预算耗尽与证据充分必须区分；KF F-008 来源核查仍强制遵守。会话预算、Token 估算及效果均待测试。见[决策记录](./decisions/2026-11-03-evidence-guided-stopping-feasibility.md) |
+| GR-005 | 检索预算作用域 | **ACCEPTED · 2026-11-03** | 第一版 CLI 在自身受控的单次调用内实施可验证的结果/输出/时间等硬限制；任务累计预算由 Agent/Skills 作为软约束管理，不承诺跨调用或整个 LLM 上下文的强制上限。超限/截断与证据充分严格区分；数值、输出契约及实现尚待设计。见[决策记录](./decisions/2026-11-03-retrieval-budget-enforcement-scope.md) |
 | R-001 | GitHub 组织 | **ACCEPTED FOR BOOTSTRAP** | 继续同一仓库；`develop/2.0` 独立开发；暂保留 1.x 代码与发布配置 |
 | F-001 | Wiki 结构 | **ACCEPTED · 2026-11-02** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2） |
 | F-002 | Frontmatter 字段 | **ACCEPTED · 2026-11-02** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
