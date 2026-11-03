@@ -22,6 +22,7 @@
 | GR-005 | 检索预算作用域 | **ACCEPTED · 2026-11-03** | 第一版 CLI 在自身受控的单次调用内实施可验证的结果/输出/时间等硬限制；任务累计预算由 Agent/Skills 作为软约束管理，不承诺跨调用或整个 LLM 上下文的强制上限。超限/截断与证据充分严格区分；数值、输出契约及实现尚待设计。见[决策记录](./decisions/2026-11-03-retrieval-budget-enforcement-scope.md) |
 | GR-006 | 单次输出预算与完整证据单元 | **ACCEPTED · 2026-11-03** | CLI 单次调用按结果数、输出字节与执行时间施加组合式硬约束，Token 仅作估算；优先返回完整定位的 Claim/Source 证据单元，放不下时明确报告部分性并提供续读定位，不能把截断内容当完整证据。具体预算、分页及 JSON 契约待设计与验收。见[决策记录](./decisions/2026-11-03-retrieval-output-budget-and-atomic-evidence.md) |
 | GR-007 | 无状态证据续读与版本检查 | **ACCEPTED · 2026-11-03** | 第一版按路径/Claim anchor/来源定位与预期版本重新读取证据，不依赖持久检索会话；版本变更或定位失效须报告并重新核对，不静默拼接旧新内容。单证据版本校验不保证全 Vault 快照一致性，搜索分页稳定性、并发与具体契约待设计测试。见[决策记录](./decisions/2026-11-03-stateless-evidence-continuation.md) |
+| GR-008 | 分层 Evidence Pack | **ACCEPTED · 2026-11-03** | 默认先返回精简知识入口与关联/证据索引，不批量注入关联笔记全文；Agent 按需展开指定 Claim、Record 与 Source，保留关系类别、来源定位、版本/未验证/截断状态，遵守 KF F-008。JSON、命令、排序和实现仍待设计验证。见[决策记录](./decisions/2026-11-03-layered-evidence-pack.md) |
 | R-001 | GitHub 组织 | **ACCEPTED FOR BOOTSTRAP** | 继续同一仓库；`develop/2.0` 独立开发；暂保留 1.x 代码与发布配置 |
 | F-001 | Wiki 结构 | **ACCEPTED · 2026-11-02** | 三种页面角色（Knowledge / Record / Source）、`## Current` 置顶的固定段落契约、主张级状态；Level 0 实验 T04 显示局部更新率 0.00 vs 1.x 0.77/0.70（RESULTS F2） |
 | F-002 | Frontmatter 字段 | **ACCEPTED · 2026-11-02** | 扁平 frontmatter；必填 `type/title/description/tags/status/updated/updated_by`；可选 `verified*/stale_after/aliases/related/supersedes/superseded_by/protected`；Record 加 `date/kind/followed_by`。移除 `freshness_status/retrieval_priority/domain`。见 Format §5–6 |
