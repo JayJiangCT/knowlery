@@ -39,3 +39,18 @@
 - 标出简化假设；不可把工具行为“看起来相近”当作通过语义符合性。
 - 验收失败时优先修订 Format / Skills / 操作契约，再考虑扩展 Runtime。
 - 将未来的测试用例放在 [tests/conformance/](../../tests/conformance/)；本次仅建立入口。
+
+## 执行记录
+
+### CLI-002 第 1 轮（2026-11-04）
+
+- **状态：Completed, Core Hypothesis Inconclusive（已完成，核心假设未定）；CLI-002 仍为 OPEN。**
+- 范围：G0（原始笔记）/ G1-A（编译 Vault，不开图扩展）/ G1-B（编译 Vault，开图扩展），在冻结的 benchmark v2（50 题，sha256 `c3e71a6e…14a9`）上各跑 3 次。
+- 为什么未定：三组的回答正确率都在 98–100%（G0 150/150，G1-A 149/150，G1-B 147/150），差异仅 1–3 次运行，没有统计意义。题目对当前模型和预算太容易，测不出编译知识对回答质量的作用。
+- 已知 G1 弱点（编译资产的缺陷被检索行为放大）：Q13 的决策理由没有编进知识页，部分运行只读到原始笔记的窄搜索片段；Q21 的当前规则页没有直接链接到 7 月的设计决定，虽有经 sprint timeline 的间接路径，失败的运行既没搜到也没沿该路径找到。Q05、Q29 的覆盖率差距是 gold 只认一个路径造成的度量问题。
+- 本轮不支持的结论：G1 提升回答质量、CLI-002 契约已通过。
+- 下一轮需要更难或更大的题集、更弱的回答模型或更紧的预算；题目须由独立作者编写。
+- 依据（仓库外）：
+  - 评分报告：`/Users/dev/Documents/knowlery-g1-eval/results/SCORES.md`
+  - 根因分析：`/Users/dev/Documents/knowlery-g1-eval/results/FINDINGS-ROUND1.md`
+  - v2 勘误（v2 本身未改）：`/Users/dev/Documents/knowlery-eval-benchmark/v2-errata/ERRATA-v2.md`
