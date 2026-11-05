@@ -2,6 +2,8 @@
 
 **Status:** READY FOR OWNER, 2026-11-05. This summary covers Gate NOW only: T0, T1, the D calibration review, and the Owner-approved T1-W check. Gates PILOT, v3, B, C and A are not started and need separate Owner approval. Nothing here is ACCEPTED.
 
+**Review status (added 2026-11-05):** the Cloud Agent reviewed this summary at commit `d48acce` as CONDITIONAL GO ([reviews/GATE-NOW-CLOUD-REVIEW.md](reviews/GATE-NOW-CLOUD-REVIEW.md)). Corrections made after that review are marked *(corrected after review)* below; the response is [reports/T1/CLOUD-REVIEW-RESPONSE.md](reports/T1/CLOUD-REVIEW-RESPONSE.md).
+
 ## 1. Round and plan reference
 
 - Topic CLI-002, Round 2. Plan: [PLAN.md](PLAN.md) (Revision 2, received 2026-11-04). Task states: [STATUS.md](STATUS.md).
@@ -24,7 +26,7 @@
 
 ### Verified facts
 
-1. **Frozen artifacts are intact** (T0). The baseline vault, compiled vault, benchmark, errata, all 450 answers, both score files and the E-1 archive match their recorded hashes. The private store is outside every public checkout and every synced folder.
+1. **Hash-frozen artifacts are intact** (T0). *(Corrected after review: "frozen" here means hash-frozen; see [reports/T1/METRIC-CONTRACT-CLARIFICATIONS.md](reports/T1/METRIC-CONTRACT-CLARIFICATIONS.md) §4.)* The baseline vault, compiled vault, benchmark, errata, all 450 answers, both score files and the E-1 archive match their recorded hashes. The private store is outside every public checkout and every synced folder.
 2. **Frozen means hash-frozen, not write-protected** (T0). Most Round 1 artifacts are still writable on disk; integrity rests on hashes. One written record overstates protection: the Round 1 status file says all four E-1 files were set read-only, but one is still writable (its content is unchanged).
 3. **Round 1 traces had no integrity record** (T0). Their counts match. A baseline is now recorded, so later changes can be detected, but changes before today cannot be ruled out.
 4. **The D protocol is reproducible between annotators** (T1-R). Across 10 packets and 34 required facts, two independent annotators agreed fully on:
@@ -52,7 +54,7 @@
 ### Interpretations
 
 - Metric D can be annotated consistently once a few judgement rules are fixed. Its file-level fields are close to mechanical.
-- Round 1's `wrong_current_claim` is the union of two different measures. It should not be compared with a measure that uses only one reference.
+- Round 1's `wrong_current_claim` appears to combine two different measures. On the 8 T1-W runs, counting a run as wrong when either reference flags it reproduces Round 1. That it is the union in general is a **hypothesis**, not tested on the rest of Round 1. Either way, it should not be compared with a measure that uses only one reference. *(Corrected after review: the earlier text stated the union as fact.)*
 
 ### Open questions
 
@@ -74,7 +76,7 @@
 
 1. **Stale `## History` content in compiled pages (Owner's question, 2026-11-05).** Superseded History entries stay inline on compiled pages. They use context window and may sway the model toward an outdated state. The D calibration review led to a protocol rule (v1.1 rule A): a History entry counts as support only for questions about the earlier state; relying on it for a current-state question is `wrong_current_claim`. The 10-run calibration sample recorded no `wrong_current_claim` under Round 2 annotation, which is not evidence of no effect. Candidate experiment: compiled pages with History inline versus History moved to a separate file or loaded on demand; compare the `wrong_current_claim` rate and tokens read. Should this enter the Round 2 or Round 3 plan, and at what scale?
 
-2. **Split `wrong_current_claim` into two measures (Owner's preferred direction, 2026-11-05; a proposal, not ACCEPTED).** A blind judging check (T1-W: 8 runs, 2 conditions, 2 fresh judges each) found full agreement inside each condition. Across conditions the verdict flipped with the reference the judges were given. With only the packet, judges compared against the benchmark's expected answer. With a list of the claims the vault itself marks as superseded, judges compared against the vault. Round 1 judges had both references and counted either conflict. Proposal: `wcc_gold` (answer conflicts with the benchmark's current state) and `wcc_vault` (answer presents as current a claim the vault marks as superseded or disputed). Each is judged with only its own reference and reported separately. Round 1's wcc stays unchanged and is described as the union of the two. Question: do you agree, and should `wcc_vault` be the primary measure for the History experiment in question 1?
+2. **Split `wrong_current_claim` into two measures (Owner's preferred direction, 2026-11-05; a proposal, not ACCEPTED).** A blind judging check (T1-W: 8 runs, 2 conditions, 2 fresh judges each) found full agreement inside each condition. Across conditions the verdict flipped with the reference the judges were given. With only the packet, judges compared against the benchmark's expected answer. With a list of the claims the vault itself marks as superseded, judges compared against the vault. Round 1 judges had both references and counted either conflict. Proposal: `wcc_gold` (answer conflicts with the benchmark's current state) and `wcc_vault` (answer presents as current a claim the vault marks as superseded or disputed). Each is judged with only its own reference and reported separately. Round 1's wcc stays unchanged; that it is the union of the two is a hypothesis that holds on the 8 T1-W runs *(corrected after review)*. Question: do you agree, and should `wcc_vault` be the primary measure for the History experiment in question 1?
 
 3. **Benchmark staleness for "current state" questions.** One expected answer appears to predate a later supersession in the vault. Should v3 authoring require every "current state" gold answer to be checked against the vault's latest supersession records, with an explicit as-of date?
 
@@ -88,6 +90,6 @@
    - **C:** information that only restates the question asserts nothing.
    
    [Protocol](reports/T1/ADJUDICATION-PROTOCOL.md), with [v1.0](reports/T1/ADJUDICATION-PROTOCOL-v1.0.md) kept.
-2. **Split `wrong_current_claim` into `wcc_gold` and `wcc_vault`.** Each is judged with only its own reference; Round 1's value is described as their union. Evidence: finding 7.
+2. **Split `wrong_current_claim` into `wcc_gold` and `wcc_vault`.** Each is judged with only its own reference; Round 1's value stays unchanged, and its relation to the two (union) is a hypothesis *(corrected after review)*. Evidence: finding 7.
 3. **Keep the D aggregation contract as built.** It covers the fields, the aggregation tool and the rule that an annotator's own equivalent is `unknown`, never `true`. Evidence: finding 4. The tool reproduced byte-identical output, and the disagreements were all in judgement fields, not in the mechanical ones.
-4. **Require hash manifests for every frozen artifact class, including traces, when it is frozen.** Evidence: findings 2 and 3.
+4. **Require hash manifests for every frozen artifact class, including traces, when it is frozen.** *(Clarified after review: this makes a class hash-frozen and, from then on, historically verifiable; it does not make it write-protected.)* Evidence: findings 2 and 3.
