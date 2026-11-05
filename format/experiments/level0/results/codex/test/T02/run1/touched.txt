@@ -1,0 +1,3 @@
+log.md
+.codex-run.log
+ANSWER.md
