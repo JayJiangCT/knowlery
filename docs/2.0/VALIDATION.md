@@ -54,3 +54,19 @@
   - 评分报告：`/Users/dev/Documents/knowlery-g1-eval/results/SCORES.md`
   - 根因分析：`/Users/dev/Documents/knowlery-g1-eval/results/FINDINGS-ROUND1.md`
   - v2 勘误（v2 本身未改）：`/Users/dev/Documents/knowlery-eval-benchmark/v2-errata/ERRATA-v2.md`
+
+#### E-1 等价证据补充计算（2026-11-04）
+
+- 决定：Owner 批准 E-1。对 Q05、Q19、Q29 的全部 27 次运行（三组各 3 次）逐条裁定等价证据：只有在数值、单位、范围、日期、限定条件和知识状态都一致时才算等价，规则对三组相同。结果：接受 2 条，拒绝 4 条（Q19 的候选全部拒绝）。
+- 原始数字保持为本轮正式结果；调整后数字由脚本实测，不是估计上限。完整覆盖率（43 道可答题，每组 129 次运行），原始 → E-1：
+
+| 层级 | G0 | G1-A | G1-B |
+| --- | --- | --- | --- |
+| Claim-level（主指标） | 126 → 126 | 121 → 127 | 125 → 128 |
+| 直接引用原始路径 | 126 → 126 | 84 → 87 | 86 → 86 |
+| Page-level Sources | 126 → 126 | 124 → 127 | 125 → 128 |
+
+- 解读：加入 E-1 后三组的 claim-level 覆盖率都在上限附近（97.7–99.2%），和正确率一样分不开三组；G1 直接引用原始笔记的比例仍明显低于 G0，这是引用方式差异，E-1 不改变它。
+- 不变的部分：冻结的 benchmark v2、gold、正确率判定、SCORES.md 和原始答卷都未改动，也没有重跑回答 Agent。
+- 状态不变：仍为 Completed, Core Hypothesis Inconclusive；CLI-002 仍为 OPEN。
+- 报告（仓库外，含裁定记录和计算脚本）：`/Users/dev/Documents/knowlery-g1-eval/results/E1-ADJUSTED-COVERAGE.md`
