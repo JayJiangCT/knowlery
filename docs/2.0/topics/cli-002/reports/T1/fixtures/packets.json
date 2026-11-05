@@ -1,0 +1,149 @@
+[
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": true,
+          "quote_delivered": true,
+          "read_extent": "full",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-log-2031-03.md",
+        "quote": "Firing temperature set to 1180 C."
+      }
+    ],
+    "packet_id": "FX01",
+    "trace": "fx01-positive.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": false,
+          "quote_delivered": false,
+          "read_extent": "listing_only",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-log-2031-03.md",
+        "quote": "Firing temperature set to 1180 C."
+      }
+    ],
+    "packet_id": "FX02",
+    "trace": "fx02-shown-not-opened.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": true,
+          "quote_delivered": false,
+          "read_extent": "preview_only",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/glaze-trials-2031-01.md",
+        "quote": "Glaze cure time is 48 hours."
+      }
+    ],
+    "packet_id": "FX03",
+    "trace": "fx03-truncated-read.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": false,
+          "quote_delivered": false,
+          "read_extent": "listing_only",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/glaze-trials-2031-01.md",
+        "quote": "Glaze cure time is 48 hours."
+      }
+    ],
+    "packet_id": "FX04",
+    "trace": "fx04-stale-digest.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": false,
+          "quote_delivered": false,
+          "read_extent": "listing_only",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-vendor-call-2031-04.md",
+        "quote": "Warranty extended to 5 years."
+      }
+    ],
+    "packet_id": "FX05",
+    "trace": "fx05-related-as-evidence.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": false,
+          "gold_path_opened": false,
+          "quote_delivered": false,
+          "read_extent": "none",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-log-2031-03.md",
+        "quote": "Firing temperature set to 1180 C."
+      }
+    ],
+    "packet_id": "FX06",
+    "preadjudicated_equivalents": [
+      "notes/kiln-log-export-2031-03.md"
+    ],
+    "trace": "fx06-equivalent-no-gold-hit.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": false,
+          "gold_path_opened": false,
+          "quote_delivered": false,
+          "read_extent": "none",
+          "trace_complete": true
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-log-2031-03.md",
+        "quote": "Firing temperature set to 1180 C."
+      }
+    ],
+    "packet_id": "FX07",
+    "trace": "fx07-unadjudicated-equivalent.jsonl"
+  },
+  {
+    "facts": [
+      {
+        "expect_mechanical": {
+          "gold_path_hit": true,
+          "gold_path_opened": true,
+          "quote_delivered": true,
+          "read_extent": "full",
+          "trace_complete": false
+        },
+        "fact_id": "F1",
+        "gold_path": "notes/kiln-log-2031-03.md",
+        "quote": "Firing temperature set to 1180 C."
+      }
+    ],
+    "packet_id": "FX08",
+    "trace": "fx08-trace-incomplete.jsonl"
+  }
+]

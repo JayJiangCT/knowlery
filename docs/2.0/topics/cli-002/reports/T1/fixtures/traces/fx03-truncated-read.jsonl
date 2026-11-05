@@ -1,0 +1,6 @@
+{"note": "SYNTHETIC FIXTURE - invented vault, not a real trace", "subtype": "init", "tools": ["Glob", "Grep", "Read", "StructuredOutput"], "type": "system"}
+{"message": {"content": [{"id": "tu_fake_01", "input": {"output_mode": "content", "path": "notes", "pattern": "kiln|glaze"}, "name": "Grep", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "<persisted-output>\nOutput too large (40.1KB). Full output saved to: <harness-tool-results>/tu_fake_01.txt\n\nPreview (first 2KB):\nnotes/kiln-log-2031-03.md:3:Kiln moved to bay 2.\nnotes/glaze-trials-2031-01.md:2:Trial batch A.\n...\n</persisted-output>", "tool_use_id": "tu_fake_01", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_02", "input": {"evidence": [{"anchor": "line 41", "path": "notes/glaze-trials-2031-01.md"}], "final_answer": "Glaze cure time is 48 hours.", "refused": false}, "name": "StructuredOutput", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "Structured output provided successfully", "tool_use_id": "tu_fake_02", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"num_turns": 2, "subtype": "success", "type": "result"}

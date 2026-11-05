@@ -1,0 +1,539 @@
+{
+  "annotators": [
+    "annotator-1",
+    "annotator-2"
+  ],
+  "disagreements": [
+    {
+      "field": "fact_verified",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "false",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "fact_verified.support_delivered",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "no",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "fact_verified.support_kind",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "none",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "required_lines_delivered",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "no",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "valid_source_reached",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "false",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "valid_source_reached.source_basis",
+      "item": "F1",
+      "packet_id": "FX03",
+      "values": {
+        "annotator-1": "none",
+        "annotator-2": "unknown"
+      }
+    },
+    {
+      "field": "proposed_equivalent.annotator_decision",
+      "item": "F1:notes/firing-summary-2031.md",
+      "packet_id": "FX07",
+      "values": {
+        "annotator-1": "accept",
+        "annotator-2": "unsure"
+      }
+    }
+  ],
+  "fields": [
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "complete": 7,
+          "incomplete": 1
+        },
+        "annotator-2": {
+          "complete": 7,
+          "incomplete": 1
+        }
+      },
+      "field": "trace_status",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 2,
+          "true": 6
+        },
+        "annotator-2": {
+          "false": 2,
+          "true": 6
+        }
+      },
+      "field": "gold_path_hit",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 5,
+          "true": 3
+        },
+        "annotator-2": {
+          "false": 5,
+          "true": 3
+        }
+      },
+      "field": "gold_path_opened",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "full": 2,
+          "listing_only": 3,
+          "none": 2,
+          "preview_only": 1
+        },
+        "annotator-2": {
+          "full": 2,
+          "listing_only": 3,
+          "none": 2,
+          "preview_only": 1
+        }
+      },
+      "field": "gold_path_opened.read_extent",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "no": 6,
+          "yes": 2
+        },
+        "annotator-2": {
+          "no": 5,
+          "unknown": 1,
+          "yes": 2
+        }
+      },
+      "field": "required_lines_delivered",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {
+          "PERSISTED_OUTPUT_NOT_IN_TRACE": 1
+        }
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 4,
+          "true": 3,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "false": 3,
+          "true": 3,
+          "unknown": 2
+        }
+      },
+      "field": "valid_source_reached",
+      "unknown_by_reason": {
+        "annotator-1": {
+          "EQUIVALENCE_NOT_ADJUDICATED": 1
+        },
+        "annotator-2": {
+          "EQUIVALENCE_NOT_ADJUDICATED": 1,
+          "PERSISTED_OUTPUT_NOT_IN_TRACE": 1
+        }
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "gold": 2,
+          "none": 4,
+          "preadjudicated_equivalent": 1,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "gold": 2,
+          "none": 3,
+          "preadjudicated_equivalent": 1,
+          "unknown": 2
+        }
+      },
+      "field": "valid_source_reached.source_basis",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 3,
+          "true": 4,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "false": 2,
+          "true": 4,
+          "unknown": 2
+        }
+      },
+      "field": "fact_verified",
+      "unknown_by_reason": {
+        "annotator-1": {
+          "TRACE_INCOMPLETE": 1
+        },
+        "annotator-2": {
+          "PERSISTED_OUTPUT_NOT_IN_TRACE": 1,
+          "TRACE_INCOMPLETE": 1
+        }
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "contradicts": 1,
+          "unknown": 1,
+          "yes": 6
+        },
+        "annotator-2": {
+          "contradicts": 1,
+          "unknown": 1,
+          "yes": 6
+        }
+      },
+      "field": "fact_verified.answer_asserts",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "no": 3,
+          "yes": 5
+        },
+        "annotator-2": {
+          "no": 2,
+          "unknown": 1,
+          "yes": 5
+        }
+      },
+      "field": "fact_verified.support_delivered",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 7,
+      "agreement": "7/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "compiled_claim": 1,
+          "none": 3,
+          "source": 4
+        },
+        "annotator-2": {
+          "compiled_claim": 1,
+          "none": 2,
+          "source": 4,
+          "unknown": 1
+        }
+      },
+      "field": "fact_verified.support_kind",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 7,
+          "true": 1
+        },
+        "annotator-2": {
+          "false": 7,
+          "true": 1
+        }
+      },
+      "field": "navigation_used_as_evidence",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 0,
+      "agreement": "0/1",
+      "compared": 1,
+      "counts": {
+        "annotator-1": {
+          "accept": 1
+        },
+        "annotator-2": {
+          "unsure": 1
+        }
+      },
+      "field": "proposed_equivalent.annotator_decision",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 2,
+      "agreement": "2/2",
+      "compared": 2,
+      "counts": {
+        "annotator-1": {
+          "yes": 2
+        },
+        "annotator-2": {
+          "yes": 2
+        }
+      },
+      "field": "claim.used_in_answer",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 2,
+      "agreement": "2/2",
+      "compared": 2,
+      "counts": {
+        "annotator-1": {
+          "false": 2
+        },
+        "annotator-2": {
+          "false": 2
+        }
+      },
+      "field": "claim.first_source_read",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 2,
+      "agreement": "2/2",
+      "compared": 2,
+      "counts": {
+        "annotator-1": {
+          "non_compliant": 2
+        },
+        "annotator-2": {
+          "non_compliant": 2
+        }
+      },
+      "field": "claim.f008",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "read": 6,
+          "truncated": 1,
+          "version_stale": 1
+        },
+        "annotator-2": {
+          "read": 6,
+          "truncated": 1,
+          "version_stale": 1
+        }
+      },
+      "field": "read.state",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "answered": 7,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "answered": 7,
+          "unknown": 1
+        }
+      },
+      "field": "run.answer_mode",
+      "unknown_by_reason": {
+        "annotator-1": {},
+        "annotator-2": {}
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "not_applicable": 7,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "not_applicable": 7,
+          "unknown": 1
+        }
+      },
+      "field": "run.proper_abstention",
+      "unknown_by_reason": {
+        "annotator-1": {
+          "TRACE_INCOMPLETE": 1
+        },
+        "annotator-2": {
+          "TRACE_INCOMPLETE": 1
+        }
+      }
+    },
+    {
+      "agree": 8,
+      "agreement": "8/8",
+      "compared": 8,
+      "counts": {
+        "annotator-1": {
+          "false": 7,
+          "unknown": 1
+        },
+        "annotator-2": {
+          "false": 7,
+          "unknown": 1
+        }
+      },
+      "field": "run.wrong_current_claim",
+      "unknown_by_reason": {
+        "annotator-1": {
+          "TRACE_INCOMPLETE": 1
+        },
+        "annotator-2": {
+          "TRACE_INCOMPLETE": 1
+        }
+      }
+    }
+  ],
+  "level_patterns": {
+    "annotator-1": {
+      "hit=false|reached=true|verified=true": 1,
+      "hit=false|reached=unknown|verified=true": 1,
+      "hit=true|reached=false|verified=false": 3,
+      "hit=true|reached=false|verified=true": 1,
+      "hit=true|reached=true|verified=true": 1,
+      "hit=true|reached=true|verified=unknown": 1
+    },
+    "annotator-2": {
+      "hit=false|reached=true|verified=true": 1,
+      "hit=false|reached=unknown|verified=true": 1,
+      "hit=true|reached=false|verified=false": 2,
+      "hit=true|reached=false|verified=true": 1,
+      "hit=true|reached=true|verified=true": 1,
+      "hit=true|reached=true|verified=unknown": 1,
+      "hit=true|reached=unknown|verified=unknown": 1
+    }
+  },
+  "missing": [],
+  "packets": [
+    "FX01",
+    "FX02",
+    "FX03",
+    "FX04",
+    "FX05",
+    "FX06",
+    "FX07",
+    "FX08"
+  ],
+  "record_kind": "aggregate",
+  "schema_version": "cli002-r2-t1/1",
+  "semantic_errors": []
+}

@@ -1,0 +1,4 @@
+{"note": "SYNTHETIC FIXTURE - invented vault, not a real trace", "subtype": "init", "tools": ["Glob", "Grep", "Read", "StructuredOutput"], "type": "system"}
+{"message": {"content": [{"id": "tu_fake_01", "input": {"file_path": "notes/kiln-log-2031-03.md"}, "name": "Read", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "1\t# Kiln log, March 2031\n2\t\n3\tKiln moved to bay 2.\n4\tFiring temperature set to 1180 C.\n", "tool_use_id": "tu_fake_01", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_99", "input": {"file_path": "concepts/kiln.md"}, "name": "Read", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}

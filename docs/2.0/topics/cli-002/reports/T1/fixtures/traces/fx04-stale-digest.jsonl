@@ -1,0 +1,8 @@
+{"note": "SYNTHETIC FIXTURE - invented vault, not a real trace", "subtype": "init", "tools": ["Glob", "Grep", "Read", "StructuredOutput"], "type": "system"}
+{"message": {"content": [{"id": "tu_fake_01", "input": {"file_path": "concepts/glaze.md"}, "name": "Read", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "1\t---\n2\ttype: concept\n3\ttitle: Glaze\n4\t---\n5\t# Glaze\n6\t\n7\t## Current\n8\t- Glaze cure time is 36 hours (src: s1) ^c3\n9\t\n10\t## Sources\n11\t- s1 \u00b7 [[notes/glaze-trials-2031-01]] \u00b7 sha256:fake0004a \u00b7 source\n12\t\n13\t## History\n14\t- 2031-02-01 \u00b7 [[#^c3]] source-checked \u00b7 s1@sha256:fake0004a \u00b7 by human:example\n", "tool_use_id": "tu_fake_01", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_02", "input": {"note": "synthetic shell digest step", "path": "notes/glaze-trials-2031-01.md"}, "name": "Digest", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "sha256:fake0004b", "tool_use_id": "tu_fake_02", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_03", "input": {"evidence": [{"anchor": "^c3", "path": "concepts/glaze.md"}], "final_answer": "Glaze cure time is 36 hours.", "refused": false}, "name": "StructuredOutput", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "Structured output provided successfully", "tool_use_id": "tu_fake_03", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"num_turns": 3, "subtype": "success", "type": "result"}

@@ -1,0 +1,8 @@
+{"note": "SYNTHETIC FIXTURE - invented vault, not a real trace", "subtype": "init", "tools": ["Glob", "Grep", "Read", "StructuredOutput"], "type": "system"}
+{"message": {"content": [{"id": "tu_fake_01", "input": {"pattern": "notes/**"}, "name": "Glob", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "notes/firing-summary-2031.md\nnotes/kiln-log-2031-03.md\nnotes/glaze-trials-2031-01.md", "tool_use_id": "tu_fake_01", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_02", "input": {"file_path": "concepts/kiln.md"}, "name": "Read", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "1\t---\n2\ttype: concept\n3\ttitle: Kiln\n4\t---\n5\t# Kiln\n6\t\n7\t## Current\n8\t- Firing temperature is 1180 C (src: s1) ^c2\n9\t\n10\t## Sources\n11\t- s1 \u00b7 [[notes/kiln-log-2031-03]] \u00b7 sha256:fake0002 \u00b7 source\n12\t\n13\t## Related\n14\t- [[notes/kiln-vendor-call-2031-04]] \u2014 vendor call about the warranty\n", "tool_use_id": "tu_fake_02", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_03", "input": {"evidence": [{"anchor": "^c2", "path": "concepts/kiln.md"}], "final_answer": "The firing temperature is 1180 C.", "refused": false}, "name": "StructuredOutput", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "Structured output provided successfully", "tool_use_id": "tu_fake_03", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"num_turns": 3, "subtype": "success", "type": "result"}

@@ -1,0 +1,6 @@
+{"note": "SYNTHETIC FIXTURE - invented vault, not a real trace", "subtype": "init", "tools": ["Glob", "Grep", "Read", "StructuredOutput"], "type": "system"}
+{"message": {"content": [{"id": "tu_fake_01", "input": {"file_path": "notes/firing-summary-2031.md"}, "name": "Read", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "1\t# Firing summary 2031\n2\t\n3\tStandard firing at 1180 C since March 2031.\n", "tool_use_id": "tu_fake_01", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"message": {"content": [{"id": "tu_fake_02", "input": {"evidence": [{"anchor": "line 3", "path": "notes/firing-summary-2031.md"}], "final_answer": "The firing temperature is 1180 C.", "refused": false}, "name": "StructuredOutput", "type": "tool_use"}], "role": "assistant"}, "type": "assistant"}
+{"message": {"content": [{"content": "Structured output provided successfully", "tool_use_id": "tu_fake_02", "type": "tool_result"}], "role": "user"}, "type": "user"}
+{"num_turns": 2, "subtype": "success", "type": "result"}

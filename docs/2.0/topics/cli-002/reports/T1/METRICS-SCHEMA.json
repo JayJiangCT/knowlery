@@ -1,0 +1,427 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "knowlery-2.0/cli-002/round2/t1/metrics-schema/1",
+  "title": "CLI-002 Round 2 evidence annotation and aggregate records",
+  "description": "Annotation and measurement records only. This is not a CLI output schema (GR-010 names are provisional). One JSON object per line in an annotator's ANNOTATIONS.jsonl (record_kind 'annotation'), and one object written by aggregate.py (record_kind 'aggregate'). Uses only: type, enum, const, required, properties, additionalProperties, items, minItems, minimum, pattern, $ref to #/$defs, oneOf. Conditional rules that JSON Schema cannot express are enforced by aggregate.py --validate and listed in METRICS.md section 6.",
+  "oneOf": [
+    { "$ref": "#/$defs/annotation_record" },
+    { "$ref": "#/$defs/aggregate_record" }
+  ],
+  "$defs": {
+    "reason_code": {
+      "description": "Why a value is 'unknown'. Required when the value is unknown, null otherwise. Meanings in METRICS.md section 5.",
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "TRACE_INCOMPLETE",
+        "PERSISTED_OUTPUT_NOT_IN_TRACE",
+        "PAGINATED_RESULT",
+        "TOOL_ERROR",
+        "PATH_ONLY_IN_TOOL_INPUT",
+        "QUOTE_NOT_MATCHABLE",
+        "LINE_NUMBERS_NOT_IN_OUTPUT",
+        "EQUIVALENCE_NOT_ADJUDICATED",
+        "SOURCE_AUTHORITY_CONFLICT",
+        "ANSWER_AMBIGUOUS",
+        "SCOPE_OR_QUALIFIER_UNCLEAR",
+        "F008_USE_UNCLEAR",
+        "F008_FIRST_SOURCE_AMBIGUOUS",
+        "F008_DIGEST_STEP_NOT_OBSERVED",
+        "F008_DIGEST_NOT_COMPUTED",
+        "F008_HISTORY_NOT_DETERMINED",
+        "NOT_OBSERVABLE_IN_ROUND1",
+        "PROTOCOL_GAP",
+        "OTHER"
+      ]
+    },
+    "events": {
+      "description": "Zero-based line numbers in the packet's trace file that justify the value.",
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "note": { "type": "string" },
+    "ref": {
+      "description": "A packet-local reference: a vault-relative path, optionally with #^anchor. Never an absolute path.",
+      "type": "string",
+      "pattern": "^[^/~].*$"
+    },
+    "obs_bool": {
+      "type": "object",
+      "required": ["value", "reason", "events"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": ["boolean", "string"], "enum": [true, false, "unknown"] },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "events": { "$ref": "#/$defs/events" },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "obs_opened": {
+      "type": "object",
+      "required": ["value", "reason", "events", "read_extent"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": ["boolean", "string"], "enum": [true, false, "unknown"] },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "events": { "$ref": "#/$defs/events" },
+        "read_extent": {
+          "description": "Widest delivered content from the gold path. full = whole file; offset_limit = a Read window; grep_snippet = Grep content lines; preview_only = a persisted-output preview; listing_only = the path was only listed; none = never delivered.",
+          "type": "string",
+          "enum": ["full", "offset_limit", "grep_snippet", "preview_only", "listing_only", "none", "unknown"]
+        },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "obs_lines": {
+      "type": "object",
+      "required": ["value", "reason", "events"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "string", "enum": ["yes", "partial", "no", "unknown"] },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "events": { "$ref": "#/$defs/events" },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "obs_reached": {
+      "type": "object",
+      "required": ["value", "reason", "events", "source_basis", "source_ref"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": ["boolean", "string"], "enum": [true, false, "unknown"] },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "events": { "$ref": "#/$defs/events" },
+        "source_basis": { "type": "string", "enum": ["gold", "preadjudicated_equivalent", "none", "unknown"] },
+        "source_ref": { "type": ["string", "null"], "pattern": "^[^/~].*$" },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "obs_verified": {
+      "type": "object",
+      "required": ["value", "reason", "events", "answer_asserts", "support_delivered", "support_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": ["boolean", "string"], "enum": [true, false, "unknown"] },
+        "reason": { "$ref": "#/$defs/reason_code" },
+        "events": { "$ref": "#/$defs/events" },
+        "answer_asserts": {
+          "description": "Does the final answer state the required fact with the same value, unit, scope, date, qualifier and knowledge status?",
+          "type": "string",
+          "enum": ["yes", "partial", "no", "contradicts", "unknown"]
+        },
+        "support_delivered": {
+          "description": "Was text that states the fact in that form delivered to the agent in a tool result?",
+          "type": "string",
+          "enum": ["yes", "no", "unknown"]
+        },
+        "support_kind": {
+          "description": "Kind of file the delivered support came from.",
+          "type": "string",
+          "enum": ["source", "compiled_claim", "both", "none", "unknown"]
+        },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "proposed_equivalent": {
+      "type": "object",
+      "required": ["candidate_ref", "location", "criteria", "annotator_decision"],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_ref": { "$ref": "#/$defs/ref" },
+        "location": { "type": "string" },
+        "criteria": {
+          "type": "object",
+          "required": ["value", "unit", "scope", "date", "qualifier", "knowledge_status"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "$ref": "#/$defs/criterion" },
+            "unit": { "$ref": "#/$defs/criterion" },
+            "scope": { "$ref": "#/$defs/criterion" },
+            "date": { "$ref": "#/$defs/criterion" },
+            "qualifier": { "$ref": "#/$defs/criterion" },
+            "knowledge_status": { "$ref": "#/$defs/criterion" }
+          }
+        },
+        "annotator_decision": { "type": "string", "enum": ["accept", "reject", "unsure"] },
+        "events": { "$ref": "#/$defs/events" },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "criterion": { "type": "string", "enum": ["same", "different", "not_stated", "unknown"] },
+    "fact_annotation": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "gold_path_hit",
+        "gold_path_opened",
+        "required_lines_delivered",
+        "valid_source_reached",
+        "proposed_equivalents",
+        "fact_verified",
+        "navigation_used_as_evidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": { "type": "string", "pattern": "^F[0-9]{1,3}$" },
+        "gold_path_hit": { "$ref": "#/$defs/obs_bool" },
+        "gold_path_opened": { "$ref": "#/$defs/obs_opened" },
+        "required_lines_delivered": { "$ref": "#/$defs/obs_lines" },
+        "valid_source_reached": { "$ref": "#/$defs/obs_reached" },
+        "proposed_equivalents": { "type": "array", "items": { "$ref": "#/$defs/proposed_equivalent" } },
+        "fact_verified": { "$ref": "#/$defs/obs_verified" },
+        "navigation_used_as_evidence": { "$ref": "#/$defs/obs_bool" },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "claim_annotation": {
+      "description": "One compiled Knowledge-page claim whose text was delivered to the agent. F-008 compliance is derived from the component fields by aggregate.py; f008 must equal the derived value.",
+      "type": "object",
+      "required": [
+        "claim_ref",
+        "facts",
+        "used_in_answer",
+        "first_vault_source",
+        "first_source_ref",
+        "first_source_read",
+        "history_source_checked",
+        "source_digest_state",
+        "digest_step_observed",
+        "f008"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "claim_ref": { "$ref": "#/$defs/ref" },
+        "facts": { "type": "array", "items": { "type": "string", "pattern": "^F[0-9]{1,3}$" } },
+        "used_in_answer": { "type": "string", "enum": ["yes", "no", "unknown"] },
+        "first_vault_source": {
+          "description": "identified = the claim's first vault-file Source is unambiguous; none = the claim cites no vault-file Source; ambiguous = order or kind does not settle it.",
+          "type": "string",
+          "enum": ["identified", "none", "ambiguous", "unknown"]
+        },
+        "first_source_ref": { "type": ["string", "null"], "pattern": "^[^/~].*$" },
+        "first_source_read": { "$ref": "#/$defs/obs_bool" },
+        "history_source_checked": {
+          "type": "string",
+          "enum": ["present_at_listed_version", "present_other_version", "absent", "unknown"]
+        },
+        "source_digest_state": {
+          "description": "Annotator's own comparison of the Source's current digest with the version listed in the page's Sources section. Not an event in the trace.",
+          "type": "string",
+          "enum": ["match", "stale", "not_computed", "not_applicable"]
+        },
+        "digest_step_observed": {
+          "description": "Does the trace show the agent comparing the digest (a shell step)?",
+          "type": ["boolean", "string"],
+          "enum": [true, false, "unknown"]
+        },
+        "f008": {
+          "type": "object",
+          "required": ["value", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string", "enum": ["compliant", "non_compliant", "not_applicable", "unknown"] },
+            "reason": { "$ref": "#/$defs/reason_code" },
+            "note": { "$ref": "#/$defs/note" }
+          }
+        },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "read_annotation": {
+      "description": "Inspect-style state of one delivered evidence read. state is derived from completeness, partial_cause and version_check by aggregate.py and must equal the derived value. A state never certifies semantic truth (GR-008).",
+      "type": "object",
+      "required": ["event", "path_ref", "role", "completeness", "partial_cause", "version_check", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "event": { "type": "integer", "minimum": 0 },
+        "path_ref": { "$ref": "#/$defs/ref" },
+        "role": {
+          "type": "string",
+          "enum": ["gold", "preadjudicated_equivalent", "proposed_equivalent", "compiled_page", "first_source", "other"]
+        },
+        "completeness": { "type": "string", "enum": ["full", "partial", "none", "unknown"] },
+        "partial_cause": {
+          "type": "string",
+          "enum": ["none", "offset_limit", "grep_snippet", "persisted_preview", "pagination", "listing_only", "tool_error", "unknown"]
+        },
+        "version_check": {
+          "description": "Did the trace show this content checked against a cited version? not_applicable = no citing page lists a version for it.",
+          "type": "string",
+          "enum": ["match", "stale", "not_checked", "not_applicable"]
+        },
+        "state": { "type": "string", "enum": ["read", "truncated", "unverified", "version_stale", "error", "unknown"] },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "count_or_unknown": {
+      "type": ["integer", "string"],
+      "minimum": 0,
+      "pattern": "^(unknown|NOT_OBSERVABLE_IN_ROUND1)$"
+    },
+    "run_annotation": {
+      "type": "object",
+      "required": ["answer_mode", "proper_abstention", "wrong_current_claim", "graph"],
+      "additionalProperties": false,
+      "properties": {
+        "answer_mode": { "type": "string", "enum": ["answered", "abstained", "mixed", "unknown"] },
+        "proper_abstention": {
+          "type": "object",
+          "required": ["value", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": ["boolean", "string"], "enum": [true, false, "not_applicable", "unknown"] },
+            "reason": { "$ref": "#/$defs/reason_code" },
+            "note": { "$ref": "#/$defs/note" }
+          }
+        },
+        "wrong_current_claim": { "$ref": "#/$defs/obs_bool" },
+        "graph": {
+          "type": "object",
+          "required": ["available", "calls", "returned_edges", "read_from_edge", "verified_use"],
+          "additionalProperties": false,
+          "properties": {
+            "available": { "type": "string", "enum": ["yes", "no", "unknown"] },
+            "calls": { "$ref": "#/$defs/count_or_unknown" },
+            "returned_edges": { "$ref": "#/$defs/count_or_unknown" },
+            "read_from_edge": { "$ref": "#/$defs/count_or_unknown" },
+            "verified_use": { "$ref": "#/$defs/count_or_unknown" },
+            "note": { "$ref": "#/$defs/note" }
+          }
+        },
+        "note": { "$ref": "#/$defs/note" }
+      }
+    },
+    "annotation_record": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "record_kind",
+        "protocol_version",
+        "packet_id",
+        "annotator_id",
+        "trace_status",
+        "facts",
+        "compiled_claims",
+        "evidence_reads",
+        "run"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "cli002-r2-t1/1" },
+        "record_kind": { "const": "annotation" },
+        "protocol_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+        "packet_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$" },
+        "annotator_id": { "type": "string", "pattern": "^annotator-[0-9]{1,2}$" },
+        "trace_status": {
+          "type": "object",
+          "required": ["value", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string", "enum": ["complete", "incomplete", "unknown"] },
+            "reason": { "$ref": "#/$defs/reason_code" },
+            "note": { "$ref": "#/$defs/note" }
+          }
+        },
+        "facts": { "type": "array", "items": { "$ref": "#/$defs/fact_annotation" } },
+        "compiled_claims": { "type": "array", "items": { "$ref": "#/$defs/claim_annotation" } },
+        "evidence_reads": { "type": "array", "items": { "$ref": "#/$defs/read_annotation" } },
+        "run": { "$ref": "#/$defs/run_annotation" },
+        "protocol_gaps": { "type": "array", "items": { "type": "string" } },
+        "notes": { "$ref": "#/$defs/note" }
+      }
+    },
+    "string_count_map": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "aggregate_field": {
+      "type": "object",
+      "required": ["field", "compared", "agree", "agreement", "counts", "unknown_by_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string" },
+        "compared": { "type": "integer", "minimum": 0 },
+        "agree": { "type": "integer", "minimum": 0 },
+        "agreement": { "type": "string", "pattern": "^[0-9]+/[0-9]+$" },
+        "counts": {
+          "description": "annotator_id -> value -> count",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/string_count_map" }
+        },
+        "unknown_by_reason": {
+          "description": "annotator_id -> reason code -> count",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/string_count_map" }
+        }
+      }
+    },
+    "aggregate_record": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "record_kind",
+        "annotators",
+        "packets",
+        "fields",
+        "level_patterns",
+        "disagreements",
+        "semantic_errors",
+        "missing"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "cli002-r2-t1/1" },
+        "record_kind": { "const": "aggregate" },
+        "annotators": { "type": "array", "items": { "type": "string" } },
+        "packets": { "type": "array", "items": { "type": "string" } },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/aggregate_field" } },
+        "level_patterns": {
+          "description": "annotator_id -> 'hit=<v>|reached=<v>|verified=<v>' -> count of facts. Shows that the three levels are not nested.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/string_count_map" }
+        },
+        "disagreements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["packet_id", "item", "field", "values"],
+            "additionalProperties": false,
+            "properties": {
+              "packet_id": { "type": "string" },
+              "item": { "type": "string" },
+              "field": { "type": "string" },
+              "values": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          }
+        },
+        "semantic_errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["annotator_id", "packet_id", "item", "rule", "detail"],
+            "additionalProperties": false,
+            "properties": {
+              "annotator_id": { "type": "string" },
+              "packet_id": { "type": "string" },
+              "item": { "type": "string" },
+              "rule": { "type": "string" },
+              "detail": { "type": "string" }
+            }
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["annotator_id", "packet_id"],
+            "additionalProperties": false,
+            "properties": {
+              "annotator_id": { "type": "string" },
+              "packet_id": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "expect": "S1-unknown-reason",
+    "file": "unknown-without-reason.jsonl"
+  },
+  {
+    "expect": "S1-unknown-reason",
+    "file": "reason-on-known-value.jsonl"
+  },
+  {
+    "expect": "S2-opened-implies-hit",
+    "file": "opened-without-hit.jsonl"
+  },
+  {
+    "expect": "S5-reached-basis",
+    "file": "reached-without-basis.jsonl"
+  },
+  {
+    "expect": "S7-verified-derivation",
+    "file": "verified-without-support.jsonl"
+  },
+  {
+    "expect": "S9-read-state",
+    "file": "read-state-mismatch.jsonl"
+  },
+  {
+    "expect": "not in enum",
+    "file": "bad-enum.jsonl"
+  },
+  {
+    "expect": "does not match",
+    "file": "absolute-path-ref.jsonl"
+  },
+  {
+    "expect": "property not allowed",
+    "file": "extra-property.jsonl"
+  },
+  {
+    "expect": "S8-f008-derivation",
+    "file": "f008-event-without-digest-step.jsonl"
+  }
+]
