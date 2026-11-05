@@ -43,7 +43,7 @@
 | Privacy grep over the whole topic folder: user paths, 64-hex digests, question and packet ids, private names and vault paths | no hits in any new or changed file. Pre-existing hits, all in files committed at `d48acce`, none private: the plan's own document hash, the protocol naming the sample-record file, invented fixture anchors, and the review's own sentence about paths |
 | `git status --short` | changes only inside `docs/2.0/topics/cli-002/` |
 
-### Changed public files (uncommitted; commit SHA pending Owner approval)
+### Changed public files (committed with Owner approval on 2026-11-05; see `git log` for this file)
 
 - Modified: `docs/2.0/topics/cli-002/STATUS.md`, `docs/2.0/topics/cli-002/ROUND-2-SUMMARY.md`.
 - New: `docs/2.0/topics/cli-002/reports/T1/CLOUD-REVIEW-RESPONSE.md`, `.../reports/T1/METRIC-CONTRACT-CLARIFICATIONS.md`, `.../reports/T1/REGRESSION-SUMMARY.md`.
