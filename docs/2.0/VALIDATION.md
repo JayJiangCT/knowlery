@@ -72,3 +72,4 @@
 - 不变的部分：冻结的 benchmark v2、gold、正确率判定、SCORES.md 和原始答卷都未改动，也没有重跑回答 Agent。
 - 状态不变：仍为 Completed, Core Hypothesis Inconclusive；CLI-002 仍为 OPEN。
 - 报告（仓库外，含裁定记录和计算脚本）：`/Users/dev/Documents/knowlery-g1-eval/results/E1-ADJUSTED-COVERAGE.md`
+- 归档（2026-11-04，独立复核 GO 后）：E-1 报告、裁定台账、裁定记录和脚本已设为只读，哈希清单 `E1-ARCHIVE.sha256`（sha256 `98d1d418e09392f9d2b7404a864fcbe52e8f195571751340055a7911fad9f6e2`）。
