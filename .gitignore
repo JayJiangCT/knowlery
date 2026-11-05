@@ -6,7 +6,8 @@
 .remember/
 .superpowers/
 test-plans/
-docs/
+docs/*
+!docs/2.0/
 prototypes/
 specs/
 plugins/
