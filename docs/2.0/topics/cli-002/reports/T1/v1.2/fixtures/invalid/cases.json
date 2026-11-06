@@ -1,0 +1,67 @@
+[
+  {
+    "expect": "Z1-answerable-has-facts",
+    "file": "zero-facts-answerable.jsonl",
+    "why": "answerable record with no required facts"
+  },
+  {
+    "expect": "Z2-abstention-matches-answerable",
+    "file": "abstention-mismatch.jsonl",
+    "why": "answerable but abstention judged"
+  },
+  {
+    "expect": "E1-unadjudicated-needs-live-candidate",
+    "file": "rejected-only-unknown.jsonl",
+    "why": "only a rejected candidate, recorded unknown"
+  },
+  {
+    "expect": "R1-compiled-reuse-derivation",
+    "file": "f008-compliant-claimed-as-reuse.jsonl",
+    "why": "P1 path set true from f008 alone"
+  },
+  {
+    "expect": "R3-currentness-basis",
+    "file": "currentness-without-basis.jsonl",
+    "why": "currentness established with no basis"
+  },
+  {
+    "expect": "W2-determinate-needs-complete-reference",
+    "file": "wcc-false-on-incomplete-reference.jsonl",
+    "why": "false from an incomplete list"
+  },
+  {
+    "expect": "W3-reference-state-reason",
+    "file": "wcc-absent-reference-wrong-reason.jsonl",
+    "why": "absent reference without REFERENCE_MISSING"
+  },
+  {
+    "expect": "W4-not-applicable-pairing",
+    "file": "wcc-vault-na-with-reference.jsonl",
+    "why": "not_applicable while a complete reference exists"
+  },
+  {
+    "expect": "W5-gold-currentness",
+    "file": "wcc-gold-unchecked-determinate.jsonl",
+    "why": "determinate wcc_gold from an unchecked gold"
+  },
+  {
+    "expect": "H1-f008-derivation-v12",
+    "file": "history-row-f008-decided.jsonl",
+    "why": "History row given a decided f008"
+  },
+  {
+    "expect": "missing required 'fact_verified'",
+    "file": "missing-fact-field.jsonl",
+    "why": "record missing a required observation"
+  },
+  {
+    "expect": "unknown schema_version",
+    "file": "unknown-schema-version.jsonl",
+    "why": "unrecognised schema version"
+  },
+  {
+    "expect": "does not match",
+    "file": "v12-record-with-v11-protocol.jsonl",
+    "why": "v1.2 schema with a 1.1 protocol label"
+  }
+]

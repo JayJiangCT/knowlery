@@ -1,0 +1,65 @@
+{
+  "arm_manifest": "applied",
+  "per_annotator": {
+    "annotator-1": {
+      "P0": {
+        "answerability_unknown": 0,
+        "denominator_answerable_total": 8,
+        "denominator_determinate_only": 7,
+        "false": 5,
+        "pass_over_answerable_total": "2/8",
+        "pass_over_determinate_only": "2/7",
+        "true": 2,
+        "unknown": 1
+      },
+      "P1": {
+        "answerability_unknown": 0,
+        "denominator_answerable_total": 8,
+        "denominator_determinate_only": 6,
+        "false": 3,
+        "pass_over_answerable_total": "3/8",
+        "pass_over_determinate_only": "3/6",
+        "true": 3,
+        "unknown": 2
+      },
+      "P1_minus_P0_runs": {
+        "P0=false|P1=false": 3,
+        "P0=false|P1=true": 1,
+        "P0=false|P1=unknown": 1,
+        "P0=true|P1=true": 2,
+        "P0=unknown|P1=unknown": 1
+      },
+      "fact_P0": {
+        "false": 5,
+        "true": 4,
+        "unknown": 2
+      },
+      "fact_P1": {
+        "false": 3,
+        "true": 5,
+        "unknown": 3
+      },
+      "legacy_wrong_current_claim": {},
+      "proper_abstention": {
+        "true": 1
+      },
+      "records": 9,
+      "records_by_schema": {
+        "cli002-r2-t1/2": 9
+      },
+      "unanswerable_excluded": 1,
+      "wcc_gold": {
+        "false": 7,
+        "unknown": 2
+      },
+      "wcc_vault": {
+        "false": 3,
+        "not_applicable": 3,
+        "true": 2,
+        "unknown": 1
+      }
+    }
+  },
+  "record_kind": "endpoint_summary",
+  "schema_version": "cli002-r2-t1/2"
+}

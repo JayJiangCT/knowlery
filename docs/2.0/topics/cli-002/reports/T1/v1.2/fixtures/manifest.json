@@ -1,0 +1,101 @@
+{
+  "note": "Synthetic manifest. arm_kind decides wcc_vault applicability; judges never choose not_applicable.",
+  "packets": {
+    "SYN01": {
+      "answerable": true,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      }
+    },
+    "SYN02": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0002"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN03": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN04": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN05": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN06": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN07": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN08": {
+      "answerable": false,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      }
+    },
+    "SYN09": {
+      "answerable": true,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      }
+    }
+  }
+}
