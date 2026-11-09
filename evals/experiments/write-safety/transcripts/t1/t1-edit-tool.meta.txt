@@ -1,0 +1,7 @@
+case=t1 run=t1-edit-tool date=2026-11-09T03:12:14Z
+repo_head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+claude_version=2.1.318 (Claude Code)
+os=macOS 14.7.4 (Darwin 23.6.0 arm64)
+settings=config/t1-settings.json mcp=none prompt=config/prompts/t1.txt
+command: claude -p "$(cat config/prompts/t1.txt)" --model claude-sonnet-5-5 --permission-mode default --settings config/t1-settings.json --setting-sources project --strict-mcp-config --output-format stream-json --verbose --no-session-persistence 
+claude_exit=0

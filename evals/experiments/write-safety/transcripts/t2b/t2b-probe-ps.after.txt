@@ -1,0 +1,12 @@
+## git status --short vault (after run)
+
+## git diff vault (after run)
+
+## validate (after run)
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+clean                entities/skylark.md
+clean                records/skylark-pilot-readout-2026-08-15.md
+validate_exit=0

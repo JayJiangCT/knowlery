@@ -1,0 +1,7 @@
+case=t2a run=t2a-probe-cli date=2026-11-09T03:14:22Z
+repo_head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+claude_version=2.1.318 (Claude Code)
+os=macOS 14.7.4 (Darwin 23.6.0 arm64)
+settings=config/t2a-settings.json mcp=none prompt=config/prompts/t2a-probe-cli.txt
+command: claude -p "$(cat config/prompts/t2a-probe-cli.txt)" --model claude-sonnet-5-5 --permission-mode default --settings config/t2a-settings.json --setting-sources project --strict-mcp-config --output-format stream-json --verbose --no-session-persistence 
+claude_exit=0

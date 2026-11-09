@@ -1,0 +1,181 @@
+# T3 command log  date=2026-11-09T03:17:33Z head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+
+$ git restore --source=2ecfe0abcf5b020cb247ede25649c38842343dbd --staged --worktree vault
+[exit=0]
+
+$ git clean -fdq vault
+[exit=0]
+
+## Step 1: edit a protected claim directly (plain sed, no harness)
+$ sed -i  s/it never returns to the kitchen (src: s3) ^c2/it may return to the kitchen if the drone aborts (src: s3) ^c2/ vault/entities/skylark.md
+[exit=0]
+
+$ git diff --stat vault
+ evals/experiments/write-safety/vault/entities/skylark.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[exit=0]
+
+## Step 2: validate against the committed baseline
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+4ec3480788228f7aa40227b3ba84750f57d505db793914d710512e39725c21f1  -
+
+$ git status --short vault
+ M vault/entities/skylark.md
+[exit=0]
+
+$ node proto/knowlery-proto.mjs validate
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+protected_change     entities/skylark.md  — ^c2 text changed
+clean                records/skylark-pilot-readout-2026-08-15.md
+[exit=1]
+
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+4ec3480788228f7aa40227b3ba84750f57d505db793914d710512e39725c21f1  -
+
+$ git status --short vault
+ M vault/entities/skylark.md
+[exit=0]
+
+## Step 3: delete the manifest, validate again (must not create one)
+$ rm vault/.knowlery/manifest.json
+[exit=0]
+
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+d38c477a6ca97dceb7d15dc09d2789d75c8caa41cbc2d5761892f4bfec32112d  -
+
+$ node proto/knowlery-proto.mjs validate
+baseline: none
+baseline_unavailable comparisons/pad-vs-locker.md  — no manifest at .knowlery/manifest.json
+baseline_unavailable concepts/charging-window.md  — no manifest at .knowlery/manifest.json
+baseline_unavailable concepts/landing-pad.md  — no manifest at .knowlery/manifest.json
+baseline_unavailable entities/skylark.md  — no manifest at .knowlery/manifest.json
+baseline_unavailable records/skylark-pilot-readout-2026-08-15.md  — no manifest at .knowlery/manifest.json
+[exit=1]
+
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+d38c477a6ca97dceb7d15dc09d2789d75c8caa41cbc2d5761892f4bfec32112d  -
+
+$ ls -la vault/.knowlery/
+total 0
+drwxr-xr-x@  2 dev  staff   64 Nov  8 22:17 .
+drwxr-xr-x@ 10 dev  staff  320 Nov  8 22:15 ..
+[exit=0]
+
+$ git status --short vault
+ D vault/.knowlery/manifest.json
+ M vault/entities/skylark.md
+[exit=0]
+
+## Step 3b: baseline without an explicit mode flag or reason is refused
+$ node proto/knowlery-proto.mjs baseline
+error: baseline requires --init or --rebuild
+[exit=2]
+
+$ node proto/knowlery-proto.mjs baseline --rebuild
+error: baseline requires --reason "<why>"
+[exit=2]
+
+## Step 4: explicit rebuild
+$ node proto/knowlery-proto.mjs baseline --rebuild --reason test
+manifest written: 5 files, REBUILT at 2026-11-09T03:17:34.434Z reason="test"
+[exit=0]
+
+$ node proto/knowlery-proto.mjs validate
+baseline: manifest v1 created null | REBUILT 2026-11-09T03:17:34.434Z reason="test" (trusted by rebuild)
+clean                comparisons/pad-vs-locker.md  — trusted by rebuild at 2026-11-09T03:17:34.434Z (test)
+clean                concepts/charging-window.md  — trusted by rebuild at 2026-11-09T03:17:34.434Z (test)
+clean                concepts/landing-pad.md  — trusted by rebuild at 2026-11-09T03:17:34.434Z (test)
+clean                entities/skylark.md  — trusted by rebuild at 2026-11-09T03:17:34.434Z (test)
+clean                records/skylark-pilot-readout-2026-08-15.md  — trusted by rebuild at 2026-11-09T03:17:34.434Z (test)
+[exit=0]
+
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+89d096d9b24bc3e393f6b7eae9335e9b09b622eb88c0064bba229c0eeaf5297d  -
+
+$ node proto/knowlery-proto.mjs validate --json
+{
+  "baseline": {
+    "manifest_version": 1,
+    "created_at": null,
+    "rebuilt_at": "2026-11-09T03:17:34.434Z",
+    "rebuild_reason": "test",
+    "trusted_by_rebuild": true
+  },
+  "results": [
+    {
+      "path": "comparisons/pad-vs-locker.md",
+      "state": "clean",
+      "detail": "trusted by rebuild at 2026-11-09T03:17:34.434Z (test)"
+    },
+    {
+      "path": "concepts/charging-window.md",
+      "state": "clean",
+      "detail": "trusted by rebuild at 2026-11-09T03:17:34.434Z (test)"
+    },
+    {
+      "path": "concepts/landing-pad.md",
+      "state": "clean",
+      "detail": "trusted by rebuild at 2026-11-09T03:17:34.434Z (test)"
+    },
+    {
+      "path": "entities/skylark.md",
+      "state": "clean",
+      "detail": "trusted by rebuild at 2026-11-09T03:17:34.434Z (test)"
+    },
+    {
+      "path": "records/skylark-pilot-readout-2026-08-15.md",
+      "state": "clean",
+      "detail": "trusted by rebuild at 2026-11-09T03:17:34.434Z (test)"
+    }
+  ]
+}
+[exit=0]
+
+$ (sha256 of every file under vault/, to prove validate wrote nothing)
+89d096d9b24bc3e393f6b7eae9335e9b09b622eb88c0064bba229c0eeaf5297d  -
+
+$ git diff vault/.knowlery/manifest.json
+diff --git a/evals/experiments/write-safety/vault/.knowlery/manifest.json b/evals/experiments/write-safety/vault/.knowlery/manifest.json
+index 1069645..728850a 100644
+--- a/evals/experiments/write-safety/vault/.knowlery/manifest.json
++++ b/evals/experiments/write-safety/vault/.knowlery/manifest.json
+@@ -1,10 +1,10 @@
+ {
+   "manifest_version": 1,
+-  "created_at": "2026-11-09T03:10:29.301Z",
+-  "created_reason": "WS-001 trusted baseline after vault commit",
+-  "rebuilt_at": null,
+-  "rebuild_reason": null,
+-  "rebuild_note": null,
++  "created_at": null,
++  "created_reason": null,
++  "rebuilt_at": "2026-11-09T03:17:34.434Z",
++  "rebuild_reason": "test",
++  "rebuild_note": "Rebuilt from current files: any prior out-of-band change is now trusted; detection against the previous baseline is lost.",
+   "last_write_id": null,
+   "files": {
+     "concepts/charging-window.md": {
+@@ -23,9 +23,9 @@
+     },
+     "entities/skylark.md": {
+       "scope": "page-body",
+-      "digest": "sha256:848741e5d62098997db726184a3603aeadb5f063abca81d8a8cf0cb97f8332aa",
++      "digest": "sha256:7324551e6c9f1f1e79e2f47b94e339ed607126ac402d03b3b9fe269d03581e29",
+       "protected": {
+-        "^c2": "sha256:a09911915c76f42bbd0e50e0dbcd50150c72662ed275651919ae60c3109a329e"
++        "^c2": "sha256:9c51b198831e313ffe1d22b530e2d55c27ed8b56a9824aaa79fc07b75b48c4c6"
+       },
+       "last_write_id": null
+     },
+[exit=0]
+
+## Restore
+$ git restore --source=2ecfe0abcf5b020cb247ede25649c38842343dbd --staged --worktree vault
+[exit=0]
+
+$ git status --short vault
+[exit=0]
+

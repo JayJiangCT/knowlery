@@ -1,0 +1,7 @@
+case=t2a run=t2a-control-sed date=2026-11-09T03:14:32Z
+repo_head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+claude_version=2.1.318 (Claude Code)
+os=macOS 14.7.4 (Darwin 23.6.0 arm64)
+settings=config/t2a-control-no-edit-deny-settings.json mcp=none prompt=config/prompts/t2a-control-sed.txt
+command: claude -p "$(cat config/prompts/t2a-control-sed.txt)" --model claude-sonnet-5-5 --permission-mode default --settings config/t2a-control-no-edit-deny-settings.json --setting-sources project --strict-mcp-config --output-format stream-json --verbose --no-session-persistence 
+claude_exit=0
