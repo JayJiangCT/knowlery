@@ -50,7 +50,7 @@ flowchart TB
 
 原始内容、来源版本及证据、加工 Wiki、治理记录是需要明确归属的长期资产。运行索引通常可重建，不能替代前述资产。人工批准的废弃、取代等决定不得只保存在易丢失的 Agent 会话或未共享的隐藏目录内。
 
-**已确认的是这些保证的方向，不是存储具体布局。** 数据类别、字段、稳定 ID、版本快照、冲突合并算法及状态机均仍需设计和验证，见 [DECISIONS.md](./DECISIONS.md) 与 [Knowledge Format v0](../../format/KNOWLEDGE-FORMAT-v0.md)。
+**已确认的是这些保证的方向，不是存储具体布局。** 数据类别、字段、页面/主张身份、来源版本及状态模型已由 [Knowledge Format v1.0](../../format/KNOWLEDGE-FORMAT-v1.0.md) 确定（ACCEPTED · 2026-11-02）；派生索引与写入安全的设计见 CLI-003、CLI-004。并发冲突处理与跨客户端治理状态持久化（F-005、F-007）仍需实现和验证，见 [DECISIONS.md](./DECISIONS.md)。
 
 ## 端到端例子（期望行为，而非现有实现宣称）
 

@@ -31,10 +31,12 @@ Git 不记录空目录，所以新区域目前通过 README 保留，**无可执
 | 阶段 | 目标 | 退出条件 |
 | --- | --- | --- |
 | P0 — Bootstrap（本次） | 独立分支、目录骨架、共识文档和待决问题 | 仅文档新增，原构建和发布路径未改动 |
-| P1 — Design & Baseline | 检视 1.x 依赖、分类复用/弃用代码，冻结 Pilot 对照样本；拟定 Format v0 | 有可复现基线、经过评审的最小契约 |
+| P1 — Design & Baseline | 检视 1.x 依赖、分类复用/弃用代码，冻结 Pilot 对照样本；确定 Knowledge Format 语义契约 | 有可复现基线、经过评审的最小契约 |
 | P2 — Vertical Slice | 完成 `ask / cook / update` 的最小 Headless 工作流与确定性写入保护 | 无 Obsidian 端到端正确，数据保全可验证 |
 | P3 — Integration | 改造 Skills、CLI/Adapter、MCP，按需迁入 Obsidian UI | 新旧数据迁移与工具兼容验收 |
 | P4 — Release | 版本策略、迁移/回滚说明、CI、npm 与插件发布验证 | 满足升级安全与跨平台验收，再考虑并入 main |
+
+**进度注记（2026-11-09）**：P0 已完成。P1 中的 Format 部分已由 [Knowledge Format v1.0](../../format/KNOWLEDGE-FORMAT-v1.0.md)（ACCEPTED · 2026-11-02）完成；1.x 复用审计与 Pilot 对照样本冻结在仓库内尚无记录。P2 的设计依据（GR-010、CLI-003、CLI-004）已 ACCEPTED，实现未开始。
 
 ## 复用审计规则
 
