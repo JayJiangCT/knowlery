@@ -1,0 +1,7 @@
+case=t2b run=t2b-probe-cli date=2026-11-09T03:15:33Z
+repo_head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+claude_version=2.1.318 (Claude Code)
+os=macOS 14.7.4 (Darwin 23.6.0 arm64)
+settings=config/t2b-settings.json mcp=config/t2b-mcp.json prompt=config/prompts/t2b-probe-cli.txt
+command: claude -p "$(cat config/prompts/t2b-probe-cli.txt)" --model claude-sonnet-5-5 --permission-mode default --settings config/t2b-settings.json --setting-sources project --strict-mcp-config --output-format stream-json --verbose --no-session-persistence --mcp-config config/t2b-mcp.json
+claude_exit=0

@@ -1,0 +1,3 @@
+# The repo root ignores .knowlery/; the experiment's trusted baseline manifest must be tracked.
+!vault/.knowlery/
+!vault/.knowlery/**

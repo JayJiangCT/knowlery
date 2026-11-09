@@ -1,0 +1,146 @@
+# T4 command log  date=2026-11-09T03:17:47Z head=2ecfe0abcf5b020cb247ede25649c38842343dbd baseline_commit=2ecfe0abcf5b020cb247ede25649c38842343dbd
+# scratch worktree: <tmp>/wt (detached at HEAD; removed at the end). Hook installed per command via core.hooksPath.
+
+## (a) commit the T3 protected-claim edit -> expected rejected
+$ git restore --source=2ecfe0abcf5b020cb247ede25649c38842343dbd --staged --worktree vault
+[exit=0]
+
+$ sed -i  s/it never returns to the kitchen (src: s3) ^c2/it may return to the kitchen if the drone aborts (src: s3) ^c2/ vault/entities/skylark.md
+[exit=0]
+
+$ git add vault
+[exit=0]
+
+$ git -c core.hooksPath=<tmp>/wt/evals/experiments/write-safety/hooks commit -m T4a: protected claim edit
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+protected_change     entities/skylark.md  — ^c2 text changed
+clean                records/skylark-pilot-readout-2026-08-15.md
+pre-commit: REJECTED — protected_change detected. Set KNOWLERY_PROTECTED_OVERRIDE="<reason>" to commit it deliberately.
+[exit=1]
+
+$ git log -1 --format=HEAD now: %h %s
+HEAD now: 2ecfe0a experiment(ws-001): commit trusted baseline manifest for T3/T4
+[exit=0]
+
+## (b) same change with the documented override -> expected accepted, override recorded
+$ env KNOWLERY_PROTECTED_OVERRIDE=owner decision recorded for WS-001 T4b git -c core.hooksPath=<tmp>/wt/evals/experiments/write-safety/hooks commit -m T4b: protected claim edit with override
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+protected_change     entities/skylark.md  — ^c2 text changed
+clean                records/skylark-pilot-readout-2026-08-15.md
+pre-commit: protected_change ACCEPTED by override; recorded in vault/log.md: - 2026-11-09 · human:Jay Jiang · entities/skylark.md · protected-change override · reason: owner decision recorded for WS-001 T4b
+[detached HEAD 7097ca3] T4b: protected claim edit with override
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+[exit=0]
+
+$ git log -1 --format=HEAD now: %h %s
+HEAD now: 7097ca3 T4b: protected claim edit with override
+[exit=0]
+
+$ git show --stat --format=%h %s HEAD
+7097ca3 T4b: protected claim edit with override
+
+ evals/experiments/write-safety/vault/entities/skylark.md | 2 +-
+ evals/experiments/write-safety/vault/log.md              | 3 +++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+[exit=0]
+
+$ git show HEAD -- vault/log.md
+commit 7097ca3f63b7fbf851e7e985342667fbd05ace4c
+Author: Jay Jiang <email redacted>
+Date:   Sun Nov 8 22:17:48 2026 -0500
+
+    T4b: protected claim edit with override
+
+diff --git a/evals/experiments/write-safety/vault/log.md b/evals/experiments/write-safety/vault/log.md
+index 1d68267..0d3361f 100644
+--- a/evals/experiments/write-safety/vault/log.md
++++ b/evals/experiments/write-safety/vault/log.md
+@@ -1,5 +1,8 @@
+ # Operation log
+ 
++## 2026-11-09
++- 2026-11-09 · human:Jay Jiang · entities/skylark.md · protected-change override · reason: owner decision recorded for WS-001 T4b
++
+ ## 2026-08-21
+ - 2026-08-21 · claude-code/claude-sonnet-5-5 · [[pad-vs-locker]] · created
+ 
+[exit=0]
+
+## (c) legal append-history on an unprotected page -> expected accepted (scratch HEAD reset to the starting commit first, dropping the a/b test commits)
+$ git reset -q --hard 2ecfe0abcf5b020cb247ede25649c38842343dbd
+[exit=0]
+
+$ git restore --source=2ecfe0abcf5b020cb247ede25649c38842343dbd --staged --worktree vault
+[exit=0]
+
+$ node proto/knowlery-proto.mjs append-history charging-window 2026-11-08 · [[#^c1]] verified by human:test-owner
+{"path":"concepts/charging-window.md","write_id":"w-20261109T031748501Z-3eaca1","log_line":"- 2026-11-09 · process:knowlery-proto · [[charging-window]] · append-history · w-20261109T031748501Z-3eaca1"}
+[exit=0]
+
+$ git add vault
+[exit=0]
+
+$ git -c core.hooksPath=<tmp>/wt/evals/experiments/write-safety/hooks commit -m T4c: legal append-history on charging-window
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+clean                entities/skylark.md
+clean                records/skylark-pilot-readout-2026-08-15.md
+[detached HEAD 8e65f5b] T4c: legal append-history on charging-window
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+[exit=0]
+
+$ git log -1 --format=HEAD now: %h %s
+HEAD now: 8e65f5b T4c: legal append-history on charging-window
+[exit=0]
+
+$ git show --stat --format=%h %s HEAD
+8e65f5b T4c: legal append-history on charging-window
+
+ evals/experiments/write-safety/vault/.knowlery/manifest.json     | 6 +++---
+ evals/experiments/write-safety/vault/concepts/charging-window.md | 1 +
+ evals/experiments/write-safety/vault/log.md                      | 3 +++
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+[exit=0]
+
+## (d) protected edit with --no-verify -> expected accepted (hook bypassed; known limit)
+$ git reset -q --hard 2ecfe0abcf5b020cb247ede25649c38842343dbd
+[exit=0]
+
+$ git restore --source=2ecfe0abcf5b020cb247ede25649c38842343dbd --staged --worktree vault
+[exit=0]
+
+$ sed -i  s/it never returns to the kitchen (src: s3) ^c2/it may return to the kitchen if the drone aborts (src: s3) ^c2/ vault/entities/skylark.md
+[exit=0]
+
+$ git add vault
+[exit=0]
+
+$ git -c core.hooksPath=<tmp>/wt/evals/experiments/write-safety/hooks commit --no-verify -m T4d: protected claim edit with --no-verify
+[detached HEAD c85a1ec] T4d: protected claim edit with --no-verify
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[exit=0]
+
+$ git log -1 --format=HEAD now: %h %s
+HEAD now: c85a1ec T4d: protected claim edit with --no-verify
+[exit=0]
+
+## (d') after the bypass, validate still reports the change against the committed manifest
+$ node proto/knowlery-proto.mjs validate
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+protected_change     entities/skylark.md  — ^c2 text changed
+clean                records/skylark-pilot-readout-2026-08-15.md
+[exit=1]
+
+## cleanup
+scratch worktree removed

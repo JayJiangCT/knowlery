@@ -1,0 +1,67 @@
+## git status --short vault (after run)
+ M vault/.knowlery/manifest.json
+ M vault/entities/skylark.md
+ M vault/log.md
+
+## git diff vault (after run)
+diff --git a/evals/experiments/write-safety/vault/.knowlery/manifest.json b/evals/experiments/write-safety/vault/.knowlery/manifest.json
+index 1069645..2182f2b 100644
+--- a/evals/experiments/write-safety/vault/.knowlery/manifest.json
++++ b/evals/experiments/write-safety/vault/.knowlery/manifest.json
+@@ -5,7 +5,7 @@
+   "rebuilt_at": null,
+   "rebuild_reason": null,
+   "rebuild_note": null,
+-  "last_write_id": null,
++  "last_write_id": "w-20261109T031507435Z-001ed3",
+   "files": {
+     "concepts/charging-window.md": {
+       "scope": "page-body",
+@@ -23,11 +23,11 @@
+     },
+     "entities/skylark.md": {
+       "scope": "page-body",
+-      "digest": "sha256:848741e5d62098997db726184a3603aeadb5f063abca81d8a8cf0cb97f8332aa",
++      "digest": "sha256:e44540167ae0269d3f674a3cd805b427c0de082a63a5523eb0572541cd00559a",
+       "protected": {
+         "^c2": "sha256:a09911915c76f42bbd0e50e0dbcd50150c72662ed275651919ae60c3109a329e"
+       },
+-      "last_write_id": null
++      "last_write_id": "w-20261109T031507435Z-001ed3"
+     },
+     "comparisons/pad-vs-locker.md": {
+       "scope": "page-body",
+diff --git a/evals/experiments/write-safety/vault/entities/skylark.md b/evals/experiments/write-safety/vault/entities/skylark.md
+index a91428a..6aacb53 100644
+--- a/evals/experiments/write-safety/vault/entities/skylark.md
++++ b/evals/experiments/write-safety/vault/entities/skylark.md
+@@ -30,6 +30,7 @@ Skylark is the fictional drone operator for the synthetic pilot.
+ - s3 · human:test-owner · stated:2026-08-10 · attestation · Parcel never returns to the kitchen after pad lock
+ 
+ ## History
++- 2026-11-08 · [[#^c1]] verified by human:test-owner
+ - 2026-08-20 · verified by human:test-owner
+ - 2026-08-15 · [[#^c1]] added · src: s1, s2 · by claude-code/claude-sonnet-5-5
+ - 2026-08-10 · [[#^c2]] added, protected by human:test-owner · src: s3
+diff --git a/evals/experiments/write-safety/vault/log.md b/evals/experiments/write-safety/vault/log.md
+index 1d68267..0614ff7 100644
+--- a/evals/experiments/write-safety/vault/log.md
++++ b/evals/experiments/write-safety/vault/log.md
+@@ -1,5 +1,8 @@
+ # Operation log
+ 
++## 2026-11-09
++- 2026-11-09 · process:knowlery-proto-mcp · [[skylark]] · append-history · w-20261109T031507435Z-001ed3
++
+ ## 2026-08-21
+ - 2026-08-21 · claude-code/claude-sonnet-5-5 · [[pad-vs-locker]] · created
+ 
+
+## validate (after run)
+baseline: manifest v1 created 2026-11-09T03:10:29.301Z
+clean                comparisons/pad-vs-locker.md
+clean                concepts/charging-window.md
+clean                concepts/landing-pad.md
+clean                entities/skylark.md
+clean                records/skylark-pilot-readout-2026-08-15.md
+validate_exit=0

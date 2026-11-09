@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "Edit", "Bash", "mcp__knowlery__validate", "mcp__knowlery__append_history"],
+    "deny": [
+      "Edit(./vault/concepts/**)",
+      "Edit(./vault/entities/**)",
+      "Edit(./vault/comparisons/**)",
+      "Edit(./vault/records/**)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "autoAllowBashIfSandboxed": true,
+    "filesystem": {
+      "denyWrite": ["../vault"]
+    }
+  }
+}

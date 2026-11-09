@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "knowlery": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["proto/mcp-server.mjs"],
+      "env": {
+        "KNOWLERY_VAULT": "vault",
+        "WS001_MCP_LOG": "transcripts/t2b/mcp-process.log"
+      }
+    }
+  }
+}

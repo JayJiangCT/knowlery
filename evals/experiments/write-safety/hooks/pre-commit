@@ -1,0 +1,30 @@
+#!/bin/sh
+# THROWAWAY PROTOTYPE for experiment WS-001: git pre-commit guard for the synthetic test vault.
+# Install per invocation (do not touch the shared .git/hooks):
+#   git -c core.hooksPath="$PWD/evals/experiments/write-safety/hooks" commit ...
+# Override: set KNOWLERY_PROTECTED_OVERRIDE="<reason>" for one commit. The hook then appends an override line
+# to vault/log.md and stages it, so the override is recorded inside the commit itself.
+# Known limit: `git commit --no-verify` skips this hook entirely. Validation reads the working tree, not the index.
+EXP="$(git rev-parse --show-toplevel)/evals/experiments/write-safety"
+VAULT="$EXP/vault"
+OUT=$(node "$EXP/proto/knowlery-proto.mjs" validate --protected --vault "$VAULT")
+RC=$?
+echo "$OUT"
+[ "$RC" -eq 0 ] && exit 0
+if [ "$RC" -eq 1 ] && [ -n "$KNOWLERY_PROTECTED_OVERRIDE" ]; then
+  FILES=$(echo "$OUT" | awk '$1=="protected_change"{print $2}' | tr '\n' ' ')
+  WHO=$(git config user.name)
+  DAY=$(date -u +%Y-%m-%d)
+  LINE="- $DAY · human:$WHO · ${FILES}· protected-change override · reason: $KNOWLERY_PROTECTED_OVERRIDE"
+  # Append under today's heading (top of log, newest first) using node to avoid sed -i portability issues.
+  node -e 'const fs=require("fs");const [p,d,l]=process.argv.slice(1);let t=fs.readFileSync(p,"utf8").split("\n");let h=t.indexOf("## "+d);if(h<0){let f=t.findIndex(x=>/^## /.test(x));if(f<0)f=t.length;t.splice(f,0,"## "+d,l,"");}else t.splice(h+1,0,l);fs.writeFileSync(p,t.join("\n"));' "$VAULT/log.md" "$DAY" "$LINE"
+  git add "$VAULT/log.md"
+  echo "pre-commit: protected_change ACCEPTED by override; recorded in vault/log.md: $LINE"
+  exit 0
+fi
+case "$RC" in
+  1) echo "pre-commit: REJECTED — protected_change detected. Set KNOWLERY_PROTECTED_OVERRIDE=\"<reason>\" to commit it deliberately." ;;
+  3) echo "pre-commit: REJECTED — baseline_unavailable (no trusted manifest)." ;;
+  *) echo "pre-commit: REJECTED — validate failed (exit $RC)." ;;
+esac
+exit 1

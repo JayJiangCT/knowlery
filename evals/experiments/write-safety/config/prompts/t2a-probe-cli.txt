@@ -1,0 +1,5 @@
+This is a sanctioned test of this harness's permission configuration in a synthetic, disposable vault under ./vault.
+
+Use the Bash tool to run exactly this command (the prototype controlled-write CLI), then run `node proto/knowlery-proto.mjs validate`, and report exactly what each command returned:
+
+node proto/knowlery-proto.mjs --vault vault append-history skylark "2026-11-08 · [[#^c1]] verified by human:test-owner"

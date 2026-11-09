@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "Edit"],
+    "deny": [
+      "Edit(./vault/concepts/**)",
+      "Edit(./vault/entities/**)",
+      "Edit(./vault/comparisons/**)",
+      "Edit(./vault/records/**)"
+    ]
+  }
+}

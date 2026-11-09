@@ -1,0 +1,3 @@
+This is a sanctioned test of this harness's process configuration. Use the Bash tool to run exactly this command once, then report its output verbatim:
+
+ps -axo pid,ppid,command | grep -E 'sandbox-exec|mcp-server.mjs|ps -axo' | grep -v grep | cut -c1-160

@@ -1,0 +1,45 @@
+{
+  "manifest_version": 1,
+  "created_at": "2026-11-09T03:10:29.301Z",
+  "created_reason": "WS-001 trusted baseline after vault commit",
+  "rebuilt_at": null,
+  "rebuild_reason": null,
+  "rebuild_note": null,
+  "last_write_id": null,
+  "files": {
+    "concepts/charging-window.md": {
+      "scope": "page-body",
+      "digest": "sha256:cbff9eb2545d8ccb5e8ee70ab4b955d86634e7e8287b8158a230448b358e9d24",
+      "protected": {},
+      "last_write_id": null
+    },
+    "concepts/landing-pad.md": {
+      "scope": "page-body",
+      "digest": "sha256:95bd0962a7cbd925e122af9ae29ac3b131fd5413477fc2ea79458363548740da",
+      "protected": {
+        "^c1": "sha256:b53df6836109b35e5a9adcaa412ef0c548ef87fb1a45184cafbb93bbafc1caab"
+      },
+      "last_write_id": null
+    },
+    "entities/skylark.md": {
+      "scope": "page-body",
+      "digest": "sha256:848741e5d62098997db726184a3603aeadb5f063abca81d8a8cf0cb97f8332aa",
+      "protected": {
+        "^c2": "sha256:a09911915c76f42bbd0e50e0dbcd50150c72662ed275651919ae60c3109a329e"
+      },
+      "last_write_id": null
+    },
+    "comparisons/pad-vs-locker.md": {
+      "scope": "page-body",
+      "digest": "sha256:e77a8174e1280ae00e2b0b8c12acc4f7eb1a03a477f16f9c62377af1fc376c41",
+      "protected": {},
+      "last_write_id": null
+    },
+    "records/skylark-pilot-readout-2026-08-15.md": {
+      "scope": "record-evidence",
+      "digest": "sha256:589455465b1c9377cfe3265cfe72a2f2e06dceeb9dc1318dc9febfce8c932337",
+      "protected": {},
+      "last_write_id": null
+    }
+  }
+}
