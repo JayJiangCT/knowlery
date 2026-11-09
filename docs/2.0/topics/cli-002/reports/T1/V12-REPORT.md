@@ -1,5 +1,7 @@
 # CLI-002 Round 2 — Metric D v1.2 contract: handoff report
 
+> **Publication note (added 2026-11-06, Cloud review m2).** This handoff describes the sub-session's working tree **before** the topic session committed it. Its "HEAD `b40bb91`" and "nothing committed" lines are that historical state. The files were published in commit `530d9e6f5d7a4b9d685bf4e1af3b5f490e2acf9f`, which the Cloud Agent reviewed. The text below is unchanged. Follow-up work: [`V12-OWNER-DECISIONS-RESOLUTION.md`](V12-OWNER-DECISIONS-RESOLUTION.md).
+
 **Task:** CLI002-R2-D-V12-CONTRACT-01 ([Cloud task brief](../../reviews/D-V12-TASK-BRIEF-2026-11-05.md)). **Date:** 2026-11-05. **Executed by:** a local sub-session started by the CLI-002 Round 2 topic session. **Stopped at:** the Owner checkpoint (Cloud brief §6 step 3). Nothing committed.
 
 **Verdict on contract readiness only: CONDITIONAL GO** — the candidate is complete enough for the Owner to decide on, and its deterministic parts pass. It is **not** ready to freeze. Conditions: the Owner decisions O-1, O-3, O-6, O-7 (and O-2/O-4/O-5 as they apply), the v1.2 regression (not started), and an independent Cloud review ([packet §3](V12-OWNER-DECISION-PACKET.md)). This is not a verdict on Gate B, which stays NOT AUTHORIZED.

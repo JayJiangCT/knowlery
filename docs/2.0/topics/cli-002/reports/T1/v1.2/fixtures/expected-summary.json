@@ -1,60 +1,72 @@
 {
-  "arm_manifest": "applied",
+  "mode": "authoritative",
   "per_annotator": {
     "annotator-1": {
       "P0": {
         "answerability_unknown": 0,
-        "denominator_answerable_total": 8,
-        "denominator_determinate_only": 7,
+        "denominator_answerable_total": 9,
+        "denominator_determinate_only": 8,
         "false": 5,
-        "pass_over_answerable_total": "2/8",
-        "pass_over_determinate_only": "2/7",
-        "true": 2,
-        "unknown": 1
-      },
-      "P1": {
-        "answerability_unknown": 0,
-        "denominator_answerable_total": 8,
-        "denominator_determinate_only": 6,
-        "false": 3,
-        "pass_over_answerable_total": "3/8",
-        "pass_over_determinate_only": "3/6",
+        "pass_conditional_on_determinate": "3/8",
+        "pass_over_answerable_total": "3/9",
         "true": 3,
-        "unknown": 2
+        "unknown": 1,
+        "unknown_share": "1/9"
+      },
+      "P1_exploratory": {
+        "answerability_unknown": 0,
+        "denominator_answerable_total": 9,
+        "denominator_determinate_only": 7,
+        "false": 3,
+        "pass_conditional_on_determinate": "4/7",
+        "pass_over_answerable_total": "4/9",
+        "true": 4,
+        "unknown": 2,
+        "unknown_share": "2/9"
       },
       "P1_minus_P0_runs": {
         "P0=false|P1=false": 3,
         "P0=false|P1=true": 1,
         "P0=false|P1=unknown": 1,
-        "P0=true|P1=true": 2,
+        "P0=true|P1=true": 3,
         "P0=unknown|P1=unknown": 1
       },
+      "compiled_reuse_true_unbound": 0,
+      "f008": {
+        "compliant": 2,
+        "non_compliant": 1,
+        "unknown": 1
+      },
+      "f008_review_trigger": [
+        "SYN04 concepts/hive-inspection.md#^c5"
+      ],
       "fact_P0": {
         "false": 5,
-        "true": 4,
+        "true": 5,
         "unknown": 2
       },
-      "fact_P1": {
+      "fact_P1_exploratory": {
         "false": 3,
-        "true": 5,
+        "true": 6,
         "unknown": 3
       },
       "legacy_wrong_current_claim": {},
       "proper_abstention": {
         "true": 1
       },
-      "records": 9,
+      "records": 10,
       "records_by_schema": {
-        "cli002-r2-t1/2": 9
+        "cli002-r2-t1/2": 10
       },
       "unanswerable_excluded": 1,
       "wcc_gold": {
         "false": 7,
+        "not_applicable": 1,
         "unknown": 2
       },
       "wcc_vault": {
         "false": 3,
-        "not_applicable": 3,
+        "not_applicable": 4,
         "true": 2,
         "unknown": 1
       }

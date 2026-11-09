@@ -23,13 +23,15 @@ def obs(value, reason=None, events=None):
 
 
 def reuse_na():
-    return {"applicable": "no", "claim_ref": None, "claim_position": NA, "temporal_scope": NA,
+    return {"applicable": "no", "claim_ref": None, "source_ref": None, "source_version": None, "claim_position": NA, "temporal_scope": NA,
             "verification_event": NA, "digest_comparison": NA, "currentness": NA,
             "currentness_basis": None, "as_of": None, "value": NA, "reason": None, "events": []}
 
 
-def reuse(claim_ref, position, scope, event, digest, currentness, value, reason, basis=None, as_of=None):
-    return {"applicable": "yes", "claim_ref": claim_ref, "claim_position": position, "temporal_scope": scope,
+def reuse(claim_ref, position, scope, event, digest, currentness, value, reason, basis=None, as_of=None,
+          source_ref="notes/hive-log-2040-03.md", source_version="sha256:fake0301"):
+    return {"applicable": "yes", "claim_ref": claim_ref, "source_ref": source_ref, "source_version": source_version,
+            "claim_position": position, "temporal_scope": scope,
             "verification_event": event, "digest_comparison": digest, "currentness": currentness,
             "currentness_basis": basis, "as_of": as_of, "value": value, "reason": reason, "events": [4]}
 
@@ -137,7 +139,9 @@ def valid_records():
     recs.append(record("SYN03", [fact("F1")], wg=wcc(U, "absent", "REFERENCE_MISSING", gold=True),
                        wv=wcc(T, "complete")))
     # SYN04 F + U: contradicted fact plus an ambiguous one => run F. Vault reference incomplete => unknown.
+    # It also relies on a compiled claim whose first Source was never read: f008 non_compliant (O6 trigger).
     recs.append(record("SYN04", [fact("F1", asserts="contradicts"), fact("F2", asserts="unknown")],
+                       claims=[claim(PAGE + "#^c5", f008={"value": "non_compliant", "reason": None})],
                        wv=wcc(U, "incomplete", "REFERENCE_INCOMPLETE")))
     # SYN05 verified compiled reuse: P0 F (no valid source), P1 T.
     cr = reuse(PAGE + "#^c3", "current", "current", "present_at_listed_version", "observed_match",
@@ -161,6 +165,10 @@ def valid_records():
                        wv=wcc(T, "complete")))
     # SYN08 unanswerable, proper abstention: excluded from P0/P1.
     recs.append(record("SYN08", [], answerable=False, mode="abstained"))
+    # SYN10 purely historical question: wcc_gold not_applicable from the manifest (O4); baseline arm.
+    recs.append(record("SYN10", [fact("F1")], wg=wcc(NA, NA, gold=True)))
+    recs[-1]["run"]["wcc_gold"]["as_of"] = None
+    recs[-1]["run"]["wcc_gold"]["gold_currentness_checked"] = U
     # SYN09 rejected-only candidate: valid_source_reached false (v1.2 step 3), fact verified from source text
     # that is not a valid source => P0 F; no compiled path => P1 F.
     f1 = fact("F1", read_gold=False, kind="source", proposed=[REJECTED])
@@ -171,15 +179,56 @@ def valid_records():
 def manifest():
     arms = {"SYN01": "baseline", "SYN02": "compiled", "SYN03": "compiled", "SYN04": "compiled",
             "SYN05": "compiled", "SYN06": "compiled", "SYN07": "compiled", "SYN08": "baseline",
-            "SYN09": "baseline"}
+            "SYN09": "baseline", "SYN10": "baseline"}
     pk = {}
     for pid, arm in sorted(arms.items()):
         pk[pid] = {"answerable": pid != "SYN08", "arm_kind": arm,
-                   "wcc_gold_reference": {"id": "ref-gold-syn", "version": "g-fake-0002" if pid == "SYN02" else "g-fake-0001"}}
+                   "wcc_gold_scope": "historical_only" if pid == "SYN10" else "current"}
+        if pid != "SYN10":
+            pk[pid]["wcc_gold_reference"] = {"id": "ref-gold-syn",
+                                             "version": "g-fake-0002" if pid == "SYN02" else "g-fake-0001"}
         if arm == "compiled":
             pk[pid]["wcc_vault_reference"] = {"id": "ref-vault-syn", "version": "v-fake-0001"}
-    return {"note": "Synthetic manifest. arm_kind decides wcc_vault applicability; judges never choose not_applicable.",
-            "packets": pk}
+    return {"note": "Synthetic manifest. arm_kind and wcc_gold_scope decide applicability; judges never choose "
+                    "not_applicable. The one approved currentness reference is invented to exercise the M1 "
+                    "binding; no real approved reference exists.",
+            "packets": pk,
+            "approved_currentness_references": [
+                {"claim_ref": PAGE + "#^c3", "source_ref": "notes/hive-log-2040-03.md",
+                 "source_version": "sha256:fake0301", "reference_id": "ref-gold-syn",
+                 "reference_version": "g-fake-0001", "as_of": "2040-06-30"}]}
+
+
+def bad_manifests():
+    """Malformed manifests for the M2 CLI and API tests."""
+    good = manifest()
+    out = {}
+    m = copy.deepcopy(good); del m["packets"]["SYN03"]["wcc_vault_reference"]
+    out["missing-vault-binding.json"] = m
+    m = copy.deepcopy(good); m["packets"]["SYN03"]["arm_kind"] = "compiled-ish"
+    out["bad-arm-kind.json"] = m
+    m = copy.deepcopy(good); del m["packets"]["SYN01"]["wcc_gold_reference"]
+    out["missing-gold-binding.json"] = m
+    m = copy.deepcopy(good); m["packets"] = {}
+    out["empty-packets.json"] = m
+    m = copy.deepcopy(good); m["approved_currentness_references"][0]["as_of"] = ""
+    out["malformed-approved-reference.json"] = m
+    return out
+
+
+def legacy_answerability_unknown():
+    """Closure m2: a v1-schema record whose answerability cannot be read (invented)."""
+    rec = record("SYN11", [fact("F1")])
+    rec["schema_version"] = "cli002-r2-t1/1"
+    rec["protocol_version"] = "1.1"
+    for f in rec["facts"]:
+        del f["compiled_reuse"]
+    run = rec["run"]
+    run["proper_abstention"] = {"value": U, "reason": "TRACE_INCOMPLETE"}
+    run["wrong_current_claim"] = obs(F)
+    for k in ("answerable", "wcc_gold", "wcc_vault"):
+        del run[k]
+    return rec
 
 
 def invalid_cases():
@@ -211,6 +260,16 @@ def invalid_cases():
     add("wcc-gold-unchecked-determinate.jsonl", r, "W5-gold-currentness", "determinate wcc_gold from an unchecked gold")
     r = copy.deepcopy(by["SYN07"]); r["compiled_claims"][0]["f008"] = {"value": "non_compliant", "reason": None}
     add("history-row-f008-decided.jsonl", r, "H1-f008-derivation-v12", "History row given a decided f008")
+    r = copy.deepcopy(by["SYN05"]); r["facts"][0]["compiled_reuse"]["claim_ref"] = None
+    add("reuse-true-null-claim-ref.jsonl", r, "R5-positive-reuse-binding", "positive reuse with no claim")
+    r = copy.deepcopy(by["SYN05"]); r["facts"][0]["compiled_reuse"]["events"] = []
+    add("reuse-true-no-events.jsonl", r, "R5-positive-reuse-binding", "positive reuse with no trace events")
+    r = copy.deepcopy(by["SYN05"]); r["facts"][0]["compiled_reuse"]["source_version"] = None
+    add("reuse-true-no-source-version.jsonl", r, "R5-positive-reuse-binding", "positive reuse with no source version")
+    r = copy.deepcopy(by["SYN05"]); r["facts"][0]["compiled_reuse"]["claim_ref"] = "records/hive-readout-2040-05.md"
+    add("reuse-true-unanchored-claim.jsonl", r, "R5-positive-reuse-binding", "positive reuse from a page without a claim anchor")
+    r = copy.deepcopy(by["SYN05"]); r["facts"][0]["compiled_reuse"]["claim_position"] = "record_unanchored"
+    add("reuse-true-from-record.jsonl", r, "R1-compiled-reuse-derivation", "Record treated as a positive reuse path (O5)")
     r = copy.deepcopy(by["SYN01"]); del r["facts"][0]["fact_verified"]
     add("missing-fact-field.jsonl", r, "missing required 'fact_verified'", "record missing a required observation")
     r = copy.deepcopy(by["SYN01"]); r["schema_version"] = "cli002-r2-t1/9"
@@ -237,6 +296,13 @@ def main():
         index.append({"file": name, "expect": expect, "why": why})
     with open(os.path.join(HERE, "invalid", "cases.json"), "w", encoding="utf-8") as fh:
         fh.write(json.dumps(index, sort_keys=True, indent=2, ensure_ascii=True) + "\n")
+    os.makedirs(os.path.join(HERE, "manifests"), exist_ok=True)
+    for name, m in sorted(bad_manifests().items()):
+        with open(os.path.join(HERE, "manifests", name), "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(m, sort_keys=True, indent=2, ensure_ascii=True) + "\n")
+    with open(os.path.join(HERE, "manifests", "not-json.json"), "w", encoding="utf-8") as fh:
+        fh.write("{not json\n")
+    dump(os.path.join(HERE, "legacy-answerability-unknown.jsonl"), [legacy_answerability_unknown()])
 
 
 if __name__ == "__main__":

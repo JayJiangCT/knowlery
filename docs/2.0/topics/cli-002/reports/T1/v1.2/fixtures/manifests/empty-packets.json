@@ -1,0 +1,14 @@
+{
+  "approved_currentness_references": [
+    {
+      "as_of": "2040-06-30",
+      "claim_ref": "concepts/hive-inspection.md#^c3",
+      "reference_id": "ref-gold-syn",
+      "reference_version": "g-fake-0001",
+      "source_ref": "notes/hive-log-2040-03.md",
+      "source_version": "sha256:fake0301"
+    }
+  ],
+  "note": "Synthetic manifest. arm_kind and wcc_gold_scope decide applicability; judges never choose not_applicable. The one approved currentness reference is invented to exercise the M1 binding; no real approved reference exists.",
+  "packets": {}
+}
