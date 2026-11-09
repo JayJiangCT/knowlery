@@ -2,12 +2,11 @@
 
 - **Status:** ACCEPTED · 2026-11-08 (Owner approved in conversation; recorded by Agent on Owner's authorization, following the same convention as the KF v1.0 acceptance record). Items in §5 "Open" remain OPEN.
 - **Refines:** CLI-001 (CLI implements KF, does not define it; `.knowlery/` is rebuildable), GR-008 (layered Evidence Pack), GR-010 (three-operation Pilot), SK-001 (Level 0 remains supported without the CLI).
-- **Suggested location:** `docs/2.0/decisions/2026-11-08-knowledge-model-serialization-and-derived-index.md`, with a `CLI-003` row in `docs/2.0/DECISIONS.md`.
 - **Trigger:** Owner proposal (2026-11-08) to move the compiled Wiki from Markdown to JSONL to reduce runtime parsing cost and Obsidian CLI dependence. Reviewed independently by two Cloud Agents and one double review; all three converged on the position below.
 
 ---
 
-## 1. Decision (proposed)
+## 1. Decision
 
 1. **Markdown remains the canonical serialization of compiled knowledge.** The Knowledge Format v1.0 page contract (frontmatter, fixed section order, `^cN` anchors, `## Sources` lines) is the authoritative on-disk representation. Baselines A-002 (Markdown-first) and "Obsidian is a first-class environment" are unchanged.
 
@@ -55,5 +54,5 @@
 
 ## 6. Status discipline
 
-- All items in §1 are PROPOSED until the Owner approves. Approval records them as ACCEPTED with this date; nothing here authorizes implementation beyond the already-approved Pilot scope.
+- §1 items are ACCEPTED as of 2026-11-08. Nothing here authorizes implementation beyond the already-approved Pilot scope (GR-010).
 - Figures cited from PR #95 and the Level 0 experiment are as recorded in the repository; this record did not re-run them.
