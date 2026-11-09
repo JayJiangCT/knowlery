@@ -36,7 +36,7 @@ Git 不记录空目录，所以新区域目前通过 README 保留，**无可执
 | P3 — Integration | 改造 Skills、CLI/Adapter、MCP，按需迁入 Obsidian UI | 新旧数据迁移与工具兼容验收 |
 | P4 — Release | 版本策略、迁移/回滚说明、CI、npm 与插件发布验证 | 满足升级安全与跨平台验收，再考虑并入 main |
 
-**进度注记（2026-11-09）**：P0 已完成。P1 中的 Format 部分已由 [Knowledge Format v1.0](../../format/KNOWLEDGE-FORMAT-v1.0.md)（ACCEPTED · 2026-11-02）完成；1.x 复用审计与 Pilot 对照样本冻结在仓库内尚无记录。P2 的设计依据（GR-010、CLI-003、CLI-004）已 ACCEPTED，实现未开始。
+**进度注记（2026-11-09）**：P0 已完成。P1 中的 Format 部分已由 [Knowledge Format v1.0](../../format/KNOWLEDGE-FORMAT-v1.0.md)（ACCEPTED · 2026-11-02）完成；1.x 复用审计与 Pilot 对照样本冻结未作为 P1 完成项登记于 [DECISIONS.md](./DECISIONS.md)。P2 的设计依据 CLI-001、CLI-003、CLI-004 已 ACCEPTED（GR-010 仅为 ACCEPTED FOR PILOT，其后续 Round 2 已由 E-003 终止），实现未开始（`evals/experiments/write-safety/proto/` 下的 WS-001 原型是实验证据，不是产品实现）。
 
 ## 复用审计规则
 
