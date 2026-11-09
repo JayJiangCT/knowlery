@@ -141,6 +141,8 @@ Act on your own when evidence quality, impact scope and reversibility are all go
 
 No tool enforces any of this in this vault: writes are not atomic, concurrent edits are not detected, `protected` is not locked. These are conventions you keep. Say so when it matters.
 
+Without the Knowlery CLI, the structured index under `.knowlery/`, automatic parsing and efficient retrieval are lost; the knowledge itself is not.
+
 ## 10. Writing to `log.md`
 
 One line per write, newest first under a `## YYYY-MM-DD` heading: `- <HH:MM> · <actor> · <page> · <what changed, one clause>`.
