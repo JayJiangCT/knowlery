@@ -16,7 +16,7 @@
 
 4. **Index freshness is checked lazily on every CLI invocation, not by a resident process.** Each call compares file mtimes against the per-file manifest; on change, compares digests; re-parses only changed files before serving results. This satisfies CLI-001 ("every operation re-verifies authoritative state from persistent files") without a Core Runtime.
 
-5. **One per-file digest manifest, two uses.** The manifest that WS-001 introduces for external-change detection is the same manifest the index uses for invalidation. There is one manifest, recorded per file (never a single vault-wide hash), so both uses remain possible. WS-001 does not need to implement indexing, only to not preclude it.
+5. **One per-file digest manifest, two uses.** Any manifest the CLI keeps for external-change detection (F-007 Write Safety; currently prototyped by experiment task WS-001, PROPOSED) is the same manifest the index uses for invalidation. It is recorded per file, never as a single vault-wide hash, so both uses remain possible. Write-safety work does not need to implement indexing, only to not preclude it.
 
 6. **Level 0 does not depend on the index.** An Agent without the CLI reads Markdown directly, as today. `CONVENTIONS.md` §7 ("what is lost without a Connector") gains one line: without the CLI, the structured index, automatic parsing and efficient retrieval are lost; the knowledge itself is not.
 
@@ -41,7 +41,7 @@
 ## 4. Consequences for in-flight work
 
 - **CLI Pilot (GR-010):** implementation order `search → inspect → explore`; architecture is parser → object model → index → operations. The parser's real complexity is reported in the Pilot (lines, exception classes handled, behavior on non-conforming input) — this is the R2 evidence.
-- **WS-001:** manifest must be per-file digests. No other change.
+- **Write safety (F-007; WS-001 prototype):** any change-detection manifest must use per-file digests. No other change.
 - **`CONVENTIONS.md`:** one line added to §7 (see §1.6). This is a conventions-page edit, not a KF semantic change; it still goes through the normal review path.
 - **Knowledge Format v1.0:** unchanged.
 
