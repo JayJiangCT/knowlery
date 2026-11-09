@@ -14,6 +14,7 @@ Topic session: the Knowlery repo main session that ran Round 1 orchestration. It
 
 ## Round 2
 
+**Stopped 2026-11-09 (E-003).** Gates PILOT, v3, B, C, A will not be authorized. Remaining materials are archived as-is.
 - **Plan:** [PLAN.md](PLAN.md) (Revision 2).
 - **Owner approvals:** Gate NOW (T0 and T1) only, approved on 2026-11-04. T1-W approved as a deviation on 2026-11-05.
 - **Gate NOW summary:** [ROUND-2-SUMMARY.md](ROUND-2-SUMMARY.md), ready for Owner review 2026-11-05, then for the Cloud Agent. Gates PILOT, v3, B, C and A need separate Owner approval and are not started.
