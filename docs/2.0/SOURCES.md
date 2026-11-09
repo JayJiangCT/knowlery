@@ -14,7 +14,7 @@
 
 - 此次任务可用的是目标文档和前期讨论的文字材料；既有“高层架构两张原图”未以可直接提交的原始图片文件提供。因此 [ARCHITECTURE.md](./ARCHITECTURE.md) 中 Mermaid 图是**重绘**，不是图片原稿。
 - 过去审查中的性能数字、194 篇 Wiki 分类、G0/G1 现象不能自动作为 2.0 的新评测结果。
-- Knowledge Format 目前是 **v0 Working Draft**；没有经批准的最终字段表、统一笔记 ID 规则、版本快照实现或 Conformance Test 结果。
+- Knowledge Format **v1.0 已于 2026-11-02 ACCEPTED**（F-001/002/003/004/006/008；见 [决策记录](./decisions/2026-11-02-knowledge-format-v1.0.md)）：字段表、slug/`^cN` 身份规则与来源版本语义已定。F-005、F-007 仍为 PARTIAL；版本校验与安全写入的 CLI 实现、Level 1 CLI 的 Conformance Test 结果尚不存在（Level 0 实验结果见 [format/experiments/level0/RESULTS.md](../../format/experiments/level0/RESULTS.md)）。*（本条原文写于 2026-10-29，当时为 v0 Working Draft；2026-11-09 更新。）*
 - 目录骨架是本轮 Bootstrap 的工程建议，不是 2.0 已经完成模块迁移的声明。
 
 ## 后续维护约定
