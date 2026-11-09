@@ -40,6 +40,7 @@
         "REFERENCE_MISSING",
         "REFERENCE_INCOMPLETE",
         "REFERENCE_VERSION_MISMATCH",
+        "RECORD_WITHOUT_CLAIM_ANCHOR",
         "GOLD_NOT_CURRENTNESS_CHECKED",
         "CURRENTNESS_NOT_ESTABLISHED",
         "EVIDENCE_PATH_NOT_OBSERVED",
@@ -828,6 +829,8 @@
       "required": [
         "applicable",
         "claim_ref",
+        "source_ref",
+        "source_version",
         "claim_position",
         "temporal_scope",
         "verification_event",
@@ -860,12 +863,32 @@
             }
           ]
         },
+        "source_ref": {
+          "description": "The vault-file Source the verification event and digest comparison refer to (closure M1).",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_version": {
+          "description": "The Source version listed on the claim's Sources line (closure M1).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "claim_position": {
+          "description": "record_unanchored = support came from a Record page with no claim anchor; never a valid P1 path (O5).",
           "type": "string",
           "enum": [
             "current",
             "disputed",
             "history_superseded",
+            "record_unanchored",
             "unknown",
             "not_applicable"
           ]
@@ -951,7 +974,7 @@
       }
     },
     "wcc_gold": {
-      "description": "Does the answer contradict the independently adjudicated current state at the reference's as_of date? All arms.",
+      "description": "Does the answer contradict the independently adjudicated current state at the reference's as_of date? All arms. not_applicable only for purely historical questions, applied from the manifest (O4).",
       "type": "object",
       "required": [
         "value",
@@ -973,7 +996,8 @@
           "enum": [
             true,
             false,
-            "unknown"
+            "unknown",
+            "not_applicable"
           ]
         },
         "reason": {
@@ -1001,7 +1025,8 @@
             "incomplete",
             "absent",
             "version_mismatch",
-            "unknown"
+            "unknown",
+            "not_applicable"
           ]
         },
         "note": {
@@ -1093,7 +1118,7 @@
       "required": [
         "schema_version",
         "record_kind",
-        "arm_manifest",
+        "mode",
         "per_annotator"
       ],
       "additionalProperties": false,
@@ -1104,11 +1129,12 @@
         "record_kind": {
           "const": "endpoint_summary"
         },
-        "arm_manifest": {
+        "mode": {
+          "description": "authoritative = a validated packet manifest was applied; provisional = no manifest, WCC and P1 compiled-path counts carry no decision weight (closure M2).",
           "type": "string",
           "enum": [
-            "absent",
-            "applied"
+            "authoritative",
+            "provisional"
           ]
         },
         "per_annotator": {

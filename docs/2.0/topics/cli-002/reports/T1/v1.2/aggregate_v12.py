@@ -23,6 +23,7 @@ import argparse
 import copy
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -92,6 +93,8 @@ def derive_compiled_reuse(c):
     if c["applicable"] == "unknown":
         return U, "F008_USE_UNCLEAR"
     pos, scope = c["claim_position"], c["temporal_scope"]
+    if pos == "record_unanchored":
+        return U, "RECORD_WITHOUT_CLAIM_ANCHOR"  # O5: a Record is never a P1 path
     # Definite failures first (false wins over unknown).
     if pos == "disputed":
         return F, None
@@ -130,12 +133,28 @@ def fact_p0(f):
     return tri_and([_tri(f["fact_verified"]["value"]), _tri(f["valid_source_reached"]["value"])])
 
 
-def compiled_path(f):
+def reuse_binding(cr):
+    """The claim / source / version / currentness reference a compiled-reuse `true` rests on."""
+    return (cr["claim_ref"], cr["source_ref"], cr["source_version"], cr["currentness_basis"], cr["as_of"])
+
+
+def approved_bindings(manifest):
+    """Bindings from a validated manifest's approved, dated currentness references (O2).
+    None approved today, so a real manifest gives an empty set."""
+    out = set()
+    for a in (manifest or {}).get("approved_currentness_references", []):
+        out.add((a["claim_ref"], a["source_ref"], a["source_version"],
+                 "%s@%s" % (a["reference_id"], a["reference_version"]), a["as_of"]))
+    return out
+
+
+def compiled_path(f, approved=frozenset()):
     """The compiled-reuse disjunct of P1, as a three-valued input.
 
-    v1.2 records carry compiled_reuse. Legacy v1 records do not: if the fact's support
-    involved a compiled claim, the reuse conditions were never observed (unknown);
-    otherwise the path does not apply (false in the disjunction).
+    v1.2 records carry compiled_reuse. A recorded `true` counts only if its exact
+    claim/source/version/reference binding is in `approved` (closure M1); otherwise it
+    is unknown, never true. Legacy v1 records carry nothing: compiled support gives
+    unknown, source-only support gives false (the path does not apply).
     """
     cr = f.get("compiled_reuse")
     if cr is None:
@@ -144,13 +163,17 @@ def compiled_path(f):
             return U
         return F
     v = cr["value"]
-    return F if v == NA else _tri(v)
+    if v == NA:
+        return F
+    if v is T and reuse_binding(cr) not in approved:
+        return U
+    return _tri(v)
 
 
-def fact_p1(f):
-    """P1 per fact: fact_verified AND (valid_source_reached OR compiled_path)."""
+def fact_p1(f, approved=frozenset()):
+    """P1 per fact: fact_verified AND (valid_source_reached OR compiled_path). Exploratory."""
     return tri_and([_tri(f["fact_verified"]["value"]),
-                    tri_or([_tri(f["valid_source_reached"]["value"]), compiled_path(f)])])
+                    tri_or([_tri(f["valid_source_reached"]["value"]), compiled_path(f, approved)])])
 
 
 def record_answerable(rec):
@@ -259,7 +282,20 @@ def semantic_errors_v12(rec):
         if cr["currentness"] in ("established_current", "established_not_current"):
             check(fid, "R3-currentness-basis", bool(cr["currentness_basis"]) and bool(cr["as_of"]),
                   "established currentness needs currentness_basis and as_of")
-        if cr["applicable"] == "yes" and cr["claim_position"] != "history_superseded":
+        if cr["value"] is T:
+            # Closure M1: a positive path must name an anchored claim, its Source and version,
+            # the trace events, and a dated reference. Binding to an approved reference is
+            # checked against the manifest by summarize().
+            check(fid, "R5-positive-reuse-binding",
+                  bool(cr["claim_ref"]) and re.search(r"#\^c[0-9]+$", cr["claim_ref"]) is not None
+                  and bool(cr["source_ref"]) and bool(cr["source_version"]) and bool(cr["events"])
+                  and bool(cr["currentness_basis"]) and bool(cr["as_of"]),
+                  "compiled_reuse true needs an anchored claim_ref, source_ref, source_version, events, "
+                  "currentness_basis and as_of")
+        if cr["applicable"] == "no":
+            check(fid, "R2-source-binding-empty", cr["source_ref"] is None and cr["source_version"] is None,
+                  "applicable no requires source_ref and source_version null")
+        if cr["applicable"] == "yes" and cr["claim_position"] not in ("history_superseded", "record_unanchored"):
             # A superseded History entry relied on for a current-state question is not support
             # (Rule A), so support_kind may be none there; everywhere else reuse implies compiled support.
             check(fid, "R4-reuse-needs-compiled-support",
@@ -317,16 +353,73 @@ def _endpoint_block():
 
 def _finish(block):
     total = block["true"] + block["false"] + block["unknown"]
+    det = block["true"] + block["false"]
     block["denominator_answerable_total"] = total
-    block["denominator_determinate_only"] = block["true"] + block["false"]
+    block["denominator_determinate_only"] = det
     block["pass_over_answerable_total"] = "%d/%d" % (block["true"], total)
-    block["pass_over_determinate_only"] = "%d/%d" % (block["true"], block["true"] + block["false"])
+    # Closure m1: a rate among determinate runs only. It assumes nothing about the
+    # unknown runs, which may differ systematically; read it beside unknown_share.
+    block["pass_conditional_on_determinate"] = "%d/%d" % (block["true"], det)
+    block["unknown_share"] = "%d/%d" % (block["unknown"], total)
     return block
+
+
+_MANIFEST_TOP = {"note", "packets", "approved_currentness_references"}
+_PACKET_KEYS = {"answerable", "arm_kind", "wcc_gold_scope", "wcc_gold_reference", "wcc_vault_reference"}
+_APPROVED_KEYS = {"claim_ref", "source_ref", "source_version", "reference_id", "reference_version", "as_of"}
+
+
+def _is_ref(o):
+    return isinstance(o, dict) and set(o) == {"id", "version"} and \
+        all(isinstance(o[k], str) and o[k] for k in ("id", "version"))
+
+
+def validate_manifest(m):
+    """Closure M2: structural checks on a packet manifest. Returns error strings."""
+    errs = []
+    if not isinstance(m, dict) or not isinstance(m.get("packets"), dict) or not m["packets"]:
+        return ["manifest: needs a non-empty 'packets' object"]
+    extra = set(m) - _MANIFEST_TOP
+    if extra:
+        errs.append("manifest: unknown top-level keys %s" % sorted(extra))
+    for pid, p in sorted(m["packets"].items()):
+        w = "manifest packet %s" % pid
+        if not isinstance(p, dict):
+            errs.append("%s: not an object" % w)
+            continue
+        if set(p) - _PACKET_KEYS:
+            errs.append("%s: unknown keys %s" % (w, sorted(set(p) - _PACKET_KEYS)))
+        if not isinstance(p.get("answerable"), bool):
+            errs.append("%s: answerable must be true or false" % w)
+        arm = p.get("arm_kind")
+        if arm not in ("baseline", "compiled"):
+            errs.append("%s: arm_kind must be baseline or compiled" % w)
+        scope = p.get("wcc_gold_scope")
+        if scope not in ("current", "historical_only"):
+            errs.append("%s: wcc_gold_scope must be current or historical_only" % w)
+        if scope == "current" and not _is_ref(p.get("wcc_gold_reference")):
+            errs.append("%s: missing or malformed wcc_gold_reference binding" % w)
+        if scope == "historical_only" and "wcc_gold_reference" in p:
+            errs.append("%s: historical_only packet must not bind a wcc_gold_reference" % w)
+        if arm == "compiled" and not _is_ref(p.get("wcc_vault_reference")):
+            errs.append("%s: missing or malformed wcc_vault_reference binding" % w)
+        if arm == "baseline" and "wcc_vault_reference" in p:
+            errs.append("%s: baseline packet must not bind a wcc_vault_reference" % w)
+    approved = m.get("approved_currentness_references", [])
+    if not isinstance(approved, list):
+        errs.append("manifest: approved_currentness_references must be a list")
+    else:
+        for i, a in enumerate(approved):
+            if not isinstance(a, dict) or set(a) != _APPROVED_KEYS or \
+                    not all(isinstance(a[k], str) and a[k] for k in _APPROVED_KEYS):
+                errs.append("manifest: approved_currentness_references[%d] malformed" % i)
+    return errs
 
 
 def _manifest_errors(by, manifest):
     errs = []
-    expected = manifest.get("packets", {})
+    expected = manifest["packets"]
+    approved = approved_bindings(manifest)
     annotators = sorted({a for a, _ in by})
     for pid in sorted(expected):
         for a in annotators:
@@ -337,25 +430,42 @@ def _manifest_errors(by, manifest):
         if m is None:
             errs.append("record not in manifest: %s / %s" % (a, pid))
             continue
-        if rec["schema_version"] == V12:
-            if rec["run"]["answerable"] != m["answerable"]:
-                errs.append("answerable differs from manifest: %s / %s" % (a, pid))
-            wv = rec["run"]["wcc_vault"]
-            if m["arm_kind"] == "baseline" and wv["value"] != NA:
-                errs.append("wcc_vault judged on a baseline-arm packet: %s / %s" % (a, pid))
-            if m["arm_kind"] == "compiled" and wv["value"] == NA:
-                errs.append("wcc_vault not_applicable on a compiled-arm packet: %s / %s" % (a, pid))
-            for name in ("wcc_gold", "wcc_vault"):
-                ref = m.get(name + "_reference")
-                w = rec["run"][name]
-                if ref and w["reference_version"] is not None and \
-                        (w["reference_id"], w["reference_version"]) != (ref["id"], ref["version"]):
+        if rec["schema_version"] != V12:
+            continue
+        run = rec["run"]
+        if run["answerable"] != m["answerable"]:
+            errs.append("answerable differs from manifest: %s / %s" % (a, pid))
+        applicable = {"wcc_gold": m["wcc_gold_scope"] == "current", "wcc_vault": m["arm_kind"] == "compiled"}
+        for name in ("wcc_gold", "wcc_vault"):
+            w = run[name]
+            if not applicable[name]:
+                if w["value"] != NA:
+                    errs.append("%s judged where the manifest says not applicable (%s): %s / %s" % (
+                        name, "baseline-arm" if name == "wcc_vault" else "historical-only", a, pid))
+                continue
+            if w["value"] == NA:
+                errs.append("%s not_applicable where the manifest says applicable (%s): %s / %s" % (
+                    name, "compiled-arm" if name == "wcc_vault" else "current-state", a, pid))
+                continue
+            ref = m[name + "_reference"]
+            if w["reference_id"] is not None or w["reference_version"] is not None:
+                if (w["reference_id"], w["reference_version"]) != (ref["id"], ref["version"]):
                     errs.append("%s reference differs from manifest: %s / %s" % (name, a, pid))
+        for f in rec["facts"]:
+            cr = f["compiled_reuse"]
+            if cr["value"] is T and reuse_binding(cr) not in approved:
+                errs.append("compiled_reuse true without an approved currentness binding: %s / %s %s" % (
+                    a, pid, f["fact_id"]))
     return errs
 
 
 def summarize(records, manifest=None):
-    """records: validated annotation dicts. Returns (summary, errors)."""
+    """records: validated annotation dicts. Returns (summary, errors).
+
+    With a manifest, the manifest is validated first and the summary is authoritative.
+    Without one, the summary is provisional: WCC counts carry no decision weight and
+    every compiled-reuse `true` is counted as unknown (closure M1, M2).
+    """
     by = {}
     errs = []
     for rec in records:
@@ -364,21 +474,30 @@ def summarize(records, manifest=None):
             errs.append("duplicate record: %s / %s" % key)
         by[key] = rec
     if manifest is not None:
+        merr = validate_manifest(manifest)
+        if merr:
+            return None, merr
         errs.extend(_manifest_errors(by, manifest))
+    approved = approved_bindings(manifest) if manifest is not None else frozenset()
+    packets = (manifest or {}).get("packets", {})
     per = {}
     for (a, pid) in sorted(by):
         rec = by[(a, pid)]
         s = per.setdefault(a, {
             "records": 0, "records_by_schema": {}, "unanswerable_excluded": 0,
-            "P0": _endpoint_block(), "P1": _endpoint_block(),
-            "fact_P0": {}, "fact_P1": {}, "P1_minus_P0_runs": {},
+            "P0": _endpoint_block(), "P1_exploratory": _endpoint_block(),
+            "fact_P0": {}, "fact_P1_exploratory": {}, "P1_minus_P0_runs": {},
+            "compiled_reuse_true_unbound": 0,
             "wcc_gold": {}, "wcc_vault": {}, "legacy_wrong_current_claim": {},
-            "proper_abstention": {},
+            "proper_abstention": {}, "f008": {}, "f008_review_trigger": [],
         })
         s["records"] += 1
         _bump(s["records_by_schema"], rec["schema_version"])
+
+        def p1(f):
+            return fact_p1(f, approved)
         try:
-            r0, r1 = run_endpoint(rec, fact_p0), run_endpoint(rec, fact_p1)
+            r0, r1 = run_endpoint(rec, fact_p0), run_endpoint(rec, p1)
         except ValueError as e:
             errs.append(str(e))
             continue
@@ -387,29 +506,38 @@ def summarize(records, manifest=None):
             _bump(s["proper_abstention"], v1._s(rec["run"]["proper_abstention"]["value"]))
         else:
             _bump(s["P0"], v1._s(r0) if r0 != "answerability_unknown" else r0)
-            _bump(s["P1"], v1._s(r1) if r1 != "answerability_unknown" else r1)
-            _bump(s["P1_minus_P0_runs"], "P0=%s|P1=%s" % (v1._s(r0), v1._s(r1)))
-            for f in rec["facts"]:
-                _bump(s["fact_P0"], v1._s(fact_p0(f)))
-                _bump(s["fact_P1"], v1._s(fact_p1(f)))
+            _bump(s["P1_exploratory"], v1._s(r1) if r1 != "answerability_unknown" else r1)
+            if r0 != "answerability_unknown":
+                _bump(s["P1_minus_P0_runs"], "P0=%s|P1=%s" % (v1._s(r0), v1._s(r1)))
+                for f in rec["facts"]:
+                    _bump(s["fact_P0"], v1._s(fact_p0(f)))
+                    _bump(s["fact_P1_exploratory"], v1._s(fact_p1(f, approved)))
+        for f in rec["facts"]:
+            cr = f.get("compiled_reuse")
+            if cr is not None and cr["value"] is T and reuse_binding(cr) not in approved:
+                s["compiled_reuse_true_unbound"] += 1
+        # O6 (G-c): every non_compliant claim goes to the pre-registered adverse-case review.
+        for c in rec["compiled_claims"]:
+            _bump(s["f008"], c["f008"]["value"])
+            if c["f008"]["value"] == "non_compliant":
+                s["f008_review_trigger"].append("%s %s" % (pid, c["claim_ref"]))
         run = rec["run"]
         if rec["schema_version"] == V12:
-            arm = (manifest or {}).get("packets", {}).get(pid, {}).get("arm_kind")
             _bump(s["wcc_gold"], v1._s(run["wcc_gold"]["value"]))
-            wv = NA if arm == "baseline" else run["wcc_vault"]["value"]
-            _bump(s["wcc_vault"], v1._s(wv))
+            arm = packets.get(pid, {}).get("arm_kind")
+            _bump(s["wcc_vault"], v1._s(NA if arm == "baseline" else run["wcc_vault"]["value"]))
         if "wrong_current_claim" in run:
             _bump(s["legacy_wrong_current_claim"], v1._s(run["wrong_current_claim"]["value"]))
     for s in per.values():
         _finish(s["P0"])
-        _finish(s["P1"])
+        _finish(s["P1_exploratory"])
+        s["f008_review_trigger"].sort()
     summary = {
         "schema_version": V12, "record_kind": "endpoint_summary",
-        "arm_manifest": "applied" if manifest is not None else "absent",
+        "mode": "authoritative" if manifest is not None else "provisional",
         "per_annotator": per,
     }
     return summary, errs
-
 
 # --------------------------------------------------------------------------
 # Self-test (deterministic; no timings in the output)
@@ -475,6 +603,22 @@ def self_test():
     se = v1.schema_errors(summ, s12, s12)
     record("summary validates against v1.2 schema", not se, "; ".join(se[:3]))
 
+    # 4b. Closure M2: malformed manifests are rejected; no manifest gives a provisional summary.
+    for name in sorted(os.listdir(_fx("manifests"))):
+        try:
+            with open(_fx("manifests", name), encoding="utf-8") as fh:
+                bad = json.load(fh)
+        except ValueError:
+            continue  # unreadable JSON is a CLI-level case, tested in test_aggregate_v12.py
+        bs, be = summarize(objs, bad)
+        record("malformed manifest %s rejected" % name, bs is None and bool(be), "; ".join(be[:2]))
+    psum, perr = summarize(objs)
+    record("no manifest => provisional mode", psum["mode"] == "provisional" and not perr)
+    record("no manifest => compiled-reuse true not counted true",
+           psum["per_annotator"]["annotator-1"]["compiled_reuse_true_unbound"] == 1 and
+           psum["per_annotator"]["annotator-1"]["P1_exploratory"]["true"] ==
+           summ["per_annotator"]["annotator-1"]["P1_exploratory"]["true"] - 1)
+
     # 5. A missing record is a validation failure, not a false.
     short = [o for o in objs if o["packet_id"] != "SYN03"]
     summ2, errs2 = summarize(short, manifest)
@@ -510,7 +654,7 @@ def main(argv=None):
     g.add_argument("--self-test", action="store_true")
     g.add_argument("--validate", nargs="+", metavar="JSONL")
     g.add_argument("--summarize", nargs="+", metavar="JSONL")
-    ap.add_argument("--manifest", help="packet manifest: answerable, arm_kind, reference ids/versions")
+    ap.add_argument("--manifest", help="validated packet manifest (answerable, arm_kind, wcc_gold_scope, reference bindings, approved currentness references). Without it the summary is provisional.")
     ap.add_argument("--out", help="write the summary here instead of stdout")
     a = ap.parse_args(argv)
     if a.self_test:
@@ -533,8 +677,15 @@ def main(argv=None):
         return 2
     manifest = None
     if a.manifest:
-        with open(a.manifest, encoding="utf-8") as fh:
-            manifest = json.load(fh)
+        try:
+            with open(a.manifest, encoding="utf-8") as fh:
+                manifest = json.load(fh)
+        except (OSError, ValueError) as e:
+            print("SUMMARIZE refused: manifest unreadable: %s" % e, file=sys.stderr)
+            return 2
+    else:
+        print("SUMMARIZE provisional: no --manifest; WCC and P1 compiled-path counts carry no decision weight",
+              file=sys.stderr)
     summ, merrs = summarize([o for _, o in recs], manifest)
     if merrs:
         for e in merrs:

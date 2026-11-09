@@ -50,6 +50,31 @@
     "why": "History row given a decided f008"
   },
   {
+    "expect": "R5-positive-reuse-binding",
+    "file": "reuse-true-null-claim-ref.jsonl",
+    "why": "positive reuse with no claim"
+  },
+  {
+    "expect": "R5-positive-reuse-binding",
+    "file": "reuse-true-no-events.jsonl",
+    "why": "positive reuse with no trace events"
+  },
+  {
+    "expect": "R5-positive-reuse-binding",
+    "file": "reuse-true-no-source-version.jsonl",
+    "why": "positive reuse with no source version"
+  },
+  {
+    "expect": "R5-positive-reuse-binding",
+    "file": "reuse-true-unanchored-claim.jsonl",
+    "why": "positive reuse from a page without a claim anchor"
+  },
+  {
+    "expect": "R1-compiled-reuse-derivation",
+    "file": "reuse-true-from-record.jsonl",
+    "why": "Record treated as a positive reuse path (O5)"
+  },
+  {
     "expect": "missing required 'fact_verified'",
     "file": "missing-fact-field.jsonl",
     "why": "record missing a required observation"

@@ -1,0 +1,125 @@
+{
+  "approved_currentness_references": [
+    {
+      "as_of": "2040-06-30",
+      "claim_ref": "concepts/hive-inspection.md#^c3",
+      "reference_id": "ref-gold-syn",
+      "reference_version": "g-fake-0001",
+      "source_ref": "notes/hive-log-2040-03.md",
+      "source_version": "sha256:fake0301"
+    }
+  ],
+  "note": "Synthetic manifest. arm_kind and wcc_gold_scope decide applicability; judges never choose not_applicable. The one approved currentness reference is invented to exercise the M1 binding; no real approved reference exists.",
+  "packets": {
+    "SYN01": {
+      "answerable": true,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current"
+    },
+    "SYN02": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0002"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN03": {
+      "answerable": true,
+      "arm_kind": "compiled-ish",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN04": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN05": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN06": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN07": {
+      "answerable": true,
+      "arm_kind": "compiled",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current",
+      "wcc_vault_reference": {
+        "id": "ref-vault-syn",
+        "version": "v-fake-0001"
+      }
+    },
+    "SYN08": {
+      "answerable": false,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current"
+    },
+    "SYN09": {
+      "answerable": true,
+      "arm_kind": "baseline",
+      "wcc_gold_reference": {
+        "id": "ref-gold-syn",
+        "version": "g-fake-0001"
+      },
+      "wcc_gold_scope": "current"
+    },
+    "SYN10": {
+      "answerable": true,
+      "arm_kind": "baseline",
+      "wcc_gold_scope": "historical_only"
+    }
+  }
+}

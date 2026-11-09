@@ -1,5 +1,20 @@
 # CLI-002 Round 2 — protocol v1.2 targeted regression: preregistration design
 
+> **Change note, 2026-11-06 (task CLI002-R2-D-V12-CLOSURE-01). Status: PRE-REGISTERED, ANNOTATORS NOT YET STARTED.**
+>
+> - **Authorization.** The Owner approved O8 on 2026-11-06: at most 2 fresh isolated annotators, at most 3 packets, one round, no paid services ([approval](../../reviews/OWNER-APPROVAL-2026-11-06.md)). The rule decisions it depends on (O2–O7) were approved in scope the same day. The "NOT STARTED" banner below is the 2026-11-05 state.
+> - **Frozen before any start.** The case list, the expected outcome per item, the comparison script, the verdict criteria and the input hashes were written and hashed in the approved private store. PREREG time: **2026-11-06T08:10:44Z**. Writing these did not involve any annotator.
+> - **Packets (3).** The two calibration packets from the v1.1 regression, byte-identical, and **one invented synthetic packet for R-A3**. A read-only search of the ten calibration packets found no case where an answer relied on a superseded History entry for a current-state fact. The synthetic packet is built so that Rule A's current-state branch flips the support judgement.
+> - **Items (11), by rule:**
+>   - B: partial support (1).
+>   - E: rejected-only candidate, and when to propose (3).
+>   - A: earlier-state branch (2) and current-state branch (2).
+>   - H: History entries as F-008 rows (2).
+>   - D: date judged only under its own fact (1).
+> - **Verdict.** Per item, rule and overall, as in section 4. MISS or SPLIT in rules A or H is flagged critical. Per the stop rule, a critical error that could reverse a main conclusion gets one explicitly scoped fix and **no second round**. Everything else is recorded as a limitation.
+> - **Dry run.** Before the freeze, the comparison script reproduced the known v1.1 outcomes on the two calibration packets.
+> - **R-A3 gap (§3).** Resolved by option (ii), an invented synthetic packet.
+
 > **NOT STARTED.** No annotator, judge or other session has been started for this regression. Starting it needs a separate Owner approval of new private annotator sessions (Owner decision O-8). This file is the design only; the case list and expected outcomes are drafted in the approved private store and are **not yet hashed or frozen**.
 
 **Task:** CLI002-R2-D-V12-CONTRACT-01, Cloud brief §6 step 5. **Date:** 2026-11-05. **Status:** PROPOSED.

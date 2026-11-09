@@ -1,5 +1,14 @@
 # CLI-002 Round 2 — Metric D v1.2 decision tables (candidate)
 
+> **Change note, 2026-11-06 (task CLI002-R2-D-V12-CLOSURE-01).** The Owner approved O1(c) and the Cloud recommendations O2–O7 as scoped, plus one bounded O8 regression ([approval](../../reviews/OWNER-APPROVAL-2026-11-06.md); status by item in [`V12-OWNER-DECISIONS-RESOLUTION.md`](V12-OWNER-DECISIONS-RESOLUTION.md)). These are ratifications, **not ACCEPTED** entries. Read every "Changes pass/fail (needs Owner)" row below as "approved in scope, 2026-11-06; not frozen". Edits made in this pass:
+> - §1.4: the determinate-only rate is renamed `pass_conditional_on_determinate` and printed beside `unknown_share` (review m1).
+> - §2: authoritative WCC needs a validated manifest; otherwise the output is provisional (M2). `wcc_gold = not_applicable` for purely historical questions (O4).
+> - §3.2: compiled-reuse `true` needs an approved, dated reference bound to the same claim, Source and version (O2, M1). Records never make it `true` (O5).
+> - §3.5: G-c chosen (O6).
+> - §4 row 5: Records handled per O5.
+>
+> The rest of the text is the 2026-11-05 version.
+
 **Task:** CLI002-R2-D-V12-CONTRACT-01. **Date:** 2026-11-05. **Baseline:** `develop/2.0` at `b40bb91`.
 
 **Status: PROPOSED.** Every rule here is a candidate for protocol v1.2 / schema `cli002-r2-t1/2`. Nothing is ACCEPTED, nothing is in use, and no existing file is changed: [`METRICS.md`](METRICS.md), [`METRICS-SCHEMA.json`](METRICS-SCHEMA.json), [`aggregate.py`](aggregate.py), the tests, the fixtures and both protocol versions stay as they are. Round 1 results, `wrong_current_claim`, the consensus annotation and the v1.1 regression are unchanged.
@@ -57,7 +66,7 @@ Both are printed, labelled, for every endpoint. Neither drops `unknown` runs sil
 | `denominator_answerable_total` | `true + false + unknown` | Every validly annotated answerable run |
 | `denominator_determinate_only` | `true + false` | Runs whose value the trace settles |
 | `pass_over_answerable_total` | `true / answerable_total` | Conservative: `unknown` counts against |
-| `pass_over_determinate_only` | `true / determinate_only` | Optimistic: assumes `unknown` runs behave like the rest |
+| `pass_conditional_on_determinate` (was `pass_over_determinate_only`) | `true / determinate_only` | Pass rate among determinate runs only. It assumes nothing about the `unknown` runs, which may differ systematically; always read it beside `unknown_share = unknown / answerable_total` |
 
 The gap between the two is the uncertainty that `unknown` creates. Test: `SummaryCounts.test_p0_counts_and_both_denominators`.
 
@@ -98,7 +107,24 @@ Annotators and judges never see the run's arm (protocol §1). If a judge chose `
 
 **Historical note (fact, public level).** In T1-W, the vault-reference judging condition used lists built from the compiled vault for baseline-arm runs too. Under this table those verdicts would be `not_applicable`; they stay as recorded in their own report and are not re-labelled.
 
-### 2.4 Not settled here
+### 2.3a Manifest is mandatory for authoritative WCC (closure M2, approved 2026-11-06)
+
+`summarize(records, manifest)` validates the manifest first. It rejects:
+
+- a malformed or empty manifest, and unknown keys;
+- an `arm_kind` other than `baseline` / `compiled`, or a `wcc_gold_scope` other than `current` / `historical_only`;
+- a missing `wcc_gold_reference` for a current-state packet, or a missing `wcc_vault_reference` for a compiled packet;
+- a record outside the manifest, an arm or scope mismatch, a reference id/version mismatch;
+- a compiled-reuse `true` whose binding is not approved.
+
+Without a manifest, the summary carries `mode: provisional`, and stderr says so. Its WCC counts carry no decision weight. Tests: `M2Manifest` (API and CLI), `O4HistoricalScope`.
+
+### 2.4 Not settled here (updated 2026-11-06)
+
+- **O4 decided in scope:** a purely historical question gets `wcc_gold = not_applicable`, applied from the manifest (`wcc_gold_scope = historical_only`). For a mixed past-and-present question, only the current-state part is judged.
+
+The original 2026-11-05 text of this section follows.
+
 
 - Whether `wcc_gold` applies to questions that ask only about an earlier state (no current-state component). The candidate schema gives `wcc_gold` no `not_applicable`; such a question would get `unknown` with `REFERENCE_MISSING` unless the Owner adds a scope rule (O-4).
 - The minimum content of a dated gold reference (O-4). This is the v3 gold specification, which is not authorized.
@@ -138,6 +164,17 @@ Applied in order; the first matching row decides. `false` rows come before `unkn
 
 Class: changes pass/fail (needs Owner) — new candidate measure (O-1, O-2). Test: class `CompiledReuse` (10 cases).
 
+**Added 2026-11-06 (O2, O5, closure M1).** Row 2a sits before row 3: a Record page without a claim anchor (`claim_position = record_unanchored`) gives `unknown` · `RECORD_WITHOUT_CLAIM_ANCHOR`, never `true`.
+
+A recorded `true` must also carry:
+
+- an anchored `claim_ref` (`…#^cN`);
+- `source_ref` and `source_version`;
+- trace `events`;
+- `currentness_basis` (`<reference id>@<version>`) and `as_of`.
+
+All of this is rule `R5`. Even then, it counts as `true` in P1 only if the exact binding (claim, Source, version, reference, `as_of`) appears among a validated manifest's `approved_currentness_references`. **No approved reference exists today**, so on real records P1's compiled path is never `true`, and P1 is reported as exploratory. Tests: `M1Binding`, self-test `reuse-true-*`.
+
 **A digest match alone never establishes currentness.** It shows the cited Source is the version the claim was checked against. It does not show that no later document superseded the claim (alignment review §3). Row 12 keeps such a fact `unknown`. Test: `CompiledReuse.test_digest_match_alone_does_not_establish_currentness`.
 
 ### 3.3 Old traces
@@ -169,6 +206,14 @@ So KF leaves open (a) whether a superseded History entry relied on for an earlie
 
 ### 3.5 F-008 as a guardrail
 
+**Decided in scope 2026-11-06 (O6): G-c, review trigger.**
+
+- Every confirmed `non_compliant` case is listed in the summary's `f008_review_trigger` and goes to a pre-registered adverse-case review.
+- `unknown` is counted, never treated as compliant.
+- A finding that could reverse the main quality conclusion, a forged source, or systematic serious evidence violations blocks a success claim.
+
+The options as written on 2026-11-05 follow.
+
 The Cloud brief asks for decision logic before thresholds. Options, none chosen:
 
 | Option | Logic | Effect |
@@ -193,7 +238,7 @@ Recommendation in the packet (O-6): G-b or G-c, decided before any Gate B data e
 | 3b | **Rule A, current-state branch** | Not support; `support_delivered` from that entry alone is `no`; P1 path `false`; `wcc_vault = true` when listed | Clarifies (R1) but **never regressed** | `CompiledReuse.test_rule_a_current_branch_superseded_entry_is_false`; regression R-A3 |
 | 3c | Question asks how something evolved (both states) | Judge each required fact by the state it describes: a fact about an earlier state takes branch 3a | **Changes pass/fail (needs Owner)**: flagged as medium risk before the v1.1 regression | Protocol; regression R-A1 |
 | 4 | **`## Sources` wikilinks** as navigation edges | For graph `read_from_edge`, a `## Sources` wikilink in delivered content is a link. Naming a Sources entry as support without its content delivered is `navigation_used_as_evidence = true` (GR-001) | Clarifies (METRICS §3.10 "a link in delivered content"; matches the consensus). Diagnostic fields only | Protocol |
-| 5 | **Pages without claim anchors** (Records) | No `compiled_claims` row (F-008 is defined per claim). Record text used as support: `support_kind` = **open** between `source` and `compiled_claim`; it is never a valid source unless pre-adjudicated | **Changes pass/fail (needs Owner / KF).** KF names Records as evidence that Knowledge pages cite, but a compiled vault's Records are compile output. The choice moves `support_kind` and therefore the P1 path | Protocol; O-5 |
+| 5 | **Pages without claim anchors** (Records) | *(2026-11-06, O5: Record text used as support is `support_kind = compiled_claim` with a note; a Record is never a valid source, never proposed as an equivalent, and never makes compiled-reuse `true`; KF placement stays OPEN.)* No `compiled_claims` row (F-008 is defined per claim). Record text used as support: `support_kind` = **open** between `source` and `compiled_claim`; it is never a valid source unless pre-adjudicated | **Changes pass/fail (needs Owner / KF).** KF names Records as evidence that Knowledge pages cite, but a compiled vault's Records are compile output. The choice moves `support_kind` and therefore the P1 path | Protocol; O-5 |
 | 6 | **`version_check`** conflict: METRICS §3.9 ("a cited version exists but the trace shows no check" ⇒ `unverified`) vs protocol step 7 (`not_checked` only for a first-Source read on behalf of a claim that lists a version) | Step 7 governs: `not_checked` only when the read is a claim's first Source and the claim's Sources line lists a version; `not_applicable` otherwise | **Changes pass/fail (needs Owner)** for `read.state` (diagnostic). No effect on P0 or P1 | Protocol |
 | 7 | **Dates**: a date that is its own required fact vs a date attached to another fact | Judge the date criterion of fact *Fi* only against the date in *Fi*'s own gold entry. A date that is a separate required fact *Fj* is judged only under *Fj*. Rule C still applies: restating the question's framing asserts nothing | **Changes pass/fail (needs Owner)**: can turn `partial` into `yes` on facts that share a date with another fact | Protocol; regression R-D1 |
 
