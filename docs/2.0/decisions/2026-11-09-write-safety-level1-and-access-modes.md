@@ -4,8 +4,6 @@
 - **Refines:** Architecture Baseline L2 ("CLI is the primary interface; MCP is an optional thin wrapper"), CLI-001 (guarantees apply only to writes through the controlled path; external writes are detected, not prevented), KF v1.0 §10 (`protected`), CLI-003 (per-file manifest shared with the derived index).
 - **Evidence:** WS-001, PR #97 (merged, `956c4e8`), `evals/experiments/write-safety/REPORT.md` and transcripts. One harness (Claude Code 2.1.318, macOS Seatbelt), one model, one run per case; all observations are scoped to that configuration. Level 0 experiment (`format/experiments/level0/RESULTS.md`): agents following `CONVENTIONS.md` alone located and updated the correct claim in 24/24 Test cells, on two harnesses including `claude-sandbox`.
 - **Reviews:** Cloud Agent acceptance of WS-001 (2026-11-08); Local Agent review (2026-11-09); Owner direction on access modes (2026-11-09).
-- **Suggested location:** `docs/2.0/decisions/2026-11-09-write-safety-level1-and-access-modes.md`; `CLI-004` row in `DECISIONS.md`; F-007 row gains "design: CLI-004", status stays PARTIAL.
-
 ---
 
 ## 1. Problem
@@ -27,7 +25,7 @@ The CLI can guarantee write safety only for writes that pass through it (CLI-001
 
 Design classification: T1 PASS, **T2a FAIL** (Bash path open — the brief's expected result), T2b PASS, T3 PASS, T4 PASS. The one path WS-001 proved enforceable (T2b) is also the most configuration-heavy and the most harness-dependent.
 
-## 3. Decision (proposed)
+## 3. Decision
 
 ### 3.1 Default mode: Agent Skills + Knowlery CLI
 
@@ -136,4 +134,4 @@ WS-001's remaining OPEN items are closed by A5, A6 and A12; no WS-002 is opened.
 
 ## 8. Status discipline
 
-All of §3–§4 is PROPOSED. WS-001 results are OBSERVED for one configuration and are not a general guarantee. KF v1.0 is unchanged. F-007 remains PARTIAL until §7's default-mode rows pass on at least one Tier 1 harness.
+§3–§4 are ACCEPTED as of 2026-11-09 (Register row CLI-004); §6 items remain OPEN. WS-001 results are OBSERVED for one configuration and are not a general guarantee. KF v1.0 is unchanged. F-007 remains PARTIAL until §7's default-mode rows pass on at least one Tier 1 harness.
