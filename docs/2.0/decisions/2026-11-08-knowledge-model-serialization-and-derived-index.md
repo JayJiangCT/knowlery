@@ -18,7 +18,7 @@
 
 5. **One per-file digest manifest, two uses.** Any manifest the CLI keeps for external-change detection (F-007 Write Safety; currently prototyped by experiment task WS-001, PROPOSED) is the same manifest the index uses for invalidation. It is recorded per file, never as a single vault-wide hash, so both uses remain possible. Write-safety work does not need to implement indexing, only to not preclude it.
 
-6. **Level 0 does not depend on the index.** An Agent without the CLI reads Markdown directly, as today. `CONVENTIONS.md` §7 ("what is lost without a Connector") gains one line: without the CLI, the structured index, automatic parsing and efficient retrieval are lost; the knowledge itself is not.
+6. **Level 0 does not depend on the index.** An Agent without the CLI reads Markdown directly, as today. `CONVENTIONS.md` §9 "What is not enforced here" (KF v1.0 §13, item 7) ("what is lost without a Connector") gains one line: without the CLI, the structured index, automatic parsing and efficient retrieval are lost; the knowledge itself is not.
 
 7. **The object model must not become a second specification.** Every field in the object model is either a KF v1.0 field or explicitly marked `computed`/`derived`. Adding a knowledge-level concept to the object model requires a KF revision first (CLI-001 rule, applied internally).
 
@@ -42,7 +42,7 @@
 
 - **CLI Pilot (GR-010):** implementation order `search → inspect → explore`; architecture is parser → object model → index → operations. The parser's real complexity is reported in the Pilot (lines, exception classes handled, behavior on non-conforming input) — this is the R2 evidence.
 - **Write safety (F-007; WS-001 prototype):** any change-detection manifest must use per-file digests. No other change.
-- **`CONVENTIONS.md`:** one line added to §7 (see §1.6). This is a conventions-page edit, not a KF semantic change; it still goes through the normal review path.
+- **`CONVENTIONS.md`:** one line added to §9 (see §1.6). This is a conventions-page edit, not a KF semantic change; it still goes through the normal review path.
 - **Knowledge Format v1.0:** unchanged.
 
 ## 5. Open
