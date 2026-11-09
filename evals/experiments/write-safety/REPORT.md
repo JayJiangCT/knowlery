@@ -137,7 +137,7 @@ Log: `transcripts/t4/t4-command-log.txt` (script `scripts/t4.sh`). The hook was 
 Each line is a write path or gap that remained open in the tested configurations.
 
 - [OBSERVED] T1/T2a config: any Bash subprocess that opens files itself (`python3 -c` shown) writes Knowledge files despite the `Edit(...)` deny rules.
-- [OBSERVED] T2a config: the controlled CLI run through Bash has no privilege over any other script; under the T2b sandbox it loses write access entirely, so controlled writes must go through MCP.
+- [OBSERVED] T2a config: the controlled CLI run through Bash has no privilege over any other script; under the T2b sandbox it loses write access entirely, and only the MCP path wrote.
 - [INFERRED] T1/T2a/T2b configs: the Edit/Write tools can still write `vault/.knowlery/manifest.json`, `vault/log.md`, `vault/CONVENTIONS.md` and `vault/sources/`, because the deny rules cover only the four Knowledge directories (not exercised).
 - [INFERRED] T1/T2a configs: Bash can run `baseline --rebuild`, which turns any out-of-band change into trusted state (T3 shows the effect; an Agent running it was not exercised).
 - [OBSERVED] T3: after a manifest rebuild, detection of earlier out-of-band changes is lost; only git history of the manifest keeps the old baseline.
