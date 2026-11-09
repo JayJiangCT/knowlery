@@ -16,6 +16,8 @@ export default defineConfig([
       // Vitepress site scaffolding — not covered by the app tsconfig, never
       // linted before f4 either (status quo, not a new exemption).
       'docs-site/**',
+      // Frozen research experiment scripts, outside the app tsconfig.
+      'evals/experiments/obsidian-headless/**',
       'evals/fixtures/**',
       'evals/reports/**',
       'knowlery-cli.mjs',
