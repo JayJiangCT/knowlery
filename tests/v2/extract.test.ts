@@ -60,7 +60,7 @@ describe('v2 text extractors', () => {
     const text = await readFile(join(root, 'Notes/会议记录.txt'), 'utf8');
     const result = await txt.extract(bytes(text));
     for (const unit of result.units) expect(unit.text.split('\n').length === 1 || Buffer.byteLength(unit.text) <= 2048).toBe(true);
-    expect(result.units.flatMap((unit) => unit.text.split('\n'))).toEqual(text.trimEnd().split('\n').filter((line) => line.trim()));
+    expect(result.units.map((unit) => unit.text).join('\n') + (text.endsWith('\n') ? '\n' : '')).toBe(text);
   });
 
   it('extracts the 200-row csv fixture with quoted commas and newlines', async () => {
@@ -105,7 +105,10 @@ describe('v2 content-addressed extraction cache', () => {
   it('replaces corrupt cache files and incorrect unit counts', async () => {
     const first = await getExtraction(root, 'Notes/meeting.md');
     const path = join(root, '.knowlery/cache/text', cacheName(first.sha256!, 'markdown@1'));
-    for (const content of ['{broken\n', `${JSON.stringify({ ...first.header, units: 999 })}\n`]) {
+    const original = await readFile(path, 'utf8');
+    const lines = original.split('\n');
+    const invalidHeaders = [{ ...first.header, units: 999 }, { ...first.header, v: 2 }, { ...first.header, sha256: digest('wrong') }, { ...first.header, extractor: 'markdown@2' }];
+    for (const content of ['{broken\n', ...invalidHeaders.map((header) => [JSON.stringify(header), ...lines.slice(1)].join('\n'))]) {
       await writeFile(path, content);
       const again = await getExtraction(root, 'Notes/meeting.md');
       expect(again.cached).toBe(false);
@@ -171,11 +174,13 @@ describe('v2 content-addressed extraction cache', () => {
 
   it('rehashes actual bytes despite unchanged size and mtime', async () => {
     const path = join(root, 'Notes/meeting.md');
+    await utimes(path, 1700000000, 1700000000);
     const original = await getExtraction(root, 'Notes/meeting.md');
     const info = await lstat(path);
     const text = 'x'.repeat(info.size);
     await writeFile(path, text);
     await utimes(path, info.atime, info.mtime);
+    expect((await lstat(path)).mtimeMs).toBe(info.mtimeMs);
     const updated = await getExtraction(root, 'Notes/meeting.md');
     expect(updated.sha256).not.toBe(original.sha256);
     expect(updated.sha256).toBe(digest(text));

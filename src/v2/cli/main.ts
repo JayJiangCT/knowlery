@@ -1,9 +1,11 @@
 import { readConfig } from '../core/config';
 import { exitCode, KnowleryError } from '../core/errors';
+import type { ExtractionOptions } from '../core/extract';
 import { resolveRoot } from '../core/paths';
 import { KF_VERSION, KIT_VERSION } from '../version';
 import { parseArgs, USAGE } from './args';
 import { runInventory } from './commands/inventory';
+import { runExtract } from './commands/extract';
 
 export interface CliIO {
   stdout(text: string): void;
@@ -11,7 +13,7 @@ export interface CliIO {
   cwd: string;
 }
 
-export async function runCli(argv: string[], io: CliIO): Promise<number> {
+export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<ExtractionOptions, 'registry' | 'ceiling'> = {}): Promise<number> {
   const json = argv.includes('--json');
   const success = (command: string, result: object, text: string) => {
     io.stdout(json ? `${JSON.stringify({ contract: KF_VERSION, ok: true, command, ...result })}\n` : text);
@@ -25,11 +27,12 @@ export async function runCli(argv: string[], io: CliIO): Promise<number> {
       case 'version':
         success('version', { kit: KIT_VERSION, kf: KF_VERSION }, `knowlery ${KIT_VERSION} (kf ${KF_VERSION})\n`);
         break;
-      case 'inventory': {
+      case 'inventory':
+      case 'extract': {
         const root = await resolveRoot(args.dir, io.cwd);
         const config = await readConfig(root);
-        const { result, text } = await runInventory(root, config, args);
-        success('inventory', result, text);
+        const { result, text } = args.command === 'extract' ? await runExtract(root, config, args, extractionOptions) : await runInventory(root, config, args);
+        success(args.command, result, text);
         break;
       }
       default: {

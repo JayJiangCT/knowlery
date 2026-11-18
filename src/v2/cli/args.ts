@@ -5,13 +5,14 @@ export const USAGE = `Usage: knowlery [--dir ROOT] [--json] <command> [arguments
 Commands:
   inventory [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   inventory --paths P…
+  extract PATH | extract --all
   --version
   --help
 
 Global flags --dir and --json may appear anywhere.`;
 
 export interface ParsedArgs {
-  command: 'inventory' | 'version' | 'help';
+  command: 'inventory' | 'extract' | 'version' | 'help';
   dir: string;
   json: boolean;
   scope?: string;
@@ -19,11 +20,13 @@ export interface ParsedArgs {
   offset?: number;
   snapshot?: string;
   paths?: string[];
+  path?: string;
+  all?: boolean;
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = { command: 'help', dir: '.', json: false };
-  let command: string | undefined;
+  let command: 'inventory' | 'extract' | undefined;
   let help = false;
   let version = false;
   const value = (index: number, flag: string): string => {
@@ -36,6 +39,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
     switch (arg) {
       case '--dir': parsed.dir = value(++i, arg); break;
       case '--json': parsed.json = true; break;
+      case '--all': parsed.all = true; break;
       case '--help': help = true; break;
       case '--version': version = true; break;
       case '--scope': parsed.scope = value(++i, arg); break;
@@ -60,17 +64,20 @@ export function parseArgs(argv: string[]): ParsedArgs {
       }
       default:
         if (arg.startsWith('-')) invalidInvocation(`Unknown flag: ${arg}`);
+        if (command === 'extract' && parsed.path === undefined) { parsed.path = arg; break; }
         if (command !== undefined) invalidInvocation(`Unexpected argument: ${arg}`);
-        if (arg !== 'inventory') invalidInvocation(`Unknown command: ${arg}`);
+        if (arg !== 'inventory' && arg !== 'extract') invalidInvocation(`Unknown command: ${arg}`);
         command = arg;
     }
   }
   const inventoryOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.offset !== undefined || parsed.snapshot !== undefined;
   if (parsed.paths && inventoryOptions) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
-  if (!command && (inventoryOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
+  if (command !== 'inventory' && (inventoryOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
+  if (command !== 'extract' && parsed.all) invalidInvocation('--all requires the extract command.');
+  if (command === 'extract' && !help && !version && Boolean(parsed.path) === Boolean(parsed.all)) invalidInvocation('Use extract PATH or extract --all, but not both.');
   if (help) parsed.command = 'help';
   else if (version) parsed.command = 'version';
-  else if (command) parsed.command = 'inventory';
+  else if (command) parsed.command = command;
   else invalidInvocation(`No command supplied.\n\n${USAGE}`);
   return parsed;
 }

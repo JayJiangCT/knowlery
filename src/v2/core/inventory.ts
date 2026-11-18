@@ -4,6 +4,9 @@ import { extname, join, posix } from 'node:path';
 import { isObject, type Config } from './config';
 import { invalidInvocation, KnowleryError } from './errors';
 import { hashFile } from './hash';
+import { readTextCache } from './extract/cache';
+import { registry as builtins } from './extract/registry';
+import type { CachedState, Registry } from './extract/types';
 import { createIgnoreMatcher } from './ignore';
 import { isMissing, relativePath, resolveInside } from './paths';
 
@@ -13,7 +16,7 @@ export interface InventoryItem {
   format: Format;
   size: number;
   sha256: string;
-  extraction: 'pending' | 'too_large';
+  extraction: 'pending' | 'too_large' | CachedState;
 }
 interface CacheLine {
   path: string;
@@ -28,6 +31,7 @@ export interface InventoryOptions {
   offset?: number;
   snapshot?: string;
   ceiling?: number;
+  registry?: Registry;
 }
 export interface InventoryResult {
   counts: { total: number; by_format: Partial<Record<Format, number>>; unsupported: number; ignored: number; symlinks: number };
@@ -119,10 +123,11 @@ export async function resolveRawSource(root: string, input: string, config: Conf
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     const prefix = parts.slice(0, i + 1).join('/');
-    if (part.startsWith('.') || part.startsWith('~$') || (i === 0 && (part === 'wiki' || part === 'AGENTS.md')) || ignores(prefix)) throw denied();
+    if (part.startsWith('.') || (i === 0 && part === 'wiki') || ignores(prefix)) throw denied();
     current = join(current, part);
     try {
-      if ((await lstat(current)).isSymbolicLink()) throw denied();
+      const info = await lstat(current);
+      if (info.isSymbolicLink() || (!info.isDirectory() && (part.startsWith('~$') || prefix === 'AGENTS.md'))) throw denied();
     } catch (error) {
       if (isMissing(error)) throw new KnowleryError('not_found', `Source not found: ${input}`, 'Choose an existing raw source.');
       throw error;
@@ -137,74 +142,73 @@ export async function cachedInventoryHash(root: string, path: string, size: numb
   return previous?.size === size && previous.mtimeMs === mtimeMs ? previous.sha256 : undefined;
 }
 
-export async function inventory(root: string, config: Config, options: InventoryOptions = {}): Promise<InventoryResult> {
-  const limit = options.limit ?? 50;
-  const offset = options.offset ?? 0;
-  const ceiling = options.ceiling ?? 104857600;
-  if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0) invalidInvocation('Invalid inventory pagination.');
-  const start = await resolveInside(root, options.scope ?? '.');
-  try {
-    await lstat(start);
-  } catch (error) {
-    if (isMissing(error)) throw new KnowleryError('not_found', `Scope not found: ${options.scope}`, 'Choose an existing scope.');
-    throw error;
-  }
-  const scope = relativePath(root, start);
-  const oldCache = await readCache(root);
-  const updated: CacheLine[] = [];
-  const items: InventoryItem[] = [];
-  const counts: InventoryResult['counts'] = { total: 0, by_format: {}, unsupported: 0, ignored: 0, symlinks: 0 };
-  const cache = { hashed: 0, reused: 0 };
-  const ignores = createIgnoreMatcher(config.ignore);
+export async function rememberInventoryHashes(root: string, lines: CacheLine[]): Promise<boolean> {
+  const cache = await readCache(root);
+  for (const line of lines) cache.set(line.path, line);
+  return writeCache(root, [...cache.values()]);
+}
 
-  async function walk(path: string): Promise<void> {
+export type RawSource = Omit<CacheLine, 'sha256'>;
+
+export async function scanRawSources(root: string, config: Config, input = '.'): Promise<{ scope: string; sources: RawSource[]; counts: InventoryResult['counts'] }> {
+  const start = await resolveRawSource(root, input, config);
+  const scope = relativePath(root, start);
+  const sources: RawSource[] = [];
+  const counts: InventoryResult['counts'] = { total: 0, by_format: {}, unsupported: 0, ignored: 0, symlinks: 0 };
+  const ignores = createIgnoreMatcher(config.ignore);
+  async function walk(path: string, ignored = false): Promise<void> {
     const rel = relativePath(root, path);
     const parts = rel.split('/');
     if (rel && parts.some((part) => part.startsWith('.'))) return;
     const info = await lstat(path);
     if (rel === 'AGENTS.md' && !info.isDirectory()) return;
-    if ((parts[0] === 'wiki' || parts[0] === '.knowlery') && (parts.length > 1 || info.isDirectory())) return;
-    if (info.isSymbolicLink()) {
-      counts.symlinks++;
-      return;
-    }
+    if (parts[0] === 'wiki') return;
+    if (info.isSymbolicLink()) { counts.symlinks++; return; }
+    ignored = ignored || ignores(rel);
     if (info.isDirectory()) {
-      for (const entry of await readdir(path)) await walk(join(path, entry));
+      for (const entry of await readdir(path)) await walk(join(path, entry), ignored);
       return;
     }
     if (!info.isFile() || parts[parts.length - 1].startsWith('~$')) return;
-    if (ignores(rel)) {
-      counts.ignored++;
-      return;
-    }
+    if (ignored) { counts.ignored++; return; }
     const format = formatFor(rel);
-    if (!format) {
-      counts.unsupported++;
-      return;
-    }
-    const previous = oldCache.get(rel);
+    if (!format) { counts.unsupported++; return; }
+    sources.push({ path: rel, size: info.size, mtimeMs: info.mtimeMs, format });
+    counts.by_format[format] = (counts.by_format[format] ?? 0) + 1;
+  }
+  await walk(start);
+  sources.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  counts.total = sources.length;
+  counts.by_format = Object.fromEntries(Object.entries(counts.by_format).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+  return { scope, sources, counts };
+}
+
+export async function inventory(root: string, config: Config, options: InventoryOptions = {}): Promise<InventoryResult> {
+  const limit = options.limit ?? 50;
+  const offset = options.offset ?? 0;
+  const ceiling = options.ceiling ?? 104857600;
+  if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0) invalidInvocation('Invalid inventory pagination.');
+  const { scope, sources, counts } = await scanRawSources(root, config, options.scope);
+  const oldCache = await readCache(root);
+  const updated: CacheLine[] = [];
+  const items: InventoryItem[] = [];
+  const cache = { hashed: 0, reused: 0 };
+  for (const source of sources) {
+    const { path, size, mtimeMs, format } = source;
+    const previous = oldCache.get(path);
     let sha256: string;
-    if (previous && previous.size === info.size && previous.mtimeMs === info.mtimeMs) {
+    if (previous && previous.size === size && previous.mtimeMs === mtimeMs) {
       sha256 = previous.sha256;
       cache.reused++;
     } else {
-      sha256 = await hashFile(path);
+      sha256 = await hashFile(join(root, path));
       cache.hashed++;
     }
-    updated.push({ path: rel, size: info.size, mtimeMs: info.mtimeMs, sha256, format });
-    items.push({ path: rel, format, size: info.size, sha256, extraction: info.size > ceiling ? 'too_large' : 'pending' });
-    counts.by_format[format] = (counts.by_format[format] ?? 0) + 1;
+    updated.push({ ...source, sha256 });
+    const extractor = (options.registry ?? builtins)[format];
+    const header = size <= ceiling && extractor ? await readTextCache(root, sha256, extractor.id, format, true) : undefined;
+    items.push({ path, format, size, sha256, extraction: size > ceiling ? 'too_large' : header?.state ?? 'pending' });
   }
-
-  let walkStart = root;
-  for (const part of scope.split('/').filter(Boolean)) {
-    walkStart = join(walkStart, part);
-    if ((await lstat(walkStart)).isSymbolicLink()) break;
-  }
-  await walk(walkStart);
-  items.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
-  counts.total = items.length;
-  counts.by_format = Object.fromEntries(Object.entries(counts.by_format).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
   const hash = createHash('sha256');
   for (const item of items) hash.update(`${item.path}\t${item.sha256}\n`);
   const snapshot = `sha256:${hash.digest('hex')}`;

@@ -280,7 +280,7 @@ describe('v2 scopes and exact paths', () => {
     const file = await jsonRun(root, ['inventory', '--scope', 'Notes/meeting.md']);
     expect(file.items.map((item) => item.path)).toEqual(['Notes/meeting.md']);
     expect(file.counts.total).toBe(1);
-    expect((await jsonRun(root, ['inventory', '--scope', 'wiki/placeholder.md'])).counts.total).toBe(0);
+    await failure(root, ['inventory', '--scope', 'wiki/placeholder.md'], 'path_denied', 1);
   });
 
   it('resolves a symlinked root to its real directory', async () => {
@@ -344,23 +344,20 @@ describe('v2 scopes and exact paths', () => {
     await failure(root, ['inventory', '--paths', 'dangling'], 'path_denied', 1);
   });
 
-  it('allows an in-root file symlink in paths mode but does not follow it during inventory', async () => {
+  it('allows in-root symlinks in paths mode but denies symlink scopes', async () => {
     await symlink('Notes/meeting.md', join(root, 'inward.md'));
     const result = await jsonRun(root, ['inventory', '--paths', 'inward.md']);
     expect(result.paths[0]).toEqual({ path: 'inward.md', exists: true, size: (await readFile(join(root, 'Notes/meeting.md'))).length, sha256: digest(await readFile(join(root, 'Notes/meeting.md'))) });
-    const scoped = await jsonRun(root, ['inventory', '--scope', 'inward.md']);
-    expect(scoped.counts).toMatchObject({ total: 0, symlinks: 1 });
+    await failure(root, ['inventory', '--scope', 'inward.md'], 'path_denied', 1);
     await symlink('Notes', join(root, 'inward-folder'));
-    const nested = await jsonRun(root, ['inventory', '--scope', 'inward-folder/meeting.md']);
-    expect(nested.counts).toMatchObject({ total: 0, symlinks: 1 });
+    await failure(root, ['inventory', '--scope', 'inward-folder/meeting.md'], 'path_denied', 1);
   });
 
-  it('reports an in-root dangling link as a missing exact path, while counting it as a symlink during walking', async () => {
+  it('reports an in-root dangling link as a missing exact path but denies it as a scope', async () => {
     await symlink('Notes/not-created.md', join(root, 'future.md'));
     const result = await jsonRun(root, ['inventory', '--paths', 'future.md']);
     expect(result.paths).toEqual([{ path: 'future.md', exists: false }]);
-    const scoped = await jsonRun(root, ['inventory', '--scope', 'future.md']);
-    expect(scoped.counts).toMatchObject({ total: 0, symlinks: 1 });
+    await failure(root, ['inventory', '--scope', 'future.md'], 'path_denied', 1);
   });
 
   it('rejects folders and every incompatible paths-mode option as invalid invocations', async () => {

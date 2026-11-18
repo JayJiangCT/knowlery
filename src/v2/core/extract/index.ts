@@ -22,9 +22,9 @@ export async function getExtraction(root: string, input: string, options: Extrac
   const format = formatFor(path);
   if (!info.isFile() || !format) throw new KnowleryError('extraction_unavailable', `No extraction format for: ${input}`, 'Choose a supported raw source file.');
   const empty = { sha256: null, header: null, units: [], warnings: [], cached: false };
-  if (info.size > (options.ceiling ?? 104857600)) return { ...empty, state: 'too_large' };
-  const extractor = (options.registry ?? builtins)[format];
   const previous = options.listing ? await cachedInventoryHash(root, relativePath(root, path), info.size, info.mtimeMs) : undefined;
+  if (info.size > (options.ceiling ?? 104857600)) return { ...empty, sha256: previous ?? null, state: 'too_large' };
+  const extractor = (options.registry ?? builtins)[format];
   if (previous && extractor) {
     const cached = await readTextCache(root, previous, extractor.id, format);
     if (cached) return { sha256: previous, state: cached.header.state, ...cached, warnings: [], cached: true };

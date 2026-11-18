@@ -62,11 +62,11 @@ describe('v2 locator resolution', () => {
     let result = select(await getExtraction(root, path), 'lines 3-4');
     expect(result.pieces).toMatchObject([{ start: 3, end: 4 }]);
     expect(renderPieces(result.pieces)).toBe(source.slice(2, 4).join('\n'));
-    await writeFile(join(root, path), `one\n${'x'.repeat(2044)}\nthree\nfour\nfive`);
+    await writeFile(join(root, path), `one\ntwo\n${'x'.repeat(2040)}\nfour\nfive`);
     source = (await readFile(join(root, path), 'utf8')).split('\n');
-    result = select(await getExtraction(root, path), 'lines 2-3');
+    result = select(await getExtraction(root, path), 'lines 3-4');
     expect(result.pieces).toHaveLength(2);
-    expect(renderPieces(result.pieces)).toBe(source.slice(1, 3).join('\n'));
+    expect(renderPieces(result.pieces)).toBe(source.slice(2, 4).join('\n'));
     await writeFile(join(root, path), 'one\ntwo\nthree\n\nfive');
     result = select(await getExtraction(root, path), 'lines 3-5');
     expect(renderPieces(result.pieces)).toBe('three\n\nfive');
