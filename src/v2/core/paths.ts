@@ -1,0 +1,58 @@
+import { lstat, realpath, stat } from 'node:fs/promises';
+import { dirname, isAbsolute, relative, resolve, sep, win32 } from 'node:path';
+import { KnowleryError } from './errors';
+
+export function isMissing(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && (error.code === 'ENOENT' || error.code === 'ENOTDIR');
+}
+
+export function isInside(root: string, path: string): boolean {
+  const rel = relative(root, path);
+  return rel === '' || (!isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`));
+}
+
+export function relativePath(root: string, path: string): string {
+  return relative(root, path).split(sep).join('/');
+}
+
+export async function resolveRoot(dir: string, cwd: string): Promise<string> {
+  try {
+    const root = await realpath(resolve(cwd, dir));
+    if (!(await stat(root)).isDirectory()) {
+      throw new KnowleryError('not_found', `Not a directory: ${dir}`, 'Choose an existing knowledge base directory with --dir.');
+    }
+    return root;
+  } catch (error) {
+    if (isMissing(error)) {
+      throw new KnowleryError('not_found', `Directory not found: ${dir}`, 'Choose an existing knowledge base directory with --dir.');
+    }
+    throw error;
+  }
+}
+
+export async function resolveInside(root: string, input: string): Promise<string> {
+  const denied = () => new KnowleryError('path_denied', `Path is outside the knowledge base: ${input}`, 'Use a root-relative path inside the knowledge base.');
+  if (isAbsolute(input) || win32.isAbsolute(input)) throw denied();
+  const path = resolve(root, input);
+  if (!isInside(root, path)) throw denied();
+
+  // Check each existing ancestor, including dangling links, before allowing missing leaves.
+  let ancestor = path;
+  while (true) {
+    try {
+      await lstat(ancestor);
+      if (!isInside(root, await realpath(ancestor))) throw denied();
+      break;
+    } catch (error) {
+      if (!isMissing(error)) throw error;
+      try {
+        if ((await lstat(ancestor)).isSymbolicLink()) throw denied();
+      } catch (linkError) {
+        if (!isMissing(linkError)) throw linkError;
+      }
+      if (ancestor === root) throw error;
+      ancestor = dirname(ancestor);
+    }
+  }
+  return path;
+}
