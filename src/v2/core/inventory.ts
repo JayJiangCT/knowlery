@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { lstat, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { extname, join, posix } from 'node:path';
 import { isObject, type Config } from './config';
 import { invalidInvocation, KnowleryError } from './errors';
@@ -42,7 +42,7 @@ export interface InventoryResult {
 }
 export type PathItem = { path: string; exists: false } | { path: string; exists: true; size: number; sha256: string };
 
-function formatFor(path: string): Format | undefined {
+export function formatFor(path: string): Format | undefined {
   switch (extname(path).toLowerCase()) {
     case '.md':
     case '.markdown': return 'markdown';
@@ -107,6 +107,34 @@ async function writeCache(root: string, lines: CacheLine[]): Promise<boolean> {
   } finally {
     if (temp) await rm(temp, { force: true }).catch(() => {});
   }
+}
+
+export async function resolveRawSource(root: string, input: string, config: Config): Promise<string> {
+  const path = await resolveInside(root, input);
+  const rel = relativePath(root, path);
+  const parts = rel.split('/').filter(Boolean);
+  const ignores = createIgnoreMatcher(config.ignore);
+  const denied = () => new KnowleryError('path_denied', `Not an inventoried source path: ${input}`, 'Choose a visible, non-ignored raw source outside wiki/ and .knowlery/.');
+  let current = root;
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const prefix = parts.slice(0, i + 1).join('/');
+    if (part.startsWith('.') || part.startsWith('~$') || (i === 0 && (part === 'wiki' || part === 'AGENTS.md')) || ignores(prefix)) throw denied();
+    current = join(current, part);
+    try {
+      if ((await lstat(current)).isSymbolicLink()) throw denied();
+    } catch (error) {
+      if (isMissing(error)) throw new KnowleryError('not_found', `Source not found: ${input}`, 'Choose an existing raw source.');
+      throw error;
+    }
+  }
+  if (await realpath(path) !== path) throw denied();
+  return path;
+}
+
+export async function cachedInventoryHash(root: string, path: string, size: number, mtimeMs: number): Promise<string | undefined> {
+  const previous = (await readCache(root)).get(path);
+  return previous?.size === size && previous.mtimeMs === mtimeMs ? previous.sha256 : undefined;
 }
 
 export async function inventory(root: string, config: Config, options: InventoryOptions = {}): Promise<InventoryResult> {
