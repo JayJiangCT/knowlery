@@ -1,4 +1,4 @@
-import { lstat, realpath, stat } from 'node:fs/promises';
+import { lstat, readlink, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep, win32 } from 'node:path';
 import { KnowleryError } from './errors';
 
@@ -36,23 +36,23 @@ export async function resolveInside(root: string, input: string): Promise<string
   const path = resolve(root, input);
   if (!isInside(root, path)) throw denied();
 
-  // Check each existing ancestor, including dangling links, before allowing missing leaves.
-  let ancestor = path;
-  while (true) {
+  // Missing leaves still need ancestor checks, including the targets of dangling links.
+  async function check(candidate: string): Promise<void> {
+    if (!isInside(root, candidate)) throw denied();
     try {
-      await lstat(ancestor);
-      if (!isInside(root, await realpath(ancestor))) throw denied();
-      break;
+      if (!isInside(root, await realpath(candidate))) throw denied();
+      return;
+    } catch (error) {
+      if (!isMissing(error) || candidate === root) throw error;
+    }
+    let target: string | undefined;
+    try {
+      if ((await lstat(candidate)).isSymbolicLink()) target = await readlink(candidate);
     } catch (error) {
       if (!isMissing(error)) throw error;
-      try {
-        if ((await lstat(ancestor)).isSymbolicLink()) throw denied();
-      } catch (linkError) {
-        if (!isMissing(linkError)) throw linkError;
-      }
-      if (ancestor === root) throw error;
-      ancestor = dirname(ancestor);
     }
+    await check(target === undefined ? dirname(candidate) : resolve(dirname(candidate), target));
   }
+  await check(path);
   return path;
 }
