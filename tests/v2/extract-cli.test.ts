@@ -72,7 +72,7 @@ describe('v2 extract command', () => {
   it('rejects denied, missing and unsupported paths', async () => {
     await writeFile(join(root, 'a.bin'), 'unsupported');
     await failure(root, ['extract', 'wiki'], 'path_denied', 1);
-    await failure(root, ['extract', 'wiki/placeholder.md'], 'path_denied', 1);
+    await failure(root, ['extract', 'wiki/record-preservation.md'], 'path_denied', 1);
     await failure(root, ['extract', 'a.bin'], 'extraction_unavailable', 1);
     await failure(root, ['extract', 'absent'], 'not_found', 1);
   });

@@ -280,7 +280,7 @@ describe('v2 scopes and exact paths', () => {
     const file = await jsonRun(root, ['inventory', '--scope', 'Notes/meeting.md']);
     expect(file.items.map((item) => item.path)).toEqual(['Notes/meeting.md']);
     expect(file.counts.total).toBe(1);
-    await failure(root, ['inventory', '--scope', 'wiki/placeholder.md'], 'path_denied', 1);
+    await failure(root, ['inventory', '--scope', 'wiki/record-preservation.md'], 'path_denied', 1);
   });
 
   it('resolves a symlinked root to its real directory', async () => {
@@ -303,7 +303,7 @@ describe('v2 scopes and exact paths', () => {
     await add('.hidden.txt');
     await add('photo.png');
     await configure(root, { kf: '2.0', ignore: ['Notes/'] });
-    const requested = ['Notes/meeting.md', 'wiki/placeholder.md', 'wiki/new.md', '.hidden.txt', 'photo.png'];
+    const requested = ['Notes/meeting.md', 'wiki/record-preservation.md', 'wiki/new.md', '.hidden.txt', 'photo.png'];
     const result = await jsonRun(root, ['inventory', '--paths', ...requested]);
     expect(Object.keys(result).sort()).toEqual(['command', 'contract', 'ok', 'paths']);
     expect(result.paths.map((item) => item.path)).toEqual(requested);
@@ -374,7 +374,7 @@ describe('v2 scopes and exact paths', () => {
     await jsonRun(root);
     await jsonRun(root);
     await jsonRun(root, ['inventory', '--scope', 'Notes']);
-    await jsonRun(root, ['inventory', '--paths', 'wiki/placeholder.md']);
+    await jsonRun(root, ['inventory', '--paths', 'wiki/record-preservation.md']);
     await failure(root, ['inventory', '--snapshot', 'old'], 'stale_version', 1);
     await failure(root, ['inventory', '--scope', '../x'], 'path_denied', 1);
     expect(await fileState(root)).toEqual(before);

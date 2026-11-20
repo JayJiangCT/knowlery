@@ -195,7 +195,7 @@ describe('v2 content-addressed extraction cache', () => {
     await symlink(join(root, 'Notes/meeting.md'), join(root, 'link.md'));
     await symlink(join(root, 'Notes'), join(root, 'folder-link'));
     await symlink('..', join(root, 'out'));
-    for (const path of ['.hidden.txt', '.hidden/a.txt', '.knowlery/config.json', 'ignored.txt', 'link.md', 'folder-link/meeting.md', 'out/a.txt', 'wiki/placeholder.md', '../escape']) {
+    for (const path of ['.hidden.txt', '.hidden/a.txt', '.knowlery/config.json', 'ignored.txt', 'link.md', 'folder-link/meeting.md', 'out/a.txt', 'wiki/record-preservation.md', '../escape']) {
       await expect(getExtraction(root, path)).rejects.toMatchObject({ code: 'path_denied' });
     }
     await expect(getExtraction(root, 'unknown.bin')).rejects.toMatchObject({ code: 'extraction_unavailable' });

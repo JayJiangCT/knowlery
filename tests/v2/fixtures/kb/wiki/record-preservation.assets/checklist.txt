@@ -1,0 +1,4 @@
+Record preservation review checklist
+1. Keep raw source files untouched.
+2. Verify each claim against its cited source.
+3. Confirm whether archived files are in scope.
