@@ -39,12 +39,12 @@ describe('v2 extract command', () => {
     await writeFile(join(root, 'a.pdf'), 'dummy');
     const { result: first } = await execute(['extract', '--all']);
     expect(first).toEqual({ contract: '2.0', ok: true, command: 'extract',
-      counts: { total: 6, ok: 5, partial: 0, unreadable: 0, too_large: 0, unavailable: 1 },
-      work: { extracted: 5, cached: 0 },
-      items: [{ path: 'a.pdf', format: 'pdf', sha256: digest('dummy'), state: 'unavailable', units: 0, problems: [] }], omitted: 0, warnings: [],
+      counts: { total: 6, ok: 5, partial: 0, unreadable: 1, too_large: 0, unavailable: 0 },
+      work: { extracted: 6, cached: 0 },
+      items: [{ path: 'a.pdf', format: 'pdf', sha256: digest('dummy'), state: 'unreadable', units: 0, problems: [{ code: 'parse_error', detail: 'Invalid PDF structure.' }] }], omitted: 0, warnings: [],
     });
     const { result: second, reads } = await execute(['extract', '--all']);
-    expect(second.work).toEqual({ extracted: 0, cached: 5 });
+    expect(second.work).toEqual({ extracted: 0, cached: 6 });
     const sources = [...(await jsonRun(root)).items.map((item) => join(root, item.path))];
     expect(reads.filter((path) => sources.includes(path))).toEqual([]);
   });
@@ -113,7 +113,7 @@ describe('v2 extract command', () => {
   it('caps exceptional items at 50 in path order and counts omitted items', async () => {
     for (let i = 0; i < 65; i++) await writeFile(join(root, `${String(i).padStart(3, '0')}.pdf`), 'pdf');
     const { result } = await execute(['extract', '--all']);
-    expect(result.counts).toMatchObject({ total: 70, unavailable: 65 });
+    expect(result.counts).toMatchObject({ total: 70, unreadable: 65 });
     expect(result.items).toHaveLength(50);
     expect(result.omitted).toBe(15);
     expect(result.items.map((item) => item.path)).toEqual(Array.from({ length: 50 }, (_, i) => `${String(i).padStart(3, '0')}.pdf`));

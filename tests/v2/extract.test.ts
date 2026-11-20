@@ -143,7 +143,7 @@ describe('v2 content-addressed extraction cache', () => {
 
   it('does not cache unavailable formats and never reads over-ceiling sources', async () => {
     await writeFile(join(root, 'a.pdf'), 'dummy');
-    expect(await getExtraction(root, 'a.pdf')).toMatchObject({ state: 'unavailable', header: null, units: [] });
+    expect(await getExtraction(root, 'a.pdf', { registry: {} })).toMatchObject({ state: 'unavailable', header: null, units: [] });
     expect(await getExtraction(root, 'Projects/policy notes.txt', { registry: {} })).toMatchObject({ state: 'unavailable' });
     const extract = vi.fn(txt.extract);
     expect(await getExtraction(root, 'Projects/policy notes.txt', { ceiling: 0, registry: { txt: { id: 'txt@1', extract } } })).toMatchObject({ state: 'too_large', sha256: null });
