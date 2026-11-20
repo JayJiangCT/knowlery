@@ -6,6 +6,7 @@ import { KF_VERSION, KIT_VERSION } from '../version';
 import { parseArgs, USAGE } from './args';
 import { runInventory } from './commands/inventory';
 import { runExtract } from './commands/extract';
+import { runRead } from './commands/read';
 
 export interface CliIO {
   stdout(text: string): void;
@@ -28,10 +29,15 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         success('version', { kit: KIT_VERSION, kf: KF_VERSION }, `knowlery ${KIT_VERSION} (kf ${KF_VERSION})\n`);
         break;
       case 'inventory':
-      case 'extract': {
+      case 'extract':
+      case 'read': {
         const root = await resolveRoot(args.dir, io.cwd);
         const config = await readConfig(root);
-        const { result, text } = args.command === 'extract' ? await runExtract(root, config, args, extractionOptions) : await runInventory(root, config, args);
+        const { result, text } = args.command === 'extract'
+          ? await runExtract(root, config, args, extractionOptions)
+          : args.command === 'read'
+            ? await runRead(root, config, args, extractionOptions)
+            : await runInventory(root, config, args);
         success(args.command, result, text);
         break;
       }

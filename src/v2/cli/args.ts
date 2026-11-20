@@ -6,13 +6,14 @@ Commands:
   inventory [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   inventory --paths P…
   extract PATH | extract --all
+  read PATH [--select S] [--offset N] [--expected-version HASH]
   --version
   --help
 
 Global flags --dir and --json may appear anywhere.`;
 
 export interface ParsedArgs {
-  command: 'inventory' | 'extract' | 'version' | 'help';
+  command: 'inventory' | 'extract' | 'read' | 'version' | 'help';
   dir: string;
   json: boolean;
   scope?: string;
@@ -22,11 +23,13 @@ export interface ParsedArgs {
   paths?: string[];
   path?: string;
   all?: boolean;
+  select?: string;
+  expectedVersion?: string;
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = { command: 'help', dir: '.', json: false };
-  let command: 'inventory' | 'extract' | undefined;
+  let command: 'inventory' | 'extract' | 'read' | undefined;
   let help = false;
   let version = false;
   const value = (index: number, flag: string): string => {
@@ -44,6 +47,13 @@ export function parseArgs(argv: string[]): ParsedArgs {
       case '--version': version = true; break;
       case '--scope': parsed.scope = value(++i, arg); break;
       case '--snapshot': parsed.snapshot = value(++i, arg); break;
+      case '--select': parsed.select = value(++i, arg); break;
+      case '--expected-version': {
+        const hash = value(++i, arg);
+        if (!/^sha256:[a-f0-9]{64}$/.test(hash)) invalidInvocation(`Bad value for ${arg}: ${hash}`);
+        parsed.expectedVersion = hash;
+        break;
+      }
       case '--limit':
       case '--offset': {
         const text = value(++i, arg);
@@ -64,17 +74,21 @@ export function parseArgs(argv: string[]): ParsedArgs {
       }
       default:
         if (arg.startsWith('-')) invalidInvocation(`Unknown flag: ${arg}`);
-        if (command === 'extract' && parsed.path === undefined) { parsed.path = arg; break; }
+        if ((command === 'extract' || command === 'read') && parsed.path === undefined) { parsed.path = arg; break; }
         if (command !== undefined) invalidInvocation(`Unexpected argument: ${arg}`);
-        if (arg !== 'inventory' && arg !== 'extract') invalidInvocation(`Unknown command: ${arg}`);
+        if (arg !== 'inventory' && arg !== 'extract' && arg !== 'read') invalidInvocation(`Unknown command: ${arg}`);
         command = arg;
     }
   }
-  const inventoryOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.offset !== undefined || parsed.snapshot !== undefined;
-  if (parsed.paths && inventoryOptions) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
-  if (command !== 'inventory' && (inventoryOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
+  const inventoryOnlyOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.snapshot !== undefined;
+  const readOnlyOptions = parsed.select !== undefined || parsed.expectedVersion !== undefined;
+  if (parsed.paths && (inventoryOnlyOptions || parsed.offset !== undefined)) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
+  if (command !== 'inventory' && (inventoryOnlyOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
+  if (command !== 'inventory' && command !== 'read' && parsed.offset !== undefined) invalidInvocation('--offset requires the inventory or read command.');
+  if (command !== 'read' && readOnlyOptions) invalidInvocation('Read options require the read command.');
   if (command !== 'extract' && parsed.all) invalidInvocation('--all requires the extract command.');
   if (command === 'extract' && !help && !version && Boolean(parsed.path) === Boolean(parsed.all)) invalidInvocation('Use extract PATH or extract --all, but not both.');
+  if (command === 'read' && !help && !version && parsed.path === undefined) invalidInvocation('Missing PATH for read.');
   if (help) parsed.command = 'help';
   else if (version) parsed.command = 'version';
   else if (command) parsed.command = command;
