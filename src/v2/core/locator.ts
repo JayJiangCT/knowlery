@@ -98,7 +98,10 @@ export function resolveLocator(extraction: Extraction, locator: Locator): { loca
       if (header.format !== 'xlsx') invalid();
       const rows = units.filter((unit): unit is Unit & { kind: 'row'; sheet: string; col: number } => unit.kind === 'row' && unit.sheet === locator.sheet && unit.col !== undefined);
       const sheets = header.meta.sheets;
-      if (!rows.length && !(Array.isArray(sheets) && sheets.includes(locator.sheet))) missing();
+      const hasSheetMeta = Array.isArray(sheets) && sheets.some((entry) =>
+        entry === locator.sheet || (typeof entry === 'object' && entry !== null && (entry as { name?: unknown }).name === locator.sheet),
+      );
+      if (!rows.length && !hasSheetMeta) missing();
       if (!locator.range) { pieces = rows; break; }
       const last = rows.reduce((max, unit) => Math.max(max, unit.row), 0);
       const { startCol, startRow, endCol } = locator.range;
