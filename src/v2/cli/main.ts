@@ -7,6 +7,7 @@ import { parseArgs, USAGE } from './args';
 import { runInventory } from './commands/inventory';
 import { runExtract } from './commands/extract';
 import { runRead } from './commands/read';
+import { runValidate } from './commands/validate';
 
 export interface CliIO {
   stdout(text: string): void;
@@ -30,14 +31,17 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         break;
       case 'inventory':
       case 'extract':
-      case 'read': {
+      case 'read':
+      case 'validate': {
         const root = await resolveRoot(args.dir, io.cwd);
         const config = await readConfig(root);
         const { result, text } = args.command === 'extract'
           ? await runExtract(root, config, args, extractionOptions)
           : args.command === 'read'
             ? await runRead(root, config, args, extractionOptions)
-            : await runInventory(root, config, args);
+            : args.command === 'validate'
+              ? await runValidate(root, config, args, extractionOptions)
+              : await runInventory(root, config, args);
         success(args.command, result, text);
         break;
       }

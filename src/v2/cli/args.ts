@@ -7,13 +7,14 @@ Commands:
   inventory --paths P…
   extract PATH | extract --all
   read PATH [--select S] [--from PAGE] [--offset N] [--expected-version HASH]
+  validate [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   --version
   --help
 
 Global flags --dir and --json may appear anywhere.`;
 
 export interface ParsedArgs {
-  command: 'inventory' | 'extract' | 'read' | 'version' | 'help';
+  command: 'inventory' | 'extract' | 'read' | 'validate' | 'version' | 'help';
   dir: string;
   json: boolean;
   scope?: string;
@@ -30,7 +31,7 @@ export interface ParsedArgs {
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = { command: 'help', dir: '.', json: false };
-  let command: 'inventory' | 'extract' | 'read' | undefined;
+  let command: 'inventory' | 'extract' | 'read' | 'validate' | undefined;
   let help = false;
   let version = false;
   const value = (index: number, flag: string): string => {
@@ -78,15 +79,16 @@ export function parseArgs(argv: string[]): ParsedArgs {
         if (arg.startsWith('-')) invalidInvocation(`Unknown flag: ${arg}`);
         if ((command === 'extract' || command === 'read') && parsed.path === undefined) { parsed.path = arg; break; }
         if (command !== undefined) invalidInvocation(`Unexpected argument: ${arg}`);
-        if (arg !== 'inventory' && arg !== 'extract' && arg !== 'read') invalidInvocation(`Unknown command: ${arg}`);
+        if (arg !== 'inventory' && arg !== 'extract' && arg !== 'read' && arg !== 'validate') invalidInvocation(`Unknown command: ${arg}`);
         command = arg;
     }
   }
-  const inventoryOnlyOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.snapshot !== undefined;
+  const listOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.snapshot !== undefined;
   const readOnlyOptions = parsed.select !== undefined || parsed.from !== undefined || parsed.expectedVersion !== undefined;
-  if (parsed.paths && (inventoryOnlyOptions || parsed.offset !== undefined)) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
-  if (command !== 'inventory' && (inventoryOnlyOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
-  if (command !== 'inventory' && command !== 'read' && parsed.offset !== undefined) invalidInvocation('--offset requires the inventory or read command.');
+  if (parsed.paths && (listOptions || parsed.offset !== undefined)) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
+  if (command !== 'inventory' && parsed.paths) invalidInvocation('--paths requires the inventory command.');
+  if (command !== 'inventory' && command !== 'validate' && listOptions) invalidInvocation('--scope, --limit and --snapshot require the inventory or validate command.');
+  if (command !== 'inventory' && command !== 'read' && command !== 'validate' && parsed.offset !== undefined) invalidInvocation('--offset requires the inventory, read or validate command.');
   if (command !== 'read' && readOnlyOptions) invalidInvocation('Read options require the read command.');
   if (command !== 'extract' && parsed.all) invalidInvocation('--all requires the extract command.');
   if (command === 'extract' && !help && !version && Boolean(parsed.path) === Boolean(parsed.all)) invalidInvocation('Use extract PATH or extract --all, but not both.');
