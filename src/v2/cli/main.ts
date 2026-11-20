@@ -8,6 +8,8 @@ import { runInventory } from './commands/inventory';
 import { runExtract } from './commands/extract';
 import { runRead } from './commands/read';
 import { runValidate } from './commands/validate';
+import { runSearch } from './commands/search';
+import { runIndexRebuild } from './commands/index';
 
 export interface CliIO {
   stdout(text: string): void;
@@ -32,7 +34,9 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
       case 'inventory':
       case 'extract':
       case 'read':
-      case 'validate': {
+      case 'validate':
+      case 'search':
+      case 'index': {
         const root = await resolveRoot(args.dir, io.cwd);
         const config = await readConfig(root);
         const { result, text } = args.command === 'extract'
@@ -41,7 +45,11 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
             ? await runRead(root, config, args, extractionOptions)
             : args.command === 'validate'
               ? await runValidate(root, config, args, extractionOptions)
-              : await runInventory(root, config, args);
+              : args.command === 'search'
+                ? await runSearch(root, config, args, extractionOptions)
+                : args.command === 'index'
+                  ? await runIndexRebuild(root, config, extractionOptions)
+                  : await runInventory(root, config, args);
         success(args.command, result, text);
         break;
       }
