@@ -472,7 +472,6 @@ describe('v2 read raw sources: versioning, offsets, errors, cache, and text form
     await readFail(['Projects/policy notes.txt', '--select', 'page 3'], 'invalid_selector', 1);
     await readFail(['Projects/policy notes.txt', '--select', 'nonsense'], 'invalid_selector', 1);
     await readFail(['Notes/meeting.md', '--select', 'heading Nope'], 'not_found', 1);
-    await readFail(['wiki/record-preservation.md'], 'invalid_selector', 1);
   });
 
   it('serves a partial csv with its problem included', async () => {
@@ -505,7 +504,7 @@ describe('v2 read raw sources: versioning, offsets, errors, cache, and text form
     expect(endText.code).toBe(0);
     expect(endText.stderr).toBe('');
     expect(endText.stdout).toBe(
-      `read Notes/meeting.md · ${endJson.version} · heading Team meeting > Decisions > Next steps · bytes 0-${endJson.bytes} of ${endJson.total_bytes} · end\n\n${endJson.text}`,
+      `read Notes/meeting.md · ${endJson.version} · heading Team meeting > Decisions > Next steps · bytes 0-${endJson.bytes} of ${endJson.total_bytes} · end\n\n${endJson.text}\n`,
     );
 
     // More + partial case
@@ -520,10 +519,10 @@ describe('v2 read raw sources: versioning, offsets, errors, cache, and text form
     expect(moreText.stdout).toBe(
       [
         `read Notes/partial-text.txt · ${moreJson.version} · line 1 · bytes 0-${moreJson.bytes} of ${moreJson.total_bytes} · partial · more`,
-        `more: --select "line 1" --offset ${moreJson.next!.offset} --expected-version ${moreJson.next!.expected_version}`,
+        `more: --select 'line 1' --offset ${moreJson.next!.offset} --expected-version ${moreJson.next!.expected_version}`,
         '',
         moreJson.text,
-      ].join('\n'),
+      ].join('\n') + '\n',
     );
   });
 

@@ -6,7 +6,7 @@ Commands:
   inventory [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   inventory --paths P…
   extract PATH | extract --all
-  read PATH [--select S] [--offset N] [--expected-version HASH]
+  read PATH [--select S] [--from PAGE] [--offset N] [--expected-version HASH]
   --version
   --help
 
@@ -24,6 +24,7 @@ export interface ParsedArgs {
   path?: string;
   all?: boolean;
   select?: string;
+  from?: string;
   expectedVersion?: string;
 }
 
@@ -48,6 +49,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       case '--scope': parsed.scope = value(++i, arg); break;
       case '--snapshot': parsed.snapshot = value(++i, arg); break;
       case '--select': parsed.select = value(++i, arg); break;
+      case '--from': parsed.from = value(++i, arg); break;
       case '--expected-version': {
         const hash = value(++i, arg);
         if (!/^sha256:[a-f0-9]{64}$/.test(hash)) invalidInvocation(`Bad value for ${arg}: ${hash}`);
@@ -81,7 +83,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
     }
   }
   const inventoryOnlyOptions = parsed.scope !== undefined || parsed.limit !== undefined || parsed.snapshot !== undefined;
-  const readOnlyOptions = parsed.select !== undefined || parsed.expectedVersion !== undefined;
+  const readOnlyOptions = parsed.select !== undefined || parsed.from !== undefined || parsed.expectedVersion !== undefined;
   if (parsed.paths && (inventoryOnlyOptions || parsed.offset !== undefined)) invalidInvocation('--paths cannot be combined with --scope, --limit, --offset or --snapshot.');
   if (command !== 'inventory' && (inventoryOnlyOptions || parsed.paths)) invalidInvocation('Inventory options require the inventory command.');
   if (command !== 'inventory' && command !== 'read' && parsed.offset !== undefined) invalidInvocation('--offset requires the inventory or read command.');

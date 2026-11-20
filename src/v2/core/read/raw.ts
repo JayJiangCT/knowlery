@@ -1,4 +1,3 @@
-import { posix } from 'node:path';
 import { KnowleryError } from '../errors';
 import { getExtraction, type ExtractionOptions } from '../extract';
 import type { Problem } from '../extract/types';
@@ -40,16 +39,7 @@ export interface ReadRawResult {
   warnings: string[];
 }
 
-function isWikiPath(input: string): boolean {
-  const normalized = posix.normalize(input.replace(/\\/g, '/'));
-  return normalized === 'wiki' || normalized.startsWith('wiki/');
-}
-
 export async function readRaw(root: string, input: string, options: ReadRawOptions = {}): Promise<ReadRawResult> {
-  if (isWikiPath(input)) {
-    throw new KnowleryError('invalid_selector', `Wiki pages cannot be read yet: ${input}`, 'Choose a raw source outside wiki/.');
-  }
-
   if (options.expectedVersion !== undefined && !/^sha256:[a-f0-9]{64}$/.test(options.expectedVersion)) {
     throw new KnowleryError('invalid_selector', `Invalid expected version: ${options.expectedVersion}`, 'Pass a sha256:<64 hex> digest from a previous read.');
   }
