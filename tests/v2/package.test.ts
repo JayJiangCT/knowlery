@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { buildPackage, PackageBuildError } from '../../src/v2/package/build';
 import { SKILLS } from '../../src/v2/skills';
-import { KIT_VERSION } from '../../src/v2/version';
+import { KF_VERSION, KIT_VERSION } from '../../src/v2/version';
 
 const execFileAsync = promisify(execFile);
 
@@ -79,7 +79,8 @@ describe('v2 release package build', () => {
       publishConfig: { tag: 'next' },
       pi: { skills: ['./skills'] },
     });
-    expect(pkg.version).toBe('2.0.0');
+    expect(pkg.version).toBe(KIT_VERSION);
+    expect(KIT_VERSION).toMatch(/^2\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?$/);
     expect(Object.prototype.hasOwnProperty.call(pkg, 'keywords')).toBe(false);
     expect(rawPkg).toBe(`${JSON.stringify(pkg, null, 2)}\n`);
 
@@ -106,7 +107,7 @@ describe('v2 release package build', () => {
       cwd: workDir,
       timeout: 15000,
     });
-    expect(versionRun.stdout).toBe('knowlery 2.0.0 (kf 2.0)\n');
+    expect(versionRun.stdout).toBe(`knowlery ${KIT_VERSION} (kf ${KF_VERSION})\n`);
     expect(versionRun.stderr).toBe('');
 
     const kbDir = join(workDir, 'kb');

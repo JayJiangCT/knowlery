@@ -244,7 +244,7 @@ export async function defaultRunKnowleryVersion(commandPath: string): Promise<st
 
 export function parseKnowleryVersion(output: string | null | undefined): string | null {
   if (!output) return null;
-  const match = /\b(\d+\.\d+\.\d+)\b/.exec(output);
+  const match = /\b(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?)\b/.exec(output);
   return match ? match[1] : null;
 }
 

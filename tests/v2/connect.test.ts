@@ -378,19 +378,38 @@ describe('v2 connect', () => {
     await makeExecutable(bin2, 'knowlery');
     const bothPath = `${bin1}${delimiter}${bin2}`;
 
-    // 2.0.0 ok — no warning, and runner gets the first PATH entry
+    // 2.0.0-beta.1 ok — prerelease preserved, no warning, and runner gets the first PATH entry
     const seenPaths: string[] = [];
-    const okEnv: RunEnv = {
+    const betaOkEnv: RunEnv = {
       pathEnv: bothPath,
       homeDir: '',
       runKnowleryVersion: (p) => {
         seenPaths.push(p);
-        return Promise.resolve('knowlery 2.0.0 (kf 2.0)\n');
+        return Promise.resolve('knowlery 2.0.0-beta.1 (kf 2.0)\n');
       },
+    };
+    const betaOkText = await runDirect(root, ['connect'], betaOkEnv);
+    expect(betaOkText.code).toBe(0);
+    expect(seenPaths).toEqual([knowleryPath1]);
+    expect(betaOkText.stdout.split('\n')[0]).toBe(`connect  root: ${root}  knowlery command: 2.0.0-beta.1 on PATH`);
+    expect(betaOkText.stdout).not.toContain('warning:');
+    const betaOkJson = await runDirectJson<ConnectListResult>(root, ['connect'], betaOkEnv);
+    expect(betaOkJson).toMatchObject({
+      knowlery_on_path: true,
+      knowlery_path: knowleryPath1,
+      knowlery_version: '2.0.0-beta.1',
+      knowlery_ok: true,
+      warning: null,
+    });
+
+    // 2.0.0 ok — no warning
+    const okEnv: RunEnv = {
+      pathEnv: bin1,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('knowlery 2.0.0 (kf 2.0)\n'),
     };
     const okText = await runDirect(root, ['connect'], okEnv);
     expect(okText.code).toBe(0);
-    expect(seenPaths).toEqual([knowleryPath1]);
     expect(okText.stdout.split('\n')[0]).toBe(`connect  root: ${root}  knowlery command: 2.0.0 on PATH`);
     expect(okText.stdout).not.toContain('warning:');
     const okJson = await runDirectJson<ConnectListResult>(root, ['connect'], okEnv);
@@ -420,6 +439,26 @@ describe('v2 connect', () => {
       knowlery_version: '1.6.2',
       knowlery_ok: false,
       warning: oldLines[1],
+    });
+
+    // 1.7.0-beta.2 on PATH — prerelease preserved, still not 2.x
+    const oldBetaEnv: RunEnv = {
+      pathEnv: bin1,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('1.7.0-beta.2\n'),
+    };
+    const oldBetaText = await runDirect(root, ['connect'], oldBetaEnv);
+    expect(oldBetaText.code).toBe(0);
+    const oldBetaLines = oldBetaText.stdout.split('\n');
+    expect(oldBetaLines[0]).toBe(`connect  root: ${root}  knowlery command: 1.7.0-beta.2 on PATH, needs 2.x`);
+    expect(oldBetaLines[1]).toBe(`warning: the knowlery on PATH is 1.7.0-beta.2 (${knowleryPath1}); the Skills and MCP entries need 2.x. Run: npm install -g knowlery@next`);
+    const oldBetaJson = await runDirectJson<ConnectListResult>(root, ['connect'], oldBetaEnv);
+    expect(oldBetaJson).toMatchObject({
+      knowlery_on_path: true,
+      knowlery_path: knowleryPath1,
+      knowlery_version: '1.7.0-beta.2',
+      knowlery_ok: false,
+      warning: oldBetaLines[1],
     });
 
     // Unknown version
