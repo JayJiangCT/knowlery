@@ -40,6 +40,7 @@ export const KF_SCHEMA = {
     'source_path_invalid',
     'locator_not_found',
     'quote_not_found',
+    'quote_missing',
     'relation_invalid',
     'supersede_inconsistent',
     'dispute_inconsistent',

@@ -263,6 +263,7 @@ describe('v2 validate', () => {
         `- s2 · \`Notes/meeting.md\` · sha256:${meetingSha} · heading Team meeting > Decisions > Next steps · "Quote that does not appear anywhere."`,
         `- s3 · \`Notes/multiline.txt\` · sha256:${multiLineSha} · lines 1-2 · "Alpha line   beta line"`,
         `- s4 · \`Notes/link-meeting.md\` · sha256:${meetingSha} · heading Team meeting > Decisions > Next steps · "Review the source documents before compiling the wiki."`,
+        `- s5 · \`Notes/meeting.md\` · sha256:${meetingSha} · heading Team meeting > Decisions > Next steps`,
       ].join('\n') + '\n',
     );
 
@@ -271,6 +272,7 @@ describe('v2 validate', () => {
       { line: 12, code: 'locator_not_found', severity: 'error' },
       { line: 13, code: 'quote_not_found', severity: 'error' },
       { line: 15, code: 'source_path_invalid', severity: 'error' },
+      { line: 16, code: 'quote_missing', severity: 'error' },
     ]);
   });
 

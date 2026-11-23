@@ -613,7 +613,7 @@ export function parsePage(text: string, fileName: string): ParsedPage {
       }
 
       if (quote === null && needsQuote(sourcePath)) {
-        addProblem('quote_not_found', line, `Source "${sourcePath}" requires a verbatim quote.`);
+        addProblem('quote_missing', line, `Source "${sourcePath}" requires a verbatim quote.`);
       }
 
       definedSourceKeys.add(key);

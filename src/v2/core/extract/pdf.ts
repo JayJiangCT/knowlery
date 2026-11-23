@@ -25,7 +25,7 @@ function getPdfjsPaths(): { cMapUrl: string; standardFontDataUrl: string } {
   return cachedPaths;
 }
 
-async function loadPdfjs(): Promise<PdfjsModule> {
+export async function loadPdfjs(): Promise<PdfjsModule> {
   if (!cachedPdfjs) {
     cachedPdfjs = import('pdfjs-dist/legacy/build/pdf.mjs');
   }

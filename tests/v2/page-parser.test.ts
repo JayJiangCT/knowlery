@@ -352,7 +352,7 @@ describe('KF 2.0 malformed pages', () => {
     ]);
   });
 
-  it('reports source_line_invalid, source_path_invalid, and quote_not_found on exact lines', async () => {
+  it('reports source_line_invalid, source_path_invalid, and quote_missing on exact lines', async () => {
     const text = await readFile(join(badDir, 'bad-sources.md'), 'utf8');
     const page = parsePage(text, 'bad-sources.md');
 
@@ -363,7 +363,7 @@ describe('KF 2.0 malformed pages', () => {
       { code: 'source_path_invalid', line: 18 }, // ../x.pdf
       { code: 'source_path_invalid', line: 19 }, // /abs.pdf
       { code: 'source_path_invalid', line: 20 }, // wiki/a.md
-      { code: 'quote_not_found', line: 21 }, // .pdf without quote
+      { code: 'quote_missing', line: 21 }, // .pdf without quote
       { code: 'source_line_invalid', line: 23 }, // 201-char quote
     ]);
     // .xlsx line without a quote (s6 on line 22) is accepted cleanly.

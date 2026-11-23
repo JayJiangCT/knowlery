@@ -3,6 +3,9 @@ import { invalidInvocation } from '../core/errors';
 export const USAGE = `Usage: knowlery [--dir ROOT] [--json] <command> [arguments]
 
 Commands:
+  init
+  sync [--apply]
+  health
   inventory [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   inventory --paths P…
   extract PATH | extract --all
@@ -18,9 +21,10 @@ Note: stale treats any source cited by at least one page as referenced; it does 
 Global flags --dir and --json may appear anywhere.`;
 
 export interface ParsedArgs {
-  command: 'inventory' | 'extract' | 'read' | 'validate' | 'stale' | 'search' | 'index' | 'version' | 'help';
+  command: 'init' | 'sync' | 'health' | 'inventory' | 'extract' | 'read' | 'validate' | 'stale' | 'search' | 'index' | 'version' | 'help';
   dir: string;
   json: boolean;
+  apply?: boolean;
   scope?: string;
   limit?: number;
   offset?: number;
@@ -37,7 +41,7 @@ export interface ParsedArgs {
 
 export function parseArgs(argv: string[]): ParsedArgs {
   const parsed: ParsedArgs = { command: 'help', dir: '.', json: false };
-  let command: 'inventory' | 'extract' | 'read' | 'validate' | 'stale' | 'search' | 'index' | undefined;
+  let command: 'init' | 'sync' | 'health' | 'inventory' | 'extract' | 'read' | 'validate' | 'stale' | 'search' | 'index' | undefined;
   let help = false;
   let version = false;
   const value = (index: number, flag: string): string => {
@@ -51,6 +55,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       case '--dir': parsed.dir = value(++i, arg); break;
       case '--json': parsed.json = true; break;
       case '--all': parsed.all = true; break;
+      case '--apply': parsed.apply = true; break;
       case '--help': help = true; break;
       case '--version': version = true; break;
       case '--scope': parsed.scope = value(++i, arg); break;
@@ -87,7 +92,11 @@ export function parseArgs(argv: string[]): ParsedArgs {
         if (command === 'search' && parsed.query === undefined) { parsed.query = arg; break; }
         if (command === 'index' && parsed.subcommand === undefined) { parsed.subcommand = arg; break; }
         if (command !== undefined) invalidInvocation(`Unexpected argument: ${arg}`);
-        if (arg !== 'inventory' && arg !== 'extract' && arg !== 'read' && arg !== 'validate' && arg !== 'stale' && arg !== 'search' && arg !== 'index') invalidInvocation(`Unknown command: ${arg}`);
+        if (
+          arg !== 'init' && arg !== 'sync' && arg !== 'health' &&
+          arg !== 'inventory' && arg !== 'extract' && arg !== 'read' &&
+          arg !== 'validate' && arg !== 'stale' && arg !== 'search' && arg !== 'index'
+        ) invalidInvocation(`Unknown command: ${arg}`);
         command = arg;
     }
   }
@@ -99,6 +108,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   if (command !== 'inventory' && command !== 'read' && command !== 'validate' && command !== 'stale' && command !== 'search' && parsed.offset !== undefined) invalidInvocation('--offset requires the inventory, read, validate, stale or search command.');
   if (command !== 'read' && readOnlyOptions) invalidInvocation('Read options require the read command.');
   if (command !== 'extract' && parsed.all) invalidInvocation('--all requires the extract command.');
+  if (command !== 'sync' && parsed.apply) invalidInvocation('--apply requires the sync command.');
   if (command === 'extract' && !help && !version && Boolean(parsed.path) === Boolean(parsed.all)) invalidInvocation('Use extract PATH or extract --all, but not both.');
   if (command === 'read' && !help && !version && parsed.path === undefined) invalidInvocation('Missing PATH for read.');
   if (command === 'search' && !help && !version) {

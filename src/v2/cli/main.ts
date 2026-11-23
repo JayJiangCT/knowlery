@@ -11,6 +11,9 @@ import { runValidate } from './commands/validate';
 import { runStale } from './commands/stale';
 import { runSearch } from './commands/search';
 import { runIndexRebuild } from './commands/index';
+import { runInit } from './commands/init';
+import { runSync } from './commands/sync';
+import { runHealth } from './commands/health';
 
 export interface CliIO {
   stdout(text: string): void;
@@ -32,6 +35,14 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
       case 'version':
         success('version', { kit: KIT_VERSION, kf: KF_VERSION }, `knowlery ${KIT_VERSION} (kf ${KF_VERSION})\n`);
         break;
+      case 'init': {
+        const root = await resolveRoot(args.dir, io.cwd);
+        const { result, text } = await runInit(root);
+        success(args.command, result, text);
+        break;
+      }
+      case 'sync':
+      case 'health':
       case 'inventory':
       case 'extract':
       case 'read':
@@ -41,19 +52,23 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
       case 'index': {
         const root = await resolveRoot(args.dir, io.cwd);
         const config = await readConfig(root);
-        const { result, text } = args.command === 'extract'
-          ? await runExtract(root, config, args, extractionOptions)
-          : args.command === 'read'
-            ? await runRead(root, config, args, extractionOptions)
-            : args.command === 'validate'
-              ? await runValidate(root, config, args, extractionOptions)
-              : args.command === 'stale'
-                ? await runStale(root, config, args, extractionOptions)
-                : args.command === 'search'
-                  ? await runSearch(root, config, args, extractionOptions)
-                  : args.command === 'index'
-                    ? await runIndexRebuild(root, config, extractionOptions)
-                    : await runInventory(root, config, args);
+        const { result, text } = args.command === 'sync'
+          ? await runSync(root, args)
+          : args.command === 'health'
+            ? await runHealth(root, config, extractionOptions)
+            : args.command === 'extract'
+              ? await runExtract(root, config, args, extractionOptions)
+              : args.command === 'read'
+                ? await runRead(root, config, args, extractionOptions)
+                : args.command === 'validate'
+                  ? await runValidate(root, config, args, extractionOptions)
+                  : args.command === 'stale'
+                    ? await runStale(root, config, args, extractionOptions)
+                    : args.command === 'search'
+                      ? await runSearch(root, config, args, extractionOptions)
+                      : args.command === 'index'
+                        ? await runIndexRebuild(root, config, extractionOptions)
+                        : await runInventory(root, config, args);
         success(args.command, result, text);
         break;
       }
