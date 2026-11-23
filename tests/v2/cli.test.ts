@@ -12,9 +12,9 @@ afterEach(async () => { await rm(root, { recursive: true, force: true }); });
 
 describe('v2 CLI contract', () => {
   it('prints the version in text and JSON', async () => {
-    expect(await invoke(root, ['--version'])).toEqual({ code: 0, stdout: 'knowlery 2.0.0-dev (kf 2.0)\n', stderr: '' });
+    expect(await invoke(root, ['--version'])).toEqual({ code: 0, stdout: 'knowlery 2.0.0 (kf 2.0)\n', stderr: '' });
     const result = await jsonRun(root, ['--version']);
-    expect(result).toEqual({ contract: '2.0', ok: true, command: 'version', kit: '2.0.0-dev', kf: '2.0' });
+    expect(result).toEqual({ contract: '2.0', ok: true, command: 'version', kit: '2.0.0', kf: '2.0' });
   });
 
   it('prints help on stdout, but no command is an invocation error with usage on stderr', async () => {
@@ -85,7 +85,7 @@ describe('v2 CLI contract', () => {
   it('starts the real process entry with npx tsx', async () => {
     const configBefore = await readFile(join(root, '.knowlery/config.json'));
     const result = await promisify(execFile)('npx', ['--no-install', 'tsx', 'src/v2/cli/bin.ts', '--version'], { cwd: process.cwd(), timeout: 15000 });
-    expect(result.stdout).toBe('knowlery 2.0.0-dev (kf 2.0)\n');
+    expect(result.stdout).toBe('knowlery 2.0.0 (kf 2.0)\n');
     expect(result.stderr).toBe('');
     expect(await readFile(join(root, '.knowlery/config.json'))).toEqual(configBefore);
   });
@@ -94,6 +94,6 @@ describe('v2 CLI contract', () => {
     let output = '';
     const code = await runCli(['--version'], { cwd: join(root, 'missing'), stdout: (text) => { output += text; }, stderr: () => { throw new Error('unexpected stderr'); } });
     expect(code).toBe(0);
-    expect(output).toContain('2.0.0-dev');
+    expect(output).toContain('2.0.0');
   });
 });

@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { chmod, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { runCli } from '../../src/v2/cli/main';
 import {
   HARNESS_IDS,
   type ConnectApplyResult,
   type ConnectListResult,
+  type KnowleryVersionRunner,
 } from '../../src/v2/core/connect';
 import { AGENTS_LINES } from '../../src/v2/core/init';
 import { findMcpRoot } from '../../src/v2/mcp/root';
@@ -31,6 +32,7 @@ afterEach(async () => {
 interface RunEnv {
   pathEnv?: string;
   homeDir?: string;
+  runKnowleryVersion?: KnowleryVersionRunner;
 }
 
 async function runDirect(root: string, argv: string[], env: RunEnv = {}) {
@@ -42,6 +44,7 @@ async function runDirect(root: string, argv: string[], env: RunEnv = {}) {
     stderr: (text) => { stderr += text; },
     pathEnv: env.pathEnv ?? '',
     homeDir: env.homeDir ?? '',
+    runKnowleryVersion: env.runKnowleryVersion,
   });
   return { code, stdout, stderr };
 }
@@ -102,10 +105,18 @@ describe('v2 connect', () => {
     const beforeState = await fileState(root);
     const beforeEntries = await allEntriesUnder(root);
 
-    const listJson = await runDirectJson<ConnectListResult>(root, ['connect'], { pathEnv: binDir, homeDir });
+    const env: RunEnv = {
+      pathEnv: binDir,
+      homeDir,
+      runKnowleryVersion: () => Promise.resolve('knowlery 2.0.0 (kf 2.0)\n'),
+    };
+    const listJson = await runDirectJson<ConnectListResult>(root, ['connect'], env);
     expect(listJson.command).toBe('connect');
     expect(listJson.root).toBe(root);
     expect(listJson.knowlery_on_path).toBe(true);
+    expect(listJson.knowlery_version).toBe('2.0.0');
+    expect(listJson.knowlery_ok).toBe(true);
+    expect(listJson.warning).toBeNull();
     expect(listJson.harnesses.map((h) => h.id)).toEqual(['pi', 'codex', 'cursor', 'gemini', 'claude']);
 
     const byId = Object.fromEntries(listJson.harnesses.map((h) => [h.id, h]));
@@ -121,9 +132,9 @@ describe('v2 connect', () => {
       mcp: 'none',
     });
 
-    const listText = await runDirect(root, ['connect'], { pathEnv: binDir, homeDir });
+    const listText = await runDirect(root, ['connect'], env);
     expect(listText.code).toBe(0);
-    expect(listText.stdout).toContain(`connect  root: ${root}  knowlery command: on PATH`);
+    expect(listText.stdout).toContain(`connect  root: ${root}  knowlery command: 2.0.0 on PATH`);
     expect(listText.stdout).toContain('claude\tClaude Code\tfound\tnot connected\tmcp: none\tmissing: 3 Skills in .claude/skills');
     expect(listText.stdout).toContain('next: knowlery connect claude');
     expect(listText.stdout).toContain('MCP is optional for these clients. Add --mcp to write a project MCP entry: knowlery connect <id> --mcp');
@@ -146,7 +157,7 @@ describe('v2 connect', () => {
     }
     const noneText = await runDirect(root, ['connect'], { pathEnv: binDir, homeDir });
     expect(noneText.stdout).toContain('knowlery command: not on PATH');
-    expect(noneText.stdout).toContain('warning: the Skills and MCP entries run "knowlery"; put the command on PATH.');
+    expect(noneText.stdout).toContain('warning: the Skills and MCP entries run "knowlery", and it is not on PATH. Install it: npm install -g knowlery@next');
     expect(noneText.stdout).toContain('No agent client was found on this machine. knowlery connect <id> works all the same.');
     expect(noneText.stdout).not.toContain('next:');
 
@@ -357,5 +368,160 @@ describe('v2 connect', () => {
     expect(argsLine).toBeDefined();
     const parsedArgs = JSON.parse(argsLine!.slice('args = '.length)) as string[];
     expect(parsedArgs).toEqual(['mcp', '--dir', root]);
+  });
+
+  it('reports each knowlery version state on PATH and checks the first PATH entry', async () => {
+    const root = await initTempKb();
+    const bin1 = await makeTempDir('knowlery-v2-bin1-');
+    const bin2 = await makeTempDir('knowlery-v2-bin2-');
+    const knowleryPath1 = await makeExecutable(bin1, 'knowlery');
+    await makeExecutable(bin2, 'knowlery');
+    const bothPath = `${bin1}${delimiter}${bin2}`;
+
+    // 2.0.0 ok — no warning, and runner gets the first PATH entry
+    const seenPaths: string[] = [];
+    const okEnv: RunEnv = {
+      pathEnv: bothPath,
+      homeDir: '',
+      runKnowleryVersion: (p) => {
+        seenPaths.push(p);
+        return Promise.resolve('knowlery 2.0.0 (kf 2.0)\n');
+      },
+    };
+    const okText = await runDirect(root, ['connect'], okEnv);
+    expect(okText.code).toBe(0);
+    expect(seenPaths).toEqual([knowleryPath1]);
+    expect(okText.stdout.split('\n')[0]).toBe(`connect  root: ${root}  knowlery command: 2.0.0 on PATH`);
+    expect(okText.stdout).not.toContain('warning:');
+    const okJson = await runDirectJson<ConnectListResult>(root, ['connect'], okEnv);
+    expect(okJson).toMatchObject({
+      knowlery_on_path: true,
+      knowlery_path: knowleryPath1,
+      knowlery_version: '2.0.0',
+      knowlery_ok: true,
+      warning: null,
+    });
+
+    // 1.6.2 on PATH — needs 2.x warning with path and install command
+    const oldEnv: RunEnv = {
+      pathEnv: bin1,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('1.6.2\n'),
+    };
+    const oldText = await runDirect(root, ['connect'], oldEnv);
+    expect(oldText.code).toBe(0);
+    const oldLines = oldText.stdout.split('\n');
+    expect(oldLines[0]).toBe(`connect  root: ${root}  knowlery command: 1.6.2 on PATH, needs 2.x`);
+    expect(oldLines[1]).toBe(`warning: the knowlery on PATH is 1.6.2 (${knowleryPath1}); the Skills and MCP entries need 2.x. Run: npm install -g knowlery@next`);
+    const oldJson = await runDirectJson<ConnectListResult>(root, ['connect'], oldEnv);
+    expect(oldJson).toMatchObject({
+      knowlery_on_path: true,
+      knowlery_path: knowleryPath1,
+      knowlery_version: '1.6.2',
+      knowlery_ok: false,
+      warning: oldLines[1],
+    });
+
+    // Unknown version
+    const unknownEnv: RunEnv = {
+      pathEnv: bin1,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve(null),
+    };
+    const unknownText = await runDirect(root, ['connect'], unknownEnv);
+    expect(unknownText.code).toBe(0);
+    const unknownLines = unknownText.stdout.split('\n');
+    expect(unknownLines[0]).toBe(`connect  root: ${root}  knowlery command: on PATH, version unknown`);
+    expect(unknownLines[1]).toBe(`warning: could not read the version of the knowlery on PATH (${knowleryPath1}); the Skills and MCP entries need 2.x.`);
+    const unknownJson = await runDirectJson<ConnectListResult>(root, ['connect'], unknownEnv);
+    expect(unknownJson).toMatchObject({
+      knowlery_on_path: true,
+      knowlery_path: knowleryPath1,
+      knowlery_version: null,
+      knowlery_ok: false,
+      warning: unknownLines[1],
+    });
+
+    // Not on PATH — runner is not called
+    let called = false;
+    const missingEnv: RunEnv = {
+      pathEnv: '',
+      homeDir: '',
+      runKnowleryVersion: () => {
+        called = true;
+        return Promise.resolve('2.0.0\n');
+      },
+    };
+    const missingText = await runDirect(root, ['connect'], missingEnv);
+    expect(missingText.code).toBe(0);
+    expect(called).toBe(false);
+    const missingLines = missingText.stdout.split('\n');
+    expect(missingLines[0]).toBe(`connect  root: ${root}  knowlery command: not on PATH`);
+    expect(missingLines[1]).toBe('warning: the Skills and MCP entries run "knowlery", and it is not on PATH. Install it: npm install -g knowlery@next');
+    const missingJson = await runDirectJson<ConnectListResult>(root, ['connect'], missingEnv);
+    expect(missingJson).toMatchObject({
+      knowlery_on_path: false,
+      knowlery_path: null,
+      knowlery_version: null,
+      knowlery_ok: false,
+      warning: missingLines[1],
+    });
+  });
+
+  it('connect <harness> still writes files with 1.x in front and appends warning only when not ok', async () => {
+    const root = await initTempKb();
+    const binDir = await makeTempDir('knowlery-v2-bin-');
+    const knowleryPath = await makeExecutable(binDir, 'knowlery');
+
+    const oldWarning = `warning: the knowlery on PATH is 1.6.2 (${knowleryPath}); the Skills and MCP entries need 2.x. Run: npm install -g knowlery@next`;
+    const oldText = await runDirect(root, ['connect', 'pi', '--mcp'], {
+      pathEnv: binDir,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('1.6.2\n'),
+    });
+    expect(oldText.code).toBe(0);
+    const mcpRaw = await readFile(join(root, '.pi/mcp.json'), 'utf8');
+    expect(JSON.parse(mcpRaw)).toMatchObject({
+      mcpServers: { knowlery: { command: 'knowlery', args: ['mcp', '--dir', root], exposure: 'direct' } },
+    });
+    const oldLines = oldText.stdout.trimEnd().split('\n');
+    expect(oldLines[oldLines.length - 1]).toBe(oldWarning);
+    expect(oldLines[oldLines.length - 2]).toBe('');
+
+    const oldJson = await runDirectJson<ConnectApplyResult>(root, ['connect', 'pi', '--mcp'], {
+      pathEnv: binDir,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('1.6.2\n'),
+    });
+    expect(oldJson.warning).toBe(oldWarning);
+
+    const okText = await runDirect(root, ['connect', 'pi', '--mcp'], {
+      pathEnv: binDir,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('knowlery 2.0.0 (kf 2.0)\n'),
+    });
+    expect(okText.code).toBe(0);
+    expect(okText.stdout).not.toContain('warning:');
+
+    const okJson = await runDirectJson<ConnectApplyResult>(root, ['connect', 'pi', '--mcp'], {
+      pathEnv: binDir,
+      homeDir: '',
+      runKnowleryVersion: () => Promise.resolve('knowlery 2.0.0 (kf 2.0)\n'),
+    });
+    expect(okJson.warning).toBeNull();
+  });
+
+  it.skipIf(process.platform === 'win32')('runs the real knowlery executable on PATH to read its version', async () => {
+    const root = await initTempKb();
+    const binDir = await makeTempDir('knowlery-v2-real-bin-');
+    const scriptPath = join(binDir, 'knowlery');
+    await writeFile(scriptPath, '#!/bin/sh\necho 1.6.2\n', 'utf8');
+    await chmod(scriptPath, 0o755);
+
+    const res = await runDirect(root, ['connect'], { pathEnv: binDir, homeDir: '' });
+    expect(res.code).toBe(0);
+    const lines = res.stdout.split('\n');
+    expect(lines[0]).toBe(`connect  root: ${root}  knowlery command: 1.6.2 on PATH, needs 2.x`);
+    expect(lines[1]).toBe(`warning: the knowlery on PATH is 1.6.2 (${scriptPath}); the Skills and MCP entries need 2.x. Run: npm install -g knowlery@next`);
   });
 });

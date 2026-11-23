@@ -41,6 +41,13 @@ function formatHarnessRow(status: HarnessStatus, details: HarnessDetails): strin
   return cols.join('\t');
 }
 
+function formatKnowleryCommandSummary(result: ConnectListResult): string {
+  if (!result.knowlery_on_path) return 'not on PATH';
+  if (result.knowlery_version === null) return 'on PATH, version unknown';
+  if (result.knowlery_ok) return `${result.knowlery_version} on PATH`;
+  return `${result.knowlery_version} on PATH, needs 2.x`;
+}
+
 export async function runConnect(
   root: string,
   args: Pick<ParsedArgs, 'harness' | 'mcp'>,
@@ -49,10 +56,10 @@ export async function runConnect(
   if (args.harness === undefined) {
     const { result, details } = await inspectConnect(root, env);
     const lines: string[] = [
-      `connect  root: ${result.root}  knowlery command: ${result.knowlery_on_path ? 'on PATH' : 'not on PATH'}`,
+      `connect  root: ${result.root}  knowlery command: ${formatKnowleryCommandSummary(result)}`,
     ];
-    if (!result.knowlery_on_path) {
-      lines.push('warning: the Skills and MCP entries run "knowlery"; put the command on PATH.');
+    if (result.warning !== null) {
+      lines.push(result.warning);
     }
     for (const status of result.harnesses) {
       lines.push(formatHarnessRow(status, details[status.id]));
@@ -104,6 +111,9 @@ export async function runConnect(
       'User-wide, not written by Knowlery. To use this knowledge base from other folders too:',
       result.user_wide,
     );
+  }
+  if (result.warning !== null) {
+    lines.push('', result.warning);
   }
 
   return { result, text: `${lines.join('\n')}\n` };

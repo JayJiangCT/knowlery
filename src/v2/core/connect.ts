@@ -1,5 +1,7 @@
+import { execFile } from 'node:child_process';
 import { access, constants, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { delimiter, dirname, join } from 'node:path';
+import { promisify } from 'node:util';
 import { SKILLS } from '../skills';
 import { isObject } from './config';
 import { invalidInvocation, KnowleryError } from './errors';
@@ -106,10 +108,21 @@ export function getHarnessSpec(id: string): HarnessSpec {
   return found;
 }
 
+export type KnowleryVersionRunner = (commandPath: string) => Promise<string | null>;
+
 export interface ConnectEnv {
   pathEnv?: string;
   homeDir?: string;
   platform?: NodeJS.Platform;
+  runKnowleryVersion?: KnowleryVersionRunner;
+}
+
+export interface KnowleryCommandStatus {
+  onPath: boolean;
+  path: string | null;
+  version: string | null;
+  ok: boolean;
+  warning: string | null;
 }
 
 export type EntryState = 'ok' | 'missing' | 'incomplete';
@@ -140,6 +153,10 @@ export interface HarnessDetails {
 export interface ConnectListResult {
   root: string;
   knowlery_on_path: boolean;
+  knowlery_path: string | null;
+  knowlery_version: string | null;
+  knowlery_ok: boolean;
+  warning: string | null;
   harnesses: HarnessStatus[];
 }
 
@@ -161,6 +178,7 @@ export interface ConnectApplyResult {
   then: string;
   mcp_note: string | null;
   user_wide: string | null;
+  warning: string | null;
 }
 
 export interface ConnectApplyReport {
@@ -182,22 +200,104 @@ async function isExecutableFile(filePath: string, platform: NodeJS.Platform): Pr
   }
 }
 
-export async function findCommandOnPath(
+export async function findCommandPathOnPath(
   command: string,
   pathEnv: string | undefined,
   platform: NodeJS.Platform = process.platform,
-): Promise<boolean> {
-  if (!pathEnv) return false;
+): Promise<string | null> {
+  if (!pathEnv) return null;
   const dirs = pathEnv.split(delimiter).filter(Boolean);
   const candidates = platform === 'win32'
     ? [command, `${command}.cmd`, `${command}.exe`]
     : [command];
   for (const dir of dirs) {
     for (const candidate of candidates) {
-      if (await isExecutableFile(join(dir, candidate), platform)) return true;
+      const candidatePath = join(dir, candidate);
+      if (await isExecutableFile(candidatePath, platform)) return candidatePath;
     }
   }
-  return false;
+  return null;
+}
+
+export async function findCommandOnPath(
+  command: string,
+  pathEnv: string | undefined,
+  platform: NodeJS.Platform = process.platform,
+): Promise<boolean> {
+  return (await findCommandPathOnPath(command, pathEnv, platform)) !== null;
+}
+
+const execFileAsync = promisify(execFile);
+const KNOWLERY_VERSION_TIMEOUT_MS = 5000;
+
+export async function defaultRunKnowleryVersion(commandPath: string): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync(commandPath, ['--version'], {
+      timeout: KNOWLERY_VERSION_TIMEOUT_MS,
+      encoding: 'utf8',
+    });
+    return stdout;
+  } catch {
+    return null;
+  }
+}
+
+export function parseKnowleryVersion(output: string | null | undefined): string | null {
+  if (!output) return null;
+  const match = /\b(\d+\.\d+\.\d+)\b/.exec(output);
+  return match ? match[1] : null;
+}
+
+export async function inspectKnowleryCommand(env: ConnectEnv = {}): Promise<KnowleryCommandStatus> {
+  const platform = env.platform ?? process.platform;
+  const commandPath = await findCommandPathOnPath('knowlery', env.pathEnv, platform);
+  if (commandPath === null) {
+    return {
+      onPath: false,
+      path: null,
+      version: null,
+      ok: false,
+      warning: 'warning: the Skills and MCP entries run "knowlery", and it is not on PATH. Install it: npm install -g knowlery@next',
+    };
+  }
+
+  const runner = env.runKnowleryVersion ?? defaultRunKnowleryVersion;
+  let output: string | null;
+  try {
+    output = await runner(commandPath);
+  } catch {
+    output = null;
+  }
+
+  const version = parseKnowleryVersion(output);
+  if (version === null) {
+    return {
+      onPath: true,
+      path: commandPath,
+      version: null,
+      ok: false,
+      warning: `warning: could not read the version of the knowlery on PATH (${commandPath}); the Skills and MCP entries need 2.x.`,
+    };
+  }
+
+  const major = Number(version.split('.')[0]);
+  if (major === 2) {
+    return {
+      onPath: true,
+      path: commandPath,
+      version,
+      ok: true,
+      warning: null,
+    };
+  }
+
+  return {
+    onPath: true,
+    path: commandPath,
+    version,
+    ok: false,
+    warning: `warning: the knowlery on PATH is ${version} (${commandPath}); the Skills and MCP entries need 2.x. Run: npm install -g knowlery@next`,
+  };
 }
 
 async function homeFolderExists(homeDir: string | undefined, folderName: string): Promise<boolean> {
@@ -330,8 +430,7 @@ export async function inspectHarness(
 }
 
 export async function inspectConnect(root: string, env: ConnectEnv = {}): Promise<ConnectListReport> {
-  const platform = env.platform ?? process.platform;
-  const knowleryOnPath = await findCommandOnPath('knowlery', env.pathEnv, platform);
+  const knowlery = await inspectKnowleryCommand(env);
   const harnesses: HarnessStatus[] = [];
   const details = {} as Record<HarnessId, HarnessDetails>;
 
@@ -344,7 +443,11 @@ export async function inspectConnect(root: string, env: ConnectEnv = {}): Promis
   return {
     result: {
       root,
-      knowlery_on_path: knowleryOnPath,
+      knowlery_on_path: knowlery.onPath,
+      knowlery_path: knowlery.path,
+      knowlery_version: knowlery.version,
+      knowlery_ok: knowlery.ok,
+      warning: knowlery.warning,
       harnesses,
     },
     details,
@@ -468,6 +571,7 @@ export async function connectHarness(
   }
 
   const inspected = await inspectHarness(root, spec, options.env);
+  const knowlery = await inspectKnowleryCommand(options.env);
 
   return {
     result: {
@@ -478,6 +582,7 @@ export async function connectHarness(
       then: spec.thenLine,
       mcp_note: withMcp ? spec.mcpLine : null,
       user_wide: withMcp ? buildUserWideLine(root, spec) : null,
+      warning: knowlery.warning,
     },
     details: inspected.details,
     outdatedSkills: skills.outdated.length > 0,

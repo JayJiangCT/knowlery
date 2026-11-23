@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { readConfig } from '../core/config';
-import { getHarnessSpec } from '../core/connect';
+import { getHarnessSpec, type KnowleryVersionRunner } from '../core/connect';
 import { exitCode, KnowleryError } from '../core/errors';
 import type { ExtractionOptions } from '../core/extract';
 import { resolveRoot } from '../core/paths';
@@ -26,6 +26,7 @@ export interface CliIO {
   knowleryDir?: string;
   pathEnv?: string;
   homeDir?: string;
+  runKnowleryVersion?: KnowleryVersionRunner;
 }
 
 export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<ExtractionOptions, 'registry' | 'ceiling'> = {}): Promise<number> {
@@ -66,6 +67,7 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         const { result, text } = await runConnect(root, args, {
           pathEnv: io.pathEnv ?? process.env.PATH,
           homeDir: io.homeDir ?? homedir(),
+          runKnowleryVersion: io.runKnowleryVersion,
         });
         success(args.command, result, text);
         break;
