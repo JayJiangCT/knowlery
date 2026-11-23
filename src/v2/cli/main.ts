@@ -1,9 +1,12 @@
+import { homedir } from 'node:os';
 import { readConfig } from '../core/config';
+import { getHarnessSpec } from '../core/connect';
 import { exitCode, KnowleryError } from '../core/errors';
 import type { ExtractionOptions } from '../core/extract';
 import { resolveRoot } from '../core/paths';
 import { KF_VERSION, KIT_VERSION } from '../version';
 import { parseArgs, USAGE } from './args';
+import { runConnect } from './commands/connect';
 import { runInventory } from './commands/inventory';
 import { runExtract } from './commands/extract';
 import { runRead } from './commands/read';
@@ -21,6 +24,8 @@ export interface CliIO {
   stderr(text: string): void;
   cwd: string;
   knowleryDir?: string;
+  pathEnv?: string;
+  homeDir?: string;
 }
 
 export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<ExtractionOptions, 'registry' | 'ceiling'> = {}): Promise<number> {
@@ -40,6 +45,28 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
       case 'init': {
         const root = await resolveRoot(args.dir, io.cwd);
         const { result, text } = await runInit(root, args);
+        success(args.command, result, text);
+        break;
+      }
+      case 'connect': {
+        if (args.harness !== undefined) getHarnessSpec(args.harness);
+        const root = await resolveRoot(args.dir, io.cwd);
+        try {
+          await readConfig(root);
+        } catch (error) {
+          if (error instanceof KnowleryError && error.code === 'not_found') {
+            throw new KnowleryError(
+              'not_found',
+              error.message,
+              'Run knowlery init in this folder first.',
+            );
+          }
+          throw error;
+        }
+        const { result, text } = await runConnect(root, args, {
+          pathEnv: io.pathEnv ?? process.env.PATH,
+          homeDir: io.homeDir ?? homedir(),
+        });
         success(args.command, result, text);
         break;
       }

@@ -2,6 +2,7 @@ import { invalidInvocation } from '../core/errors';
 
 export const COMMANDS = [
   'init',
+  'connect',
   'sync',
   'health',
   'inventory',
@@ -20,6 +21,7 @@ export const USAGE = `Usage: knowlery [--dir ROOT] [--json] <command> [arguments
 
 Commands:
   init [--skills-dir DIR]
+  connect [HARNESS] [--mcp]
   sync [--apply] [--skills-dir DIR]
   health
   inventory [--scope PATH] [--limit N] [--offset N] [--snapshot S]
@@ -44,6 +46,8 @@ export interface ParsedArgs {
   json: boolean;
   apply?: boolean;
   skillsDir?: string;
+  harness?: string;
+  mcp?: boolean;
   scope?: string;
   limit?: number;
   offset?: number;
@@ -75,6 +79,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
       case '--json': parsed.json = true; break;
       case '--all': parsed.all = true; break;
       case '--apply': parsed.apply = true; break;
+      case '--mcp': parsed.mcp = true; break;
       case '--skills-dir': parsed.skillsDir = value(++i, arg); break;
       case '--help': help = true; break;
       case '--version': version = true; break;
@@ -111,6 +116,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
         if ((command === 'extract' || command === 'read') && parsed.path === undefined) { parsed.path = arg; break; }
         if (command === 'search' && parsed.query === undefined) { parsed.query = arg; break; }
         if (command === 'index' && parsed.subcommand === undefined) { parsed.subcommand = arg; break; }
+        if (command === 'connect' && parsed.harness === undefined) { parsed.harness = arg; break; }
         if (command !== undefined) invalidInvocation(`Unexpected argument: ${arg}`);
         if (!(COMMANDS as readonly string[]).includes(arg)) invalidInvocation(`Unknown command: ${arg}`);
         command = arg as CommandName;
@@ -125,6 +131,10 @@ export function parseArgs(argv: string[]): ParsedArgs {
   if (command !== 'read' && readOnlyOptions) invalidInvocation('Read options require the read command.');
   if (command !== 'extract' && parsed.all) invalidInvocation('--all requires the extract command.');
   if (command !== 'sync' && parsed.apply) invalidInvocation('--apply requires the sync command.');
+  if (command !== 'connect' && parsed.mcp) invalidInvocation('--mcp requires the connect command with a harness id.');
+  if (command === 'connect' && !help && !version && parsed.mcp && parsed.harness === undefined) {
+    invalidInvocation('--mcp requires a harness id: knowlery connect <id> --mcp');
+  }
   if (command !== 'init' && command !== 'sync' && parsed.skillsDir !== undefined) invalidInvocation('--skills-dir requires the init or sync command.');
   if (command === 'extract' && !help && !version && Boolean(parsed.path) === Boolean(parsed.all)) invalidInvocation('Use extract PATH or extract --all, but not both.');
   if (command === 'read' && !help && !version && parsed.path === undefined) invalidInvocation('Missing PATH for read.');

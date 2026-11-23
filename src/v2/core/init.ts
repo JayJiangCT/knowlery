@@ -82,16 +82,16 @@ function splitLinesTrimRight(text: string): string[] {
   return text.replace(/\r\n/g, '\n').split('\n').map((line) => line.replace(/[ \t]+$/, ''));
 }
 
-function hasAllAgentsLines(text: string): boolean {
+export function hasAllAgentsLines(text: string): boolean {
   const existing = new Set(splitLinesTrimRight(text));
   return AGENTS_LINES.every((line) => existing.has(line.replace(/[ \t]+$/, '')));
 }
 
-function hasPointerImport(text: string): boolean {
+export function hasPointerImport(text: string): boolean {
   return text.replace(/\r\n/g, '\n').split('\n').some((line) => POINTER_IMPORT_LINES.has(line.trim()));
 }
 
-async function pathExists(path: string): Promise<boolean> {
+export async function pathExists(path: string): Promise<boolean> {
   try {
     await lstat(path);
     return true;
@@ -101,8 +101,64 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
+export async function ensureAgentsFile(root: string): Promise<{ state: 'written' | 'kept'; missingLines: string[] }> {
+  const agentsPath = join(root, 'AGENTS.md');
+  if (await pathExists(agentsPath)) {
+    const existingAgents = await readFile(agentsPath, 'utf8');
+    return {
+      state: 'kept',
+      missingLines: hasAllAgentsLines(existingAgents) ? [] : [...AGENTS_LINES],
+    };
+  }
+  await writeFile(agentsPath, `${AGENTS_LINES.join('\n')}\n`, { encoding: 'utf8', flag: 'wx' });
+  return { state: 'written', missingLines: [] };
+}
+
+export async function ensurePointerFile(
+  root: string,
+  pointer: (typeof POINTER_FILES)[number],
+): Promise<{ state: 'written' | 'kept'; missingLine: string }> {
+  const pointerPath = join(root, pointer.name);
+  if (await pathExists(pointerPath)) {
+    const existingText = await readFile(pointerPath, 'utf8');
+    return {
+      state: 'kept',
+      missingLine: hasPointerImport(existingText) ? '' : pointer.importLine,
+    };
+  }
+  await writeFile(pointerPath, pointer.content, { encoding: 'utf8', flag: 'wx' });
+  return { state: 'written', missingLine: '' };
+}
+
+export async function ensureSkills(
+  root: string,
+  skillsDir: string = DEFAULT_SKILLS_DIR,
+): Promise<{ created: string[]; kept: string[]; outdated: string[] }> {
+  const skillsTarget = await resolveSkillsDir(root, skillsDir);
+  const created: string[] = [];
+  const kept: string[] = [];
+  const outdated: string[] = [];
+  for (const skill of SKILLS) {
+    const relPath = `${skillsTarget.rel}/${skill.name}/SKILL.md`;
+    const skillDir = join(skillsTarget.abs, skill.name);
+    const skillPath = join(skillDir, 'SKILL.md');
+    if (await pathExists(skillPath)) {
+      kept.push(relPath);
+      const existingText = await readFile(skillPath, 'utf8');
+      if (existingText !== skill.text) {
+        outdated.push(relPath);
+      }
+    } else {
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(skillPath, skill.text, { encoding: 'utf8', flag: 'wx' });
+      created.push(relPath);
+    }
+  }
+  return { created, kept, outdated };
+}
+
 export async function initKb(root: string, options: InitOptions = {}): Promise<InitResult> {
-  const skillsTarget = await resolveSkillsDir(root, options.skillsDir);
+  await resolveSkillsDir(root, options.skillsDir);
 
   for (const marker of V1_MARKERS) {
     if (await pathExists(join(root, marker))) {
@@ -211,58 +267,29 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
   }
 
   // 6. AGENTS.md
-  const agentsPath = join(root, 'AGENTS.md');
-  let agentsMd: 'written' | 'kept';
-  let agentsLines: string[];
-  if (await pathExists(agentsPath)) {
-    kept.push('AGENTS.md');
-    agentsMd = 'kept';
-    const existingAgents = await readFile(agentsPath, 'utf8');
-    agentsLines = hasAllAgentsLines(existingAgents) ? [] : [...AGENTS_LINES];
-  } else {
-    await writeFile(agentsPath, `${AGENTS_LINES.join('\n')}\n`, { encoding: 'utf8', flag: 'wx' });
-    created.push('AGENTS.md');
-    agentsMd = 'written';
-    agentsLines = [];
-  }
+  const agents = await ensureAgentsFile(root);
+  if (agents.state === 'written') created.push('AGENTS.md');
+  else kept.push('AGENTS.md');
 
   // 7. Pointer files (CLAUDE.md, GEMINI.md)
   const pointerStates: Record<string, { state: 'written' | 'kept'; line: string }> = {};
   for (const pointer of POINTER_FILES) {
-    const pointerPath = join(root, pointer.name);
-    if (await pathExists(pointerPath)) {
-      kept.push(pointer.name);
-      const existingText = await readFile(pointerPath, 'utf8');
-      pointerStates[pointer.name] = {
-        state: 'kept',
-        line: hasPointerImport(existingText) ? '' : pointer.importLine,
-      };
-    } else {
-      await writeFile(pointerPath, pointer.content, { encoding: 'utf8', flag: 'wx' });
-      created.push(pointer.name);
-      pointerStates[pointer.name] = { state: 'written', line: '' };
-    }
+    const res = await ensurePointerFile(root, pointer);
+    if (res.state === 'written') created.push(pointer.name);
+    else kept.push(pointer.name);
+    pointerStates[pointer.name] = { state: res.state, line: res.missingLine };
   }
 
   // 8. Skills
-  for (const skill of SKILLS) {
-    const relPath = `${skillsTarget.rel}/${skill.name}/SKILL.md`;
-    const skillDir = join(skillsTarget.abs, skill.name);
-    const skillPath = join(skillDir, 'SKILL.md');
-    if (await pathExists(skillPath)) {
-      kept.push(relPath);
-    } else {
-      await mkdir(skillDir, { recursive: true });
-      await writeFile(skillPath, skill.text, { encoding: 'utf8', flag: 'wx' });
-      created.push(relPath);
-    }
-  }
+  const skills = await ensureSkills(root, options.skillsDir);
+  created.push(...skills.created);
+  kept.push(...skills.kept);
 
   return {
     created,
     kept,
-    agents_md: agentsMd,
-    agents_lines: agentsLines,
+    agents_md: agents.state,
+    agents_lines: agents.missingLines,
     claude_md: pointerStates['CLAUDE.md'].state,
     claude_line: pointerStates['CLAUDE.md'].line,
     gemini_md: pointerStates['GEMINI.md'].state,
