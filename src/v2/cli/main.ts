@@ -8,6 +8,7 @@ import { runInventory } from './commands/inventory';
 import { runExtract } from './commands/extract';
 import { runRead } from './commands/read';
 import { runValidate } from './commands/validate';
+import { runStale } from './commands/stale';
 import { runSearch } from './commands/search';
 import { runIndexRebuild } from './commands/index';
 
@@ -35,6 +36,7 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
       case 'extract':
       case 'read':
       case 'validate':
+      case 'stale':
       case 'search':
       case 'index': {
         const root = await resolveRoot(args.dir, io.cwd);
@@ -45,11 +47,13 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
             ? await runRead(root, config, args, extractionOptions)
             : args.command === 'validate'
               ? await runValidate(root, config, args, extractionOptions)
-              : args.command === 'search'
-                ? await runSearch(root, config, args, extractionOptions)
-                : args.command === 'index'
-                  ? await runIndexRebuild(root, config, extractionOptions)
-                  : await runInventory(root, config, args);
+              : args.command === 'stale'
+                ? await runStale(root, config, args, extractionOptions)
+                : args.command === 'search'
+                  ? await runSearch(root, config, args, extractionOptions)
+                  : args.command === 'index'
+                    ? await runIndexRebuild(root, config, extractionOptions)
+                    : await runInventory(root, config, args);
         success(args.command, result, text);
         break;
       }

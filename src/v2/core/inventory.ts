@@ -44,6 +44,13 @@ export interface InventoryResult {
   cache: { hashed: number; reused: number };
   warnings: string[];
 }
+export interface InventoryListResult {
+  scope: string;
+  counts: InventoryResult['counts'];
+  items: InventoryItem[];
+  cache: { hashed: number; reused: number };
+  warnings: string[];
+}
 export type PathItem = { path: string; exists: false } | { path: string; exists: true; size: number; sha256: string };
 
 export function formatFor(path: string): Format | undefined {
@@ -183,11 +190,12 @@ export async function scanRawSources(root: string, config: Config, input = '.'):
   return { scope, sources, counts };
 }
 
-export async function inventory(root: string, config: Config, options: InventoryOptions = {}): Promise<InventoryResult> {
-  const limit = options.limit ?? 50;
-  const offset = options.offset ?? 0;
+export async function inventoryList(
+  root: string,
+  config: Config,
+  options: Pick<InventoryOptions, 'scope' | 'ceiling' | 'registry'> = {},
+): Promise<InventoryListResult> {
   const ceiling = options.ceiling ?? 104857600;
-  if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0) invalidInvocation('Invalid inventory pagination.');
   const { scope, sources, counts } = await scanRawSources(root, config, options.scope);
   const oldCache = await readCache(root);
   const updated: CacheLine[] = [];
@@ -209,6 +217,16 @@ export async function inventory(root: string, config: Config, options: Inventory
     const header = size <= ceiling && extractor ? await readTextCache(root, sha256, extractor.id, format, true) : undefined;
     items.push({ path, format, size, sha256, extraction: size > ceiling ? 'too_large' : header?.state ?? 'pending' });
   }
+  const kept = [...oldCache.values()].filter((line) => !inScope(line.path, scope));
+  const warnings = await writeCache(root, [...kept, ...updated]) ? [] : ['cache_not_written'];
+  return { scope, counts, items, cache, warnings };
+}
+
+export async function inventory(root: string, config: Config, options: InventoryOptions = {}): Promise<InventoryResult> {
+  const limit = options.limit ?? 50;
+  const offset = options.offset ?? 0;
+  if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0) invalidInvocation('Invalid inventory pagination.');
+  const { counts, items, cache, warnings } = await inventoryList(root, config, options);
   const hash = createHash('sha256');
   for (const item of items) hash.update(`${item.path}\t${item.sha256}\n`);
   const snapshot = `sha256:${hash.digest('hex')}`;
@@ -224,8 +242,6 @@ export async function inventory(root: string, config: Config, options: Inventory
     bytes += size;
   }
   const more = offset + page.length < items.length;
-  const kept = [...oldCache.values()].filter((line) => !inScope(line.path, scope));
-  const warnings = await writeCache(root, [...kept, ...updated]) ? [] : ['cache_not_written'];
   return { counts, items: page, offset, returned: page.length, more, next: more ? { offset: offset + page.length, snapshot } : null, snapshot, cache, warnings };
 }
 

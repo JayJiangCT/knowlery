@@ -14,12 +14,7 @@ export type PageFreshness =
   | 'source_changed'
   | 'ok';
 
-export async function pageFreshness(root: string, config: Config, page: ParsedPage): Promise<PageFreshness> {
-  const status = page.frontmatter.status;
-  if (status === 'superseded' || status === 'deprecated' || status === 'disputed') {
-    return status;
-  }
-
+export function citedSourceKeys(page: ParsedPage): Set<string> {
   const citedKeys = new Set<string>();
   for (const claim of page.claims) {
     for (const key of claim.sources) citedKeys.add(key);
@@ -27,6 +22,16 @@ export async function pageFreshness(root: string, config: Config, page: ParsedPa
   for (const item of page.open) {
     for (const key of item.sources) citedKeys.add(key);
   }
+  return citedKeys;
+}
+
+export async function pageFreshness(root: string, config: Config, page: ParsedPage): Promise<PageFreshness> {
+  const status = page.frontmatter.status;
+  if (status === 'superseded' || status === 'deprecated' || status === 'disputed') {
+    return status;
+  }
+
+  const citedKeys = citedSourceKeys(page);
 
   if (citedKeys.size === 0) return 'ok';
 
