@@ -7,7 +7,17 @@ import type { ParsedArgs } from '../args';
 
 export type SearchResult = WikiSearchResult | RawSearchResult;
 
-function formatWikiText(result: WikiSearchResult): string {
+export interface FormatSearchTextOptions {
+  includeVersion?: boolean;
+  formatNext?: (result: SearchResult) => string;
+}
+
+function defaultSearchNextLine(result: SearchResult): string {
+  if (!result.next) return '';
+  return `more: --offset ${result.next.offset} --snapshot ${result.next.snapshot}`;
+}
+
+export function formatWikiText(result: WikiSearchResult, options: FormatSearchTextOptions = {}): string {
   const start = result.returned > 0 ? result.offset + 1 : 0;
   const end = result.offset + result.returned;
   const range = result.returned > 0 ? `${start}-${end} of ${result.counts.matched}` : `0 of ${result.counts.matched}`;
@@ -19,6 +29,7 @@ function formatWikiText(result: WikiSearchResult): string {
       .filter((part): part is string => Boolean(part))
       .join('  ');
     lines.push(`${hit.path}  ${hit.title}  [${meta}]`);
+    if (options.includeVersion) lines.push(`  version: ${hit.version}`);
     if (hit.description) lines.push(`  desc: ${hit.description}`);
     if (hit.snippet) lines.push(`  snippet: ${hit.snippet}`);
     if (hit.relations.length > 0) {
@@ -29,7 +40,7 @@ function formatWikiText(result: WikiSearchResult): string {
   }
 
   if (result.next) {
-    lines.push(`more: --offset ${result.next.offset} --snapshot ${result.next.snapshot}`);
+    lines.push((options.formatNext ?? defaultSearchNextLine)(result));
   }
   for (const warning of result.warnings) {
     lines.push(`warning: ${warning}`);
@@ -37,7 +48,7 @@ function formatWikiText(result: WikiSearchResult): string {
   return `${lines.join('\n')}\n`;
 }
 
-function formatRawText(result: RawSearchResult): string {
+export function formatRawText(result: RawSearchResult, options: FormatSearchTextOptions = {}): string {
   const start = result.returned > 0 ? result.offset + 1 : 0;
   const end = result.offset + result.returned;
   const range = result.returned > 0 ? `${start}-${end} of ${result.counts.matched}` : `0 of ${result.counts.matched}`;
@@ -48,17 +59,22 @@ function formatRawText(result: RawSearchResult): string {
     const matchKind = hit.phrase ? 'phrase' : 'terms';
     const titlePart = hit.title ? `  ${hit.title}` : '';
     lines.push(`${hit.path}  ${hit.locator}${titlePart}  [${hit.format}  ${matchKind}  matches:${hit.matches}]`);
+    if (options.includeVersion) lines.push(`  version: ${hit.version}`);
     if (hit.description) lines.push(`  desc: ${hit.description}`);
     if (hit.snippet) lines.push(`  snippet: ${hit.snippet}`);
   }
 
   if (result.next) {
-    lines.push(`more: --offset ${result.next.offset} --snapshot ${result.next.snapshot}`);
+    lines.push((options.formatNext ?? defaultSearchNextLine)(result));
   }
   for (const warning of result.warnings) {
     lines.push(`warning: ${warning}`);
   }
   return `${lines.join('\n')}\n`;
+}
+
+export function formatSearchText(result: SearchResult, options: FormatSearchTextOptions = {}): string {
+  return result.scope === 'wiki' ? formatWikiText(result, options) : formatRawText(result, options);
 }
 
 export async function runSearch(

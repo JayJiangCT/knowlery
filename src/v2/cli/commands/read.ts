@@ -18,39 +18,55 @@ function withTrailingNewline(output: string): string {
   return output.endsWith('\n') ? output : `${output}\n`;
 }
 
-export function formatReadRawText(result: ReadRawResult): string {
+export interface FormatReadTextOptions {
+  formatNext?: (result: ReadResult) => string;
+}
+
+function defaultReadNextLine(result: ReadResult): string {
+  if (!result.next) return '';
+  if (result.kind === 'cited') {
+    return `more: --select ${quoteSelect(result.next.select)} --from ${quoteSelect(result.next.from)} --offset ${result.next.offset} --expected-version ${result.next.expected_version}`;
+  }
+  return `more: --select ${quoteSelect(result.next.select)} --offset ${result.next.offset} --expected-version ${result.next.expected_version}`;
+}
+
+export function formatReadRawText(result: ReadRawResult, options: FormatReadTextOptions = {}): string {
   const end = result.offset + result.bytes;
   const tail = `${result.partial ? 'partial · ' : ''}${result.more ? 'more' : 'end'}`;
   const header = `read ${result.path} · ${result.version} · ${result.select} · bytes ${result.offset}-${end} of ${result.total_bytes} · ${tail}`;
   const lines = [header];
   if (result.next) {
-    lines.push(`more: --select ${quoteSelect(result.next.select)} --offset ${result.next.offset} --expected-version ${result.next.expected_version}`);
+    lines.push((options.formatNext ?? defaultReadNextLine)(result));
   }
   return withTrailingNewline(`${lines.join('\n')}\n\n${result.text}`);
 }
 
-export function formatReadWikiText(result: ReadWikiResult): string {
+export function formatReadWikiText(result: ReadWikiResult, options: FormatReadTextOptions = {}): string {
   const end = result.offset + result.bytes;
   const tail = `${result.partial ? 'partial · ' : ''}${result.more ? 'more' : 'end'}`;
   const header = `read ${result.path} · ${result.version} · ${result.select} · bytes ${result.offset}-${end} of ${result.total_bytes} · ${tail}`;
   const lines = [header];
   if (result.next) {
-    lines.push(`more: --select ${quoteSelect(result.next.select)} --offset ${result.next.offset} --expected-version ${result.next.expected_version}`);
+    lines.push((options.formatNext ?? defaultReadNextLine)(result));
   }
   return withTrailingNewline(`${lines.join('\n')}\n\n${result.text}`);
 }
 
-export function formatReadCitedText(result: ReadCitedResult): string {
+export function formatReadCitedText(result: ReadCitedResult, options: FormatReadTextOptions = {}): string {
   const end = result.offset + result.bytes;
   const tail = `${result.partial ? 'partial · ' : ''}${result.more ? 'more' : 'end'}`;
   const header = `read ${result.path} · ${result.version} · ${result.select} · pin ${result.pin} · bytes ${result.offset}-${end} of ${result.total_bytes} · ${tail}`;
   const lines = [header];
   if (result.next) {
-    lines.push(
-      `more: --select ${quoteSelect(result.next.select)} --from ${quoteSelect(result.next.from)} --offset ${result.next.offset} --expected-version ${result.next.expected_version}`,
-    );
+    lines.push((options.formatNext ?? defaultReadNextLine)(result));
   }
   return withTrailingNewline(`${lines.join('\n')}\n\n${result.text}`);
+}
+
+export function formatReadText(result: ReadResult, options: FormatReadTextOptions = {}): string {
+  if (result.kind === 'wiki') return formatReadWikiText(result, options);
+  if (result.kind === 'cited') return formatReadCitedText(result, options);
+  return formatReadRawText(result, options);
 }
 
 function isWikiRelPath(rel: string): boolean {

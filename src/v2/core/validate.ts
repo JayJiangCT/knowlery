@@ -8,6 +8,7 @@ import { getExtraction, type ExtractionOptions } from './extract';
 import type { Extraction } from './extract/types';
 import { parseLocator, renderPieces, resolveLocator } from './locator';
 import { isPageFile, listPages } from './page/files';
+import { citedSourceKeys } from './page/freshness';
 import type { ParsedPage } from './page/model';
 import { parsePage } from './page/parse';
 import { isMissing } from './paths';
@@ -463,8 +464,10 @@ export async function validateWiki(
     }
 
     // Per Sources line.
+    const citedKeys = citedSourceKeys(page);
     for (const source of page.sources) {
       if (invalidSourceLines.has(source.line)) continue;
+      const isCited = citedKeys.has(source.key);
       const outcome = await loadSource(source.path);
       const what = source.quote !== null ? 'locator and quote' : 'locator';
 
@@ -480,39 +483,45 @@ export async function validateWiki(
         continue;
       }
       if (outcome.kind === 'not_found') {
-        allFindings.push(
-          makeFinding(
-            pagePath,
-            source.line,
-            'not_checked',
-            `Could not check ${what} for ${source.key} ("${source.path}"): source file is missing.`,
-          ),
-        );
+        if (isCited) {
+          allFindings.push(
+            makeFinding(
+              pagePath,
+              source.line,
+              'not_checked',
+              `Could not check ${what} for ${source.key} ("${source.path}"): source file is missing.`,
+            ),
+          );
+        }
         continue;
       }
       if (outcome.kind === 'unavailable') {
-        allFindings.push(
-          makeFinding(
-            pagePath,
-            source.line,
-            'not_checked',
-            `Could not check ${what} for ${source.key} ("${source.path}"): source cannot be read (${outcome.state}).`,
-          ),
-        );
+        if (isCited) {
+          allFindings.push(
+            makeFinding(
+              pagePath,
+              source.line,
+              'not_checked',
+              `Could not check ${what} for ${source.key} ("${source.path}"): source cannot be read (${outcome.state}).`,
+            ),
+          );
+        }
         continue;
       }
 
       const extraction = outcome.extraction;
       const pinnedSha = `sha256:${source.sha256}`;
       if (extraction.sha256 !== pinnedSha) {
-        allFindings.push(
-          makeFinding(
-            pagePath,
-            source.line,
-            'not_checked',
-            `Could not check ${what} for ${source.key} ("${source.path}"): source changed since it was pinned.`,
-          ),
-        );
+        if (isCited) {
+          allFindings.push(
+            makeFinding(
+              pagePath,
+              source.line,
+              'not_checked',
+              `Could not check ${what} for ${source.key} ("${source.path}"): source changed since it was pinned.`,
+            ),
+          );
+        }
         continue;
       }
 

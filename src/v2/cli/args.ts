@@ -11,6 +11,7 @@ export const COMMANDS = [
   'stale',
   'search',
   'index',
+  'mcp',
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -29,6 +30,7 @@ Commands:
   stale [--scope PATH] [--limit N] [--offset N] [--snapshot S]
   search QUERY [--scope wiki|raw] [--limit N] [--offset N] [--snapshot S]
   index rebuild
+  mcp [--dir ROOT]
   --version
   --help
 
@@ -38,6 +40,7 @@ Global flags --dir and --json may appear anywhere.`;
 export interface ParsedArgs {
   command: CommandName | 'version' | 'help';
   dir: string;
+  dirExplicit: boolean;
   json: boolean;
   apply?: boolean;
   skillsDir?: string;
@@ -56,7 +59,7 @@ export interface ParsedArgs {
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
-  const parsed: ParsedArgs = { command: 'help', dir: '.', json: false };
+  const parsed: ParsedArgs = { command: 'help', dir: '.', dirExplicit: false, json: false };
   let command: CommandName | undefined;
   let help = false;
   let version = false;
@@ -68,7 +71,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     switch (arg) {
-      case '--dir': parsed.dir = value(++i, arg); break;
+      case '--dir': parsed.dir = value(++i, arg); parsed.dirExplicit = true; break;
       case '--json': parsed.json = true; break;
       case '--all': parsed.all = true; break;
       case '--apply': parsed.apply = true; break;

@@ -14,11 +14,13 @@ import { runIndexRebuild } from './commands/index';
 import { runInit } from './commands/init';
 import { runSync } from './commands/sync';
 import { runHealth } from './commands/health';
+import { runMcp } from './commands/mcp';
 
 export interface CliIO {
   stdout(text: string): void;
   stderr(text: string): void;
   cwd: string;
+  knowleryDir?: string;
 }
 
 export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<ExtractionOptions, 'registry' | 'ceiling'> = {}): Promise<number> {
@@ -40,6 +42,16 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         const { result, text } = await runInit(root, args);
         success(args.command, result, text);
         break;
+      }
+      case 'mcp': {
+        await runMcp({
+          dir: args.dirExplicit ? args.dir : undefined,
+          envDir: io.knowleryDir,
+          cwd: io.cwd,
+          stderr: (text) => { io.stderr(text); },
+          extractionOptions,
+        });
+        return 0;
       }
       case 'sync':
       case 'health':

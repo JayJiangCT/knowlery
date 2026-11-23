@@ -298,6 +298,9 @@ describe('v2 validate', () => {
         '---',
         '# PDF reference',
         '',
+        '## Current',
+        '- Manual describes the procedure (src: s1) ^c1',
+        '',
         '## Sources',
         `- s1 · \`Projects/manual.pdf\` · sha256:${pdfSha} · page 1 · "Not in pdf."`,
       ].join('\n') + '\n',
@@ -313,10 +316,75 @@ describe('v2 validate', () => {
     expect(data.counts.by_code).toEqual({ not_checked: 4 });
     expect(data.items.every((item) => item.code === 'not_checked' && item.severity === 'info')).toBe(true);
     expect(data.items.map((item) => `${item.path}:${item.line}`)).toEqual([
-      'wiki/pdf-ref.md:12',
+      'wiki/pdf-ref.md:15',
       'wiki/record-preservation.md:29',
       'wiki/record-preservation.md:30',
       'wiki/wiki-compile-overview.md:20',
+    ]);
+  });
+
+  it('skips not_checked for uncited Sources lines while still checking cited ones and matching-pin quotes', async () => {
+    const meetingBytes = await readFile(join(root, 'Notes/meeting.md'));
+    const meetingSha = digest(meetingBytes).slice('sha256:'.length);
+    const staleSha = '0'.repeat(64);
+
+    await writeFile(
+      join(root, 'wiki/history-only-source.md'),
+      [
+        '---',
+        'type: concept',
+        'title: History only source',
+        'description: Old source line cited only from History.',
+        'status: current',
+        'created: 2026-10-01',
+        'updated: 2026-11-18',
+        '---',
+        '# History only source',
+        '',
+        '## Current',
+        '- Current claim uses the updated pin (src: s2) ^c2',
+        '',
+        '## Sources',
+        `- s1 · \`Notes/meeting.md\` · sha256:${staleSha} · heading Team meeting > Decisions > Next steps · "Old quote."`,
+        `- s2 · \`Notes/meeting.md\` · sha256:${meetingSha} · heading Team meeting > Decisions > Next steps · "Review the source documents before compiling the wiki."`,
+        `- s3 · \`Notes/meeting.md\` · sha256:${meetingSha} · heading Team meeting > Decisions > Next steps · "Wrong quote on uncited matching pin."`,
+        '',
+        '## History',
+        '- Old claim (src: s1) · superseded 2026-11-18 by ^c2 · source revised ^c1',
+      ].join('\n') + '\n',
+    );
+
+    const uncited = await validateJson(['--scope', 'wiki/history-only-source.md']);
+    expect(uncited.counts.not_checked).toBe(0);
+    expect(uncited.items.map((f) => ({ line: f.line, code: f.code }))).toEqual([
+      { line: 17, code: 'quote_not_found' },
+    ]);
+
+    await writeFile(
+      join(root, 'wiki/history-only-source.md'),
+      [
+        '---',
+        'type: concept',
+        'title: History only source',
+        'description: Stale source line cited from Current.',
+        'status: current',
+        'created: 2026-10-01',
+        'updated: 2026-11-18',
+        '---',
+        '# History only source',
+        '',
+        '## Current',
+        '- Current claim still cites s1 (src: s1) ^c1',
+        '',
+        '## Sources',
+        `- s1 · \`Notes/meeting.md\` · sha256:${staleSha} · heading Team meeting > Decisions > Next steps · "Old quote."`,
+      ].join('\n') + '\n',
+    );
+
+    const cited = await validateJson(['--scope', 'wiki/history-only-source.md']);
+    expect(cited.counts.not_checked).toBe(1);
+    expect(cited.items.map((f) => ({ line: f.line, code: f.code, severity: f.severity }))).toEqual([
+      { line: 15, code: 'not_checked', severity: 'info' },
     ]);
   });
 
