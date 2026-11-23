@@ -1,20 +1,38 @@
 import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
+import { SKILLS } from '../skills';
 import { KF_VERSION } from '../version';
 import { readConfig } from './config';
 import { renderConventions } from './conventions';
-import { KnowleryError } from './errors';
+import { invalidInvocation, KnowleryError } from './errors';
 import { listPages } from './page/files';
 import type { ParsedPage } from './page/model';
 import { parsePage } from './page/parse';
-import { isMissing } from './paths';
+import { isMissing, relativePath, resolveInside } from './paths';
 import { renderWikiIndex } from './wiki-index';
+
+export const DEFAULT_SKILLS_DIR = '.agents/skills';
 
 export const AGENTS_LINES: readonly string[] = [
   'This folder is a Knowlery knowledge base. Raw sources stay untouched; compiled pages are in wiki/.',
   'Before reading or editing anything under wiki/, read wiki/CONVENTIONS.md and follow it.',
   'Use the knowlery command to search, read, list stale sources and validate. Never edit .knowlery/.',
 ];
+
+export const POINTER_FILES = [
+  {
+    name: 'CLAUDE.md',
+    importLine: '@AGENTS.md',
+    content: 'Follow the instructions in AGENTS.md in this folder.\n@AGENTS.md\n',
+  },
+  {
+    name: 'GEMINI.md',
+    importLine: '@./AGENTS.md',
+    content: 'Follow the instructions in AGENTS.md in this folder.\n@./AGENTS.md\n',
+  },
+] as const;
+
+const POINTER_IMPORT_LINES = new Set(['@AGENTS.md', '@./AGENTS.md']);
 
 const V1_MARKERS = ['KNOWLEDGE.md', 'SCHEMA.md', 'INDEX.base'] as const;
 
@@ -27,11 +45,50 @@ const INITIAL_LOG_TEXT = [
   '',
 ].join('\n');
 
+export interface InitOptions {
+  skillsDir?: string;
+}
+
 export interface InitResult {
   created: string[];
   kept: string[];
   agents_md: 'written' | 'kept';
   agents_lines: string[];
+  claude_md: 'written' | 'kept';
+  claude_line: string;
+  gemini_md: 'written' | 'kept';
+  gemini_line: string;
+}
+
+export async function resolveSkillsDir(root: string, skillsDir: string = DEFAULT_SKILLS_DIR): Promise<{ abs: string; rel: string }> {
+  let abs: string;
+  try {
+    abs = await resolveInside(root, skillsDir);
+  } catch (error) {
+    if (error instanceof KnowleryError && error.code === 'path_denied') {
+      invalidInvocation(`Invalid --skills-dir "${skillsDir}": must stay inside the knowledge base root.`);
+    }
+    throw error;
+  }
+  const rel = relativePath(root, abs);
+  const firstSegment = rel.split('/')[0];
+  if (!rel || !firstSegment || !firstSegment.startsWith('.') || firstSegment === '.knowlery') {
+    invalidInvocation(`Invalid --skills-dir "${skillsDir}": must be a hidden folder inside the root other than .knowlery.`);
+  }
+  return { abs, rel };
+}
+
+function splitLinesTrimRight(text: string): string[] {
+  return text.replace(/\r\n/g, '\n').split('\n').map((line) => line.replace(/[ \t]+$/, ''));
+}
+
+function hasAllAgentsLines(text: string): boolean {
+  const existing = new Set(splitLinesTrimRight(text));
+  return AGENTS_LINES.every((line) => existing.has(line.replace(/[ \t]+$/, '')));
+}
+
+function hasPointerImport(text: string): boolean {
+  return text.replace(/\r\n/g, '\n').split('\n').some((line) => POINTER_IMPORT_LINES.has(line.trim()));
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -44,7 +101,9 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-export async function initKb(root: string): Promise<InitResult> {
+export async function initKb(root: string, options: InitOptions = {}): Promise<InitResult> {
+  const skillsTarget = await resolveSkillsDir(root, options.skillsDir);
+
   for (const marker of V1_MARKERS) {
     if (await pathExists(join(root, marker))) {
       throw new KnowleryError(
@@ -154,19 +213,59 @@ export async function initKb(root: string): Promise<InitResult> {
   // 6. AGENTS.md
   const agentsPath = join(root, 'AGENTS.md');
   let agentsMd: 'written' | 'kept';
+  let agentsLines: string[];
   if (await pathExists(agentsPath)) {
     kept.push('AGENTS.md');
     agentsMd = 'kept';
+    const existingAgents = await readFile(agentsPath, 'utf8');
+    agentsLines = hasAllAgentsLines(existingAgents) ? [] : [...AGENTS_LINES];
   } else {
     await writeFile(agentsPath, `${AGENTS_LINES.join('\n')}\n`, { encoding: 'utf8', flag: 'wx' });
     created.push('AGENTS.md');
     agentsMd = 'written';
+    agentsLines = [];
+  }
+
+  // 7. Pointer files (CLAUDE.md, GEMINI.md)
+  const pointerStates: Record<string, { state: 'written' | 'kept'; line: string }> = {};
+  for (const pointer of POINTER_FILES) {
+    const pointerPath = join(root, pointer.name);
+    if (await pathExists(pointerPath)) {
+      kept.push(pointer.name);
+      const existingText = await readFile(pointerPath, 'utf8');
+      pointerStates[pointer.name] = {
+        state: 'kept',
+        line: hasPointerImport(existingText) ? '' : pointer.importLine,
+      };
+    } else {
+      await writeFile(pointerPath, pointer.content, { encoding: 'utf8', flag: 'wx' });
+      created.push(pointer.name);
+      pointerStates[pointer.name] = { state: 'written', line: '' };
+    }
+  }
+
+  // 8. Skills
+  for (const skill of SKILLS) {
+    const relPath = `${skillsTarget.rel}/${skill.name}/SKILL.md`;
+    const skillDir = join(skillsTarget.abs, skill.name);
+    const skillPath = join(skillDir, 'SKILL.md');
+    if (await pathExists(skillPath)) {
+      kept.push(relPath);
+    } else {
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(skillPath, skill.text, { encoding: 'utf8', flag: 'wx' });
+      created.push(relPath);
+    }
   }
 
   return {
     created,
     kept,
     agents_md: agentsMd,
-    agents_lines: [...AGENTS_LINES],
+    agents_lines: agentsLines,
+    claude_md: pointerStates['CLAUDE.md'].state,
+    claude_line: pointerStates['CLAUDE.md'].line,
+    gemini_md: pointerStates['GEMINI.md'].state,
+    gemini_line: pointerStates['GEMINI.md'].line,
   };
 }

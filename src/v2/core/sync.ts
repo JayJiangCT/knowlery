@@ -1,12 +1,25 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { SKILLS } from '../skills';
 import { renderConventions } from './conventions';
+import { resolveSkillsDir } from './init';
 import { isMissing } from './paths';
 
 const MAX_DIFF_LINES = 40;
 
-export type SyncConventionsState = 'current' | 'outdated' | 'missing' | 'updated' | 'created';
+export type SyncFileState = 'current' | 'outdated' | 'missing' | 'updated' | 'created';
+export type SyncConventionsState = SyncFileState;
+
+export interface SyncSkillEntry {
+  name: string;
+  path: string;
+  state: SyncFileState;
+  removed?: string[];
+  added?: string[];
+  removed_more?: number;
+  added_more?: number;
+}
 
 export interface SyncResult {
   conventions: SyncConventionsState;
@@ -14,6 +27,7 @@ export interface SyncResult {
   added: string[];
   removed_more: number;
   added_more: number;
+  skills: SyncSkillEntry[];
 }
 
 function splitLines(text: string): string[] {
@@ -68,9 +82,10 @@ function diffLines(existing: string, desired: string): { removed: string[]; adde
   };
 }
 
-async function writeAtomic(wikiDir: string, targetPath: string, content: string): Promise<void> {
-  await mkdir(wikiDir, { recursive: true });
-  const tempPath = join(wikiDir, `.CONVENTIONS-${randomUUID()}.tmp`);
+async function writeAtomic(targetPath: string, content: string): Promise<void> {
+  const dir = dirname(targetPath);
+  await mkdir(dir, { recursive: true });
+  const tempPath = join(dir, `.sync-${randomUUID()}.tmp`);
   try {
     await writeFile(tempPath, content, { encoding: 'utf8', flag: 'wx' });
     await rename(tempPath, targetPath);
@@ -79,42 +94,77 @@ async function writeAtomic(wikiDir: string, targetPath: string, content: string)
   }
 }
 
-export async function syncKb(root: string, options: { apply?: boolean } = {}): Promise<SyncResult> {
-  const apply = options.apply ?? false;
-  const wikiDir = join(root, 'wiki');
-  const conventionsPath = join(wikiDir, 'CONVENTIONS.md');
-  const desired = renderConventions();
-
+async function syncFile(
+  targetPath: string,
+  desired: string,
+  apply: boolean,
+): Promise<{ state: SyncFileState; removed: string[]; added: string[]; removed_more: number; added_more: number }> {
   let existing: string | undefined;
   try {
-    existing = await readFile(conventionsPath, 'utf8');
+    existing = await readFile(targetPath, 'utf8');
   } catch (error) {
     if (!isMissing(error)) throw error;
   }
 
   if (existing === undefined) {
     if (apply) {
-      await writeAtomic(wikiDir, conventionsPath, desired);
-      return { conventions: 'created', removed: [], added: [], removed_more: 0, added_more: 0 };
+      await writeAtomic(targetPath, desired);
+      return { state: 'created', removed: [], added: [], removed_more: 0, added_more: 0 };
     }
-    return { conventions: 'missing', removed: [], added: [], removed_more: 0, added_more: 0 };
+    return { state: 'missing', removed: [], added: [], removed_more: 0, added_more: 0 };
   }
 
   if (existing === desired) {
-    return { conventions: 'current', removed: [], added: [], removed_more: 0, added_more: 0 };
+    return { state: 'current', removed: [], added: [], removed_more: 0, added_more: 0 };
   }
 
   if (apply) {
-    await writeAtomic(wikiDir, conventionsPath, desired);
-    return { conventions: 'updated', removed: [], added: [], removed_more: 0, added_more: 0 };
+    await writeAtomic(targetPath, desired);
+    return { state: 'updated', removed: [], added: [], removed_more: 0, added_more: 0 };
   }
 
   const { removed, added, removedMore, addedMore } = diffLines(existing, desired);
   return {
-    conventions: 'outdated',
+    state: 'outdated',
     removed,
     added,
     removed_more: removedMore,
     added_more: addedMore,
+  };
+}
+
+export async function syncKb(root: string, options: { apply?: boolean; skillsDir?: string } = {}): Promise<SyncResult> {
+  const apply = options.apply ?? false;
+  const skillsTarget = await resolveSkillsDir(root, options.skillsDir);
+
+  const conventionsPath = join(root, 'wiki', 'CONVENTIONS.md');
+  const conv = await syncFile(conventionsPath, renderConventions(), apply);
+
+  const skills: SyncSkillEntry[] = [];
+  for (const skill of SKILLS) {
+    const relPath = `${skillsTarget.rel}/${skill.name}/SKILL.md`;
+    const skillPath = join(skillsTarget.abs, skill.name, 'SKILL.md');
+    const synced = await syncFile(skillPath, skill.text, apply);
+    const entry: SyncSkillEntry = {
+      name: skill.name,
+      path: relPath,
+      state: synced.state,
+    };
+    if (synced.state === 'outdated') {
+      entry.removed = synced.removed;
+      entry.added = synced.added;
+      entry.removed_more = synced.removed_more;
+      entry.added_more = synced.added_more;
+    }
+    skills.push(entry);
+  }
+
+  return {
+    conventions: conv.state,
+    removed: conv.removed,
+    added: conv.added,
+    removed_more: conv.removed_more,
+    added_more: conv.added_more,
+    skills,
   };
 }

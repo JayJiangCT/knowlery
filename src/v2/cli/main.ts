@@ -37,7 +37,7 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         break;
       case 'init': {
         const root = await resolveRoot(args.dir, io.cwd);
-        const { result, text } = await runInit(root);
+        const { result, text } = await runInit(root, args);
         success(args.command, result, text);
         break;
       }

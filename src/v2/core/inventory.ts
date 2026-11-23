@@ -120,6 +120,8 @@ async function writeCache(root: string, lines: CacheLine[]): Promise<boolean> {
   }
 }
 
+const ROOT_ENTRY_FILES = new Set(['AGENTS.md', 'CLAUDE.md', 'GEMINI.md']);
+
 export async function resolveRawSource(root: string, input: string, config: Config): Promise<string> {
   const path = await resolveInside(root, input);
   const rel = relativePath(root, path);
@@ -134,7 +136,7 @@ export async function resolveRawSource(root: string, input: string, config: Conf
     current = join(current, part);
     try {
       const info = await lstat(current);
-      if (info.isSymbolicLink() || (!info.isDirectory() && (part.startsWith('~$') || prefix === 'AGENTS.md'))) throw denied();
+      if (info.isSymbolicLink() || (!info.isDirectory() && (part.startsWith('~$') || ROOT_ENTRY_FILES.has(prefix)))) throw denied();
     } catch (error) {
       if (isMissing(error)) throw new KnowleryError('not_found', `Source not found: ${input}`, 'Choose an existing raw source.');
       throw error;
@@ -168,7 +170,7 @@ export async function scanRawSources(root: string, config: Config, input = '.'):
     const parts = rel.split('/');
     if (rel && parts.some((part) => part.startsWith('.'))) return;
     const info = await lstat(path);
-    if (rel === 'AGENTS.md' && !info.isDirectory()) return;
+    if (ROOT_ENTRY_FILES.has(rel) && !info.isDirectory()) return;
     if (parts[0] === 'wiki') return;
     if (info.isSymbolicLink()) { counts.symlinks++; return; }
     ignored = ignored || ignores(rel);

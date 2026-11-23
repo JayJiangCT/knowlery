@@ -71,10 +71,15 @@ describe('v2 init, sync, and health', () => {
       'wiki/index.md',
       'wiki/log.md',
       'AGENTS.md',
+      'CLAUDE.md',
+      'GEMINI.md',
+      '.agents/skills/knowlery-compile/SKILL.md',
+      '.agents/skills/knowlery-maintain/SKILL.md',
+      '.agents/skills/knowlery-answer/SKILL.md',
     ]);
     expect(first.kept).toEqual([]);
     expect(first.agents_md).toBe('written');
-    expect(first.agents_lines).toEqual([...AGENTS_LINES]);
+    expect(first.agents_lines).toEqual([]);
 
     expect(JSON.parse(await readFile(join(root, '.knowlery/config.json'), 'utf8'))).toEqual({
       kf: '2.0',
@@ -100,8 +105,14 @@ describe('v2 init, sync, and health', () => {
       'wiki/index.md',
       'wiki/log.md',
       'AGENTS.md',
+      'CLAUDE.md',
+      'GEMINI.md',
+      '.agents/skills/knowlery-compile/SKILL.md',
+      '.agents/skills/knowlery-maintain/SKILL.md',
+      '.agents/skills/knowlery-answer/SKILL.md',
     ]);
     expect(second.agents_md).toBe('kept');
+    expect(second.agents_lines).toEqual([]);
     expect(await fileState(root)).toEqual(stateAfterFirst);
   });
 
@@ -153,6 +164,11 @@ describe('v2 init, sync, and health', () => {
       'wiki/index.md',
       'wiki/log.md',
       'AGENTS.md',
+      'CLAUDE.md',
+      'GEMINI.md',
+      '.agents/skills/knowlery-compile/SKILL.md',
+      '.agents/skills/knowlery-maintain/SKILL.md',
+      '.agents/skills/knowlery-answer/SKILL.md',
     ]);
     expect(await readFile(join(root, '.knowlery/config.json'), 'utf8')).toBe(configBefore);
   });
