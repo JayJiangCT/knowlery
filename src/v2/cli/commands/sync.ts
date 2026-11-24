@@ -17,6 +17,10 @@ export async function runSync(
   if (result.conventions === 'outdated') {
     appendDiff(lines, result.removed, result.added, result.removed_more, result.added_more);
   }
+  lines.push(`AGENTS.md: ${result.agents.state}`);
+  if (result.agents.state === 'outdated') {
+    appendDiff(lines, result.agents.removed, result.agents.added, result.agents.removed_more, result.agents.added_more);
+  }
   for (const skill of result.skills) {
     lines.push(`skill ${skill.name} (${skill.path}): ${skill.state}`);
     if (skill.state === 'outdated') {

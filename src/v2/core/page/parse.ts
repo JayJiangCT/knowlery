@@ -132,7 +132,6 @@ function isExternalTarget(target: string): boolean {
 function hasInvalidSourcePath(sourcePath: string): boolean {
   if (sourcePath.startsWith('/')) return true;
   if (sourcePath.includes('\\')) return true;
-  if (sourcePath.startsWith('wiki/') || sourcePath === 'wiki') return true;
   if (sourcePath.startsWith('.knowlery/') || sourcePath === '.knowlery') return true;
   const segments = sourcePath.split('/');
   return segments.some((segment) => segment === '..');

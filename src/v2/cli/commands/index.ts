@@ -9,7 +9,7 @@ import { rememberInventoryHashes, scanRawSources, type RawSource } from '../../c
 import { listPages } from '../../core/page/files';
 import type { ParsedPage } from '../../core/page/model';
 import { parsePage } from '../../core/page/parse';
-import { isMissing } from '../../core/paths';
+import { isMissing, WIKI_DIR } from '../../core/paths';
 import { renderWikiIndex } from '../../core/wiki-index';
 
 export interface IndexRebuildResult {
@@ -75,7 +75,7 @@ export async function runIndexRebuild(
     if (!isMissing(error)) throw error;
   }
 
-  const wikiDir = join(root, 'wiki');
+  const wikiDir = join(root, WIKI_DIR);
   let hasWiki = false;
   try {
     const info = await lstat(wikiDir);

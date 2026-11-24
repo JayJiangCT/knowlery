@@ -2,6 +2,7 @@ import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { readConfig } from '../../src/v2/core/config';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import { searchWiki } from '../../src/v2/core/search/wiki';
 import type { RawSearchResult } from '../../src/v2/core/search/raw';
 import type { WikiSearchResult } from '../../src/v2/core/search/wiki';
@@ -57,7 +58,7 @@ describe('v2 search', () => {
     expect(res.hits.length).toBeGreaterThan(0);
 
     const first = res.hits[0];
-    expect(first.path).toBe('wiki/record-preservation.md');
+    expect(first.path).toBe(`${WIKI_DIR}/record-preservation.md`);
     expect(first.freshness).toBe('disputed');
     expect(first.snippet).toMatch(/\^c\d+$/);
     expect(first.relations.some((r) => r.direction === 'out')).toBe(true);
@@ -66,7 +67,7 @@ describe('v2 search', () => {
     const textRun = await invoke(root, ['search', 'original records rule']);
     expect(textRun.code).toBe(0);
     expect(textRun.stdout).toContain('search wiki  verdict: ok');
-    expect(textRun.stdout).toContain('wiki/record-preservation.md');
+    expect(textRun.stdout).toContain(`${WIKI_DIR}/record-preservation.md`);
 
     const miss = await jsonRun(root, ['search', 'zebra quantum harmonica']) as unknown as SearchJson<WikiSearchResult>;
     expect(miss.verdict).toBe('no_confident_match');
@@ -87,17 +88,17 @@ describe('v2 search', () => {
 
     const initial = await jsonRun(root, ['search', 'wiki compilation']) as unknown as SearchJson<WikiSearchResult>;
     expect(initial.verdict).toBe('ok');
-    const overviewInitial = initial.hits.find((h) => h.path === 'wiki/wiki-compile-overview.md');
+    const overviewInitial = initial.hits.find((h) => h.path === `${WIKI_DIR}/wiki-compile-overview.md`);
     expect(overviewInitial?.freshness).toBe('ok');
 
     await writeFile(join(root, 'Notes/meeting.md'), '# Team meeting\n\nUpdated line.\n');
     const changed = await jsonRun(root, ['search', 'wiki compilation']) as unknown as SearchJson<WikiSearchResult>;
-    const overviewChanged = changed.hits.find((h) => h.path === 'wiki/wiki-compile-overview.md');
+    const overviewChanged = changed.hits.find((h) => h.path === `${WIKI_DIR}/wiki-compile-overview.md`);
     expect(overviewChanged?.freshness).toBe('source_changed');
 
     await rm(join(root, 'Notes/meeting.md'));
     const missing = await jsonRun(root, ['search', 'wiki compilation']) as unknown as SearchJson<WikiSearchResult>;
-    const overviewMissing = missing.hits.find((h) => h.path === 'wiki/wiki-compile-overview.md');
+    const overviewMissing = missing.hits.find((h) => h.path === `${WIKI_DIR}/wiki-compile-overview.md`);
     expect(overviewMissing?.freshness).toBe('source_missing');
   });
 
@@ -158,7 +159,7 @@ describe('v2 search', () => {
     const root = await kb();
     for (let i = 1; i <= 30; i++) {
       const slug = `widget-page-${String(i).padStart(2, '0')}`;
-      await writeFile(join(root, 'wiki', `${slug}.md`), makeGeneratedPage(slug, `Widget Page ${i}`));
+      await writeFile(join(root, WIKI_DIR, `${slug}.md`), makeGeneratedPage(slug, `Widget Page ${i}`));
     }
 
     const seen: string[] = [];
@@ -179,7 +180,7 @@ describe('v2 search', () => {
     expect(new Set(seen).size).toBe(30);
 
     // Edit one page in between -> stale_version.
-    await writeFile(join(root, 'wiki/widget-page-01.md'), makeGeneratedPage('widget-page-01', 'Widget Page 1 Updated'));
+    await writeFile(join(root, `${WIKI_DIR}/widget-page-01.md`), makeGeneratedPage('widget-page-01', 'Widget Page 1 Updated'));
     await failure(root, ['search', 'widget orchestration', '--offset', '10', '--snapshot', firstSnapshot], 'stale_version', 1);
 
     // --limit 26 exits 2.
@@ -192,7 +193,7 @@ describe('v2 search', () => {
     for (let i = 1; i <= 1000; i++) {
       const slug = `perf-page-${String(i).padStart(4, '0')}`;
       const extra = i === 777 ? '- Special obsidian-beacon calibration rule (src: s1) ^c2\n' : '';
-      writes.push(writeFile(join(root, 'wiki', `${slug}.md`), makeGeneratedPage(slug, `Perf Page ${i}`, extra)));
+      writes.push(writeFile(join(root, WIKI_DIR, `${slug}.md`), makeGeneratedPage(slug, `Perf Page ${i}`, extra)));
     }
     await Promise.all(writes);
 
@@ -203,7 +204,7 @@ describe('v2 search', () => {
 
     expect(res.verdict).toBe('ok');
     expect(res.counts.searched).toBe(1005);
-    expect(res.hits[0].path).toBe('wiki/perf-page-0777.md');
+    expect(res.hits[0].path).toBe(`${WIKI_DIR}/perf-page-0777.md`);
     expect(elapsedMs).toBeLessThan(5000);
     console.log(`[perf] 1,000-page wiki search: ${elapsedMs.toFixed(1)} ms`);
   }, 30000);

@@ -1,7 +1,7 @@
 import type { Config } from '../../core/config';
 import { invalidInvocation, KnowleryError } from '../../core/errors';
 import type { ExtractionOptions } from '../../core/extract';
-import { relativePath, resolveInside } from '../../core/paths';
+import { isWikiRelPath, relativePath, resolveInside, WIKI_DIR } from '../../core/paths';
 import { readCited, type ReadCitedResult } from '../../core/read/cited';
 import { readRaw, type ReadRawResult } from '../../core/read/raw';
 import { readWiki, type ReadWikiResult } from '../../core/read/wiki';
@@ -69,10 +69,6 @@ export function formatReadText(result: ReadResult, options: FormatReadTextOption
   return formatReadRawText(result, options);
 }
 
-function isWikiRelPath(rel: string): boolean {
-  return rel === 'wiki' || rel.startsWith('wiki/');
-}
-
 function parseCitedKey(select: string): string | null {
   if (!select.startsWith('cited:')) return null;
   const key = select.slice('cited:'.length);
@@ -113,7 +109,7 @@ export async function runRead(
       throw new KnowleryError(
         'invalid_selector',
         `Selector "${args.select}" requires --from PAGE.`,
-        'Pass --from wiki/<page>.md alongside --select cited:<key>.',
+        `Pass --from ${WIKI_DIR}/<page>.md alongside --select cited:<key>.`,
       );
     }
     const key = args.select !== undefined ? parseCitedKey(args.select) : null;

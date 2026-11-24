@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
-import { cp, lstat, mkdir, mkdtemp, readFile, readdir, readlink, realpath, writeFile } from 'node:fs/promises';
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, readlink, realpath, rename, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect } from 'vitest';
 import { runCli } from '../../src/v2/cli/main';
 import type { ErrorCode } from '../../src/v2/core/errors';
 import type { InventoryResult, PathItem } from '../../src/v2/core/inventory';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 
 export const fixture = join(process.cwd(), 'tests/v2/fixtures/kb');
 export const basePaths = ['Archive/old.md', 'Finance/orders.csv', 'Notes/meeting.md', 'Notes/会议记录.txt', 'Projects/policy notes.txt'];
@@ -24,6 +25,7 @@ export async function makeKb(): Promise<string> {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'knowlery-v2-')));
   await cp(fixture, root, { recursive: true });
   await configure(root, { kf: '2.0' });
+  await rename(join(root, 'wiki'), join(root, WIKI_DIR));
   return root;
 }
 

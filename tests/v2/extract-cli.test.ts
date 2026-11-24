@@ -9,6 +9,7 @@ import { getExtraction, type ExtractionOptions } from '../../src/v2/core/extract
 import { cacheName } from '../../src/v2/core/extract/cache';
 import { registry } from '../../src/v2/core/extract/registry';
 import { txt } from '../../src/v2/core/extract/txt';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import { configure, digest, failure, fileState, invoke, jsonRun, makeKb } from './helpers';
 
 vi.mock('node:fs/promises', async (importOriginal) => {
@@ -71,8 +72,8 @@ describe('v2 extract command', () => {
 
   it('rejects denied, missing and unsupported paths', async () => {
     await writeFile(join(root, 'a.bin'), 'unsupported');
-    await failure(root, ['extract', 'wiki'], 'path_denied', 1);
-    await failure(root, ['extract', 'wiki/record-preservation.md'], 'path_denied', 1);
+    await failure(root, ['extract', WIKI_DIR], 'path_denied', 1);
+    await failure(root, ['extract', `${WIKI_DIR}/record-preservation.md`], 'path_denied', 1);
     await failure(root, ['extract', 'a.bin'], 'extraction_unavailable', 1);
     await failure(root, ['extract', 'absent'], 'not_found', 1);
   });
@@ -190,7 +191,7 @@ describe('v2 inventory extraction state', () => {
     await writeFile(join(root, '.hidden.txt'), 'text');
     await configure(root, { kf: '2.0', ignore: ['Archive', 'Notes/**'] });
     await symlink(join(root, 'Projects'), join(root, 'link'));
-    for (const scope of ['wiki', '.knowlery', '.hidden', '.hidden/file.txt', '.hidden.txt', 'Archive', 'Archive/old.md', 'Notes/meeting.md', 'link', 'link/policy notes.txt']) {
+    for (const scope of [WIKI_DIR, '.knowlery', '.hidden', '.hidden/file.txt', '.hidden.txt', 'Archive', 'Archive/old.md', 'Notes/meeting.md', 'link', 'link/policy notes.txt']) {
       await failure(root, ['inventory', '--scope', scope], 'path_denied', 1);
       await failure(root, ['extract', scope], 'path_denied', 1);
     }

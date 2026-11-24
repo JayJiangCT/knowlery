@@ -2,7 +2,7 @@ import { lstat, readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { KF_SCHEMA } from '../../schema/kf-2.0';
 import { KnowleryError } from '../errors';
-import { isMissing, relativePath, resolveInside } from '../paths';
+import { isMissing, relativePath, resolveInside, WIKI_DIR } from '../paths';
 import type { ParsedPage } from './model';
 import { parsePage } from './parse';
 
@@ -16,7 +16,7 @@ export function isPageFile(name: string): boolean {
 }
 
 export async function listPages(root: string): Promise<string[]> {
-  const wikiDir = join(root, 'wiki');
+  const wikiDir = join(root, WIKI_DIR);
   let entries;
   try {
     entries = await readdir(wikiDir, { withFileTypes: true });
@@ -29,7 +29,7 @@ export async function listPages(root: string): Promise<string[]> {
   for (const entry of entries) {
     if (!entry.isFile()) continue;
     if (!isPageFile(entry.name)) continue;
-    pages.push(`wiki/${entry.name}`);
+    pages.push(`${WIKI_DIR}/${entry.name}`);
   }
   pages.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   return pages;
@@ -39,11 +39,11 @@ export async function readPage(root: string, path: string): Promise<ParsedPage> 
   const resolved = await resolveInside(root, path);
   const rel = relativePath(root, resolved);
   const name = basename(rel);
-  if (dirname(rel) !== 'wiki' || !isPageFile(name)) {
+  if (dirname(rel) !== WIKI_DIR || !isPageFile(name)) {
     throw new KnowleryError(
       'path_denied',
-      `Not a wiki page directly inside wiki/: ${path}`,
-      'Choose a page file directly inside wiki/ (excluding CONVENTIONS.md, index.md, and log.md).',
+      `Not a wiki page directly inside ${WIKI_DIR}/: ${path}`,
+      `Choose a page file directly inside ${WIKI_DIR}/ (excluding CONVENTIONS.md, index.md, and log.md).`,
     );
   }
 
@@ -52,7 +52,7 @@ export async function readPage(root: string, path: string): Promise<ParsedPage> 
     info = await lstat(resolved);
   } catch (error) {
     if (isMissing(error)) {
-      throw new KnowleryError('not_found', `Page not found: ${path}`, 'Check the page path inside wiki/.');
+      throw new KnowleryError('not_found', `Page not found: ${path}`, `Check the page path inside ${WIKI_DIR}/.`);
     }
     throw error;
   }
@@ -60,7 +60,7 @@ export async function readPage(root: string, path: string): Promise<ParsedPage> 
     throw new KnowleryError(
       'path_denied',
       `Wiki page path is not a regular file: ${path}`,
-      'Choose a regular Markdown file directly inside wiki/.',
+      `Choose a regular Markdown file directly inside ${WIKI_DIR}/.`,
     );
   }
 

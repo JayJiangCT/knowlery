@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { runCli } from '../../src/v2/cli/main';
 import type { IndexRebuildResult } from '../../src/v2/cli/commands/index';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import type { WikiSearchResult } from '../../src/v2/core/search/wiki';
 import { fileState, jsonRun, makeKb } from './helpers';
 
@@ -84,14 +85,14 @@ describe('v2 index rebuild', () => {
     // Orphan file was pruned.
     await expect(lstat(orphanPath)).rejects.toThrow();
 
-    // wiki/index.md matches expected bytes exactly.
-    const indexPath = join(root, 'wiki/index.md');
+    // index.md matches expected bytes exactly.
+    const indexPath = join(root, `${WIKI_DIR}/index.md`);
     const written = await readFile(indexPath, 'utf8');
     expect(written).toBe(EXPECTED_INDEX);
 
-    // Nothing outside .knowlery/cache/ changed except wiki/index.md.
+    // Nothing outside .knowlery/cache/ changed except index.md.
     const after = await fileState(root);
-    delete after['wiki/index.md'];
+    delete after[`${WIKI_DIR}/index.md`];
     expect(after).toEqual(before);
 
     // Second run reports unchanged and preserves mtime.
@@ -120,16 +121,16 @@ describe('v2 index rebuild', () => {
     expect(invRes.items.some((item) => item.path.includes('index.md'))).toBe(false);
   });
 
-  it('reports no_wiki when wiki/ does not exist and rejects invalid index invocations', async () => {
+  it('reports no_wiki when wiki directory does not exist and rejects invalid index invocations', async () => {
     const root = await kb();
-    await rm(join(root, 'wiki'), { recursive: true, force: true });
+    await rm(join(root, WIKI_DIR), { recursive: true, force: true });
 
     const res = await runDirect(root, ['index', 'rebuild', '--json']);
     expect(res.code).toBe(0);
     const data = JSON.parse(res.stdout) as IndexJson;
     expect(data.pages).toBe(0);
     expect(data.index).toBe('no_wiki');
-    await expect(lstat(join(root, 'wiki'))).rejects.toThrow();
+    await expect(lstat(join(root, WIKI_DIR))).rejects.toThrow();
 
     const missingSub = await runDirect(root, ['index', '--json']);
     expect(missingSub.code).toBe(2);

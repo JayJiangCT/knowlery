@@ -11,7 +11,7 @@ import { isPageFile, listPages } from './page/files';
 import { citedSourceKeys } from './page/freshness';
 import type { ParsedPage } from './page/model';
 import { parsePage } from './page/parse';
-import { isMissing } from './paths';
+import { isMissing, WIKI_DIR } from './paths';
 
 export type FindingCode = RuleCode | 'not_checked';
 export type FindingSeverity = 'error' | 'warning' | 'info';
@@ -98,17 +98,18 @@ function decodeLinkTarget(raw: string): string {
 function normalizeScope(scope: string | undefined): { kind: 'all' } | { kind: 'page'; path: string; slug: string } {
   if (scope === undefined) return { kind: 'all' };
   const cleaned = scope.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (cleaned === 'wiki') return { kind: 'all' };
-  if (cleaned.startsWith('wiki/')) {
-    const rest = cleaned.slice('wiki/'.length);
+  if (cleaned === WIKI_DIR) return { kind: 'all' };
+  const wikiPrefix = `${WIKI_DIR}/`;
+  if (cleaned.startsWith(wikiPrefix)) {
+    const rest = cleaned.slice(wikiPrefix.length);
     if (!rest.includes('/') && isPageFile(rest)) {
-      return { kind: 'page', path: `wiki/${rest}`, slug: rest.slice(0, -3) };
+      return { kind: 'page', path: `${WIKI_DIR}/${rest}`, slug: rest.slice(0, -3) };
     }
   }
   throw new KnowleryError(
     'invalid_selector',
     `Invalid validate scope "${scope}".`,
-    'Use "wiki" or a single page path like "wiki/<slug>.md".',
+    `Use "${WIKI_DIR}" or a single page path like "${WIKI_DIR}/<slug>.md".`,
   );
 }
 
@@ -200,7 +201,7 @@ export async function validateWiki(
     throw new KnowleryError(
       'not_found',
       `Page not found: ${scope.path}`,
-      'Check the page path inside wiki/.',
+      `Check the page path inside ${WIKI_DIR}/.`,
     );
   }
 
@@ -258,7 +259,7 @@ export async function validateWiki(
 
   for (const { path: pagePath, page } of pages) {
     const slug = page.slug;
-    const ownAssetsPrefix = `wiki/${slug}.assets/`;
+    const ownAssetsPrefix = `${WIKI_DIR}/${slug}.assets/`;
 
     // 1. Parser problems.
     const invalidSourceLines = new Set<number>();
@@ -279,7 +280,7 @@ export async function validateWiki(
               pagePath,
               1,
               'relation_invalid',
-              `Relation "${relKey}" points to missing page "wiki/${target}.md".`,
+              `Relation "${relKey}" points to missing page "${WIKI_DIR}/${target}.md".`,
             ),
           );
         }
@@ -398,7 +399,7 @@ export async function validateWiki(
         continue;
       }
 
-      const normalized = posix.normalize(posix.join('wiki', decoded));
+      const normalized = posix.normalize(posix.join(WIKI_DIR, decoded));
       if (normalized === '..' || normalized.startsWith('../')) {
         allFindings.push(
           makeFinding(
@@ -411,14 +412,17 @@ export async function validateWiki(
         continue;
       }
 
-      const assetsMatch = /^wiki\/([^/]+)\.assets(?:\/|$)/.exec(normalized);
+      const wikiPrefix = `${WIKI_DIR}/`;
+      const assetsMatch = normalized.startsWith(wikiPrefix)
+        ? /^([^/]+)\.assets(?:\/|$)/.exec(normalized.slice(wikiPrefix.length))
+        : null;
       if (assetsMatch && assetsMatch[1] !== slug) {
         allFindings.push(
           makeFinding(
             pagePath,
             link.line,
             'attachment_outside',
-            `Link target "${link.target}" points into another page's assets folder ("wiki/${assetsMatch[1]}.assets/").`,
+            `Link target "${link.target}" points into another page's assets folder ("${WIKI_DIR}/${assetsMatch[1]}.assets/").`,
           ),
         );
         continue;
@@ -448,8 +452,8 @@ export async function validateWiki(
     }
 
     // 7a. Orphan attachment files under this page's assets folder.
-    const ownAssetsDir = join(root, `wiki/${slug}.assets`);
-    const assetFiles = await listFilesRecursive(ownAssetsDir, `wiki/${slug}.assets`);
+    const ownAssetsDir = join(root, `${WIKI_DIR}/${slug}.assets`);
+    const assetFiles = await listFilesRecursive(ownAssetsDir, `${WIKI_DIR}/${slug}.assets`);
     for (const assetRel of assetFiles) {
       if (!linkedOwnAssets.has(assetRel)) {
         allFindings.push(
@@ -561,17 +565,17 @@ export async function validateWiki(
     }
   }
 
-  // 7b. Orphan wiki/<name>.assets folders with no matching wiki/<name>.md page.
-  const wikiDir = join(root, 'wiki');
+  // 7b. Orphan <WIKI_DIR>/<name>.assets folders with no matching <WIKI_DIR>/<name>.md page.
+  const wikiDir = join(root, WIKI_DIR);
   try {
     const entries = await readdir(wikiDir, { withFileTypes: true });
     for (const entry of entries) {
       if (!entry.isDirectory() || !entry.name.endsWith('.assets')) continue;
       const name = entry.name.slice(0, -'.assets'.length);
       if (!name) continue;
-      const matchingPage = `wiki/${name}.md`;
+      const matchingPage = `${WIKI_DIR}/${name}.md`;
       if (!pagePathSet.has(matchingPage)) {
-        const folderRel = `wiki/${entry.name}`;
+        const folderRel = `${WIKI_DIR}/${entry.name}`;
         allFindings.push(
           makeFinding(
             folderRel,
@@ -591,7 +595,7 @@ export async function validateWiki(
     ? allFindings
     : allFindings.filter((finding) => {
         if (finding.path === scope.path) return true;
-        const assetsFolder = `wiki/${scope.slug}.assets`;
+        const assetsFolder = `${WIKI_DIR}/${scope.slug}.assets`;
         return finding.path === assetsFolder || finding.path.startsWith(`${assetsFolder}/`);
       });
 

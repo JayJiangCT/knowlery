@@ -9,6 +9,7 @@ import { registry as builtins } from './extract/registry';
 import type { CachedState, Registry } from './extract/types';
 import { createIgnoreMatcher } from './ignore';
 import { isMissing, relativePath, resolveInside } from './paths';
+import { ALWAYS_SKIPPED_DIRS, hasProjectMarker, PROJECT_MARKERS, PROJECT_OUTPUT_DIRS } from './skips';
 
 export type Format = 'markdown' | 'txt' | 'csv' | 'pdf' | 'docx' | 'xlsx';
 export interface InventoryItem {
@@ -34,7 +35,7 @@ export interface InventoryOptions {
   registry?: Registry;
 }
 export interface InventoryResult {
-  counts: { total: number; by_format: Partial<Record<Format, number>>; unsupported: number; ignored: number; symlinks: number };
+  counts: { total: number; by_format: Partial<Record<Format, number>>; unsupported: number; ignored: number; skipped: number; symlinks: number };
   items: InventoryItem[];
   offset: number;
   returned: number;
@@ -127,20 +128,30 @@ export async function resolveRawSource(root: string, input: string, config: Conf
   const rel = relativePath(root, path);
   const parts = rel.split('/').filter(Boolean);
   const ignores = createIgnoreMatcher(config.ignore);
-  const denied = () => new KnowleryError('path_denied', `Not an inventoried source path: ${input}`, 'Choose a visible, non-ignored raw source outside wiki/ and .knowlery/.');
+  const denied = () => new KnowleryError('path_denied', `Not an inventoried source path: ${input}`, 'Choose a visible, non-ignored raw source outside .knowlery/ and built-in skipped folders.');
   let current = root;
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
     const prefix = parts.slice(0, i + 1).join('/');
-    if (part.startsWith('.') || (i === 0 && part === 'wiki') || ignores(prefix)) throw denied();
+    if (part.startsWith('.')) throw denied();
+    const parentPath = current;
     current = join(current, part);
+    let info;
     try {
-      const info = await lstat(current);
-      if (info.isSymbolicLink() || (!info.isDirectory() && (part.startsWith('~$') || ROOT_ENTRY_FILES.has(prefix)))) throw denied();
+      info = await lstat(current);
     } catch (error) {
-      if (isMissing(error)) throw new KnowleryError('not_found', `Source not found: ${input}`, 'Choose an existing raw source.');
+      if (isMissing(error)) {
+        if (ignores(prefix)) throw denied();
+        throw new KnowleryError('not_found', `Source not found: ${input}`, 'Choose an existing raw source.');
+      }
       throw error;
     }
+    if (info.isSymbolicLink() || (!info.isDirectory() && (part.startsWith('~$') || ROOT_ENTRY_FILES.has(prefix)))) throw denied();
+    if (info.isDirectory()) {
+      if (ALWAYS_SKIPPED_DIRS.has(part)) throw denied();
+      if (i > 0 && PROJECT_OUTPUT_DIRS.has(part) && await hasProjectMarker(parentPath)) throw denied();
+    }
+    if (ignores(prefix)) throw denied();
   }
   if (await realpath(path) !== path) throw denied();
   return path;
@@ -159,26 +170,37 @@ export async function rememberInventoryHashes(root: string, lines: CacheLine[]):
 
 export type RawSource = Omit<CacheLine, 'sha256'>;
 
-export async function scanRawSources(root: string, config: Config, input = '.'): Promise<{ scope: string; sources: RawSource[]; counts: InventoryResult['counts'] }> {
+export async function scanRawSources(root: string, config: Config, input = '.'): Promise<{ scope: string; sources: RawSource[]; counts: InventoryResult['counts']; skipped_folders: string[] }> {
   const start = await resolveRawSource(root, input, config);
   const scope = relativePath(root, start);
   const sources: RawSource[] = [];
-  const counts: InventoryResult['counts'] = { total: 0, by_format: {}, unsupported: 0, ignored: 0, symlinks: 0 };
+  const counts: InventoryResult['counts'] = { total: 0, by_format: {}, unsupported: 0, ignored: 0, skipped: 0, symlinks: 0 };
+  const skippedFolders: string[] = [];
   const ignores = createIgnoreMatcher(config.ignore);
-  async function walk(path: string, ignored = false): Promise<void> {
+  async function walk(path: string, ignored = false, parentIsProject = false): Promise<void> {
     const rel = relativePath(root, path);
-    const parts = rel.split('/');
+    const parts = rel ? rel.split('/') : [];
     if (rel && parts.some((part) => part.startsWith('.'))) return;
     const info = await lstat(path);
     if (ROOT_ENTRY_FILES.has(rel) && !info.isDirectory()) return;
-    if (parts[0] === 'wiki') return;
     if (info.isSymbolicLink()) { counts.symlinks++; return; }
-    ignored = ignored || ignores(rel);
     if (info.isDirectory()) {
-      for (const entry of await readdir(path)) await walk(join(path, entry), ignored);
+      const name = parts[parts.length - 1];
+      if (rel && name !== undefined && (ALWAYS_SKIPPED_DIRS.has(name) || (parts.length > 1 && PROJECT_OUTPUT_DIRS.has(name) && parentIsProject))) {
+        counts.skipped++;
+        skippedFolders.push(rel);
+        return;
+      }
+      ignored = ignored || (rel !== '' && ignores(rel));
+      const dirEntries = await readdir(path, { withFileTypes: true });
+      const isProject = rel !== '' && dirEntries.some((entry) => !entry.isDirectory() && PROJECT_MARKERS.has(entry.name));
+      for (const entry of dirEntries) {
+        await walk(join(path, entry.name), ignored, isProject);
+      }
       return;
     }
-    if (!info.isFile() || parts[parts.length - 1].startsWith('~$')) return;
+    if (!info.isFile() || (parts.length > 0 && parts[parts.length - 1].startsWith('~$'))) return;
+    ignored = ignored || ignores(rel);
     if (ignored) { counts.ignored++; return; }
     const format = formatFor(rel);
     if (!format) { counts.unsupported++; return; }
@@ -187,9 +209,10 @@ export async function scanRawSources(root: string, config: Config, input = '.'):
   }
   await walk(start);
   sources.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  skippedFolders.sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   counts.total = sources.length;
   counts.by_format = Object.fromEntries(Object.entries(counts.by_format).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
-  return { scope, sources, counts };
+  return { scope, sources, counts, skipped_folders: skippedFolders };
 }
 
 export async function inventoryList(

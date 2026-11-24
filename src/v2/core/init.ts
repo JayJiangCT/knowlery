@@ -2,21 +2,28 @@ import { lstat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { SKILLS } from '../skills';
 import { KF_VERSION } from '../version';
-import { readConfig } from './config';
+import { Beta1WikiError, checkBeta1Wiki, readConfig } from './config';
 import { renderConventions } from './conventions';
 import { invalidInvocation, KnowleryError } from './errors';
+import { checkGitWikiIgnore, type GitCheckIgnoreRunner, type GitIgnoreState } from './git';
 import { listPages } from './page/files';
 import type { ParsedPage } from './page/model';
 import { parsePage } from './page/parse';
-import { isMissing, relativePath, resolveInside } from './paths';
+import { isMissing, relativePath, resolveInside, WIKI_DIR } from './paths';
 import { renderWikiIndex } from './wiki-index';
 
 export const DEFAULT_SKILLS_DIR = '.agents/skills';
 
-export const AGENTS_LINES: readonly string[] = [
+export const BETA1_AGENTS_LINES: readonly string[] = [
   'This folder is a Knowlery knowledge base. Raw sources stay untouched; compiled pages are in wiki/.',
   'Before reading or editing anything under wiki/, read wiki/CONVENTIONS.md and follow it.',
   'Use the knowlery command to search, read, list stale sources and validate. Never edit .knowlery/.',
+];
+
+export const AGENTS_LINES: readonly string[] = [
+  `This folder is a Knowlery knowledge base. Raw sources stay untouched; compiled pages are in ${WIKI_DIR}/.`,
+  `Before reading or editing anything under ${WIKI_DIR}/, read ${WIKI_DIR}/CONVENTIONS.md and follow it.`,
+  `Use the knowlery command to search, read, list stale sources and validate. Inside .knowlery/, edit only ${WIKI_DIR}/.`,
 ];
 
 export const POINTER_FILES = [
@@ -47,6 +54,7 @@ const INITIAL_LOG_TEXT = [
 
 export interface InitOptions {
   skillsDir?: string;
+  runGitCheckIgnore?: GitCheckIgnoreRunner;
 }
 
 export interface InitResult {
@@ -58,6 +66,9 @@ export interface InitResult {
   claude_line: string;
   gemini_md: 'written' | 'kept';
   gemini_line: string;
+  git: GitIgnoreState;
+  git_rule: string | null;
+  warning: string | null;
 }
 
 export async function resolveSkillsDir(root: string, skillsDir: string = DEFAULT_SKILLS_DIR): Promise<{ abs: string; rel: string }> {
@@ -159,6 +170,7 @@ export async function ensureSkills(
 
 export async function initKb(root: string, options: InitOptions = {}): Promise<InitResult> {
   await resolveSkillsDir(root, options.skillsDir);
+  await checkBeta1Wiki(root);
 
   for (const marker of V1_MARKERS) {
     if (await pathExists(join(root, marker))) {
@@ -175,7 +187,9 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
     await readConfig(root);
     hasAcceptedConfig = true;
   } catch (error) {
-    if (error instanceof KnowleryError && error.code === 'not_found') {
+    if (error instanceof Beta1WikiError) {
+      throw error;
+    } else if (error instanceof KnowleryError && error.code === 'not_found') {
       hasAcceptedConfig = false;
     } else if (error instanceof KnowleryError && (error.code === 'invalid_config' || error.code === 'unsupported_schema')) {
       throw new KnowleryError(
@@ -196,14 +210,6 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
     );
   }
 
-  if (!hasAcceptedConfig && await pathExists(join(root, 'wiki'))) {
-    throw new KnowleryError(
-      'unsupported_schema',
-      'Found wiki/ without a Knowlery 2.0 config: wiki/ was not created by Knowlery 2.0.',
-      'Rename wiki/ or choose another root.',
-    );
-  }
-
   const created: string[] = [];
   const kept: string[] = [];
 
@@ -217,35 +223,35 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
     created.push('.knowlery/config.json');
   }
 
-  // 2. wiki/ directory
-  const wikiDir = join(root, 'wiki');
+  // 2. wiki directory
+  const wikiDir = join(root, WIKI_DIR);
   if (await pathExists(wikiDir)) {
     const info = await lstat(wikiDir);
     if (info.isSymbolicLink() || !info.isDirectory()) {
       throw new KnowleryError(
         'unsupported_schema',
-        'wiki/ is not a regular directory.',
-        'Rename wiki/ or choose another root.',
+        `${WIKI_DIR}/ is not a regular directory.`,
+        `Remove or rename ${WIKI_DIR}/ or choose another root.`,
       );
     }
   } else {
     await mkdir(wikiDir, { recursive: false });
-    created.push('wiki/');
+    created.push(`${WIKI_DIR}/`);
   }
 
-  // 3. wiki/CONVENTIONS.md
+  // 3. CONVENTIONS.md
   const conventionsPath = join(wikiDir, 'CONVENTIONS.md');
   if (await pathExists(conventionsPath)) {
-    kept.push('wiki/CONVENTIONS.md');
+    kept.push(`${WIKI_DIR}/CONVENTIONS.md`);
   } else {
     await writeFile(conventionsPath, renderConventions(), { encoding: 'utf8', flag: 'wx' });
-    created.push('wiki/CONVENTIONS.md');
+    created.push(`${WIKI_DIR}/CONVENTIONS.md`);
   }
 
-  // 4. wiki/index.md
+  // 4. index.md
   const indexPath = join(wikiDir, 'index.md');
   if (await pathExists(indexPath)) {
-    kept.push('wiki/index.md');
+    kept.push(`${WIKI_DIR}/index.md`);
   } else {
     const pagePaths = await listPages(root);
     const pages: ParsedPage[] = [];
@@ -254,16 +260,16 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
       pages.push(parsePage(text, basename(pagePath)));
     }
     await writeFile(indexPath, renderWikiIndex(pages), { encoding: 'utf8', flag: 'wx' });
-    created.push('wiki/index.md');
+    created.push(`${WIKI_DIR}/index.md`);
   }
 
-  // 5. wiki/log.md
+  // 5. log.md
   const logPath = join(wikiDir, 'log.md');
   if (await pathExists(logPath)) {
-    kept.push('wiki/log.md');
+    kept.push(`${WIKI_DIR}/log.md`);
   } else {
     await writeFile(logPath, INITIAL_LOG_TEXT, { encoding: 'utf8', flag: 'wx' });
-    created.push('wiki/log.md');
+    created.push(`${WIKI_DIR}/log.md`);
   }
 
   // 6. AGENTS.md
@@ -285,6 +291,8 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
   created.push(...skills.created);
   kept.push(...skills.kept);
 
+  const gitStatus = await checkGitWikiIgnore(root, options.runGitCheckIgnore);
+
   return {
     created,
     kept,
@@ -294,5 +302,8 @@ export async function initKb(root: string, options: InitOptions = {}): Promise<I
     claude_line: pointerStates['CLAUDE.md'].line,
     gemini_md: pointerStates['GEMINI.md'].state,
     gemini_line: pointerStates['GEMINI.md'].line,
+    git: gitStatus.state,
+    git_rule: gitStatus.rule,
+    warning: gitStatus.warning,
   };
 }

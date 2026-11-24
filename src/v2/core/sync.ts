@@ -3,13 +3,14 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { SKILLS } from '../skills';
 import { renderConventions } from './conventions';
-import { resolveSkillsDir } from './init';
-import { isMissing } from './paths';
+import { AGENTS_LINES, BETA1_AGENTS_LINES, hasAllAgentsLines, resolveSkillsDir } from './init';
+import { isMissing, WIKI_DIR } from './paths';
 
 const MAX_DIFF_LINES = 40;
 
 export type SyncFileState = 'current' | 'outdated' | 'missing' | 'updated' | 'created';
 export type SyncConventionsState = SyncFileState;
+export type SyncAgentsState = SyncFileState | 'incomplete';
 
 export interface SyncSkillEntry {
   name: string;
@@ -21,12 +22,21 @@ export interface SyncSkillEntry {
   added_more?: number;
 }
 
+export interface SyncAgentsEntry {
+  state: SyncAgentsState;
+  removed: string[];
+  added: string[];
+  removed_more: number;
+  added_more: number;
+}
+
 export interface SyncResult {
   conventions: SyncConventionsState;
   removed: string[];
   added: string[];
   removed_more: number;
   added_more: number;
+  agents: SyncAgentsEntry;
   skills: SyncSkillEntry[];
 }
 
@@ -133,12 +143,55 @@ async function syncFile(
   };
 }
 
+async function syncAgents(root: string, apply: boolean): Promise<SyncAgentsEntry> {
+  const agentsPath = join(root, 'AGENTS.md');
+  const desired = `${AGENTS_LINES.join('\n')}\n`;
+  const beta1Exact = `${BETA1_AGENTS_LINES.join('\n')}\n`;
+
+  let existing: string | undefined;
+  try {
+    existing = await readFile(agentsPath, 'utf8');
+  } catch (error) {
+    if (!isMissing(error)) throw error;
+  }
+
+  if (existing === undefined) {
+    if (apply) {
+      await writeAtomic(agentsPath, desired);
+      return { state: 'created', removed: [], added: [], removed_more: 0, added_more: 0 };
+    }
+    return { state: 'missing', removed: [], added: [], removed_more: 0, added_more: 0 };
+  }
+
+  if (existing === beta1Exact) {
+    if (apply) {
+      await writeAtomic(agentsPath, desired);
+      return { state: 'updated', removed: [], added: [], removed_more: 0, added_more: 0 };
+    }
+    const { removed, added, removedMore, addedMore } = diffLines(existing, desired);
+    return {
+      state: 'outdated',
+      removed,
+      added,
+      removed_more: removedMore,
+      added_more: addedMore,
+    };
+  }
+
+  if (hasAllAgentsLines(existing)) {
+    return { state: 'current', removed: [], added: [], removed_more: 0, added_more: 0 };
+  }
+
+  return { state: 'incomplete', removed: [], added: [], removed_more: 0, added_more: 0 };
+}
+
 export async function syncKb(root: string, options: { apply?: boolean; skillsDir?: string } = {}): Promise<SyncResult> {
   const apply = options.apply ?? false;
   const skillsTarget = await resolveSkillsDir(root, options.skillsDir);
 
-  const conventionsPath = join(root, 'wiki', 'CONVENTIONS.md');
+  const conventionsPath = join(root, WIKI_DIR, 'CONVENTIONS.md');
   const conv = await syncFile(conventionsPath, renderConventions(), apply);
+  const agents = await syncAgents(root, apply);
 
   const skills: SyncSkillEntry[] = [];
   for (const skill of SKILLS) {
@@ -165,6 +218,7 @@ export async function syncKb(root: string, options: { apply?: boolean; skillsDir
     added: conv.added,
     removed_more: conv.removed_more,
     added_more: conv.added_more,
+    agents,
     skills,
   };
 }

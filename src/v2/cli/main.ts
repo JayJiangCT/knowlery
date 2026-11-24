@@ -3,6 +3,7 @@ import { readConfig } from '../core/config';
 import { getHarnessSpec, type KnowleryVersionRunner } from '../core/connect';
 import { exitCode, KnowleryError } from '../core/errors';
 import type { ExtractionOptions } from '../core/extract';
+import type { GitCheckIgnoreRunner } from '../core/git';
 import { resolveRoot } from '../core/paths';
 import { KF_VERSION, KIT_VERSION } from '../version';
 import { parseArgs, USAGE } from './args';
@@ -27,6 +28,7 @@ export interface CliIO {
   pathEnv?: string;
   homeDir?: string;
   runKnowleryVersion?: KnowleryVersionRunner;
+  runGitCheckIgnore?: GitCheckIgnoreRunner;
 }
 
 export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<ExtractionOptions, 'registry' | 'ceiling'> = {}): Promise<number> {
@@ -45,7 +47,7 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         break;
       case 'init': {
         const root = await resolveRoot(args.dir, io.cwd);
-        const { result, text } = await runInit(root, args);
+        const { result, text } = await runInit(root, args, { runGitCheckIgnore: io.runGitCheckIgnore });
         success(args.command, result, text);
         break;
       }
@@ -96,7 +98,7 @@ export async function runCli(argv: string[], io: CliIO, extractionOptions: Pick<
         const { result, text } = args.command === 'sync'
           ? await runSync(root, args)
           : args.command === 'health'
-            ? await runHealth(root, config, extractionOptions)
+            ? await runHealth(root, config, { ...extractionOptions, runGitCheckIgnore: io.runGitCheckIgnore })
             : args.command === 'extract'
               ? await runExtract(root, config, args, extractionOptions)
               : args.command === 'read'

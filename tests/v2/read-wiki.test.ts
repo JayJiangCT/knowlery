@@ -3,6 +3,7 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { formatReadRawText } from '../../src/v2/cli/commands/read';
 import { runCli } from '../../src/v2/cli/main';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import type { ReadCitedResult } from '../../src/v2/core/read/cited';
 import { LOCATOR_PAGE_CAP } from '../../src/v2/core/read/page';
 import type { ReadRawResult } from '../../src/v2/core/read/raw';
@@ -74,7 +75,7 @@ async function readFail(argv: string[], expectedCode: string, exit = 1): Promise
 
 describe('v2 read wiki pages', () => {
   it('reads current (default), history, section:sources, all, and missing sections', async () => {
-    const filePath = 'wiki/record-preservation.md';
+    const filePath = `${WIKI_DIR}/record-preservation.md`;
     const raw = await readFile(join(root, filePath), 'utf8');
 
     const current = await readWikiJson([filePath]);
@@ -117,7 +118,7 @@ describe('v2 read wiki pages', () => {
     expect(all.text).toBe(raw);
 
     // Missing section gives empty text, not an error.
-    await writeFile(join(root, 'wiki/minimal.md'), [
+    await writeFile(join(root, `${WIKI_DIR}/minimal.md`), [
       '---',
       'type: concept',
       'title: Minimal',
@@ -132,7 +133,7 @@ describe('v2 read wiki pages', () => {
       '- One claim (src: s1) ^c1',
       '',
     ].join('\n'));
-    const missing = await readWikiJson(['wiki/minimal.md', '--select', 'section:Open']);
+    const missing = await readWikiJson([`${WIKI_DIR}/minimal.md`, '--select', 'section:Open']);
     expect(missing.select).toBe('section:open');
     expect(missing.text).toBe('');
     expect(missing.bytes).toBe(0);
@@ -141,7 +142,7 @@ describe('v2 read wiki pages', () => {
   });
 
   it('builds outline with next ids, sources, sections, and relations', async () => {
-    const outline = await readWikiJson(['wiki/record-preservation.md', '--select', 'outline']);
+    const outline = await readWikiJson([`${WIKI_DIR}/record-preservation.md`, '--select', 'outline']);
     expect(outline.select).toBe('outline');
     const lines = outline.text.trimEnd().split('\n');
     expect(lines[0]).toBe('page record-preservation · concept · disputed · updated 2026-11-18');
@@ -189,12 +190,12 @@ describe('v2 read wiki pages', () => {
       `- s1 · \`Notes/meeting.md\` · sha256:${'a'.repeat(64)} · heading Team meeting · "Review"`,
       '',
     ].join('\n');
-    await writeFile(join(root, 'wiki/many-claims.md'), pageText);
+    await writeFile(join(root, `${WIKI_DIR}/many-claims.md`), pageText);
 
     const expectedSection = ['## Current', ...claimLines].join('\n') + '\n';
     let collected = '';
     let pageCount = 0;
-    let nextArgs = ['wiki/many-claims.md'];
+    let nextArgs = [`${WIKI_DIR}/many-claims.md`];
     while (true) {
       const page = await readWikiJson(nextArgs);
       pageCount++;
@@ -208,7 +209,7 @@ describe('v2 read wiki pages', () => {
       }
       expect(page.next).not.toBeNull();
       nextArgs = [
-        'wiki/many-claims.md',
+        `${WIKI_DIR}/many-claims.md`,
         '--select', page.next!.select,
         '--offset', String(page.next!.offset),
         '--expected-version', page.next!.expected_version,
@@ -235,34 +236,34 @@ describe('v2 read wiki pages', () => {
       ...claims,
       '',
     ].join('\n');
-    await writeFile(join(root, 'wiki/versioned.md'), content);
+    await writeFile(join(root, `${WIKI_DIR}/versioned.md`), content);
 
-    const first = await readWikiJson(['wiki/versioned.md']);
+    const first = await readWikiJson([`${WIKI_DIR}/versioned.md`]);
     expect(first.more).toBe(true);
 
     const second = await readWikiJson([
-      'wiki/versioned.md',
+      `${WIKI_DIR}/versioned.md`,
       '--select', first.next!.select,
       '--offset', String(first.next!.offset),
       '--expected-version', first.version,
     ]);
     expect(second.version).toBe(first.version);
 
-    await readFail(['wiki/versioned.md', '--expected-version', `sha256:${'f'.repeat(64)}`], 'stale_version');
+    await readFail([`${WIKI_DIR}/versioned.md`, '--expected-version', `sha256:${'f'.repeat(64)}`], 'stale_version');
 
-    await writeFile(join(root, 'wiki/versioned.md'), `${content}\n`);
+    await writeFile(join(root, `${WIKI_DIR}/versioned.md`), `${content}\n`);
     await readFail([
-      'wiki/versioned.md',
+      `${WIKI_DIR}/versioned.md`,
       '--select', first.next!.select,
       '--offset', String(first.next!.offset),
       '--expected-version', first.next!.expected_version,
     ], 'stale_version');
   });
 
-  it('reads wiki/log.md with the default selector', async () => {
+  it('reads log.md with the default selector', async () => {
     const logContent = '# Log\n\n- 2026-11-18 · compiled wiki\n';
-    await writeFile(join(root, 'wiki/log.md'), logContent);
-    const res = await readWikiJson(['wiki/log.md']);
+    await writeFile(join(root, `${WIKI_DIR}/log.md`), logContent);
+    const res = await readWikiJson([`${WIKI_DIR}/log.md`]);
     expect(res.select).toBe('all');
     expect(res.page).toBeNull();
     expect(res.problems).toBe(0);
@@ -275,10 +276,10 @@ describe('v2 read cited passages', () => {
     const matched = await readCitedJson([
       'Notes/meeting.md',
       '--select', 'cited:s2',
-      '--from', 'wiki/record-preservation.md',
+      '--from', `${WIKI_DIR}/record-preservation.md`,
     ]);
     expect(matched.select).toBe('cited:s2');
-    expect(matched.from).toBe('wiki/record-preservation.md');
+    expect(matched.from).toBe(`${WIKI_DIR}/record-preservation.md`);
     expect(matched.key).toBe('s2');
     expect(matched.pin).toBe('match');
     expect(matched.locator).toBe('heading Team meeting > Decisions > Next steps');
@@ -287,7 +288,7 @@ describe('v2 read cited passages', () => {
     expect(JSON.stringify(matched)).not.toContain('"verified"');
 
     const matchedText = await invoke(root, [
-      'read', 'Notes/meeting.md', '--select', 'cited:s2', '--from', 'wiki/record-preservation.md',
+      'read', 'Notes/meeting.md', '--select', 'cited:s2', '--from', `${WIKI_DIR}/record-preservation.md`,
     ]);
     expect(matchedText.code).toBe(0);
     expect(matchedText.stdout.split('\n')[0]).toContain(' · cited:s2 · pin match · ');
@@ -301,14 +302,14 @@ describe('v2 read cited passages', () => {
     const changed = await readCitedJson([
       'Notes/meeting.md',
       '--select', 'cited:s2',
-      '--from', 'wiki/record-preservation.md',
+      '--from', `${WIKI_DIR}/record-preservation.md`,
     ]);
     expect(changed.pin).toBe('changed');
     expect(changed.version).not.toBe(changed.pinned_version);
     expect(changed.text).toContain('One more line.');
 
     const changedText = await invoke(root, [
-      'read', 'Notes/meeting.md', '--select', 'cited:s2', '--from', 'wiki/record-preservation.md',
+      'read', 'Notes/meeting.md', '--select', 'cited:s2', '--from', `${WIKI_DIR}/record-preservation.md`,
     ]);
     expect(changedText.stdout.split('\n')[0]).toContain(' · cited:s2 · pin changed · ');
 
@@ -317,23 +318,23 @@ describe('v2 read cited passages', () => {
     await readFail([
       'Notes/meeting.md',
       '--select', 'cited:s2',
-      '--from', 'wiki/record-preservation.md',
+      '--from', `${WIKI_DIR}/record-preservation.md`,
     ], 'stale_version');
   });
 
   it('rejects invalid routing, unknown keys, mismatched paths, denied wiki paths, and missing pages', async () => {
-    await writeFile(join(root, 'wiki/log.md'), '# Log\n');
+    await writeFile(join(root, `${WIKI_DIR}/log.md`), '# Log\n');
 
-    await readFail(['Notes/meeting.md', '--select', 'cited:s99', '--from', 'wiki/record-preservation.md'], 'not_found');
-    const mismatch = await readFail(['Archive/old.md', '--select', 'cited:s2', '--from', 'wiki/record-preservation.md'], 'invalid_selector');
+    await readFail(['Notes/meeting.md', '--select', 'cited:s99', '--from', `${WIKI_DIR}/record-preservation.md`], 'not_found');
+    const mismatch = await readFail(['Archive/old.md', '--select', 'cited:s2', '--from', `${WIKI_DIR}/record-preservation.md`], 'invalid_selector');
     expect(mismatch.message).toContain('Notes/meeting.md');
 
     await readFail(['Notes/meeting.md', '--select', 'cited:s2'], 'invalid_selector');
-    await readFail(['Notes/meeting.md', '--select', 'outline', '--from', 'wiki/record-preservation.md'], 'invalid_selector');
+    await readFail(['Notes/meeting.md', '--select', 'outline', '--from', `${WIKI_DIR}/record-preservation.md`], 'invalid_selector');
     await readFail(['Notes/meeting.md', '--select', 'current'], 'invalid_selector');
-    await readFail(['wiki/log.md', '--select', 'outline'], 'invalid_selector');
-    await readFail(['wiki/record-preservation.assets/checklist.txt'], 'path_denied');
-    await readFail(['wiki/does-not-exist.md'], 'not_found');
+    await readFail([`${WIKI_DIR}/log.md`, '--select', 'outline'], 'invalid_selector');
+    await readFail([`${WIKI_DIR}/record-preservation.assets/checklist.txt`], 'path_denied');
+    await readFail([`${WIKI_DIR}/does-not-exist.md`], 'not_found');
   });
 });
 
@@ -388,7 +389,7 @@ describe('v2 read text formatting: single-quoted more hints and trailing newline
     expect(csvTextRun.stdout.endsWith('\n')).toBe(true);
     expect(csvTextRun.stdout.endsWith('\n\n')).toBe(false);
 
-    const wikiTextRun = await invoke(root, ['read', 'wiki/record-preservation.md']);
+    const wikiTextRun = await invoke(root, ['read', `${WIKI_DIR}/record-preservation.md`]);
     expect(wikiTextRun.code).toBe(0);
     expect(wikiTextRun.stdout.endsWith('\n')).toBe(true);
     expect(wikiTextRun.stdout.endsWith('\n\n')).toBe(false);

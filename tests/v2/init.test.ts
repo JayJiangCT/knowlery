@@ -8,6 +8,7 @@ import type { ExtractionOptions } from '../../src/v2/core/extract';
 import { registry as builtinRegistry } from '../../src/v2/core/extract/registry';
 import type { HealthResult } from '../../src/v2/core/health';
 import { AGENTS_LINES, type InitResult } from '../../src/v2/core/init';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import type { SyncResult } from '../../src/v2/core/sync';
 import type { ValidateResult } from '../../src/v2/core/validate';
 import { configure, failure, fileState, invoke, jsonRun, makeKb } from './helpers';
@@ -66,10 +67,10 @@ describe('v2 init, sync, and health', () => {
     expect(first.command).toBe('init');
     expect(first.created).toEqual([
       '.knowlery/config.json',
-      'wiki/',
-      'wiki/CONVENTIONS.md',
-      'wiki/index.md',
-      'wiki/log.md',
+      `${WIKI_DIR}/`,
+      `${WIKI_DIR}/CONVENTIONS.md`,
+      `${WIKI_DIR}/index.md`,
+      `${WIKI_DIR}/log.md`,
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
@@ -86,7 +87,7 @@ describe('v2 init, sync, and health', () => {
       ignore: [],
       mcp: { raw: true },
     });
-    expect(await readFile(join(root, 'wiki/CONVENTIONS.md'), 'utf8')).toBe(renderConventions());
+    expect(await readFile(join(root, `${WIKI_DIR}/CONVENTIONS.md`), 'utf8')).toBe(renderConventions());
     expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(`${AGENTS_LINES.join('\n')}\n`);
 
     const val = await runDirectJson<ValidateResult>(root, ['validate']);
@@ -101,9 +102,9 @@ describe('v2 init, sync, and health', () => {
     expect(second.created).toEqual([]);
     expect(second.kept).toEqual([
       '.knowlery/config.json',
-      'wiki/CONVENTIONS.md',
-      'wiki/index.md',
-      'wiki/log.md',
+      `${WIKI_DIR}/CONVENTIONS.md`,
+      `${WIKI_DIR}/index.md`,
+      `${WIKI_DIR}/log.md`,
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
@@ -136,7 +137,7 @@ describe('v2 init, sync, and health', () => {
     expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toBe(original);
   });
 
-  it('refuses 1.x markers, non-2.0 .knowlery/config.json, and unmanaged wiki/ without writing anything', async () => {
+  it('refuses 1.x markers and non-2.0 .knowlery/config.json without writing anything, while accepting a user wiki/ folder', async () => {
     const withKnowledge = await makeEmptyDir();
     await writeFile(join(withKnowledge, 'KNOWLEDGE.md'), '# Legacy\n');
     await failure(withKnowledge, ['init'], 'unsupported_schema', 1);
@@ -148,10 +149,13 @@ describe('v2 init, sync, and health', () => {
     const withWiki = await makeEmptyDir();
     await mkdir(join(withWiki, 'wiki'));
     await writeFile(join(withWiki, 'wiki/custom.md'), '# Existing\n');
-    await failure(withWiki, ['init'], 'unsupported_schema', 1);
+    const res = await runDirectJson<InitResult>(withWiki, ['init']);
+    expect(res.created).toContain(`${WIKI_DIR}/`);
+    const inv = await jsonRun(withWiki, ['inventory']);
+    expect(inv.items.map((item) => item.path)).toEqual(['wiki/custom.md']);
   });
 
-  it('completes a folder that already has a hand-made valid config and no wiki/', async () => {
+  it('completes a folder that already has a hand-made valid config and no hidden wiki', async () => {
     const root = await makeEmptyDir();
     await configure(root, { kf: '2.0', ignore: ['Drafts/**'] });
     const configBefore = await readFile(join(root, '.knowlery/config.json'), 'utf8');
@@ -159,10 +163,10 @@ describe('v2 init, sync, and health', () => {
     const res = await runDirectJson<InitResult>(root, ['init']);
     expect(res.kept).toEqual(['.knowlery/config.json']);
     expect(res.created).toEqual([
-      'wiki/',
-      'wiki/CONVENTIONS.md',
-      'wiki/index.md',
-      'wiki/log.md',
+      `${WIKI_DIR}/`,
+      `${WIKI_DIR}/CONVENTIONS.md`,
+      `${WIKI_DIR}/index.md`,
+      `${WIKI_DIR}/log.md`,
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
@@ -190,7 +194,7 @@ describe('v2 init, sync, and health', () => {
       added_more: 0,
     });
 
-    const convPath = join(root, 'wiki/CONVENTIONS.md');
+    const convPath = join(root, `${WIKI_DIR}/CONVENTIONS.md`);
     await writeFile(convPath, `${renderConventions()}A stray line.\n`);
 
     const outdatedRes = await invoke(root, ['sync', '--json']);

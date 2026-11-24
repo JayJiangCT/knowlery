@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { runCli } from '../../src/v2/cli/main';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import { findMcpRoot } from '../../src/v2/mcp/root';
 import {
   buildMcpServer,
@@ -122,12 +123,13 @@ describe('v2 mcp', () => {
     }) as ToolCallResult;
     expect(searchRes.isError).toBeFalsy();
     const searchText = textOf(searchRes);
-    expect(searchText).toContain('wiki/record-preservation.md');
+    expect(searchText).toContain(`${WIKI_DIR}/record-preservation.md`);
 
-    const hitVersionMatch = searchText.match(/wiki\/record-preservation\.md[^\n]*\n {2}version: (sha256:[a-f0-9]{64})/);
+    const escapedWikiDir = WIKI_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const hitVersionMatch = searchText.match(new RegExp(`${escapedWikiDir}/record-preservation\\.md[^\\n]*\\n {2}version: (sha256:[a-f0-9]{64})`));
     expect(hitVersionMatch).not.toBeNull();
 
-    const inv = await jsonRun(root, ['inventory', '--paths', 'wiki/record-preservation.md']);
+    const inv = await jsonRun(root, ['inventory', '--paths', `${WIKI_DIR}/record-preservation.md`]);
     expect(inv.paths[0].exists).toBe(true);
     if (inv.paths[0].exists) {
       expect(hitVersionMatch![1]).toBe(inv.paths[0].sha256);
@@ -135,18 +137,18 @@ describe('v2 mcp', () => {
 
     const readPageRes = await client.callTool({
       name: 'read',
-      arguments: { path: 'wiki/record-preservation.md' },
+      arguments: { path: `${WIKI_DIR}/record-preservation.md` },
     }) as ToolCallResult;
     expect(readPageRes.isError).toBeFalsy();
     const readPageText = textOf(readPageRes);
-    const cliRead = await invoke(root, ['read', 'wiki/record-preservation.md']);
+    const cliRead = await invoke(root, ['read', `${WIKI_DIR}/record-preservation.md`]);
     expect(readPageText.split('\n')[0]).toBe(cliRead.stdout.split('\n')[0]);
     expect(readPageRes.structuredContent).toBeDefined();
     expect(readPageRes.structuredContent).not.toHaveProperty('text');
 
     const sourcesRes = await client.callTool({
       name: 'read',
-      arguments: { path: 'wiki/record-preservation.md', select: 'section:Sources' },
+      arguments: { path: `${WIKI_DIR}/record-preservation.md`, select: 'section:Sources' },
     }) as ToolCallResult;
     expect(sourcesRes.isError).toBeFalsy();
     expect(sourcesRes.structuredContent).not.toHaveProperty('text');
@@ -157,7 +159,7 @@ describe('v2 mcp', () => {
       arguments: {
         path: 'Notes/meeting.md',
         select: 'cited:s2',
-        from: 'wiki/record-preservation.md',
+        from: `${WIKI_DIR}/record-preservation.md`,
       },
     }) as ToolCallResult;
     expect(citedRes.isError).toBeFalsy();
@@ -257,7 +259,7 @@ describe('v2 mcp', () => {
 
     const wikiRead = await client.callTool({
       name: 'read',
-      arguments: { path: 'wiki/record-preservation.md' },
+      arguments: { path: `${WIKI_DIR}/record-preservation.md` },
     }) as ToolCallResult;
     expect(wikiRead.isError).toBeFalsy();
 
@@ -307,7 +309,7 @@ describe('v2 mcp', () => {
     const calls: Array<{ name: string; arguments: Record<string, unknown> }> = [
       { name: 'health', arguments: {} },
       { name: 'search', arguments: { query: 'test' } },
-      { name: 'read', arguments: { path: 'wiki/index.md' } },
+      { name: 'read', arguments: { path: `${WIKI_DIR}/index.md` } },
     ];
     for (const call of calls) {
       const res = await client.callTool(call) as ToolCallResult;
@@ -342,7 +344,7 @@ describe('v2 mcp', () => {
     const cjkClaim = '核心结论包含大量中文记录用于测试长度限制与结构化输出裁剪'.repeat(6);
     for (let i = 1; i <= 15; i++) {
       await writeFile(
-        join(root, `wiki/cjk-page-${i}.md`),
+        join(root, `${WIKI_DIR}/cjk-page-${i}.md`),
         [
           '---',
           'type: concept',
@@ -374,7 +376,7 @@ describe('v2 mcp', () => {
     expect(measuredSearch).toBeLessThanOrEqual(RESULT_SIZE_LIMIT);
     expect(cjkSearch.structuredContent).toHaveProperty('hits_omitted', true);
     expect(cjkSearch.structuredContent).not.toHaveProperty('hits');
-    expect(textOf(cjkSearch)).toContain('wiki/cjk-page-1.md');
+    expect(textOf(cjkSearch)).toContain(`${WIKI_DIR}/cjk-page-1.md`);
 
     // Confirm that including hits would indeed have exceeded SEARCH_STRUCTURED_LIMIT.
     const smallSearch = await client.callTool({
@@ -427,7 +429,7 @@ describe('v2 mcp', () => {
 
     expect(((await client.callTool({ name: 'health', arguments: {} })) as ToolCallResult).isError).toBeFalsy();
     expect(((await client.callTool({ name: 'search', arguments: { query: 'record' } })) as ToolCallResult).isError).toBeFalsy();
-    expect(((await client.callTool({ name: 'read', arguments: { path: 'wiki/record-preservation.md' } })) as ToolCallResult).isError).toBeFalsy();
+    expect(((await client.callTool({ name: 'read', arguments: { path: `${WIKI_DIR}/record-preservation.md` } })) as ToolCallResult).isError).toBeFalsy();
 
     expect(await fileState(root)).toEqual(before);
   });

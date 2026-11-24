@@ -5,6 +5,7 @@ import { runCli } from '../../src/v2/cli/main';
 import { readConfig } from '../../src/v2/core/config';
 import { readPage } from '../../src/v2/core/page/files';
 import { pageFreshness } from '../../src/v2/core/page/freshness';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import type { StaleResult } from '../../src/v2/core/stale';
 import { failure, invoke, jsonRun, makeKb } from './helpers';
 
@@ -83,14 +84,14 @@ describe('stale', () => {
       category: 'changed',
       path: 'Notes/meeting.md',
       pages: [
-        { page: 'wiki/record-preservation.md', keys: ['s2'] },
-        { page: 'wiki/wiki-compile-overview.md', keys: ['s1'] },
+        { page: `${WIKI_DIR}/record-preservation.md`, keys: ['s2'] },
+        { page: `${WIKI_DIR}/wiki-compile-overview.md`, keys: ['s1'] },
       ],
       pages_more: 0,
     });
 
     const config = await readConfig(root);
-    const overview = await readPage(root, 'wiki/wiki-compile-overview.md');
+    const overview = await readPage(root, `${WIKI_DIR}/wiki-compile-overview.md`);
     expect(await pageFreshness(root, config, overview)).toBe('source_changed');
 
     // Change Notes/会议记录.txt: cited live in wiki-compile-overview, only in History in record-preservation.
@@ -101,7 +102,7 @@ describe('stale', () => {
     expect(cnItem).toMatchObject({
       category: 'changed',
       path: 'Notes/会议记录.txt',
-      pages: [{ page: 'wiki/wiki-compile-overview.md', keys: ['s2'] }],
+      pages: [{ page: `${WIKI_DIR}/wiki-compile-overview.md`, keys: ['s2'] }],
       pages_more: 0,
     });
   });
@@ -126,7 +127,7 @@ describe('stale', () => {
         path: 'Archive/old.md',
         to: 'Archive/renamed.md',
         pages: [
-          { page: 'wiki/record-preservation.md', keys: ['s3'] },
+          { page: `${WIKI_DIR}/record-preservation.md`, keys: ['s3'] },
         ],
         pages_more: 0,
       },
@@ -153,15 +154,15 @@ describe('stale', () => {
       category: 'missing',
       path: 'Projects/policy notes.txt',
       pages: [
-        { page: 'wiki/record-preservation.md', keys: ['s1'] },
-        { page: 'wiki/source-policy-notes.md', keys: ['s1', 's2'] },
-        { page: 'wiki/wiki-compile-overview.md', keys: ['s3'] },
+        { page: `${WIKI_DIR}/record-preservation.md`, keys: ['s1'] },
+        { page: `${WIKI_DIR}/source-policy-notes.md`, keys: ['s1', 's2'] },
+        { page: `${WIKI_DIR}/wiki-compile-overview.md`, keys: ['s3'] },
       ],
       pages_more: 0,
     });
 
     const config = await readConfig(root);
-    const policyPage = await readPage(root, 'wiki/source-policy-notes.md');
+    const policyPage = await readPage(root, `${WIKI_DIR}/source-policy-notes.md`);
     expect(await pageFreshness(root, config, policyPage)).toBe('source_missing');
   });
 
@@ -271,13 +272,13 @@ describe('stale', () => {
     expect(textOut.stdout).toBe(
       [
         'sources: 3  pages: 5  changed: 1  missing: 0  moved: 0  unreadable: 0  unreferenced: 1',
-        'changed\tNotes/meeting.md\t\twiki/record-preservation.md[s2]; wiki/wiki-compile-overview.md[s1]',
+        `changed\tNotes/meeting.md\t\t${WIKI_DIR}/record-preservation.md[s2]; ${WIKI_DIR}/wiki-compile-overview.md[s1]`,
         'unreferenced\tNotes/new-note.md\tmarkdown\t',
         '',
       ].join('\n'),
     );
 
-    await failure(root, ['stale', '--scope', 'wiki'], 'path_denied', 1);
+    await failure(root, ['stale', '--scope', WIKI_DIR], 'path_denied', 1);
   });
 
   it('pages through 60 unreferenced files and rejects stale snapshots', async () => {

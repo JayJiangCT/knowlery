@@ -1,3 +1,4 @@
+import { WIKI_DIR } from '../core/paths';
 import { KIT_VERSION } from '../version';
 
 export interface PackageManifest {
@@ -51,7 +52,9 @@ It needs Node.js 20 or later.
     knowlery init
     knowlery connect
 
-\`init\` adds a \`wiki/\` folder, an \`AGENTS.md\` file and three Skills to the folder. \`connect\` lists the agent clients it knows (Pi, Codex, Cursor, Gemini CLI, Claude Code) and what each still needs. Then start your agent in the folder and ask it to compile the folder into the wiki.
+\`init\` adds a hidden \`${WIKI_DIR}/\` folder, an \`AGENTS.md\` file and three Skills to the folder. \`connect\` lists the agent clients it knows (Pi, Codex, Cursor, Gemini CLI, Claude Code) and what each still needs. Then start your agent in the folder and ask it to compile the folder into the wiki.
+
+Coming from 2.0.0-beta.1: in the knowledge base folder run \`mv wiki ${WIKI_DIR}\`, then \`knowlery sync --apply\`.
 
 ## Pi
 

@@ -2,6 +2,12 @@ import { lstat, readlink, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep, win32 } from 'node:path';
 import { KnowleryError } from './errors';
 
+export const WIKI_DIR = '.knowlery/wiki';
+
+export function isWikiRelPath(rel: string): boolean {
+  return rel === WIKI_DIR || rel.startsWith(`${WIKI_DIR}/`);
+}
+
 export function isMissing(error: unknown): boolean {
   return error instanceof Error && 'code' in error && (error.code === 'ENOENT' || error.code === 'ENOTDIR');
 }

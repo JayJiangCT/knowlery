@@ -7,10 +7,10 @@ import { isValidSlug, parsePage } from '../../src/v2/core/page/parse';
 import { isPageFile, listPages, readPage } from '../../src/v2/core/page/files';
 import { getExtraction } from '../../src/v2/core/extract';
 import { parseLocator, resolveLocator } from '../../src/v2/core/locator';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import { makeKb } from './helpers';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 
-const kbFixture = join(process.cwd(), 'tests/v2/fixtures/kb');
 const badDir = join(process.cwd(), 'tests/v2/fixtures/bad-pages');
 
 function sha256Hex(bytes: Buffer): string {
@@ -37,29 +37,36 @@ describe('KF 2.0 schema', () => {
 
 describe('KF 2.0 clean fixture pages', () => {
   const expectedFiles = [
-    'wiki/company-ltd.md',
-    'wiki/customer-order-comparison.md',
-    'wiki/record-preservation.md',
-    'wiki/source-policy-notes.md',
-    'wiki/wiki-compile-overview.md',
+    `${WIKI_DIR}/company-ltd.md`,
+    `${WIKI_DIR}/customer-order-comparison.md`,
+    `${WIKI_DIR}/record-preservation.md`,
+    `${WIKI_DIR}/source-policy-notes.md`,
+    `${WIKI_DIR}/wiki-compile-overview.md`,
   ];
 
   it('parses all five fixture pages cleanly with no problems', async () => {
-    const pages = await listPages(kbFixture);
-    expect(pages).toEqual(expectedFiles);
+    const root = await makeKb();
+    try {
+      const pages = await listPages(root);
+      expect(pages).toEqual(expectedFiles);
 
-    const seenTypes = new Set<string>();
-    for (const rel of pages) {
-      const parsed = await readPage(kbFixture, rel);
-      expect(parsed.problems, `${rel} had problems: ${JSON.stringify(parsed.problems)}`).toEqual([]);
-      if (parsed.frontmatter.type) seenTypes.add(parsed.frontmatter.type);
+      const seenTypes = new Set<string>();
+      for (const rel of pages) {
+        const parsed = await readPage(root, rel);
+        expect(parsed.problems, `${rel} had problems: ${JSON.stringify(parsed.problems)}`).toEqual([]);
+        if (parsed.frontmatter.type) seenTypes.add(parsed.frontmatter.type);
+      }
+      expect(seenTypes).toEqual(new Set(['source', 'concept', 'entity', 'comparison', 'synthesis']));
+    } finally {
+      await rm(root, { recursive: true, force: true });
     }
-    expect(seenTypes).toEqual(new Set(['source', 'concept', 'entity', 'comparison', 'synthesis']));
   });
 
   it('checks record-preservation.md field by field against the parsed model', async () => {
-    const page = await readPage(kbFixture, 'wiki/record-preservation.md');
-    expect(page).toEqual({
+    const root = await makeKb();
+    try {
+      const page = await readPage(root, `${WIKI_DIR}/record-preservation.md`);
+      expect(page).toEqual({
       slug: 'record-preservation',
       frontmatter: {
         type: 'concept',
@@ -203,8 +210,11 @@ describe('KF 2.0 clean fixture pages', () => {
         open: 'q2',
         source: 's5',
       },
-      problems: [],
-    });
+        problems: [],
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('verifies every Sources line in all five pages against real files, sha256, locators, and quotes', async () => {
@@ -237,18 +247,28 @@ describe('KF 2.0 clean fixture pages', () => {
   });
 
   it('counts History claim ids when computing next ids', async () => {
-    const page = await readPage(kbFixture, 'wiki/record-preservation.md');
-    // Highest claim in ## Current is c4, but ## History contains c5.
-    expect(page.claims.map((c) => c.id)).toEqual(['c2', 'c3', 'c4']);
-    expect(page.next.claim).toBe('c6');
+    const root = await makeKb();
+    try {
+      const page = await readPage(root, `${WIKI_DIR}/record-preservation.md`);
+      // Highest claim in ## Current is c4, but ## History contains c5.
+      expect(page.claims.map((c) => c.id)).toEqual(['c2', 'c3', 'c4']);
+      expect(page.next.claim).toBe('c6');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('produces the exact same model and line numbers for CRLF line endings', async () => {
-    const lfText = await readFile(join(kbFixture, 'wiki/record-preservation.md'), 'utf8');
-    const crlfText = lfText.replace(/\n/g, '\r\n');
-    expect(parsePage(crlfText, 'record-preservation.md')).toEqual(
-      parsePage(lfText, 'record-preservation.md'),
-    );
+    const root = await makeKb();
+    try {
+      const lfText = await readFile(join(root, `${WIKI_DIR}/record-preservation.md`), 'utf8');
+      const crlfText = lfText.replace(/\n/g, '\r\n');
+      expect(parsePage(crlfText, 'record-preservation.md')).toEqual(
+        parsePage(lfText, 'record-preservation.md'),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 
@@ -362,7 +382,7 @@ describe('KF 2.0 malformed pages', () => {
       { code: 'source_line_invalid', line: 17 }, // unparsable line
       { code: 'source_path_invalid', line: 18 }, // ../x.pdf
       { code: 'source_path_invalid', line: 19 }, // /abs.pdf
-      { code: 'source_path_invalid', line: 20 }, // wiki/a.md
+      { code: 'source_path_invalid', line: 20 }, // .knowlery/a.md
       { code: 'quote_missing', line: 21 }, // .pdf without quote
       { code: 'source_line_invalid', line: 23 }, // 201-char quote
     ]);
@@ -440,23 +460,23 @@ describe('KF 2.0 page file helpers', () => {
   it('lists only the five page files in sorted order and excludes special files and folders', async () => {
     const root = await makeKb();
     try {
-      await writeFile(join(root, 'wiki/CONVENTIONS.md'), '# Conventions\n');
-      await writeFile(join(root, 'wiki/index.md'), '# Index\n');
-      await writeFile(join(root, 'wiki/log.md'), '# Log\n');
-      await mkdir(join(root, 'wiki/nested'), { recursive: true });
-      await writeFile(join(root, 'wiki/nested/ignored.md'), '# Nested\n');
+      await writeFile(join(root, `${WIKI_DIR}/CONVENTIONS.md`), '# Conventions\n');
+      await writeFile(join(root, `${WIKI_DIR}/index.md`), '# Index\n');
+      await writeFile(join(root, `${WIKI_DIR}/log.md`), '# Log\n');
+      await mkdir(join(root, `${WIKI_DIR}/nested`), { recursive: true });
+      await writeFile(join(root, `${WIKI_DIR}/nested/ignored.md`), '# Nested\n');
 
       const pages = await listPages(root);
       expect(pages).toEqual([
-        'wiki/company-ltd.md',
-        'wiki/customer-order-comparison.md',
-        'wiki/record-preservation.md',
-        'wiki/source-policy-notes.md',
-        'wiki/wiki-compile-overview.md',
+        `${WIKI_DIR}/company-ltd.md`,
+        `${WIKI_DIR}/customer-order-comparison.md`,
+        `${WIKI_DIR}/record-preservation.md`,
+        `${WIKI_DIR}/source-policy-notes.md`,
+        `${WIKI_DIR}/wiki-compile-overview.md`,
       ]);
 
-      await expect(readPage(root, 'wiki/index.md')).rejects.toMatchObject({ code: 'path_denied' });
-      await expect(readPage(root, 'wiki/nested/ignored.md')).rejects.toMatchObject({ code: 'path_denied' });
+      await expect(readPage(root, `${WIKI_DIR}/index.md`)).rejects.toMatchObject({ code: 'path_denied' });
+      await expect(readPage(root, `${WIKI_DIR}/nested/ignored.md`)).rejects.toMatchObject({ code: 'path_denied' });
       await expect(readPage(root, 'Notes/meeting.md')).rejects.toMatchObject({ code: 'path_denied' });
     } finally {
       await rm(root, { recursive: true, force: true });

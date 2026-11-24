@@ -3,6 +3,7 @@ import { lstat, mkdir, readFile, readdir, rm, symlink, utimes, writeFile } from 
 import { join } from 'node:path';
 import { inventory } from '../../src/v2/core/inventory';
 import { readConfig } from '../../src/v2/core/config';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import { basePaths, configure, digest, failure, fileState, invoke, jsonRun, makeKb } from './helpers';
 
 let root: string;
@@ -28,7 +29,7 @@ describe('v2 raw source inventory', () => {
     const result = await jsonRun(root);
     expect(result.command).toBe('inventory');
     expect(result.items.map((item) => item.path)).toEqual(basePaths);
-    expect(result.counts).toEqual({ total: 5, by_format: { csv: 1, markdown: 2, txt: 2 }, unsupported: 0, ignored: 0, symlinks: 0 });
+    expect(result.counts).toEqual({ total: 5, by_format: { csv: 1, markdown: 2, txt: 2 }, unsupported: 0, ignored: 0, skipped: 0, symlinks: 0 });
     for (const item of result.items) {
       const bytes = await readFile(join(root, item.path));
       expect(item).toEqual({ path: item.path, format: item.format, size: bytes.length, sha256: digest(bytes), extraction: 'pending' });
@@ -43,19 +44,19 @@ describe('v2 raw source inventory', () => {
     const lines = text.stdout.trimEnd().split('\n');
     expect(text.code).toBe(0);
     expect(text.stderr).toBe('');
-    expect(lines[0]).toBe('sources: 5 (csv 1, markdown 2, txt 2)  unsupported: 0  ignored: 0  symlinks: 0');
+    expect(lines[0]).toBe('sources: 5 (csv 1, markdown 2, txt 2)  unsupported: 0  ignored: 0  skipped: 0  symlinks: 0');
     expect(lines.slice(1)).toEqual(data.items.map((item) => `${item.path}\t${item.format}\t${item.size}\t${item.sha256}\t${item.extraction}`));
   });
 
   it('excludes reserved and hidden names, counts unsupported files and both kinds of symlink', async () => {
-    for (const path of ['AGENTS.md', '.hidden.txt', '.hidden/source.md', 'Notes/.hidden.txt', 'Notes/.hidden/source.md', '~$lock.docx', 'Notes/~$lock.txt', '.knowlery/internal.txt', 'wiki/deep/page.md']) await add(path);
+    for (const path of ['AGENTS.md', '.hidden.txt', '.hidden/source.md', 'Notes/.hidden.txt', 'Notes/.hidden/source.md', '~$lock.docx', 'Notes/~$lock.txt', '.knowlery/internal.txt', `${WIKI_DIR}/deep/page.md`]) await add(path);
     await add('Notes/AGENTS.md');
     await add('photo.png');
     await symlink(join(root, 'Notes/meeting.md'), join(root, 'source-link.md'));
     await symlink(join(root, 'Notes'), join(root, 'folder-link'));
     const result = await jsonRun(root);
     expect(result.items.map((item) => item.path)).toEqual([...basePaths, 'Notes/AGENTS.md'].sort());
-    expect(result.counts).toMatchObject({ total: 6, unsupported: 1, ignored: 0, symlinks: 2 });
+    expect(result.counts).toMatchObject({ total: 6, unsupported: 1, ignored: 0, skipped: 0, symlinks: 2 });
   });
 
   it('never follows a dangling link or a link outside the root during walking', async () => {
@@ -280,7 +281,7 @@ describe('v2 scopes and exact paths', () => {
     const file = await jsonRun(root, ['inventory', '--scope', 'Notes/meeting.md']);
     expect(file.items.map((item) => item.path)).toEqual(['Notes/meeting.md']);
     expect(file.counts.total).toBe(1);
-    await failure(root, ['inventory', '--scope', 'wiki/record-preservation.md'], 'path_denied', 1);
+    await failure(root, ['inventory', '--scope', `${WIKI_DIR}/record-preservation.md`], 'path_denied', 1);
   });
 
   it('resolves a symlinked root to its real directory', async () => {
@@ -303,12 +304,12 @@ describe('v2 scopes and exact paths', () => {
     await add('.hidden.txt');
     await add('photo.png');
     await configure(root, { kf: '2.0', ignore: ['Notes/'] });
-    const requested = ['Notes/meeting.md', 'wiki/record-preservation.md', 'wiki/new.md', '.hidden.txt', 'photo.png'];
+    const requested = ['Notes/meeting.md', `${WIKI_DIR}/record-preservation.md`, `${WIKI_DIR}/new.md`, '.hidden.txt', 'photo.png'];
     const result = await jsonRun(root, ['inventory', '--paths', ...requested]);
     expect(Object.keys(result).sort()).toEqual(['command', 'contract', 'ok', 'paths']);
     expect(result.paths.map((item) => item.path)).toEqual(requested);
     for (const item of result.paths) {
-      if (item.path === 'wiki/new.md') expect(item).toEqual({ path: item.path, exists: false });
+      if (item.path === `${WIKI_DIR}/new.md`) expect(item).toEqual({ path: item.path, exists: false });
       else {
         const bytes = await readFile(join(root, item.path));
         expect(item).toEqual({ path: item.path, exists: true, size: bytes.length, sha256: digest(bytes) });
@@ -374,7 +375,7 @@ describe('v2 scopes and exact paths', () => {
     await jsonRun(root);
     await jsonRun(root);
     await jsonRun(root, ['inventory', '--scope', 'Notes']);
-    await jsonRun(root, ['inventory', '--paths', 'wiki/record-preservation.md']);
+    await jsonRun(root, ['inventory', '--paths', `${WIKI_DIR}/record-preservation.md`]);
     await failure(root, ['inventory', '--snapshot', 'old'], 'stale_version', 1);
     await failure(root, ['inventory', '--scope', '../x'], 'path_denied', 1);
     expect(await fileState(root)).toEqual(before);

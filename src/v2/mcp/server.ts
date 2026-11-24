@@ -6,7 +6,7 @@ import { formatSearchText, runSearch, type SearchResult } from '../cli/commands/
 import { readConfig, type Config } from '../core/config';
 import { KnowleryError } from '../core/errors';
 import type { ExtractionOptions } from '../core/extract';
-import { relativePath, resolveInside } from '../core/paths';
+import { isWikiRelPath, relativePath, resolveInside } from '../core/paths';
 import { KIT_VERSION } from '../version';
 import { findMcpRoot, formatRootSource, type ResolvedMcpRoot } from './root';
 import { HEALTH_DESCRIPTION, READ_DESCRIPTION, SEARCH_DESCRIPTION, SERVER_INSTRUCTIONS } from './texts';
@@ -170,10 +170,6 @@ function stripReadBody(result: ReadResult): Record<string, unknown> {
     if (key !== 'text') rest[key] = value;
   }
   return rest;
-}
-
-function isWikiRelPath(rel: string): boolean {
-  return rel === 'wiki' || rel.startsWith('wiki/');
 }
 
 export function buildMcpServer(options: McpServerOptions): McpServer {

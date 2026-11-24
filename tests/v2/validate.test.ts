@@ -5,6 +5,7 @@ import { runCli } from '../../src/v2/cli/main';
 import type { ExtractionOptions } from '../../src/v2/core/extract';
 import { registry as builtinRegistry } from '../../src/v2/core/extract/registry';
 import { parsePage } from '../../src/v2/core/page/parse';
+import { WIKI_DIR } from '../../src/v2/core/paths';
 import type { ValidateFinding, ValidateResult } from '../../src/v2/core/validate';
 import { digest, failure, fileState, invoke, makeKb } from './helpers';
 
@@ -64,11 +65,11 @@ describe('v2 validate', () => {
 
   it('reports cross-page relation, supersession, dispute, deprecation, link, and attachment findings once at expected locations', async () => {
     // 1. relation_invalid (missing target) + supersede_inconsistent (target not superseded) + link_broken + attachment_outside + attachment_orphan (file)
-    await mkdir(join(root, 'wiki/alpha.assets'), { recursive: true });
-    await writeFile(join(root, 'wiki/alpha.assets/used.txt'), 'used\n');
-    await writeFile(join(root, 'wiki/alpha.assets/unused.txt'), 'unused\n');
+    await mkdir(join(root, `${WIKI_DIR}/alpha.assets`), { recursive: true });
+    await writeFile(join(root, `${WIKI_DIR}/alpha.assets/used.txt`), 'used\n');
+    await writeFile(join(root, `${WIKI_DIR}/alpha.assets/unused.txt`), 'unused\n');
     await writeFile(
-      join(root, 'wiki/alpha.md'),
+      join(root, `${WIKI_DIR}/alpha.md`),
       [
         '---',
         'type: concept',
@@ -83,13 +84,13 @@ describe('v2 validate', () => {
         '# Alpha',
         '',
         '## Evidence',
-        'Good [own](alpha.assets/used.txt) and [raw](../Notes/meeting.md) and [broken](missing-page.md) and [outside](record-preservation.assets/checklist.txt).',
+        'Good [own](alpha.assets/used.txt) and [raw](../../Notes/meeting.md) and [broken](missing-page.md) and [outside](record-preservation.assets/checklist.txt).',
       ].join('\n') + '\n',
     );
 
     // 2. beta: status current (causes alpha's supersede_inconsistent) + dispute_inconsistent (claim #disputed while status not disputed AND no Open about it)
     await writeFile(
-      join(root, 'wiki/beta.md'),
+      join(root, `${WIKI_DIR}/beta.md`),
       [
         '---',
         'type: concept',
@@ -111,7 +112,7 @@ describe('v2 validate', () => {
 
     // 3. gamma: status superseded with nobody superseding it
     await writeFile(
-      join(root, 'wiki/gamma.md'),
+      join(root, `${WIKI_DIR}/gamma.md`),
       [
         '---',
         'type: concept',
@@ -127,7 +128,7 @@ describe('v2 validate', () => {
 
     // 4. cycle-a <-> cycle-b: supersedes cycle (both status: superseded so only cycle fires)
     await writeFile(
-      join(root, 'wiki/cycle-a.md'),
+      join(root, `${WIKI_DIR}/cycle-a.md`),
       [
         '---',
         'type: concept',
@@ -142,7 +143,7 @@ describe('v2 validate', () => {
       ].join('\n') + '\n',
     );
     await writeFile(
-      join(root, 'wiki/cycle-b.md'),
+      join(root, `${WIKI_DIR}/cycle-b.md`),
       [
         '---',
         'type: concept',
@@ -159,7 +160,7 @@ describe('v2 validate', () => {
 
     // 5. delta: status disputed with no #disputed claim
     await writeFile(
-      join(root, 'wiki/delta.md'),
+      join(root, `${WIKI_DIR}/delta.md`),
       [
         '---',
         'type: concept',
@@ -175,7 +176,7 @@ describe('v2 validate', () => {
 
     // 6. epsilon: status deprecated with no deprecated event with a note
     await writeFile(
-      join(root, 'wiki/epsilon.md'),
+      join(root, `${WIKI_DIR}/epsilon.md`),
       [
         '---',
         'type: concept',
@@ -193,27 +194,27 @@ describe('v2 validate', () => {
     );
 
     // 7. Orphan assets folder with no matching page
-    await mkdir(join(root, 'wiki/ghost.assets'), { recursive: true });
-    await writeFile(join(root, 'wiki/ghost.assets/pic.txt'), 'orphan\n');
+    await mkdir(join(root, `${WIKI_DIR}/ghost.assets`), { recursive: true });
+    await writeFile(join(root, `${WIKI_DIR}/ghost.assets/pic.txt`), 'orphan\n');
 
     const data = await validateJson();
     const simplify = (f: ValidateFinding) => ({ path: f.path, line: f.line, code: f.code, severity: f.severity });
     const actual = data.items.map(simplify);
 
     expect(actual).toEqual([
-      { path: 'wiki/alpha.assets/unused.txt', line: null, code: 'attachment_orphan', severity: 'warning' },
-      { path: 'wiki/alpha.md', line: 1, code: 'relation_invalid', severity: 'error' },
-      { path: 'wiki/alpha.md', line: 1, code: 'supersede_inconsistent', severity: 'error' },
-      { path: 'wiki/alpha.md', line: 14, code: 'attachment_outside', severity: 'error' },
-      { path: 'wiki/alpha.md', line: 14, code: 'link_broken', severity: 'error' },
-      { path: 'wiki/beta.md', line: 12, code: 'dispute_inconsistent', severity: 'error' },
-      { path: 'wiki/beta.md', line: 12, code: 'dispute_inconsistent', severity: 'error' },
-      { path: 'wiki/cycle-a.md', line: 1, code: 'supersede_inconsistent', severity: 'error' },
-      { path: 'wiki/cycle-b.md', line: 1, code: 'supersede_inconsistent', severity: 'error' },
-      { path: 'wiki/delta.md', line: 1, code: 'dispute_inconsistent', severity: 'error' },
-      { path: 'wiki/epsilon.md', line: 1, code: 'deprecate_incomplete', severity: 'error' },
-      { path: 'wiki/gamma.md', line: 1, code: 'supersede_inconsistent', severity: 'error' },
-      { path: 'wiki/ghost.assets', line: null, code: 'attachment_orphan', severity: 'warning' },
+      { path: `${WIKI_DIR}/alpha.assets/unused.txt`, line: null, code: 'attachment_orphan', severity: 'warning' },
+      { path: `${WIKI_DIR}/alpha.md`, line: 1, code: 'relation_invalid', severity: 'error' },
+      { path: `${WIKI_DIR}/alpha.md`, line: 1, code: 'supersede_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/alpha.md`, line: 14, code: 'attachment_outside', severity: 'error' },
+      { path: `${WIKI_DIR}/alpha.md`, line: 14, code: 'link_broken', severity: 'error' },
+      { path: `${WIKI_DIR}/beta.md`, line: 12, code: 'dispute_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/beta.md`, line: 12, code: 'dispute_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/cycle-a.md`, line: 1, code: 'supersede_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/cycle-b.md`, line: 1, code: 'supersede_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/delta.md`, line: 1, code: 'dispute_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/epsilon.md`, line: 1, code: 'deprecate_incomplete', severity: 'error' },
+      { path: `${WIKI_DIR}/gamma.md`, line: 1, code: 'supersede_inconsistent', severity: 'error' },
+      { path: `${WIKI_DIR}/ghost.assets`, line: null, code: 'attachment_orphan', severity: 'warning' },
     ]);
 
     expect(data.counts).toEqual({
@@ -246,7 +247,7 @@ describe('v2 validate', () => {
     const multiLineSha = digest(multiLineBytes).slice('sha256:'.length);
 
     await writeFile(
-      join(root, 'wiki/source-checks.md'),
+      join(root, `${WIKI_DIR}/source-checks.md`),
       [
         '---',
         'type: concept',
@@ -267,7 +268,7 @@ describe('v2 validate', () => {
       ].join('\n') + '\n',
     );
 
-    const data = await validateJson(['--scope', 'wiki/source-checks.md']);
+    const data = await validateJson(['--scope', `${WIKI_DIR}/source-checks.md`]);
     expect(data.items.map((f) => ({ line: f.line, code: f.code, severity: f.severity }))).toEqual([
       { line: 12, code: 'locator_not_found', severity: 'error' },
       { line: 13, code: 'quote_not_found', severity: 'error' },
@@ -286,7 +287,7 @@ describe('v2 validate', () => {
     await writeFile(join(root, 'Projects/manual.pdf'), pdfBytes);
     const pdfSha = digest(pdfBytes).slice('sha256:'.length);
     await writeFile(
-      join(root, 'wiki/pdf-ref.md'),
+      join(root, `${WIKI_DIR}/pdf-ref.md`),
       [
         '---',
         'type: concept',
@@ -316,10 +317,10 @@ describe('v2 validate', () => {
     expect(data.counts.by_code).toEqual({ not_checked: 4 });
     expect(data.items.every((item) => item.code === 'not_checked' && item.severity === 'info')).toBe(true);
     expect(data.items.map((item) => `${item.path}:${item.line}`)).toEqual([
-      'wiki/pdf-ref.md:15',
-      'wiki/record-preservation.md:29',
-      'wiki/record-preservation.md:30',
-      'wiki/wiki-compile-overview.md:20',
+      `${WIKI_DIR}/pdf-ref.md:15`,
+      `${WIKI_DIR}/record-preservation.md:29`,
+      `${WIKI_DIR}/record-preservation.md:30`,
+      `${WIKI_DIR}/wiki-compile-overview.md:20`,
     ]);
   });
 
@@ -329,7 +330,7 @@ describe('v2 validate', () => {
     const staleSha = '0'.repeat(64);
 
     await writeFile(
-      join(root, 'wiki/history-only-source.md'),
+      join(root, `${WIKI_DIR}/history-only-source.md`),
       [
         '---',
         'type: concept',
@@ -354,14 +355,14 @@ describe('v2 validate', () => {
       ].join('\n') + '\n',
     );
 
-    const uncited = await validateJson(['--scope', 'wiki/history-only-source.md']);
+    const uncited = await validateJson(['--scope', `${WIKI_DIR}/history-only-source.md`]);
     expect(uncited.counts.not_checked).toBe(0);
     expect(uncited.items.map((f) => ({ line: f.line, code: f.code }))).toEqual([
       { line: 17, code: 'quote_not_found' },
     ]);
 
     await writeFile(
-      join(root, 'wiki/history-only-source.md'),
+      join(root, `${WIKI_DIR}/history-only-source.md`),
       [
         '---',
         'type: concept',
@@ -381,7 +382,7 @@ describe('v2 validate', () => {
       ].join('\n') + '\n',
     );
 
-    const cited = await validateJson(['--scope', 'wiki/history-only-source.md']);
+    const cited = await validateJson(['--scope', `${WIKI_DIR}/history-only-source.md`]);
     expect(cited.counts.not_checked).toBe(1);
     expect(cited.items.map((f) => ({ line: f.line, code: f.code, severity: f.severity }))).toEqual([
       { line: 15, code: 'not_checked', severity: 'info' },
@@ -390,12 +391,12 @@ describe('v2 validate', () => {
 
   it('reports parser problems unchanged for a malformed page copied from bad-pages', async () => {
     const src = join(process.cwd(), 'tests/v2/fixtures/bad-pages/bad-claims-and-open.md');
-    await copyFile(src, join(root, 'wiki/bad-claims-and-open.md'));
+    await copyFile(src, join(root, `${WIKI_DIR}/bad-claims-and-open.md`));
     const parsed = parsePage(await readFile(src, 'utf8'), 'bad-claims-and-open.md');
 
-    const data = await validateJson(['--scope', 'wiki/bad-claims-and-open.md']);
+    const data = await validateJson(['--scope', `${WIKI_DIR}/bad-claims-and-open.md`]);
     const expected = parsed.problems
-      .map((p) => ({ path: 'wiki/bad-claims-and-open.md', line: p.line, code: p.code, severity: 'error', message: p.message }))
+      .map((p) => ({ path: `${WIKI_DIR}/bad-claims-and-open.md`, line: p.line, code: p.code, severity: 'error', message: p.message }))
       .sort((a, b) => a.line - b.line || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 
     for (const exp of expected) {
@@ -403,21 +404,21 @@ describe('v2 validate', () => {
     }
   });
 
-  it('filters by --scope wiki/<slug>.md and rejects invalid or missing scopes', async () => {
-    await rm(join(root, 'wiki/source-policy-notes.md'));
-    const scoped = await validateJson(['--scope', 'wiki/record-preservation.md']);
+  it('filters by --scope and rejects invalid or missing scopes', async () => {
+    await rm(join(root, `${WIKI_DIR}/source-policy-notes.md`));
+    const scoped = await validateJson(['--scope', `${WIKI_DIR}/record-preservation.md`]);
     expect(scoped.counts.pages).toBe(1);
     expect(scoped.items.length).toBeGreaterThan(0);
-    expect(scoped.items.every((item) => item.path === 'wiki/record-preservation.md' || item.path.startsWith('wiki/record-preservation.assets/'))).toBe(true);
+    expect(scoped.items.every((item) => item.path === `${WIKI_DIR}/record-preservation.md` || item.path.startsWith(`${WIKI_DIR}/record-preservation.assets/`))).toBe(true);
 
     await failure(root, ['validate', '--scope', 'Notes'], 'invalid_selector', 1);
-    await failure(root, ['validate', '--scope', 'wiki/does-not-exist.md'], 'not_found', 1);
+    await failure(root, ['validate', '--scope', `${WIKI_DIR}/does-not-exist.md`], 'not_found', 1);
   });
 
   it('pages through findings with --limit and --snapshot and fails with stale_version on concurrent edit', async () => {
     await copyFile(
       join(process.cwd(), 'tests/v2/fixtures/bad-pages/bad-sources.md'),
-      join(root, 'wiki/bad-sources.md'),
+      join(root, `${WIKI_DIR}/bad-sources.md`),
     );
 
     const all = await validateJson();
@@ -448,14 +449,14 @@ describe('v2 validate', () => {
     expect(textPage.stdout).toContain(`more: --offset 2 --snapshot ${all.snapshot}\n`);
 
     // Edit a page in between -> stale_version.
-    await writeFile(join(root, 'wiki/company-ltd.md'), (await readFile(join(root, 'wiki/company-ltd.md'), 'utf8')) + '\n[[bad-wikilink]]\n');
+    await writeFile(join(root, `${WIKI_DIR}/company-ltd.md`), (await readFile(join(root, `${WIKI_DIR}/company-ltd.md`), 'utf8')) + '\n[[bad-wikilink]]\n');
     await failure(root, ['validate', '--limit', '2', '--offset', '2', '--snapshot', all.snapshot], 'stale_version', 1);
   });
 
-  it('ignores special files wiki/index.md, wiki/log.md, and wiki/CONVENTIONS.md', async () => {
-    await writeFile(join(root, 'wiki/index.md'), '# Index\n\n[[wikilink-ok-here]]\n');
-    await writeFile(join(root, 'wiki/log.md'), 'Unstructured log file.\n');
-    await writeFile(join(root, 'wiki/CONVENTIONS.md'), 'Conventions without frontmatter.\n');
+  it('ignores special files index.md, log.md, and CONVENTIONS.md', async () => {
+    await writeFile(join(root, `${WIKI_DIR}/index.md`), '# Index\n\n[[wikilink-ok-here]]\n');
+    await writeFile(join(root, `${WIKI_DIR}/log.md`), 'Unstructured log file.\n');
+    await writeFile(join(root, `${WIKI_DIR}/CONVENTIONS.md`), 'Conventions without frontmatter.\n');
 
     const data = await validateJson();
     expect(data.counts).toEqual({

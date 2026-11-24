@@ -13,7 +13,7 @@ export async function runInventory(root: string, config: Config, args: ParsedArg
   const result = await inventory(root, config, args);
   const counts = result.counts;
   const formats = Object.entries(counts.by_format).map(([format, count]) => `${format} ${count}`).join(', ');
-  const lines = [`sources: ${counts.total} (${formats})  unsupported: ${counts.unsupported}  ignored: ${counts.ignored}  symlinks: ${counts.symlinks}`];
+  const lines = [`sources: ${counts.total} (${formats})  unsupported: ${counts.unsupported}  ignored: ${counts.ignored}  skipped: ${counts.skipped}  symlinks: ${counts.symlinks}`];
   for (const item of result.items) lines.push(`${item.path}\t${item.format}\t${item.size}\t${item.sha256}\t${item.extraction}`);
   if (result.next) lines.push(`more: --offset ${result.next.offset} --snapshot ${result.next.snapshot}`);
   for (const warning of result.warnings) lines.push(`warning: ${warning}`);

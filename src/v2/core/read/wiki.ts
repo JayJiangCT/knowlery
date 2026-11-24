@@ -6,7 +6,7 @@ import { KnowleryError } from '../errors';
 import { isPageFile } from '../page/files';
 import type { PageSection, ParsedPage } from '../page/model';
 import { parsePage } from '../page/parse';
-import { isMissing, relativePath, resolveInside } from '../paths';
+import { isMissing, relativePath, resolveInside, WIKI_DIR } from '../paths';
 import { LOCATOR_PAGE_CAP, OUTLINE_PAGE_CAP, outlineSegments, paginateSegments } from './page';
 import type { ReadRawNext } from './raw';
 
@@ -154,15 +154,15 @@ export async function readWiki(root: string, input: string, options: ReadWikiOpt
   const resolved = await resolveInside(root, input);
   const rel = relativePath(root, resolved);
   const name = basename(rel);
-  const inWikiRoot = dirname(rel) === 'wiki';
+  const inWikiRoot = dirname(rel) === WIKI_DIR;
   const isSpecial = inWikiRoot && SPECIAL_FILES.has(name);
   const isPage = inWikiRoot && isPageFile(name);
 
   if (!isPage && !isSpecial) {
     throw new KnowleryError(
       'path_denied',
-      `Path under wiki/ cannot be read: ${input}`,
-      'Choose a wiki page or special file (CONVENTIONS.md, index.md, log.md) directly inside wiki/.',
+      `Path under ${WIKI_DIR}/ cannot be read: ${input}`,
+      `Choose a wiki page or special file (CONVENTIONS.md, index.md, log.md) directly inside ${WIKI_DIR}/.`,
     );
   }
 
@@ -186,7 +186,7 @@ export async function readWiki(root: string, input: string, options: ReadWikiOpt
     info = await lstat(resolved);
   } catch (error) {
     if (isMissing(error)) {
-      throw new KnowleryError('not_found', `Page not found: ${input}`, 'Check the page path inside wiki/.');
+      throw new KnowleryError('not_found', `Page not found: ${input}`, `Check the page path inside ${WIKI_DIR}/.`);
     }
     throw error;
   }
@@ -194,7 +194,7 @@ export async function readWiki(root: string, input: string, options: ReadWikiOpt
     throw new KnowleryError(
       'path_denied',
       `Wiki path is not a regular file: ${input}`,
-      'Choose a regular Markdown file directly inside wiki/.',
+      `Choose a regular Markdown file directly inside ${WIKI_DIR}/.`,
     );
   }
 
